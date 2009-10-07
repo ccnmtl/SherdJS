@@ -159,6 +159,21 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		}
 		return found;
 	    };
+	    this.update = function(obj,html_dom) {
+		//HACK: TOTALLY UNFINISHED (see config/djangosherd.js openCitation())
+		if (html_dom != null) {
+		    try {
+			if (obj.url) {
+			    html_dom.SetURL(obj.url);
+			} else {
+			    return false;
+			}
+			return true;
+		    } catch(e) {
+			//alert(e.message);
+		    }
+		}
+	    };
 	    this.create = function(obj,doc) {
 		var id = (typeof self.id=='function')?self.id():Sherd.Base.newID('quicktime');
 		var opt = {url:''

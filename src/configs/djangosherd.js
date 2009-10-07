@@ -133,12 +133,12 @@ function DjangoSherd_Project_Config() {
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     //ds.clipform = new DjangoSherd_ClipForm();//see below
     //djangosherd.clipstrip = new ClipStrip();
-    addLoadEvent(function() {
-	var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
-	if ( annotation_to_open != null) {
+    var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
+    if ( annotation_to_open != null) {
+	addLoadEvent(function() {
 	    openCitation(annotation_to_open[1]+'/',true);
-	}
-    });
+	});
+    }
 }
 
 function DjangoSherd_AssetMicroFormat() {
@@ -146,14 +146,18 @@ function DjangoSherd_AssetMicroFormat() {
 	var rv = {};
 	var link = getFirstElementByTagAndClassName('a','assetlabel-quicktime',found_obj.html);
 	if (link) { 
-	    var poster = getFirstElementByTagAndClassName('a','assetlabel-poster',found_obj.html);
-	    if (poster) rv.poster = poster.href;
+	    var poster = getFirstElementByTagAndClassName('img','assetimage-poster',found_obj.html);
+	    //TODO: dereference poster url
+	    //test on poster.width is to make sure it is loaded/loadable
+	    /// e.g. if poster.src gives a 500 error, then Quicktime will super-barf
+	    ///      and the video becomes comletely inaccessible
+	    rv.poster = ((poster && poster.width) ? poster.src : '/site_media/js/sherdjs/media/images/poster.gif');
 	    return update(rv,{type:'quicktime'
 			      ,url:link.href
 			      ,quicktime:link.href
 			      ,height:256
 			      ,width:320
-			      ,autoplay:'true'
+			      ,autoplay:'false'
 			     }
 			 );
 	}
@@ -251,20 +255,24 @@ function openCitation(url,no_autoplay) {
     showElement('videoclipbox');
 
     var ann_obj = djangosherd.annotationMicroformat.read({html:current_citation});
-    var obj_div = getFirstElementByTagAndClassName('div','asset-display');
-    //djangosherd.assetview.html.put(obj_div, ann_obj.asset);
+    var obj_div = getFirstElementByTagAndClassName('div','asset-display' /*TODO:parent!*/);
 
     ann_obj.asset.autoplay = (no_autoplay)?'false':'true';
 
     var asset = djangosherd.assetview.microformat.create(ann_obj.asset);
-    obj_div.innerHTML = asset.text;
+
+    var try_update = djangosherd.assetview.microformat.update(ann_obj.asset,
+   	theMovie);
+    if (!try_update) {///HACK HACK HACK
+	obj_div.innerHTML = asset.text;
+    }
     djangosherd.assetview.html.put(document.getElementById(asset.htmlID));
     var ann_data = ann_obj.annotations[0];
     //VITAL code
     if (ann_data.duration) movDuration = ann_data.duration;
     if (ann_data.timeScale) movscale = ann_data.timeScale;
     giveUp();
-    refresh_mymovie(ann_data.startCode,ann_data.endCode,'Clip');
     prepareGrabber();
+    refresh_mymovie(ann_data.startCode,ann_data.endCode,'Clip');
     document.location = '#annotation=annotation'+id;
 }
