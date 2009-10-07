@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Asset Collection</title>
+  <script type="text/javascript" src="../views/video.js"></script>
+
+  <!--must be included in HEAD for IE to do write() correctly -->
+  <script type="text/javascript" src="../views/quicktime.js"></script>
+</head>
+<body>
+  <div id="userassets" class="sherd-collection">
+    <!--[if IE]>
+    <object id="qt_event_source" 
+            classid="clsid:CB927D12-4FF7-4a9e-A169-56E4B8A75598"         
+	    codebase="http://www.apple.com/qtactivex/qtplugin.cab#version=7,2,1,0" ></object>
+    <object id="foo"
+            width="320" height="260"
+            style='behavior:url(#qt_event_source)'
+	    codebase="http://www.apple.com/qtactivex/qtplugin.cab" 
+	    classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B">
+    <[endif]-->
+    <!--[if !IE]><-->
+    <object id="foo" type="video/quicktime" 
+	    data="" 
+	    width="320" height="260"
+	    >
+      <!--	  <param name="src" value="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:ed067259e01962e53c0a1905c232c1ac5555a802/StreamingProxy" />
+      -->
+      <!-- ><![endif]-->
+	  <param name="postdomevents" value="true" />
+	  <param name="autoplay" value="false" />
+	  <param name="autohref" value="true" />
+	  <param name="href" value="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:ed067259e01962e53c0a1905c232c1ac5555a802/StreamingProxy" />
+	  <param name="controller" value="true" />
+	  Error text.
+	</object>
+  </div>
+  <div id="testresults">
+    <div id="completed"></div>
+    <div id="passed" style="background-color:#DDFFDD;"></div>
+    <div id="failed" style="background-color:#FF4444;"></div>
+  </div>    
+  <script type="text/javascript">
+    var urls = [
+    //QUICKTIME
+    ///mov
+    'http://main.wgbh.org/saybrother/programs/media/sb_0304/sb_0304_ref.mov'
+    ///streaming 15 fps
+    ,'rtsp://qtss.cc.columbia.edu/projects/ginsburg/big_math_01.mov'
+    ///24 fps
+    ,'http://qtss.cc.columbia.edu/projects/courseworks/omeally/greatest_jazz_films/sound_of_miles_davis.mov'
+    ///streaming
+    ,'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:ed067259e01962e53c0a1905c232c1ac5555a802/StreamingProxy'
+    ///16:9 dimensions
+	///'streaming' wgbh
+	,'http://openvaultresearch.wgbh.org/media/video/barcode167399_H.264-STREAMED-320*240-356.mp4'
+    ]
+    var x = new Sherd.Video.QuickTime();
+    x.html.put(document.getElementById('foo'));
+
+    //tests
+    var test_queue = [
+	//loading
+	/*
+	{data:'setsource'
+	 ,call:function(){this.media.SetSource(url);}
+	 ,check:this.media.GetDuration
+	 ,event:'load'
+	}
+	,
+        */
+	//seeking
+	{data:'jump to 30'
+	 ,call:function(){this.media.seek(30);}
+	 ,check:x.media.time
+	 ,event:'seek'
+	 ,test:function(rv){return (rv >=30);}
+	 ,timeout:10000
+	}
+	,
+	{data:'jump back to 1'
+	 ,call:function(){this.media.seek(1);}
+	 ,check:x.media.time
+	 ,event:'seek'
+	 ,test:function(rv){return (10 > rv);}
+	 ,timeout:10000
+	}
+	/*
+	,
+	{data:'jump past duration should go to end'
+	 ,call:function(){this.media.seek(10000);}
+	 ,check:x.media.time
+	 ,event:'seek'
+	 ,test:function(rv){return (rv > 10);}
+	 ,timeout:10000
+	}
+	,
+	{data:'jump back to 10 and pause'
+	 ,call:function(){this.media.seek(1);}
+	 ,check:x.media.time
+	 ,event:'pause'
+	 ,test:function(rv){return (10 > rv);}
+	 ,timeout:10000
+	}*/
+	,
+	{data:'test Collation'}
+    ];//test_queue
+
+    function tester(){
+	var self = this;
+	function test_ok(result,data) {
+	    delete self.unfinished_tests[data];
+	    self.passed_tests[data]=1;
+	    self.completed_count++;
+	}
+	
+	this.passed_tests= {};
+	this.unfinished_tests = {};
+	this.test_count = test_queue.length-1;//last one is to collate
+	this.completed_count = 0;
+	for(var i=0;i<this.test_count;i++) {
+	    this.unfinished_tests[ test_queue[i].data ]=1;
+	    test_queue[i].callback = test_ok;
+	    test_queue[i].self = x;
+	    //test_queue[i].log = window.console.log;
+	    test_queue[i].poll = 1000;	    
+	}
+
+	test_queue[this.test_count].call = function collate(data) {
+	    var passed = document.getElementById('passed');
+	    var failed = document.getElementById('failed');
+	    var message = '';
+	    for (a in self.passed_tests) {
+		message += '<div>'+a+'</div>';
+	    }
+	    passed.innerHTML = message;
+	    message = '';
+	    for (a in self.unfinished_tests) {
+		message += '<div>'+a+'</div>';
+	    }
+	    failed.innerHTML = message;
+	}
+
+	
+	x.events.queue('test video',test_queue);
+    }
+  var t = new tester();
+
+  </script>
+</body>
+</html>

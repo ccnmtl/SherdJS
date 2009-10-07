@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Essay Workspace</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  
+  <!--YUI shit BEGIN-->
+  <link rel="stylesheet" type="text/css" href="../lib/yui2/assets/yui.css" >
+  <link rel="stylesheet" type="text/css" href="../lib/yui2/build/menu/assets/skins/sam/menu.css" />
+  <link rel="stylesheet" type="text/css" href="../lib/yui2/build/button/assets/skins/sam/button.css" />
+  <link rel="stylesheet" type="text/css" href="../lib/yui2/build/container/assets/skins/sam/container.css" />
+  <link rel="stylesheet" type="text/css" href="../lib/yui2/build/editor/assets/skins/sam/editor.css" />
+
+  <script type="text/javascript" src="../lib/yui2/build/yuiloader/yuiloader-min.js"></script>
+  <script type="text/javascript" src="../lib/yui2/build/event/event-min.js"></script>
+  <script type="text/javascript" src="../lib/yui2/build/dom/dom-min.js"></script>
+  <script type="text/javascript" src="../lib/yui2/build/animation/animation-min.js"></script>
+  <script type="text/javascript" src="../lib/yui2/build/element/element-min.js"></script>
+  <script type="text/javascript" src="../lib/yui2/build/container/container-min.js"></script>
+  <script type="text/javascript" src="../lib/yui2/build/menu/menu-min.js"></script>
+  <script type="text/javascript" src="../lib/yui2/build/button/button-min.js"></script>
+  <script type="text/javascript" src="../lib/yui2/build/editor/editor.js"></script>
+  <!--END YUI shit -->
+  
+  <script type="text/javascript" src="../js/cite/yui2-editor.js"></script>
+</head>
+<body>
+  <div class="sherd-collection">
+    
+  </div>
+  <div class="yui-skin-sam"><!-- For YUI to skin it properly -->
+    <form method="post" action="#" id="form1">
+      <textarea id="editor" name="editor" rows="20" cols="25"></textarea>
+    </form>
+  </div>
+
+
+  <!-- JS SETUP! -->
+  <script type="text/javascript">
+    var Dom = YAHOO.util.Dom;
+    var Event = YAHOO.util.Event;
+
+
+    var myConfig = {
+        height: '400px'
+        ,width: '350px'
+        ,animate: true
+        //,dompath: true
+        ,focusAtStart: true
+	,markup:'xhmtl'
+	,ptags:true
+    };
+    var myEditor = new YAHOO.widget.Editor('editor', myConfig);
+    myEditor._defaultToolbar.grouplabels=false;
+    myEditor._defaultToolbar.titlebar=false;//'hello';
+
+    //myEditor.on('toolbarLoaded', function () {myEditor.toolbar.collapse();}, myEditor, true);
+
+    CiteYUIEditor(myEditor);
+
+    myEditor.on('afterNodeChange', function(evt) {
+	Event.stopEvent(evt);
+	var el = this._getSelectedElement();
+	//var range = this._getRange();
+	if (this._isElement(el, 'a')) {
+	    if (window.console) {
+		window.console.log(el);
+		window.console.log(evt);
+	    }
+	    var win = new YAHOO.widget.EditorWindow('linkdetails', {width: '100px'});
+	    this.currentElement[0] = el;
+	    win.el = el;
+
+	    var body;
+	    if (!this._windows.linkdetails) {
+		this._windows.linkdetails = {body:this._getDoc().createElement('div')}
+	    }
+	    body = this._windows.linkdetails.body
+	    body.innerHTML = '<a target="_blank" href="'+win.el.href+'">link</a>';
+	    
+	    win.setBody(body);
+	    this.openWindow(win);
+	    //if we want to do things like not disable the toolbar,
+	    //we'll need to replace subclass/replace openWindow()
+	}
+    }, myEditor, true);
+
+    myEditor.render();
+    //set/add microformat for myEditor (for save/serialization)
+    //storage
+    //tie storage to collectionHTML (AssetManager?)
+    //make myEditor the add-destination for collectionHTML
+    //
+  </script>
+
+</body>
+</html>

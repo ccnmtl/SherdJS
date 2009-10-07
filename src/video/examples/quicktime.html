@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Asset Collection</title>
+  <script type="text/javascript" src="../js/video.js"></script>
+  <script type="text/javascript" src="../js/quicktime.js"></script>
+</head>
+<body>
+  <div id="userassets" class="sherd-collection">
+    <!--[if IE]>
+    <object width="320" height="260"
+	    codebase="http://www.apple.com/qtactivex/qtplugin.cab" 
+	    classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B">
+	  <param name="src" value="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:ed067259e01962e53c0a1905c232c1ac5555a802/StreamingProxy" />
+    <[endif]-->
+    <!--[if !IE]><-->
+    <object id="foo" type="video/quicktime" 
+	    data="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:ed067259e01962e53c0a1905c232c1ac5555a802/StreamingProxy" 
+	    width="320" height="260"
+	    >
+      <!-- ><![endif]-->
+	  <param name="autoplay" value="false" />
+	  <param name="controller" value="true" />
+	  Error text.
+	</object>
+  </div>
+  <script type="text/javascript>
+    var urls = [
+    //QUICKTIME
+    ///mov
+    'http://main.wgbh.org/saybrother/programs/media/sb_0304/sb_0304_ref.mov'
+    ///streaming 15 fps
+    ,'rtsp://qtss.cc.columbia.edu/projects/ginsburg/big_math_01.mov'
+    ///24 fps
+    ,'http://qtss.cc.columbia.edu/projects/courseworks/omeally/greatest_jazz_films/sound_of_miles_davis.mov'
+    ///streaming with redirection
+    ,'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:ed067259e01962e53c0a1905c232c1ac5555a802/StreamingProxy'
+    ///streaming
+    ///16:9 dimensions
+    
+    //YouTube
+
+    //jw player
+
+    //FlowPlayer
+
+    //VIDEO tag
+
+    
+    ]
+
+
+    //tests
+    //search
+
+
+    //loading
+    {call:function(){media.SetSource(url);}
+    ,wait:media.GetDuration
+    ,event:'
+    }
+    ,
+
+
+    ,
+    //seeking
+    {call:function(){media.SetTime(30);}
+    ,wait:media.GetTime
+    ,event:'seek'
+    ,test:function(rv){return (rv >=30);}
+    ,timeout:20
+    }
+    ,
+    {call:function(){media.SetTime(1);}
+    ,wait:media.GetTime
+    ,event:'seek'
+    ,test:function(rv){return (10 > rv);}
+    ,timeout:20
+    }
+    ,
+    {call:function(){media.SetTime(10000);}
+    ,wait:media.GetTime
+    ,event:'seek'
+    ,test:function(rv){return (rv > 10);}
+    ,timeout:20
+    }
+
+  </script>
+</body>
+</html>
