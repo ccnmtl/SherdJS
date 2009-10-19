@@ -262,7 +262,7 @@ function openCitation(url,no_autoplay) {
     var asset = djangosherd.assetview.microformat.create(ann_obj.asset);
 
     var try_update = djangosherd.assetview.microformat.update(ann_obj.asset,
-   	theMovie);
+   	document.movie1);//BIG BAD ASSUMPTION of single viewer
     if (!try_update) {///HACK HACK HACK
 	obj_div.innerHTML = asset.text;
     }

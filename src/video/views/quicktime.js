@@ -172,6 +172,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		    } catch(e) {
 			//alert(e.message);
 		    }
+		    return false;
 		}
 	    };
 	    this.create = function(obj,doc) {
