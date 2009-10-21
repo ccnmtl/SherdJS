@@ -4,8 +4,6 @@ if (typeof djangosherd=='undefined'){djangosherd = {};}
 djangosherd.initAssets = function() {
     forEach(getElementsByTagAndClassName('div','asset-links'),
 	    function(asset_links) {
-		///1. read asset_obj
-		///2. insert asset_obj into obj_div as assetview
 		var obj_div = getFirstElementByTagAndClassName('div','asset-display',asset_links.parentNode);
 
 		djangosherd.assetview.html.pull(asset_links, 
@@ -259,22 +257,39 @@ function openCitation(url,no_autoplay) {
     var ann_obj = djangosherd.annotationMicroformat.read({html:current_citation});
     var obj_div = getFirstElementByTagAndClassName('div','asset-display' /*TODO:parent!*/);
 
-    ann_obj.asset.autoplay = (no_autoplay)?'false':'true';
+    if (ann_obj.asset) {
+	ann_obj.asset.autoplay = (no_autoplay)?'false':'true';
 
-    var asset = djangosherd.assetview.microformat.create(ann_obj.asset);
+	var asset = djangosherd.assetview.microformat.create(ann_obj.asset);
 
-    var try_update = djangosherd.assetview.microformat.update(ann_obj.asset,
-   	document.movie1);//BIG BAD ASSUMPTION of single viewer
-    if (!try_update) {///HACK HACK HACK
-	obj_div.innerHTML = asset.text;
+	var try_update = djangosherd.assetview.microformat.update(ann_obj.asset,
+   	    document.movie1);//BIG BAD ASSUMPTION of single viewer
+	if (!try_update) {///HACK HACK HACK
+	    obj_div.innerHTML = asset.text;
+	    if (/Trident/.test(navigator.userAgent)) {
+		///again!  just for IE.  nice IE, gentle IE
+		setTimeout(function() {
+		    //AGAIN: BIG BAD ASSUMPTION of single viewer
+		    djangosherd.assetview.microformat.update(ann_obj.asset,
+   							     document.movie1);
+		},100);
+	    }
+	}
+	djangosherd.assetview.html.put(document.getElementById(asset.htmlID));
+	var ann_data = ann_obj.annotations[0];
+	//VITAL code
+	if (ann_data.duration) movDuration = ann_data.duration;
+	if (ann_data.timeScale) movscale = ann_data.timeScale;
+	giveUp();
+	prepareGrabber();
+	refresh_mymovie(ann_data.startCode,ann_data.endCode,'Clip');
+    } else {
+	try {
+	    giveUp();
+	} catch(e) {
+	    alert(e);
+	}
+	obj_div.innerHTML = '';
     }
-    djangosherd.assetview.html.put(document.getElementById(asset.htmlID));
-    var ann_data = ann_obj.annotations[0];
-    //VITAL code
-    if (ann_data.duration) movDuration = ann_data.duration;
-    if (ann_data.timeScale) movscale = ann_data.timeScale;
-    giveUp();
-    prepareGrabber();
-    refresh_mymovie(ann_data.startCode,ann_data.endCode,'Clip');
     document.location = '#annotation=annotation'+id;
 }
