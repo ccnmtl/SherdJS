@@ -126,18 +126,20 @@ function DjangoSherd_Asset_Config() {
     }
 
 }
-function DjangoSherd_Project_Config() {
+function DjangoSherd_Project_Config(no_open_from_hash) {
     var ds = djangosherd;
     ds.assetview = new Sherd.Video.QuickTime();//TODO: youtube|qt
     ds.assetview.id = function(){return 'movie1';}
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     //ds.clipform = new DjangoSherd_ClipForm();//see below
     //djangosherd.clipstrip = new ClipStrip();
-    var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
-    if ( annotation_to_open != null) {
-	addLoadEvent(function() {
-	    openCitation(annotation_to_open[1]+'/',true);
-	});
+    if (!no_open_from_hash) {
+	var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
+	if ( annotation_to_open != null) {
+	    addLoadEvent(function() {
+		openCitation(annotation_to_open[1]+'/',true);
+	    });
+	}
     }
 }
 
