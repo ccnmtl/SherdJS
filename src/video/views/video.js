@@ -140,13 +140,19 @@ if (!Sherd.Video.Base) {
 	}
 	this.setState = function(obj) {
 	    if (typeof obj=='object') {
-		if (typeof obj.start=='number') {
-		    ///VITAL
+		///VITAL
+		try {
 		    giveUp();
-		    refresh_mymovie(obj.start, obj.start, 'Clip');
 		    prepareGrabber();
-		}
-		//??TODO: handle end as a stop point
+		    if (obj.duration) movDuration = obj.duration; 
+		    if (obj.timeScale) movscale = obj.timeScale; 
+		    
+		    if (obj.startCode && obj.endCode) {
+			refresh_mymovie(obj.startCode, obj.endCode, 'Clip');
+		    } else if (typeof obj.start=='number') {
+			refresh_mymovie(obj.start, obj.start, 'Clip');
+		    }
+		}catch(e){/*maybe no movie?*/}
 	    }
 	}
 	///END VITAL-specific

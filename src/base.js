@@ -8,9 +8,17 @@ function hasAttr(obj,key) {
 	return (typeof(obj[key]) != 'undefined');
     } catch(e) {return false;}
 }
-
+var new_id = 0;
     Sherd.Base = {
 	'hasAttr':hasAttr
+	,'newID':function(prefix) {
+	    prefix = prefix||'autogen';
+	    var new_id = 1;
+	    while (document.getElementById(prefix+new_id)!=null) {
+		new_id = Math.floor(Math.random()*10000);
+	    }
+	    return prefix+new_id;
+	}
 	,'log':function() {
 	    try{window.console.log(arguments);}
 	    catch(e) {
@@ -74,11 +82,7 @@ function hasAttr(obj,key) {
 	    this.id = function() {
 		var _dom = this.get();
 		if (!_dom.id) {
-		    var new_id = 1;
-		    while (!document.getElementById(this.idPrefix()+new_id)) {
-			new_id = Math.floor(Math.random()*10000);
-		    }
-		    _dom.id = this.idPrefix()+new_id;
+		    _dom.id = Sherd.Base.newID(this.idPrefix());
 		}
 		return _dom.id;
 	    }

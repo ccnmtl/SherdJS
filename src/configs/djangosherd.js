@@ -64,10 +64,7 @@ function DjangoSherd_Asset_Config() {
 		obj = evalJSON(orig_annotation_data.getAttribute('data-annotation'));
 	    }catch(e){/*non-valid json?*/}
 	    if (ds.clipform.setState(obj)) {//true on success
-		try {
-		    ///CHOPPING BLOCK -> assetview
-		    refresh_mymovie(obj.startCode,obj.endCode,'Clip');//autoplays
-		}catch(e) {/*eh, nevermind*/}
+		ds.assetview.setState(obj);
 	    }
 	} else {
 	    var annotation_query = ds.clipform.queryformat.find(document.location.hash);
@@ -84,7 +81,6 @@ function DjangoSherd_Asset_Config() {
 	connect(clip_tab,'onclick',function(evt){
 	    var view_state = ds.assetview.getState();
 	    //state unmanipulated
-	    console.log(ds.clipform.getState());
 	    if (view_state['default']) {
 		if (typeof ds.assetview.play=='function') {
 		    ds.assetview.play();
@@ -93,9 +89,7 @@ function DjangoSherd_Asset_Config() {
 	    //state already manipulated, so bring it in.
 	    //TODO: probably not setState here--instead send it to something like .annotate() which'll call getState()
 	    else if (ds.clipform.getState()['default']) {
-		console.log(view_state);
 		ds.clipform.storage.update(view_state);
-		console.log('ih');
 	    }
 	});
     });
@@ -241,14 +235,15 @@ function openCitation(url,no_autoplay) {
     var ann_obj = djangosherd.annotationMicroformat.read({html:current_citation});
     var obj_div = getFirstElementByTagAndClassName('div','asset-display' /*TODO:parent!*/);
 
-    ///CHOPPING BLOCK: push to quicktime view
+
     if (ann_obj.asset) {
-	ann_obj.asset.autoplay = (no_autoplay)?'false':'true';
+	ann_obj.asset.autoplay = (no_autoplay)?'false':'true'; //***
 
 	var asset = djangosherd.assetview.microformat.create(ann_obj.asset);
 
+	///CHOPPING BLOCK: push to quicktime view
 	var try_update = djangosherd.assetview.microformat.update(ann_obj.asset,
-   	    document.movie1);//BIG BAD ASSUMPTION of single viewer
+   	    document.movie1);//BIG BAD ASSUMPTION of single viewer //***
 	if (!try_update) {///HACK HACK HACK
 	    obj_div.innerHTML = asset.text;
 	    if (/Trident/.test(navigator.userAgent)) {
@@ -260,21 +255,10 @@ function openCitation(url,no_autoplay) {
 		},100);
 	    }
 	}
-	djangosherd.assetview.html.put(document.getElementById(asset.htmlID));
 	var ann_data = ann_obj.annotations[0];
-	//VITAL code
-	if (ann_data.duration) movDuration = ann_data.duration;
-	if (ann_data.timeScale) movscale = ann_data.timeScale;
-	giveUp();
-	prepareGrabber();
-	refresh_mymovie(ann_data.startCode,ann_data.endCode,'Clip');
+	djangosherd.assetview.setState(ann_data);
     } else {
-	try {
-	    giveUp();
-	} catch(e) {
-	    alert(e);
-	}
-	obj_div.innerHTML = '';
+	djangosherd.assetview.html.remove();
     }
     document.location = '#annotation=annotation'+id;
 }

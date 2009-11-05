@@ -28,6 +28,26 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		return (/(rtsp:|\.mov$|\.mp4$|\.qtl$)/.test(asset_obj.url))?'quicktime':false;
 	    }
 	}
+	///OVERRIDE  ??hack?
+	this.html.remove = function(part) {
+	    try {
+		giveUp();//VITAL
+	    }catch(e){alert(e);}
+	    var par = self.components.wrapper.parentNode;
+	    par.innerHTML = '';
+	}
+	this.html.put = function(dom,part) {
+	    if (part) {
+		self.components[part] = dom;
+	    } else {
+		self.components['wrapper'] = dom;
+		var media = dom.getElementsByTagName('object');
+		if (media) {
+		    self.components['media'] = media.item(0);
+		}
+	    }
+	}
+
 	this.media = {};
 	this.media._updateMovScale = function() {
 	    self.components.media = document[self.id()];
@@ -161,6 +181,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		return found;
 	    };
 	    this.update = function(obj,html_dom) {
+		self.components.media = document[self.id()]; //VITAL: theMovie
 		//HACK: TOTALLY UNFINISHED (see config/djangosherd.js openCitation())
 		if (html_dom != null) {
 		    try {
@@ -177,6 +198,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		}
 	    };
 	    this.create = function(obj,doc) {
+		var wrapperID = Sherd.Base.newID('quicktime-wrapper');
 		var id = (typeof self.id=='function')?self.id():Sherd.Base.newID('quicktime');
 		var opt = {url:''
 			   ,width:320
@@ -193,12 +215,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		}
 		opt.href= '';//for poster support
 		opt.autohref= '';//for poster support
-		var extra_IE = '';
-		/*///disabling for now
-		if (!document.getElementById('qt_event_source')) {
-		    ///See http://developer.apple.com/documentation/quicktime/Conceptual/QTScripting_JavaScript/bQTScripting_JavaScri_Document/QuickTimeandJavaScri.html#//apple_ref/doc/uid/TP40001526-CH001-DontLinkElementID_10
-		    extra_IE = '<object id="qt_event_source" classid="clsid:CB927D12-4FF7-4a9e-A169-56E4B8A75598" codebase="http://www.apple.com/qtactivex/qtplugin.cab#version=7,2,1,0" ></object>';
-		}*/
 		if (typeof opt.poster == 'string' 
 		    && !(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
 			 || /Linux/.test(navigator.userAgent)
@@ -213,9 +229,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		}
 		//we need to retest where the href usecase is needed
 		//since safari breaks
-		return {htmlID:id
+		return {htmlID:wrapperID
+			,mediaID:id
 			,object:obj
-			,text:'<!--[if IE]>'+extra_IE+'<object id="'+id+'" \
+			,text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper"><!--[if IE]><object id="'+id+'" \
                          width="'+opt.width+'" height="'+opt.height+'" \
                          style="behavior:url(#qt_event_source)"  \
 	                 codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
@@ -231,9 +248,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 	                 <param name="enablejavascript" value="true" /> \
 	                 <param name="autoplay" value="'+opt.autoplay+'" /> \
 	                 '+opt.extra+'\
-	                 '+opt.errortext+'</object>'
+	                 '+opt.errortext+'</object></div>'
 			/*
-			'<!--[if IE]>'+extra_IE+'<object id="'+id+'" \
+			'<!--[if IE]><object id="'+id+'" \
                          width="'+opt.width+'" height="'+opt.height+'" \
                          style="behavior:url(#qt_event_source)"  \
 	                 codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
@@ -253,7 +270,12 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		       };
 	    };
 	    this.components = function(html_dom) {
-		return {'media':html_dom};
+		var rv = {'wrapper':html_dom};
+		var media = html_dom.getElementsByTagName('object');
+		if (media.length) {
+		    rv.media = media.item(0);
+		}
+		return rv;
 	    };
 	}
 	this.attachMicroformat(new _default_QTformat());
