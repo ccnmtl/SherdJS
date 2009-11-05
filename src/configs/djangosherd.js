@@ -9,20 +9,31 @@ djangosherd.initAssets = function() {
 		djangosherd.assetview.html.pull(asset_links, 
 						djangosherd.assetMicroFormat);
 		djangosherd.assetview.html.push(obj_div);
-		/*
-		var asset_obj = djangosherd.assetMicroFormat.read({html:asset_links});
-
-		djangosherd.assetview.html.put(obj_div, asset_obj);
-
-		//TODO: fix along with better API
-		var asset = djangosherd.assetview.microformat.create(asset_obj);
-		obj_div.innerHTML = asset.text;
-		djangosherd.assetview.html.put(document.getElementById(asset.htmlID));
-               */
 	    });
 }
 
 function DjangoSherd_Asset_Config() {
+    ///: currently (obv) assumes one asset
+    ///: editable derives from user.is_authenticated (true for all), and any particular annotation
+
+    ///# Find assets. initAssets()
+    ///# Editable? (i.e. note-form?)
+    ///#   What type of asset is it? ***
+    ///#   load asset into note-form
+    ///#   load asset for play
+    ///# else:
+    ///#   look for asset in hash
+    ///#     load asset for play
+    ///# Setup Noteform (for annotating asset)
+    ///#   video: on field change, 
+    ///#     update code; (connect AND InMovieTime wrappers)
+    ///#     update view
+
+    ///: More meta (what should stay here)
+    ///# init sources with their format-understanders (and config on when to update or with a rescan-hook?)
+    ///# init controller for presentation (one at a time, right?) ?with starting destination
+    ///# new information?  who cares? (sources and listeners: observer pattern sounds like enough)
+
     var ds = djangosherd;
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
@@ -30,28 +41,22 @@ function DjangoSherd_Asset_Config() {
     ds.notelist = new DjangoSherd_NoteList(); //storage
     ds.assetview = new Sherd.Video.QuickTime();//TODO: youtube|qt
     ds.assetview.id = function(){return 'movie1';}
-    //ds.clipform = new DjangoSherd_ClipForm();//see below
+
     ds.noteform = new DjangoSherd_NoteForm();//see below
     //djangosherd.clipstrip = new ClipStrip();
 
-    //ds.clipform.attachView(ds.assetview);
-    //ds.clipform.addStorage(ds.noteform);
-    function DjangoSherd_UpdateHack() {
-	var obj = {
-	    startCode:document.forms['videonoteform'].clipBegin.value,
-	    endCode:document.forms['videonoteform'].clipEnd.value,
-	    duration:theMovie.GetDuration(),
-	    timeScale:movscale
-	};
-	obj.start = ds.assetview.codeToSeconds(obj.startCode);
-	obj.end = ds.assetview.codeToSeconds(obj.endCode);
-	ds.noteform.storage.update(obj);
-    }
+    ds.clipform = new DjangoSherd_ClipForm();//see vitalwrapper.js
+    ds.clipform.attachView(ds.assetview);
+    ds.clipform.addStorage(ds.noteform);
+
     addLoadEvent(function() {
 	ds.initAssets();
 	//ds.clipstrip.html.put($('clipstrip'));
 	ds.noteform.html.put($('clip-form'));
-	//ds.clipform.html.put($('clipping-form'));
+
+	ds.clipform.html.push('videonoteform'); //write videoform
+	ds.clipform.initialize(); //build listeners
+
 	var orig_annotation_data = $('original-annotation');
 	if (orig_annotation_data != null) {
 	    try {
@@ -75,23 +80,8 @@ function DjangoSherd_Asset_Config() {
 	    }
 
 	}
+	ds.assetview.html.put(theMovie,'media'); //assumes it's been built by now. (from above if..else..)
 
-	connect(document.forms['videonoteform'].clipBegin,'onchange',function() {
-	    var obj = {};
-	    obj.start = ds.assetview.codeToSeconds(obj.startCode);
-	    obj.end = ds.assetview.codeToSeconds(obj.endCode);
-	    if (obj.end < obj.start) 
-		document.forms['videonoteform'].clipEnd.value = document.forms['videonoteform'].clipBegin.value;
-	    DjangoSherd_UpdateHack();
-	});
-	connect(document.forms['videonoteform'].clipEnd,'onchange',function() {
-	    var obj = {};
-	    obj.start = ds.assetview.codeToSeconds(obj.startCode);
-	    obj.end = ds.assetview.codeToSeconds(obj.endCode);
-	    if (obj.end < obj.start) 
-		document.forms['videonoteform'].clipStart.value = document.forms['videonoteform'].clipEnd.value;
-	    DjangoSherd_UpdateHack();
-	});
 	////Connect tabs to VITAL functions
 	var clip_tab = ($('Clip'))?$('Clip'):$('EditClip');
 	connect(clip_tab,'onclick',function(evt){
@@ -111,20 +101,12 @@ function DjangoSherd_Asset_Config() {
 	});
 	connect('Item','onclick',initClipStrip);
     });
-    //DECORATORS
-    var old_InMovieTime = InMovieTime;
-    var old_OutMovieTime = OutMovieTime;
-    InMovieTime = function() {
-	old_InMovieTime.apply(window,arguments);
-	DjangoSherd_UpdateHack();
-    }
-    OutMovieTime = function() {
-	old_OutMovieTime.apply(window,arguments);
-	DjangoSherd_UpdateHack();
-    }
-
 }
 function DjangoSherd_Project_Config(no_open_from_hash) {
+    ///# load viewers
+    ///# load assetfinders
+    ///# if (no_open_from_hash and hash)
+    ///#   openCitation(annotation)
     var ds = djangosherd;
     ds.assetview = new Sherd.Video.QuickTime();//TODO: youtube|qt
     ds.assetview.id = function(){return 'movie1';}
@@ -203,13 +185,6 @@ function DjangoSherd_AnnotationMicroFormat() {
 function DjangoSherd_NoteList() {
 }
 
-function DjangoSherd_ClipForm() {
-    var self = this;
-    Sherd.Video.Annotators.FormFragment.apply(this,arguments);//inherit
-
-    //TODO: when create-clip is tabbed to, we also need to gettime/pause
-}
-
 
 
 function DjangoSherd_NoteForm() {
@@ -247,6 +222,17 @@ function currentUID() {
 
 var current_citation = false;
 function openCitation(url,no_autoplay) {
+    ///# where is my destination?
+    ///# is there an annotation/asset already there?
+    ///#     if same: leave alone
+    ///#     else: 
+    ///#       unload oldasset, 
+    ///#       load asset
+    ///# else: load asset
+    ///# is annotation not-present?
+    ///#    load annotation (with options (e.g. autoplay)
+    ///# update local views
+    ///#    e.g. location.hash
     var id = url.match(/(\d+)\/$/).pop();
 
     if (current_citation) removeElementClass(current_citation,'active-annotation');

@@ -30,6 +30,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 	}
 	this.media = {};
 	this.media._updateMovScale = function() {
+	    self.components.media = document[self.id()];
 	    self.media.movscale = self.components.media.GetTimeScale();
 	}
 	this.media.time = function() {
