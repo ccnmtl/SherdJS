@@ -11,6 +11,9 @@
 ///5. (also switch InMovieTime(),OutMovieTime() to listeners)
 
 function DjangoSherd_ClipForm() {
+    var secondsToCode = Sherd.Video.secondsToCode;
+    var codeToSeconds = Sherd.Video.codeToSeconds;
+    var nofraction = true;
     var self = this;
     //Sherd.Video.Annotators.FormFragment.apply(this,arguments);//inherit
     Sherd.Base.AssetView.apply(this,arguments);//inherit
@@ -41,19 +44,48 @@ function DjangoSherd_ClipForm() {
     this.getState = function() {
 	var duration = self.targetview.media.duration();
 	var timeScale = self.targetview.media.movscale;
+	
 	var obj = {
-	    startCode:self.components.startField.value,
-	    endCode:self.components.endField.value,
-	    duration:duration,
-	    timeScale:timeScale
+	    'startCode':self.components.startField.value,
+	    'endCode':self.components.endField.value,
+	    'duration':duration,
+	    'timeScale':timeScale
 	};
-	obj.start = self.targetview.codeToSeconds(obj.startCode);
-	obj.end = self.targetview.codeToSeconds(obj.endCode);
+	obj.start = codeToSeconds(obj.startCode);
+	obj.end = codeToSeconds(obj.endCode);
+	obj['default'] = (obj.start==0 && obj.end==0);
 	return obj;
     }
 
+    this.setState = function(obj) {
+	if (typeof obj=='object') {
+	    var start=false;
+	    if (obj.startCode) {
+		start = self.components.startField.value=obj.startCode;
+	    } else if (obj.start) {
+		start = self.components.startField.value=secondsToCode(obj.start,nofraction);
+	    }
+	    if (obj.duration) movDuration = obj.duration;
+	    if (obj.timeScale) movscale = obj.timeScale;
+	    if (obj.endCode) {
+		self.components.endField.value=obj.endCode;
+	    } else if (obj.end) {
+		self.components.endField.value=secondsToCode(obj.end,nofraction);
+	    } else if (start) {
+		self.components.endField.value=start;
+	    }
+	    if (start) {//clipstrip
+		try {  formToClip();  }catch(e){/*eh, nevermind*/}
+	    }
+	    return true;
+	}
+    }
+
     this.storage = {
-	update: function(obj) {
+	update: function(obj,just_downstream) {
+	    if (!just_downstream) {
+		self.setState(obj);
+	    }
 	    for (var i=0;i<self.targetstorage.length;i++) {
 		self.targetstorage[i].storage.update(obj);
 	    }
@@ -65,12 +97,12 @@ function DjangoSherd_ClipForm() {
 	connect(self.components.startButton,'onclick',function(evt) {
 	    InMovieTime(); //embedded assumption of forms['videonoteform']
 	    var obj = self.getState();
-	    self.storage.update(obj);
+	    self.storage.update(obj,true);
 	});
 	connect(self.components.endButton,'onclick',function(evt) {
 	    OutMovieTime(); //embedded assumption of forms['videonoteform']
 	    var obj = self.getState();
-	    self.storage.update(obj);
+	    self.storage.update(obj,true);
 
 	});
 	connect(self.components.startField,'onchange',function(evt) {
@@ -80,7 +112,7 @@ function DjangoSherd_ClipForm() {
 		obj.endCode = obj.startCode;
 		self.components.endField.value = obj.startCode;//HTML
 	    }
-	    self.storage.update(obj);
+	    self.storage.update(obj,true);
 	});
 	connect(self.components.endField,'onchange',function(evt) {
 	    var obj = self.getState();
@@ -89,12 +121,29 @@ function DjangoSherd_ClipForm() {
 		obj.startCode = obj.endCode;
 		self.components.startField.value = obj.endCode;//HTML
 	    }
-	    self.storage.update(obj);
+	    self.storage.update(obj,true);
 	});
 	
     }
 
-    //1. update form field
+    this.queryformat = {
+	create:function(obj){return ''},
+	find:function(str){
+	    var start_point=String(str).match(/start=([.\d]+)/);
+	    if (start_point != null) {
+		var start = Number(start_point[1]);
+		if (!isNaN(start)) {
+		    return [{ start:start }];
+		}
+	    }
+	    return [];
+	},
+	read:function(found_obj){
+	    found_obj.startCode = secondsToCode(found_obj.start,nofraction);
+	    return found_obj;
+	}
+    }
+
     this.microformat = {
 	create:function(obj) {
 	    var htmlID = 'vitalcrap1';

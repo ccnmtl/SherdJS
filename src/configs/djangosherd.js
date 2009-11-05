@@ -38,16 +38,16 @@ function DjangoSherd_Asset_Config() {
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
 
-    ds.notelist = new DjangoSherd_NoteList(); //storage
+    //ds.notelist = new DjangoSherd_NoteList(); //storage
     ds.assetview = new Sherd.Video.QuickTime();//TODO: youtube|qt
-    ds.assetview.id = function(){return 'movie1';}
+    ds.assetview.id = function(){return 'movie1';}//hackity-hack
 
     ds.noteform = new DjangoSherd_NoteForm();//see below
     //djangosherd.clipstrip = new ClipStrip();
 
     ds.clipform = new DjangoSherd_ClipForm();//see vitalwrapper.js
-    ds.clipform.attachView(ds.assetview);
-    ds.clipform.addStorage(ds.noteform);
+    ds.clipform.attachView(ds.assetview);//to query current state.
+    ds.clipform.addStorage(ds.noteform);//will get updated when clipform does
 
     addLoadEvent(function() {
 	ds.initAssets();
@@ -59,47 +59,45 @@ function DjangoSherd_Asset_Config() {
 
 	var orig_annotation_data = $('original-annotation');
 	if (orig_annotation_data != null) {
+	    var obj = false;
 	    try {
-		var obj = evalJSON($('original-annotation').getAttribute('data-annotation'));
-		if (typeof obj=='object' && obj.startCode) {
-		    document.forms['videonoteform'].clipBegin.value=obj.startCode;
-		    document.forms['videonoteform'].clipEnd.value=obj.endCode;
-		    if (obj.duration) movDuration = obj.duration;
-		    if (obj.timeScale) movscale = obj.timeScale;
-		    formToClip();
-		    refresh_mymovie(obj.startCode,obj.endCode,'Clip');
-		}
-	    } catch(e) {/*eh, nevermind*/}
-	} else {
-	    var start_point = String(document.location.hash).match(/start=(\d+)/);
-	    if ( start_point != null) {
-		var start = ds.assetview.secondsToCode(start_point[1]);
-		giveUp();
-		refresh_mymovie(start, start, 'Clip');
-		prepareGrabber();
+		obj = evalJSON(orig_annotation_data.getAttribute('data-annotation'));
+	    }catch(e){/*non-valid json?*/}
+	    if (ds.clipform.setState(obj)) {//true on success
+		try {
+		    ///CHOPPING BLOCK -> assetview
+		    refresh_mymovie(obj.startCode,obj.endCode,'Clip');//autoplays
+		}catch(e) {/*eh, nevermind*/}
 	    }
-
+	} else {
+	    var annotation_query = ds.clipform.queryformat.find(document.location.hash);
+	    if (annotation_query.length) {
+		ds.assetview.setState(annotation_query[0]);
+	    }
 	}
+	//CHOPPING BLOCK ?better way to source it?
+	//theMovie is set in vital's prepareGrabber() which is run onload or explicitly
 	ds.assetview.html.put(theMovie,'media'); //assumes it's been built by now. (from above if..else..)
 
 	////Connect tabs to VITAL functions
 	var clip_tab = ($('Clip'))?$('Clip'):$('EditClip');
 	connect(clip_tab,'onclick',function(evt){
-	    //if  t>0 and current value is zero(d), then set (and pause)
-	    
-	    if ($('currtime').innerHTML=='00:00:00') {
-		var mimetype = theMovie.GetMIMEType();
-		if (/image/.test(mimetype)) {
-		    theMovie.SetURL(theMovie.GetHREF());
-		} else {
-		    theMovie.Play();
+	    var view_state = ds.assetview.getState();
+	    //state unmanipulated
+	    console.log(ds.clipform.getState());
+	    if (view_state['default']) {
+		if (typeof ds.assetview.play=='function') {
+		    ds.assetview.play();
 		}
-	    } else if (document.forms['videonoteform'].clipBegin.value == '00:00:00') {
-		InMovieTime();
+	    } 
+	    //state already manipulated, so bring it in.
+	    //TODO: probably not setState here--instead send it to something like .annotate() which'll call getState()
+	    else if (ds.clipform.getState()['default']) {
+		console.log(view_state);
+		ds.clipform.storage.update(view_state);
+		console.log('ih');
 	    }
-	    initClipStrip();
 	});
-	connect('Item','onclick',initClipStrip);
     });
 }
 function DjangoSherd_Project_Config(no_open_from_hash) {
@@ -111,7 +109,6 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
     ds.assetview = new Sherd.Video.QuickTime();//TODO: youtube|qt
     ds.assetview.id = function(){return 'movie1';}
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
-    //ds.clipform = new DjangoSherd_ClipForm();//see below
     //djangosherd.clipstrip = new ClipStrip();
     if (!no_open_from_hash) {
 	var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
@@ -211,6 +208,7 @@ function DjangoSherd_NoteForm() {
 **********************/
 
 //carryover from vital--should return whether we're editing a clip or not
+//used for clipstrip setting (see initClipStrip() )
 function currentUID() {
     try {
 	var clip_tab = ($('Clip'))?$('Clip'):$('EditClip');
@@ -243,6 +241,7 @@ function openCitation(url,no_autoplay) {
     var ann_obj = djangosherd.annotationMicroformat.read({html:current_citation});
     var obj_div = getFirstElementByTagAndClassName('div','asset-display' /*TODO:parent!*/);
 
+    ///CHOPPING BLOCK: push to quicktime view
     if (ann_obj.asset) {
 	ann_obj.asset.autoplay = (no_autoplay)?'false':'true';
 

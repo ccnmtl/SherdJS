@@ -10,9 +10,7 @@
 if (typeof Sherd == 'undefined') {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.Helpers) {
-    Sherd.Video.Helpers = function() {
-	//helper functions
-	this.secondsToCode = function(seconds,nofraction) {
+    Sherd.Video.secondsToCode = function(seconds,nofraction) {
 	    //second argument is the timecode object to be modified, otherwise it'll create one
 	    var tc = {};
 	    intTime = Math.floor(seconds);
@@ -31,9 +29,9 @@ if (!Sherd.Video.Helpers) {
 		suffix = ':'+((front<10)?'0'+front:front)+ '.' + back;
 	    }
 	    return tc.hr + ":" + tc.min + ":" + tc.sec + suffix;
-	}
-	
-	this.codeToSeconds = function(code) {
+    }
+
+    Sherd.Video.codeToSeconds = function(code) {
 	    var mvscale = 1;
 	    //takes a timecode like '0:01:36:00.0' and turns it into # seconds
 	    var t = code.split(':');
@@ -50,7 +48,11 @@ if (!Sherd.Video.Helpers) {
 		x=parseInt(t.pop(),10);
 	    }
 	    return seconds;
-	}
+    }
+    Sherd.Video.Helpers = function() {
+	//helper functions
+	this.secondsToCode = Sherd.Video.secondsToCode;
+	this.codeToSeconds = Sherd.Video.codeToSeconds;
     }
 }
 if (!Sherd.Video.Base) {
@@ -114,6 +116,40 @@ if (!Sherd.Video.Base) {
 	    find:function(html_dom){return [{html:html_dom}]},
 	    read:function(found_obj){var obj;return obj;}
 	};
+
+
+	///BEGIN VITAL assumption -->relegate to quicktime.js when smarter
+	this.play = function() {
+	    if (theMovie) {
+		var mimetype = theMovie.GetMIMEType();
+		if (/image/.test(mimetype)) {
+		    theMovie.SetURL(theMovie.GetHREF());
+		} else {
+		    theMovie.Play();
+		}
+	    }
+	}
+	this.getState = function() {
+	    var state = {
+		'start':self.media.time()
+	    };
+	    state['default'] = (!state.start);
+	    state['duration'] = self.media.duration();
+	    state['timeScale'] = self.media.movscale;//correct after time()/duration() called
+	    return state;
+	}
+	this.setState = function(obj) {
+	    if (typeof obj=='object') {
+		if (typeof obj.start=='number') {
+		    ///VITAL
+		    giveUp();
+		    refresh_mymovie(obj.start, obj.start, 'Clip');
+		    prepareGrabber();
+		}
+		//??TODO: handle end as a stop point
+	    }
+	}
+	///END VITAL-specific
 
 	this.get = function(){return self.components['media'];}
 
