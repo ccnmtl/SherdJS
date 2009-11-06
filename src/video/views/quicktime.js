@@ -201,7 +201,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		if (create_obj && create_obj.text) {
 		    html_dom.innerHTML = create_obj.text;
 		    var top = document.getElementById(create_obj.htmlID);
-		    /*///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
+		    /*
+		    ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
 		    if (/Trident/.test(navigator.userAgent)) {
 			///again!  just for IE.  nice IE, gentle IE
 			setTimeout(function() {

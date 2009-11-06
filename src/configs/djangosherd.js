@@ -120,7 +120,7 @@ function DjangoSherd_AssetMicroFormat() {
 	    //test on poster.width is to make sure it is loaded/loadable
 	    /// e.g. if poster.src gives a 500 error, then Quicktime will super-barf
 	    ///      and the video becomes comletely inaccessible
-	    rv.poster = ((poster && poster.width) ? poster.src : '/site_media/js/sherdjs/media/images/poster.gif');
+	    rv.poster = ((poster && poster.width) ? poster.src : '/site_media/js/sherdjs/media/images/click_to_play.jpg');
 	    return update(rv,{type:'quicktime'
 			      ,url:link.href
 			      ,quicktime:link.href
@@ -233,7 +233,9 @@ function openCitation(url,no_autoplay) {
 
     if (ann_obj.asset) {
 	ann_obj.asset.autoplay = (no_autoplay)?'false':'true'; //***
-
+	if (!no_autoplay) {//"please wait, loading" image
+	    ann_obj.asset.poster = '/site_media/js/sherdjs/media/images/poster.gif';
+	}
 	djangosherd.assetview.html.push(obj_div,{asset:ann_obj.asset});
 	/*
 	var asset_html = djangosherd.assetview.microformat.create(ann_obj.asset);
