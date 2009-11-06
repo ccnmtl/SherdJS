@@ -38,7 +38,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 	}
 	this.html.put = function(dom,part) {
 	    if (part) {
-		self.components[part] = dom;
+		self.components = self.microformat.components(dom);
 	    } else {
 		self.components['wrapper'] = dom;
 		var media = dom.getElementsByTagName('object');
@@ -142,14 +142,16 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 	    this.type = function() {return 'quicktime';};
 	    this.read = function(found_obj) {
 		//return asset object (with url:src, dimensions, etc)
-		var obj = {url:''//defaults
-			   ,width:320
-			   ,height:260
-			   ,autoplay:'false'
-			   ,controller:'true'
-			   ,errortext:'Error text.'
-			   ,type:'video/quicktime'
-			  };
+		var obj = {
+		    url:'',//defaults
+		    quicktime:'',
+		    width:320,
+		    height:260,
+		    autoplay:'false',
+		    controller:'true',
+		    errortext:'Error text.',
+		    type:'video/quicktime',
+		};
 		var params = found_obj.html.getElementsByTagName('param');
 		for (var i=0;i<params.length;i++) {
 		    obj[params[i].getAttribute('name')] = params[i].getAttribute('value');
@@ -160,6 +162,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		} else {
 		    obj.url = found_obj.html.getAttribute('data');
 		}
+		obj.quicktime = obj.url;
 		if (Number(found_obj.html.width)) obj.width=Number(found_obj.html.width);
 		if (Number(found_obj.html.height)) obj.height=Number(found_obj.html.height);
 		return obj;
@@ -181,22 +184,34 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		return found;
 	    };
 	    this.update = function(obj,html_dom) {
-		self.components.media = document[self.id()]; //VITAL: theMovie
-		//HACK: TOTALLY UNFINISHED (see config/djangosherd.js openCitation())
-		if (html_dom != null) {
+		///1. test if something exists in components now (else return false)
+		///2. assert( obj ~= from_obj) (else return false)
+		///3. 
+		if (!obj.quicktime) {return false;}
+		var compo = self.components || self.microformat.components(html_dom);
+		if (compo && compo.media && compo.media != null) {
 		    try {
-			if (obj.url) {
-			    html_dom.SetURL(obj.url);
-			} else {
-			    return false;
-			}
+			compo.media.SetURL(obj.quicktime);
 			return true;
-		    } catch(e) {
-			//alert(e.message);
-		    }
-		    return false;
+		    } catch(e) { /*alert(e.message);*/ }
 		}
+		return false;
 	    };
+	    this.write = function(create_obj,html_dom) {
+		if (create_obj && create_obj.text) {
+		    html_dom.innerHTML = create_obj.text;
+		    var top = document.getElementById(create_obj.htmlID);
+		    /*///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
+		    if (/Trident/.test(navigator.userAgent)) {
+			///again!  just for IE.  nice IE, gentle IE
+			setTimeout(function() {
+			    //self.microformat.update(create_obj.object, top);
+			},100);
+		    }
+                    */
+		    self.components = self.microformat.components(top,create_obj);
+		}
+	    }
 	    this.create = function(obj,doc) {
 		var wrapperID = Sherd.Base.newID('quicktime-wrapper');
 		var id = (typeof self.id=='function')?self.id():Sherd.Base.newID('quicktime');
@@ -269,13 +284,20 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 	                 '+opt.errortext+'</object>'*/
 		       };
 	    };
-	    this.components = function(html_dom) {
-		var rv = {'wrapper':html_dom};
-		var media = html_dom.getElementsByTagName('object');
-		if (media.length) {
-		    rv.media = media.item(0);
-		}
-		return rv;
+	    this.components = function(html_dom,create_obj) {
+		try {
+		    var rv = {'wrapper':html_dom};
+		    if (create_obj) {
+			rv.media = document[create_obj.mediaID];
+		    } else {
+			var media = html_dom.getElementsByTagName('object');
+			if (media.length) {
+			    rv.media = media.item(0);
+			}
+		    }
+		    return rv;
+		} catch(e) {}
+		return false;
 	    };
 	}
 	this.attachMicroformat(new _default_QTformat());

@@ -156,23 +156,37 @@ var new_id = 0;
 		    var mf =(optional_microformat)?optional_microformat
 			:self.microformat;
 		    ///
-		    self._asset = mf.read({html:dom_or_id});
+		    var asset = mf.read({html:dom_or_id});
 		    //FAKE!!! (for now)
 		    self.events.signal(self,'asset.update');
+
+		    return asset;
 		}
-		this.html.push = function(dom_or_id, optional_microformat) {
+		this.html.push = function(dom_or_id, options) {
+		    options = options || {};
+		    options.microformat = options.microformat || self.microformat;
+		    options.asset = options.asset || self._asset;
 		    ///argument resolution
 		    if (typeof dom_or_id=='string') {
 			dom_or_id=document.getElementById(dom_or_id);
 		    }
-		    var mf =(optional_microformat)?optional_microformat
-			:self.microformat;
-		    ///
-		    if (self._asset) {
-			var asset = mf.create(self._asset);
-			if (asset.text) {
-			    dom_or_id.innerHTML = asset.text;
-			    self.html.put(document.getElementById(asset.htmlID));
+		    if (options.asset) {
+			if (options.asset != self._asset) {
+			    var updated = (options.microformat.update //replace or update
+				           && 
+					   options.microformat.update(options.asset, 
+								      dom_or_id.firstChild)
+					  );
+			    if (!updated) {
+				var asset_html = options.microformat.create(options.asset);
+				if (options.microformat.write) {
+				    options.microformat.write(asset_html,dom_or_id);
+				}
+				else if (asset_html.text) {
+				    dom_or_id.innerHTML = asset_html.text;
+				    self.html.put(document.getElementById(asset_html.htmlID));
+				}
+			    }
 			}
 		    }
 		    

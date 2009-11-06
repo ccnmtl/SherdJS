@@ -6,9 +6,9 @@ djangosherd.initAssets = function() {
 	    function(asset_links) {
 		var obj_div = getFirstElementByTagAndClassName('div','asset-display',asset_links.parentNode);
 
-		djangosherd.assetview.html.pull(asset_links, 
-						djangosherd.assetMicroFormat);
-		djangosherd.assetview.html.push(obj_div);
+		var asset = djangosherd.assetview.html.pull(asset_links, 
+		                                            djangosherd.assetMicroFormat);
+		djangosherd.assetview.html.push(obj_div,{asset:asset});
 	    });
 }
 
@@ -54,7 +54,7 @@ function DjangoSherd_Asset_Config() {
 	//ds.clipstrip.html.put($('clipstrip'));
 	ds.noteform.html.put($('clip-form'));
 
-	ds.clipform.html.push('videonoteform'); //write videoform
+	ds.clipform.html.push('videonoteform',{asset:{} }); //write videoform
 	ds.clipform.initialize(); //build listeners
 
 	var orig_annotation_data = $('original-annotation');
@@ -72,11 +72,7 @@ function DjangoSherd_Asset_Config() {
 		ds.assetview.setState(annotation_query[0]);
 	    }
 	}
-	//CHOPPING BLOCK ?better way to source it?
-	//theMovie is set in vital's prepareGrabber() which is run onload or explicitly
-	ds.assetview.html.put(theMovie,'media'); //assumes it's been built by now. (from above if..else..)
-
-	////Connect tabs to VITAL functions
+	////Clicking EditClip tab starts to clipping
 	var clip_tab = ($('Clip'))?$('Clip'):$('EditClip');
 	connect(clip_tab,'onclick',function(evt){
 	    var view_state = ds.assetview.getState();
@@ -194,7 +190,6 @@ function DjangoSherd_NoteForm() {
     }
     //TODO: less barebones
     //1. send signal for updates when replaced
-    //2. ClipForm needs to listen (via Storage)
 }
 
 /**********************
@@ -239,13 +234,15 @@ function openCitation(url,no_autoplay) {
     if (ann_obj.asset) {
 	ann_obj.asset.autoplay = (no_autoplay)?'false':'true'; //***
 
-	var asset = djangosherd.assetview.microformat.create(ann_obj.asset);
+	djangosherd.assetview.html.push(obj_div,{asset:ann_obj.asset});
+	/*
+	var asset_html = djangosherd.assetview.microformat.create(ann_obj.asset);
 
 	///CHOPPING BLOCK: push to quicktime view
 	var try_update = djangosherd.assetview.microformat.update(ann_obj.asset,
    	    document.movie1);//BIG BAD ASSUMPTION of single viewer //***
 	if (!try_update) {///HACK HACK HACK
-	    obj_div.innerHTML = asset.text;
+	    obj_div.innerHTML = asset_html.text;
 	    if (/Trident/.test(navigator.userAgent)) {
 		///again!  just for IE.  nice IE, gentle IE
 		setTimeout(function() {
@@ -255,6 +252,7 @@ function openCitation(url,no_autoplay) {
 		},100);
 	    }
 	}
+        */
 	var ann_data = ann_obj.annotations[0];
 	djangosherd.assetview.setState(ann_data);
     } else {
