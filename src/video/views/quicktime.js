@@ -201,47 +201,56 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		if (create_obj && create_obj.text) {
 		    html_dom.innerHTML = create_obj.text;
 		    var top = document.getElementById(create_obj.htmlID);
-		    /*
 		    ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
-		    if (/Trident/.test(navigator.userAgent)) {
+		    if (/Trident/.test(navigator.userAgent) && create_obj.object.autoplay=='true') {
 			///again!  just for IE.  nice IE, gentle IE
 			setTimeout(function() {
-			    //self.microformat.update(create_obj.object, top);
+			    self.microformat.update(create_obj.object, top);
 			},100);
 		    }
-                    */
 		    self.components = self.microformat.components(top,create_obj);
 		}
 	    }
 	    this.create = function(obj,doc) {
 		var wrapperID = Sherd.Base.newID('quicktime-wrapper');
 		var id = (typeof self.id=='function')?self.id():Sherd.Base.newID('quicktime');
-		var opt = {url:''
-			   ,width:320
-			   ,height:260
-			   ,autoplay:'false'
-			   ,controller:'true'
-			   ,errortext:'Error text.'
-			   ,mimetype:'video/quicktime'
-			   ,poster:false
-			   ,extra:''
-			  };
+		var opt = {
+		    url:'',
+		    width:320,
+		    height:260,
+		    autoplay:'false',
+		    controller:'true',
+		    errortext:'Error text.',
+		    mimetype:'video/quicktime',
+		    poster:false,
+		    loadingposter:false,
+		    extra:''
+		};
 		for (a in opt) {
 		    if (obj[a]) opt[a] = obj[a];
 		}
 		opt.href= '';//for poster support
 		opt.autohref= '';//for poster support
-		if (typeof opt.poster == 'string' 
-		    && !(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
-			 || /Linux/.test(navigator.userAgent)
-			)) {
-		    opt.mimetype = 'image/x-quicktime';
-		    opt.extra += '<param name="href" value="'+opt.url+'" /> \
-		                 <param name="autohref" value="'+opt.autoplay+'" /> \
-		                 <param name="target" value="myself" /> \
-                                ';
-		    opt.url = opt.poster;
-		    opt.controller = 'false';
+		if (!(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
+		     || /Linux/.test(navigator.userAgent)
+		     )) {
+		    if (opt.autoplay == 'true' && opt.loadingposter) {
+			opt.mimetype = 'image/x-quicktime';
+			opt.extra += '<param name="href" value="'+opt.url+'" /> \
+		                      <param name="autohref" value="true" /> \
+		                      <param name="target" value="myself" /> \
+                                     ';
+			opt.url = opt.poster;
+			opt.controller = 'false';
+		    } else if (opt.poster) {
+			opt.mimetype = 'image/x-quicktime';
+			opt.extra += '<param name="href" value="'+opt.url+'" /> \
+		                      <param name="autohref" value="'+opt.autoplay+'" /> \
+		                      <param name="target" value="myself" /> \
+                                     ';
+			opt.url = opt.poster;
+			opt.controller = 'false';
+		    }
 		}
 		//we need to retest where the href usecase is needed
 		//since safari breaks
