@@ -50,7 +50,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 
 	this.media = {};
 	this.media._updateMovScale = function() {
-	    self.components.media = document[self.id()];
+	    if (!self.components.media) {
+		///TODO:ASSUMING id() dependency for now
+		self.components.media = self.microformat.components( false, {mediaID:self.id()} );
+	    }
 	    self.media.movscale = self.components.media.GetTimeScale();
 	}
 	this.media.time = function() {
@@ -296,10 +299,13 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 	    };
 	    this.components = function(html_dom,create_obj) {
 		try {
-		    var rv = {'wrapper':html_dom};
+		    var rv = {};
+		    if (html_dom) {
+			rv.wrapper = html_dom;
+		    }
 		    if (create_obj) {
-			rv.media = document[create_obj.mediaID];
-		    } else {
+			rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
+		    } else if (html_dom) {
 			var media = html_dom.getElementsByTagName('object');
 			if (media.length) {
 			    rv.media = media.item(0);
