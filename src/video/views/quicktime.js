@@ -304,6 +304,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 			rv.wrapper = html_dom;
 		    }
 		    if (create_obj) {
+			//the first works for everyone except safari
+			//the latter probably works everywhere except IE
 			rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
 		    } else if (html_dom) {
 			var media = html_dom.getElementsByTagName('object');
