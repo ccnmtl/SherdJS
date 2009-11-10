@@ -60,11 +60,10 @@ if (!Sherd.Video.Base) {
     var unimplemented = function(){throw Error('unimplemented');};
 
     Sherd.Video.Base = function(options){
+	var self = this;
 	Sherd.Video.Helpers.apply(this);
 	Sherd.Base.AssetView.apply(this);
 
-	var self = this;
-	this.components = {};//asset view core
 	this.options = {
 	    src:null
 	    ,start:false

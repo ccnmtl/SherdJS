@@ -1,35 +1,25 @@
 //requires MochiKit
 if (typeof djangosherd=='undefined'){djangosherd = {};}
 
-djangosherd.initAssets = function() {
+///assetview: html.pull,html.push,html.remove,setState,getState,&OPTIONAL:play 
+/// pull,push are supported by Base.AssetView, but in, turn, call:
+///  id, microformat.update, microformat.write, microformat.create
+/// when attached to clipform: media.duration,media.movscale (and probably media.time)
+
+djangosherd.findAssets = function() {
+    var assets = [];
     forEach(getElementsByTagAndClassName('div','asset-links'),
 	    function(asset_links) {
-		var obj_div = getFirstElementByTagAndClassName('div','asset-display',asset_links.parentNode);
-
-		var asset = djangosherd.assetview.html.pull(asset_links, 
-		                                            djangosherd.assetMicroFormat);
-		djangosherd.assetview.html.push(obj_div,{asset:asset});
+		assets.push( djangosherd.assetMicroFormat.read({html:asset_links}) );
 	    });
+    return assets;
 }
 
 function DjangoSherd_Asset_Config() {
     ///: currently (obv) assumes one asset
     ///: editable derives from user.is_authenticated (true for all), and any particular annotation
 
-    ///# Find assets. initAssets()
-    ///# Editable? (i.e. note-form?)
-    ///#   What type of asset is it? ***
-    ///#   load asset into note-form
-    ///#   load asset for play
-    ///# else:
-    ///#   look for asset in hash
-    ///#     load asset for play
-    ///# Setup Noteform (for annotating asset)
-    ///#   video: on field change, 
-    ///#     update code; (connect AND InMovieTime wrappers)
-    ///#     update view
-
-    ///: More meta (what should stay here)
+    ///: Meta (what should stay here)
     ///# init sources with their format-understanders (and config on when to update or with a rescan-hook?)
     ///# init controller for presentation (one at a time, right?) ?with starting destination
     ///# new information?  who cares? (sources and listeners: observer pattern sounds like enough)
@@ -38,22 +28,37 @@ function DjangoSherd_Asset_Config() {
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
 
-    //ds.notelist = new DjangoSherd_NoteList(); //storage
-    ds.assetview = new Sherd.Video.QuickTime();//TODO: youtube|qt
-    ds.assetview.id = function(){return 'movie1';}//hackity-hack
-
     ds.noteform = new DjangoSherd_NoteForm();//see below
     //djangosherd.clipstrip = new ClipStrip();
 
-    ds.clipform = new DjangoSherd_ClipForm();//see vitalwrapper.js
-    ds.clipform.attachView(ds.assetview);//to query current state.
-    ds.clipform.addStorage(ds.noteform);//will get updated when clipform does
-
     addLoadEvent(function() {
-	ds.initAssets();
-	//ds.clipstrip.html.put($('clipstrip'));
-	ds.noteform.html.put($('clip-form'));
+	///# Find assets.
+	var assets = ds.findAssets();
+	if (!assets.length) return;//no assets!
 
+	///#   What type of asset is it? ***
+	switch(assets[0].type) {
+	case 'quicktime':
+	    ds.assetview = new Sherd.Video.QuickTime();
+	    ds.assetview.id = function(){return 'movie1';}//hackity-hack
+	    ds.clipform = new DjangoSherd_ClipForm();//see vitalwrapper.js
+	    break;
+	case 'image':
+	    ds.assetview = new Sherd.Image.OpenLayers();
+	    ds.clipform = new Sherd.Image.Annotators.OpenLayers();
+	    break;
+	//TODO: youtube,etc.
+	}
+	ds.clipform.attachView(ds.assetview);//to query current state.
+	ds.clipform.addStorage(ds.noteform);//will get updated when clipform does
+
+	//ds.clipstrip.html.put($('clipstrip'));
+	var obj_div = getFirstElementByTagAndClassName('div','asset-display');//id=videoclip
+	djangosherd.assetview.html.push(obj_div,{asset: assets[0] });
+
+	///# Editable? (i.e. note-form?)
+	ds.noteform.html.put($('clip-form'));
+	///#   load asset into note-form
 	ds.clipform.html.push('videonoteform',{asset:{} }); //write videoform
 	ds.clipform.initialize(); //build listeners
 
@@ -63,14 +68,18 @@ function DjangoSherd_Asset_Config() {
 	    try {
 		obj = evalJSON(orig_annotation_data.getAttribute('data-annotation'));
 	    }catch(e){/*non-valid json?*/}
+	    ///#initialize view from clipform
 	    if (ds.clipform.setState(obj)) {//true on success
 		ds.assetview.setState(obj);
 	    }
-	} else {
+	} else if (document.location.hash) {
 	    var annotation_query = ds.clipform.queryformat.find(document.location.hash);
 	    if (annotation_query.length) {
+		///#initialize view from hash
 		ds.assetview.setState(annotation_query[0]);
 	    }
+	} else {
+	    ds.assetview.setState();
 	}
 	////Clicking EditClip tab starts to clipping
 	var clip_tab = ($('Clip'))?$('Clip'):$('EditClip');
@@ -83,8 +92,8 @@ function DjangoSherd_Asset_Config() {
 		}
 	    } 
 	    //state already manipulated, so bring it in.
-	    //TODO: probably not setState here--instead send it to something like .annotate() which'll call getState()
 	    else if (ds.clipform.getState()['default']) {
+		//TODO: probably should let clipform decide whether to do this
 		ds.clipform.storage.update(view_state);
 	    }
 	});
@@ -113,8 +122,15 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 function DjangoSherd_AssetMicroFormat() {
     this.read = function(found_obj) {
 	var rv = {};
-	var link = getFirstElementByTagAndClassName('a','assetlabel-quicktime',found_obj.html);
-	if (link) { 
+	forEach(getElementsByTagAndClassName('a','assetsource',found_obj.html),function(elt) {
+	    var reg = String(elt.className).match(/assetlabel-(\w+)/);
+	    if (reg != null) {
+		///ASSUMES: only one source for each label
+		rv[ reg[1] ] = elt.href;
+		///TODO: maybe look for some data attributes here, too, when we put them there.
+	    }
+	});
+	if (rv.quicktime) {
 	    var poster = getFirstElementByTagAndClassName('img','assetimage-poster',found_obj.html);
 	    //TODO: dereference poster url
 	    //test on poster.width is to make sure it is loaded/loadable
@@ -122,24 +138,23 @@ function DjangoSherd_AssetMicroFormat() {
 	    ///      and the video becomes comletely inaccessible
 	    rv.poster = ((poster && poster.width) ? poster.src : '/site_media/js/sherdjs/media/images/click_to_play.jpg');
 	    return update(rv,{type:'quicktime',
-			      url:link.href,
-			      quicktime:link.href,
+			      url:rv.quicktime,
 			      height:256,
 			      width:320,
 			      autoplay:'false',
 			      loadingposter:'/site_media/js/sherdjs/media/images/poster.gif'
 			     }
 			 );
+	} else if (rv.youtube) {
+	    return {type:'youtube',
+		    url:rv.youtube,
+		    height:240,
+		    width:320
+		   };
+	} else if (rv.image) {
+	    rv.type = 'image';
+	    return rv;
 	}
-	link = getFirstElementByTagAndClassName('a','assetlabel-youtube',found_obj.html);
-	if (link) { return {type:'youtube',
-			    url:link.href,
-			    youtube:link.href,
-			    height:240,
-			    width:320
-			   };
-		  }
-	
     }
 }
 
@@ -235,24 +250,7 @@ function openCitation(url,no_autoplay) {
     if (ann_obj.asset) {
 	ann_obj.asset.autoplay = (no_autoplay)?'false':'true'; //***
 	djangosherd.assetview.html.push(obj_div,{asset:ann_obj.asset});
-	/*
-	var asset_html = djangosherd.assetview.microformat.create(ann_obj.asset);
 
-	///CHOPPING BLOCK: push to quicktime view
-	var try_update = djangosherd.assetview.microformat.update(ann_obj.asset,
-   	    document.movie1);//BIG BAD ASSUMPTION of single viewer //***
-	if (!try_update) {///HACK HACK HACK
-	    obj_div.innerHTML = asset_html.text;
-	    if (/Trident/.test(navigator.userAgent)) {
-		///again!  just for IE.  nice IE, gentle IE
-		setTimeout(function() {
-		    //AGAIN: BIG BAD ASSUMPTION of single viewer
-		    djangosherd.assetview.microformat.update(ann_obj.asset,
-   							     document.movie1);
-		},100);
-	    }
-	}
-        */
 	var ann_data = ann_obj.annotations[0];
 	djangosherd.assetview.setState(ann_data);
     } else {
@@ -260,3 +258,36 @@ function openCitation(url,no_autoplay) {
     }
     document.location = '#annotation=annotation'+id;
 }
+
+
+
+/****random thoughts
+what is in the user's control context (C)?
+0. asset representations
+   - announce they want focus (but need instantiation)
+   -- arguments are asset, and representations object
+   --in place?  the presenter decides
+1. an asset presenter (in focus) (V)
+   - some assets can announce that they've gained focus
+     - e.g. when someone clicks play or starts panning/zooming, etc.
+2. an annotator (decorated on the presenter?) (C)
+   - (edit/create mode): has state about how the user is entering info
+   - connected (deeply) to the asset-type
+3. annotation representations (V):
+   - has a storage/collection source 
+   -signals selection,editing TO controller
+   -receives signal to update (from storage), possibly with args (to narrow what should be updated)
+(only for creating/editing mode)
+3. a collection (i.e. storage) of annotations (M)
+   - for default 'save' target
+
+STORIES:
+  when an asset changes in the presenter
+    (?what happens to the representations, etc)
+    (?annotators)
+  when a representation wants focus of an asset that's not in view
+   -or two assets at once?
+   --maybe one 'annotation representation' is two presenters within it?
+   --what would this do to 'focus' wrt replacement? 
+      (just because focus went somewhere doesn't mean it should be the destination of other asset loads)
+*/
