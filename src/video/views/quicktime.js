@@ -36,19 +36,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 	    var par = self.components.wrapper.parentNode;
 	    par.innerHTML = '';
 	}
-	this.html.put = function(dom,part) {
-	    self.components = self.microformat.components(dom);
-	    /*
-	    if (part) {
-	    } else {
-		self.components['wrapper'] = dom;
-		var media = dom.getElementsByTagName('object');
-		if (media) {
-		    self.components['media'] = media.item(0);
-		}
-	    }
-            */
-	}
 
 	this.media = {};
 	this.media._updateMovScale = function() {

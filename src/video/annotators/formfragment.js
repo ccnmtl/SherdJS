@@ -13,6 +13,7 @@ if (!Sherd.Video.Annotators.FormFragment) {
 	    this.media = view.media;
 	}
 
+	///TODO: get rid of this, and adapt the whole thing
 	this.html = {
 	    put: function(dom) {
 		//self.components['form'] = dom;//do we need this?

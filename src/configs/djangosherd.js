@@ -198,11 +198,7 @@ function DjangoSherd_NoteList() {
 
 function DjangoSherd_NoteForm() {
     var self = this;
-    this.html = {
-	put:function(dom) {
-	    self.components = {'form':dom};
-	}
-    };
+    Sherd.Base.DomObject.apply(this,arguments);//inherit
     this.storage = {
 	update:function(obj) {
 	    var range1 = '0';
@@ -214,9 +210,10 @@ function DjangoSherd_NoteForm() {
 		range1 = obj.x;
 		range2 = obj.y;
 	    }
-	    self.components.form['annotation-range1'].value = range1;
-	    self.components.form['annotation-range2'].value = range2;
-	    self.components.form['annotation-annotation_data'].value = serializeJSON(obj);//TODO obj!
+	    //top is the form
+	    self.components.top['annotation-range1'].value = range1;
+	    self.components.top['annotation-range2'].value = range2;
+	    self.components.top['annotation-annotation_data'].value = serializeJSON(obj);//TODO obj!
 	}
     }
     //TODO: less barebones

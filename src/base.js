@@ -95,10 +95,17 @@ var new_id = 0;
 	    this.html = {
 		get:function(part){part=(part)?part:'media';
 				   return self.components[part];},
-		put:function(dom,part){
-		    part=(part)?part:'media';
-		    self.clearListeners();
-		    self.components[part] = dom;
+		put:function(dom){
+		    //maybe should update instead of clobber,
+		    ///but we should have it clobber
+		    ///until we need it
+		    if (self.microformat && self.microformat.components) {
+			self.components = self.microformat.components(dom);
+		    } else {
+			self.components = {
+			    'top':dom
+			};
+		    }
 		},
 		remove:function(part) {
 		    part=(part)?part:'media';

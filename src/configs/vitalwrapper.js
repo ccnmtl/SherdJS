@@ -21,9 +21,6 @@ function DjangoSherd_ClipForm() {
     //TODO: when create-clip is tabbed to, we also need to gettime/pause
     this._asset = {};//to be 'true'
     this.targetstorage = [];
-    this.html.put = function(dom) {
-	self.components = self.microformat.components(dom);
-    }
 
     ///will this work?  this is all so hacky!
     this.attachView = function(view) {
