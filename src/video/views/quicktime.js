@@ -257,10 +257,18 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		}
 		//we need to retest where the href usecase is needed
 		//since safari breaks
-		return {htmlID:wrapperID
-			,mediaID:id
-			,object:obj
-			,text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper"><!--[if IE]><object id="'+id+'" \
+		return {htmlID:wrapperID,
+			mediaID:id,
+			currentTimeID:'currtime',
+			durationID:'totalcliplength',
+			clickToPlayID:'clicktoplay',
+			object:obj,
+			text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
+                        <div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div>\
+	                <span id="clicktoplay" \
+                              onclick="theMovie.SetURL(theMovie.GetHREF());hideElement(event.target)"\
+                             >Click video to play</span>\
+                        <!--[if IE]><object id="'+id+'" \
                          width="'+opt.width+'" height="'+opt.height+'" \
                          style="behavior:url(#qt_event_source)"  \
 	                 codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
