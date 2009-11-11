@@ -66,20 +66,26 @@ function DjangoSherd_Asset_Config() {
 	if (orig_annotation_data != null) {
 	    var obj = false;
 	    try {
+		///#initialize for editing
 		obj = evalJSON(orig_annotation_data.getAttribute('data-annotation'));
-	    }catch(e){/*non-valid json?*/}
-	    ///#initialize view from clipform
-	    if (ds.clipform.setState(obj)) {//true on success
+		///let assetview go first, because it might be able to give the
+		///obj hints for the clipform which should be stupider
 		ds.assetview.setState(obj);
+		ds.clipform.setState(obj);
+	    }catch(e){/*non-valid json?*/}
+	} else {
+	    var annotation_query = [];
+	    if (document.location.hash) {
+		///?why should queryformat be on clipform?  maybe local default?
+		annotation_query = ds.clipform.queryformat.find(document.location.hash);
 	    }
-	} else if (document.location.hash) {
-	    var annotation_query = ds.clipform.queryformat.find(document.location.hash);
 	    if (annotation_query.length) {
 		///#initialize view from hash
 		ds.assetview.setState(annotation_query[0]);
+	    } else {
+		///#default initialization
+		ds.assetview.setState();
 	    }
-	} else {
-	    ds.assetview.setState();
 	}
 	////Clicking EditClip tab starts to clipping
 	var clip_tab = ($('Clip'))?$('Clip'):$('EditClip');
@@ -199,8 +205,17 @@ function DjangoSherd_NoteForm() {
     };
     this.storage = {
 	update:function(obj) {
-	    self.components.form['annotation-range1'].value = obj.start;
-	    self.components.form['annotation-range2'].value = obj.end;
+	    var range1 = '0';
+	    var range2 = '0';
+	    if (obj.start) {//video
+		range1 = obj.start;
+		range2 = obj.end;
+	    } else if (obj.x) {//image
+		range1 = obj.x;
+		range2 = obj.y;
+	    }
+	    self.components.form['annotation-range1'].value = range1;
+	    self.components.form['annotation-range2'].value = range2;
 	    self.components.form['annotation-annotation_data'].value = serializeJSON(obj);//TODO obj!
 	}
     }

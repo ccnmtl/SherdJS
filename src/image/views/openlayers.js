@@ -3,15 +3,25 @@ if (!Sherd.Image) {Sherd.Image = {};}
 if (!Sherd.Image.OpenLayers) {
     Sherd.Image.OpenLayers = function() {
 	var self = this;
+	var Mochi = MochiKit.DOM;
 	Sherd.Base.AssetView.apply(this,arguments); //inherit
+
+	this.openlayers = {
+	    feature2json:function(feature) {
+		if (self.openlayers.GeoJSON) {
+		    return {'geometry':self.openlayers.GeoJSON.extract.geometry.call(
+			self.openlayers.GeoJSON, feature.geometry
+		    )};
+		}
+	    }
+	};
 
 	this.currentfeature = false;
 
 	this.getState = function() {
 	    var geojson = {};
 	    if (self.currentfeature) {
-		geojson = self.openlayers.GeoJSON.extract.geometry.call(
-		    self.openlayers.GeoJSON, self.currentfeature.geometry);
+		geojson = self.openlayers.feature2json(self.currentfeature);
 	    } 
 	    var m = self.openlayers.map;
 	    if (m) {
@@ -29,6 +39,7 @@ if (!Sherd.Image.OpenLayers) {
 		'y':0,//center of -90:90
 		'zoom':0
 	    };
+	    console.log(obj);
 	    if (typeof obj=='object') {
 		if (obj.geometry) {//obj is a json feature
 		    self.currentfeature = self.openlayers.GeoJSON.parseFeature(obj);
@@ -44,18 +55,16 @@ if (!Sherd.Image.OpenLayers) {
 	    }
 	    self.openlayers.map.setCenter(new OpenLayers.LonLat(state.x, state.y), state.zoom);
 	}
-	this.openlayers = {
-	};
 	this.microformat = {};
 	this.microformat.create = function(obj,doc) {
 	    var wrapperID = Sherd.Base.newID('openlayers-wrapper');
 	    if (!obj.options) obj.options = {numZoomLevels: 3};
-	    if (!obj.width) obj.width = 480;
-	    if (!obj.height) obj.height = 320;
+	    if (!obj.width) obj.width = '100%';
+	    if (!obj.height) obj.height = (Mochi.getViewportDimensions().h-250 )+'px';
 	    return {
 		object:obj,
 		htmlID:wrapperID,
-		text:'<div id="'+wrapperID+'" class="sherd-openlayers-map" style="width:'+obj.width+'px;height:'+obj.height+'px"></div>'
+		text:'<div id="'+wrapperID+'" class="sherd-openlayers-map" style="width:'+obj.width+';height:'+obj.height+'"></div>'
 	    }
 	}
 	this.microformat.update = function(obj,html_dom) {

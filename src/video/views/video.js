@@ -151,6 +151,7 @@ if (!Sherd.Video.Base) {
 		    } else if (typeof obj.start=='number') {
 			refresh_mymovie(obj.start, obj.start, 'Clip');
 		    }
+		    return true;
 		}catch(e){/*maybe no movie?*/}
 	    }
 	}
