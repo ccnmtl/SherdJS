@@ -6,6 +6,37 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	var self = this;
 	Sherd.Base.AssetView.apply(this,arguments);//inherit
 
+	this.attachView = function(view) {
+	    self.targetview = view;
+	}
+	this.targetstorage = [];
+	this.addStorage = function(stor) {
+	    this.targetstorage.push(stor);
+	}
+	
+	this.getState = function(){
+	    return {};
+	}
+	this.setState = function(obj){
+	    
+	};
+
+	this.initialize = function() {
+	    self.openlayers.editingtoolbar = new self.openlayers.CustomEditingToolbar(
+		self.targetview.openlayers.vectors
+	    );
+	    self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
+
+	    //on creation of an annotation
+	    self.openlayers.editingtoolbar.featureAdded = function(feature) {
+		//because only one annotation is allowed at once.
+		self.openlayers.editingtoolbar.deactivate();
+		var geojson = self.targetview.openlayers.feature2json(feature);
+		self.storage.update(geojson,true);
+	    }
+	    ///# 3. button to redraw
+
+	}
 	this.openlayers = {
 	    CustomEditingToolbar :OpenLayers.Class(
 		OpenLayers.Control.EditingToolbar, {
@@ -40,40 +71,6 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		})
 	};//end this.openlayers
 	    
-
-	///will this work?  this is all so hacky!
-	this.attachView = function(view) {
-	    //this.media = view.media; //WTF?!
-	    self.targetview = view;
-	}
-	this.targetstorage = [];
-	this.addStorage = function(stor) {
-	    this.targetstorage.push(stor);
-	}
-	
-	this.getState = function(){
-	    return {};
-	}
-	this.setState = function(obj){
-	    
-	};
-
-	this.initialize = function() {
-	    self.openlayers.editingtoolbar = new self.openlayers.CustomEditingToolbar(
-		self.targetview.openlayers.vectors
-	    );
-	    self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
-
-	    //on creation of an annotation
-	    self.openlayers.editingtoolbar.featureAdded = function(feature) {
-		//because only one annotation is allowed at once.
-		self.openlayers.editingtoolbar.deactivate();
-		var geojson = self.targetview.openlayers.feature2json(feature);
-		self.storage.update(geojson,true);
-	    }
-	    ///# 3. button to redraw
-
-	}
 	this.storage = {
 	    'update':function(obj,just_downstream){
 		for (var i=0;i<self.targetstorage.length;i++) {
@@ -94,8 +91,16 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
 		    htmlID:id,
-		    text:'<div id="'+id+'"><button>Center Annotation</button> <button>Redo Annotation</button></div>'
+		    text:'<div id="'+id+'"><button class="sherd-image-center">Center Annotation</button> <button class="sherd-image-redo">Redo Annotation</button></div>'
 		};
+	    },
+	    'components':function(html_dom,create_obj) {
+		var buttons = html_dom.getElementsByTagName('button');
+		return {
+		    'top':html_dom,
+		    'center':buttons[0],
+		    'redo':buttons[1]
+		}
 	    }
 	}
     }//END Sherd.Image.Annotators.OpenLayers

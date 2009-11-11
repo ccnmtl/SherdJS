@@ -149,6 +149,7 @@ if (!Sherd.Video.Base) {
 		    if (obj.startCode && obj.endCode) {
 			refresh_mymovie(obj.startCode, obj.endCode, 'Clip');
 		    } else if (typeof obj.start=='number') {
+			//?does this even work?
 			refresh_mymovie(obj.start, obj.start, 'Clip');
 		    }
 		    return true;
@@ -208,23 +209,19 @@ if (!Sherd.Video.Base) {
 	this.events.queue = function queue(name,plan) {
 	    
 	    var current = -1;
-	    //window.console.log('hi');
 	    if (plan.length) {
 		var next;
 		var cur;
 		var pollID;
 		var timeoutID;
-		//window.console.log(plan);
 
 		//TODO: event, broadcast attrs
 		function advance() {
 		    if (pollID) window.clearTimeout(pollID);
 		    if (timeoutID) window.clearTimeout(timeoutID);
 		    ++current;
-		    //window.console.log(['advance',name,current,plan.length]);
 		    if (plan.length > current) {
 			cur = plan[current];
-			//window.console.log(cur);
 			next();
 		    }
 		}

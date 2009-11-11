@@ -39,7 +39,6 @@ if (!Sherd.Image.OpenLayers) {
 		'y':0,//center of -90:90
 		'zoom':0
 	    };
-	    console.log(obj);
 	    if (typeof obj=='object') {
 		if (obj.geometry) {//obj is a json feature
 		    self.currentfeature = self.openlayers.GeoJSON.parseFeature(obj);

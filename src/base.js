@@ -184,7 +184,7 @@ var new_id = 0;
 				}
 				else if (asset_html.text) {
 				    dom_or_id.innerHTML = asset_html.text;
-				    self.html.put(document.getElementById(asset_html.htmlID));
+				    self.html.put( document.getElementById(asset_html.htmlID) );
 				}
 			    }
 			}

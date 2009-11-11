@@ -22,14 +22,7 @@ function DjangoSherd_ClipForm() {
     this._asset = {};//to be 'true'
     this.targetstorage = [];
     this.html.put = function(dom) {
-	var inputs = dom.getElementsByTagName('input');
-	self.components = {
-	    'form': dom,
-	    'startButton':inputs[2],
-	    'endButton':inputs[4],
-	    'startField':inputs[3],
-	    'endField':inputs[5]
-	}
+	self.components = self.microformat.components(dom);
     }
 
     ///will this work?  this is all so hacky!
@@ -165,7 +158,17 @@ function DjangoSherd_ClipForm() {
 	      </table>\
 	    </div>\
 	  </div></div>'};
-	}//create function
+	},//create function
+	components:function(html_dom,create_obj) {
+	    var inputs = html_dom.getElementsByTagName('input');
+	    return {
+		'form': html_dom,
+		'startButton':inputs[2],
+		'endButton':inputs[4],
+		'startField':inputs[3],
+		'endField':inputs[5]
+	    }
+ 	}
     }//microformat
 
 }

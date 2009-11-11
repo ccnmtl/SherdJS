@@ -37,8 +37,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 	    par.innerHTML = '';
 	}
 	this.html.put = function(dom,part) {
+	    self.components = self.microformat.components(dom);
+	    /*
 	    if (part) {
-		self.components = self.microformat.components(dom);
 	    } else {
 		self.components['wrapper'] = dom;
 		var media = dom.getElementsByTagName('object');
@@ -46,6 +47,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 		    self.components['media'] = media.item(0);
 		}
 	    }
+            */
 	}
 
 	this.media = {};

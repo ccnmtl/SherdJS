@@ -227,15 +227,11 @@ function DjangoSherd_NoteForm() {
  'temp' VITAL adaption (instead of using sherd
 **********************/
 
-//carryover from vital--should return whether we're editing a clip or not
+//carryover from vital--should return whether a clip should be visible
 //used for clipstrip setting (see initClipStrip() )
 function currentUID() {
-    try {
-	var clip_tab = ($('Clip'))?$('Clip'):$('EditClip');
-	return clip_tab.parentNode.className == 'tabberactive';
-    } catch(e) {//no clip element
-	return true;
-    }
+    return true;
+    //just returning true, will show the markers at 0, but hey, so what
 }
 
 var current_citation = false;
