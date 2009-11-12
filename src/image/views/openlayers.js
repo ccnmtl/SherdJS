@@ -40,19 +40,26 @@ if (!Sherd.Image.OpenLayers) {
 		'zoom':0
 	    };
 	    if (typeof obj=='object') {
-		if (obj.geometry) {//obj is a json feature
+		if (obj.feature) {
+		    self.currentfeature = obj.feature;
+		} else if (obj.geometry) {//obj is a json feature
 		    self.currentfeature = self.openlayers.GeoJSON.parseFeature(obj);
-		    var bounds = self.currentfeature.geometry.getBounds();
-		    self.openlayers.vectors.addFeatures( [self.currentfeature] );
-		    self.openlayers.map.zoomToExtent(bounds);
-		    return;
 		} else {
 		    if (obj.x) state.x = obj.x;
 		    if (obj.y) state.y = obj.y;
 		    if (obj.zoom) state.zoom = obj.zoom;
+		    self.currentfeature = false;
+		}
+		if (self.currentfeature) {
+		    var bounds = self.currentfeature.geometry.getBounds();
+		    self.openlayers.vectors.addFeatures( [self.currentfeature] );
+		    self.openlayers.map.zoomToExtent(bounds);
+		    return;
 		}
 	    }
-	    self.openlayers.map.setCenter(new OpenLayers.LonLat(state.x, state.y), state.zoom);
+	    self.openlayers.map.setCenter(
+		new OpenLayers.LonLat(state.x, state.y), state.zoom
+	    );
 	}
 	this.microformat = {};
 	this.microformat.create = function(obj,doc) {

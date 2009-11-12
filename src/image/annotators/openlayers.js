@@ -13,12 +13,22 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	this.addStorage = function(stor) {
 	    this.targetstorage.push(stor);
 	}
-	
+
 	this.getState = function(){
 	    return {};
 	}
+
+	var mode = 'create';//||'browse'
 	this.setState = function(obj){
-	    
+	    if (typeof obj=='object') {
+		//because only one annotation is allowed at once.
+		self.openlayers.editingtoolbar.deactivate();
+
+		///show buttons
+		self.components.center.style.display = 'inline';
+		self.components.redo.style.display = 'inline';
+		mode = 'browse';
+	    }
 	};
 
 	this.initialize = function() {
@@ -26,15 +36,34 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		self.targetview.openlayers.vectors
 	    );
 	    self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
+	    self.openlayers.editingtoolbar.sherd.navigation.activate()
 
 	    //on creation of an annotation
 	    self.openlayers.editingtoolbar.featureAdded = function(feature) {
-		//because only one annotation is allowed at once.
-		self.openlayers.editingtoolbar.deactivate();
 		var geojson = self.targetview.openlayers.feature2json(feature);
-		self.storage.update(geojson,true);
+		///this should probably be through a signal?
+		self.targetview.setState({feature:feature});
+		self.storage.update(geojson);
 	    }
-	    ///# 3. button to redraw
+	    ///# 3. button listeners
+	    connect(self.components.center,'onclick',function(evt) {
+		self.targetview.setState({feature:self.targetview.currentfeature});
+	    });
+	    connect(self.components.redo,'onclick',function(evt) {
+		if (mode != 'create') {
+		    mode = 'create';
+		    self.openlayers.editingtoolbar.activate();
+		    ///visit current feature
+		    //self.targetview.setState({feature:self.targetview.currentfeature});
+
+		    //reset feature BAD BAD BAD (because we're not going through a function )
+		    self.targetview.currentfeature = false;
+		    //delete all (assumes only one annotation)
+		    self.targetview.openlayers.vectors.removeFeatures(
+			self.targetview.openlayers.vectors.features
+		    );
+		}
+	    });
 
 	}
 	this.openlayers = {
@@ -65,14 +94,18 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 			}
 			this.sherd.pointHandler.featureAdded = featureAdded;
 			this.sherd.polygonHandler.featureAdded = featureAdded;
-			this.addControls([ this.sherd.navigation ]);
-			this.addControls([this.sherd.pointHandler, this.sherd.polygonHandler]);
+			this.addControls([this.sherd.navigation,
+					  this.sherd.pointHandler, 
+					  this.sherd.polygonHandler]);
 		    }
 		})
 	};//end this.openlayers
 	    
 	this.storage = {
 	    'update':function(obj,just_downstream){
+		if (!just_downstream) {
+		    self.setState(obj);
+		}
 		for (var i=0;i<self.targetstorage.length;i++) {
 		    self.targetstorage[i].storage.update(obj);
 		}
@@ -91,7 +124,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
 		    htmlID:id,
-		    text:'<div id="'+id+'"><button class="sherd-image-center">Center Annotation</button> <button class="sherd-image-redo">Redo Annotation</button></div>'
+		    text:'<div id="'+id+'" style="height:3em;"><button style="display:none;" class="sherd-image-center">Center Annotation</button> <button style="display:none;" class="sherd-image-redo">Redo Annotation</button></div>'
 		};
 	    },
 	    'components':function(html_dom,create_obj) {
