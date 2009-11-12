@@ -15,6 +15,72 @@ djangosherd.findAssets = function() {
     return assets;
 }
 
+function GenericAssetView(options) {
+    var self = this;
+
+    ////INIT
+    this.settings = {};
+    if (Sherd.Video && Sherd.Video.QuickTime) {
+	var quicktime = {'view':new Sherd.Video.QuickTime()};
+	quicktime.view.id = function(){return 'movie1';}//hackity-hack
+	if (options.clipform) {
+	    quicktime.clipform = new DjangoSherd_ClipForm();//see vitalwrapper.js
+	    quicktime.clipform.attachView(quicktime.view);
+	    if (options.storage) {
+		quicktime.clipform.addStorage(options.storage);
+	    }
+	}
+	this.settings.quicktime = quicktime;
+    }
+    if (Sherd.Image && Sherd.Image.OpenLayers) {
+	var image = {'view':new Sherd.Image.OpenLayers()};
+	if (options.clipform) {
+	    image.clipform = new Sherd.Image.Annotators.OpenLayers();
+	    image.clipform.attachView(image.view);
+	    if (options.storage) {
+		image.clipform.addStorage(options.storage);
+	    }
+	}
+	this.settings.image = image;
+    }
+    ////API
+    var current_type = false;
+    this.html = {
+	remove:function() {
+	    if (current_type) {
+		self.settings[current_type].view.html.remove();
+	    }
+	},
+	push:function(html_dom,options) {
+	    if (options.asset 
+		&& options.asset.type
+		&& (options.asset.type in self.settings)
+	       ) {
+		if (current_type && current_type != options.asset.type) {
+		    self.settings[current_type].view.html.remove();
+		}
+		current_type = options.asset.type;
+		///the main pass
+		self.settings[current_type].view.html.push(html_dom,options);
+
+		if (self.settings[current_type].clipform) {
+		    self.clipform = self.settings[current_type].clipform;
+		}
+	    } else {
+		throw "Your asset does not have a (supported) type marked";
+	    }
+	}
+    }
+    this.setState = function() {
+	if (current_type) {
+	    self.settings[current_type].view.setState.apply(
+		self.settings[current_type].view,
+		arguments//special JS magic
+	    );
+	}
+    }
+}
+
 function DjangoSherd_Asset_Config() {
     ///: currently (obv) assumes one asset
     ///: editable derives from user.is_authenticated (true for all), and any particular annotation
@@ -36,31 +102,17 @@ function DjangoSherd_Asset_Config() {
 	var assets = ds.findAssets();
 	if (!assets.length) return;//no assets!
 
-	///#   What type of asset is it? ***
-	switch(assets[0].type) {
-	case 'quicktime':
-	    ds.assetview = new Sherd.Video.QuickTime();
-	    ds.assetview.id = function(){return 'movie1';}//hackity-hack
-	    ds.clipform = new DjangoSherd_ClipForm();//see vitalwrapper.js
-	    break;
-	case 'image':
-	    ds.assetview = new Sherd.Image.OpenLayers();
-	    ds.clipform = new Sherd.Image.Annotators.OpenLayers();
-	    break;
-	//TODO: youtube,etc.
-	}
-	ds.clipform.attachView(ds.assetview);//to query current state.
-	ds.clipform.addStorage(ds.noteform);//will get updated when clipform does
+	ds.assetview = new GenericAssetView({'clipform':true,'storage':ds.noteform});
 
 	//ds.clipstrip.html.put($('clipstrip'));
 	var obj_div = getFirstElementByTagAndClassName('div','asset-display');//id=videoclip
-	djangosherd.assetview.html.push(obj_div,{asset: assets[0] });
+	ds.assetview.html.push(obj_div,{asset: assets[0] });
 
 	///# Editable? (i.e. note-form?)
 	ds.noteform.html.put($('clip-form'));
 	///#   load asset into note-form
-	ds.clipform.html.push('videonoteform',{asset:{} }); //write videoform
-	ds.clipform.initialize(); //build listeners
+	ds.assetview.clipform.html.push('videonoteform',{asset:{} }); //write videoform
+	ds.assetview.clipform.initialize(); //build listeners
 
 	var orig_annotation_data = $('original-annotation');
 	if (orig_annotation_data != null) {
@@ -71,13 +123,13 @@ function DjangoSherd_Asset_Config() {
 		///let assetview go first, because it might be able to give the
 		///obj hints for the clipform which should be stupider
 		ds.assetview.setState(obj);
-		ds.clipform.setState(obj);
+		ds.assetview.clipform.setState(obj);
 	    }catch(e){/*non-valid json?*/}
 	} else {
 	    var annotation_query = [];
 	    if (document.location.hash) {
 		///?why should queryformat be on clipform?  maybe local default?
-		annotation_query = ds.clipform.queryformat.find(document.location.hash);
+		annotation_query = ds.assetview.clipform.queryformat.find(document.location.hash);
 	    }
 	    if (annotation_query.length) {
 		///#initialize view from hash
@@ -98,9 +150,9 @@ function DjangoSherd_Asset_Config() {
 		}
 	    } 
 	    //state already manipulated, so bring it in.
-	    else if (ds.clipform.getState()['default']) {
+	    else if (ds.assetview.clipform.getState()['default']) {
 		//TODO: probably should let clipform decide whether to do this
-		ds.clipform.storage.update(view_state);
+		ds.assetview.clipform.storage.update(view_state);
 	    }
 	});
     });
@@ -111,15 +163,14 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
     ///# if (no_open_from_hash and hash)
     ///#   openCitation(annotation)
     var ds = djangosherd;
-    ds.assetview = new Sherd.Video.QuickTime();//TODO: youtube|qt
-    ds.assetview.id = function(){return 'movie1';}
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
-    //djangosherd.clipstrip = new ClipStrip();
+    ds.assetview = new GenericAssetView({/*no clipform*/});
+
     if (!no_open_from_hash) {
 	var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
 	if ( annotation_to_open != null) {
 	    addLoadEvent(function() {
-		openCitation(annotation_to_open[1]+'/',true);
+		    openCitation(annotation_to_open[1]+'/',true);
 	    });
 	}
     }
