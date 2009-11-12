@@ -50,12 +50,12 @@ if (!Sherd.Image.OpenLayers) {
 		    if (obj.zoom) state.zoom = obj.zoom;
 		    self.currentfeature = false;
 		}
-		if (self.currentfeature) {
-		    var bounds = self.currentfeature.geometry.getBounds();
-		    self.openlayers.vectors.addFeatures( [self.currentfeature] );
-		    self.openlayers.map.zoomToExtent(bounds);
-		    return;
-		}
+	    }
+	    if (self.currentfeature) {
+		var bounds = self.currentfeature.geometry.getBounds();
+		self.openlayers.vectors.addFeatures( [self.currentfeature] );
+		self.openlayers.map.zoomToExtent(bounds);
+		return;
 	    }
 	    self.openlayers.map.setCenter(
 		new OpenLayers.LonLat(state.x, state.y), state.zoom
@@ -106,6 +106,11 @@ if (!Sherd.Image.OpenLayers) {
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,
 		     'externalProjection': new OpenLayers.Projection(projection)}
 		);
+
+		///LISTENER!!! TODO: probably move this somewhere, so we can unload
+		connect(window,'onresize',function() {
+		    self.components.top.style.height = (Mochi.getViewportDimensions().h-250 )+'px';
+		});
 	    }
 	}
 	this.microformat.components = function(html_dom,create_obj) {
