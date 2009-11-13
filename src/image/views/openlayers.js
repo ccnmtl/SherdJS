@@ -90,6 +90,7 @@ if (!Sherd.Image.OpenLayers) {
 		self.components = self.microformat.components(top,create_obj);
 		
 		self.openlayers.map =  new OpenLayers.Map(create_obj.htmlID);
+                /*
 		self.openlayers.graphic = new OpenLayers.Layer.Image(
                     create_obj.object.title||'Image',
 		    create_obj.object.image,//url of image
@@ -98,6 +99,14 @@ if (!Sherd.Image.OpenLayers) {
                     new OpenLayers.Size(create_obj.object.width, create_obj.object.height),
                     create_obj.object.options
 		);
+                */
+
+		self.openlayers.graphic = new OpenLayers.Layer.XYZ(
+		    "hello",
+		    "http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Portland/ESRI_LandBase_WebMercator/MapServer/tile/${z}/${y}/${x}",
+		    {sphericalMercator: false}
+		);
+
 		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer");
 		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
 
@@ -108,6 +117,7 @@ if (!Sherd.Image.OpenLayers) {
 		);
 
 		///LISTENER!!! TODO: probably move this somewhere, so we can unload
+		///Mochi
 		connect(window,'onresize',function() {
 		    self.components.top.style.height = (Mochi.getViewportDimensions().h-250 )+'px';
 		});
