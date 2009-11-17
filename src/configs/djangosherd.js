@@ -183,7 +183,8 @@ function DjangoSherd_AssetMicroFormat() {
 	    var reg = String(elt.className).match(/assetlabel-(\w+)/);
 	    if (reg != null) {
 		///ASSUMES: only one source for each label
-		rv[ reg[1] ] = elt.href;
+		///use getAttribute rather than href, to avoid urlencodings
+		rv[ reg[1] ] = elt.getAttribute('href');
 		///TODO: maybe look for some data attributes here, too, when we put them there.
 	    }
 	});

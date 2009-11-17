@@ -64,13 +64,14 @@ if (!Sherd.Image.OpenLayers) {
 	this.microformat = {};
 	this.microformat.create = function(obj,doc) {
 	    var wrapperID = Sherd.Base.newID('openlayers-wrapper');
-	    if (!obj.options) obj.options = {numZoomLevels: 3};
-	    if (!obj.width) obj.width = '100%';
-	    if (!obj.height) obj.height = (Mochi.getViewportDimensions().h-250 )+'px';
+	    ///TODO:zoom-levels might be something more direct on the object?
+	    if (!obj.options) obj.options = {numZoomLevels: 3, sphericalMercator: false};
+	    var width = '100%';
+	    var height = (Mochi.getViewportDimensions().h-250 )+'px';
 	    return {
 		object:obj,
 		htmlID:wrapperID,
-		text:'<div id="'+wrapperID+'" class="sherd-openlayers-map" style="width:'+obj.width+';height:'+obj.height+'"></div>'
+		text:'<div id="'+wrapperID+'" class="sherd-openlayers-map" style="width:100%;height:'+height+'"></div>'
 	    }
 	}
 	this.microformat.update = function(obj,html_dom) {
@@ -90,22 +91,24 @@ if (!Sherd.Image.OpenLayers) {
 		self.components = self.microformat.components(top,create_obj);
 		
 		self.openlayers.map =  new OpenLayers.Map(create_obj.htmlID);
-                /*
-		self.openlayers.graphic = new OpenLayers.Layer.Image(
-                    create_obj.object.title||'Image',
-		    create_obj.object.image,//url of image
-                    //'http://earthtrends.wri.org/images/maps/4_m_citylights_lg.gif',
-		    new OpenLayers.Bounds(-180, -90, 180, 90),
-                    new OpenLayers.Size(create_obj.object.width, create_obj.object.height),
-                    create_obj.object.options
-		);
-                */
-
-		self.openlayers.graphic = new OpenLayers.Layer.XYZ(
-		    "hello",
-		    "http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Portland/ESRI_LandBase_WebMercator/MapServer/tile/${z}/${y}/${x}",
-		    {sphericalMercator: false}
-		);
+		if (create_obj.object.xyztile) {
+		    create_obj.object.options.numZoomLevels = Math.ceil(create_obj.object.width/256) || 5;
+		    self.openlayers.graphic = new OpenLayers.Layer.XYZ(
+			create_obj.object.title||'Image',
+			create_obj.object.xyztile,
+			//"http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Portland/ESRI_LandBase_WebMercator/MapServer/tile/${z}/${y}/${x}",
+			create_obj.object.options
+		    );
+		} else {
+		    self.openlayers.graphic = new OpenLayers.Layer.Image(
+			create_obj.object.title||'Image',
+			create_obj.object.image,//url of image
+			///TODO:figure these out better
+			new OpenLayers.Bounds(-180, -90, 180, 90),
+			new OpenLayers.Size(create_obj.object.width, create_obj.object.height),
+			create_obj.object.options
+		    );
+		}
 
 		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer");
 		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
