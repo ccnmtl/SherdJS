@@ -174,6 +174,15 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 	    });
 	}
     }
+    addLoadEvent(function(){
+	forEach($$('a.materialCitation'),function(elt){
+	    var url = elt.getAttribute('href');
+	    connect(elt,'onclick',function(evt){
+		openCitation(url);
+		evt.preventDefault();//don't open href
+	    });
+	});
+    });
 }
 
 function DjangoSherd_AssetMicroFormat() {

@@ -65,7 +65,14 @@ if (!Sherd.Image.OpenLayers) {
 	this.microformat.create = function(obj,doc) {
 	    var wrapperID = Sherd.Base.newID('openlayers-wrapper');
 	    ///TODO:zoom-levels might be something more direct on the object?
-	    if (!obj.options) obj.options = {numZoomLevels: 3, sphericalMercator: false};
+	    if (!obj.options) obj.options = {
+		numZoomLevels: 5, 
+		sphericalMercator: false,
+		projection:'Flatland:1',
+		///TODO figure out how the fuck this works
+		maxExtent:new OpenLayers.Bounds(-180, -180, 180, 90)
+		//,units:'m'
+	    };
 	    var width = '100%';
 	    var height = (Mochi.getViewportDimensions().h-250 )+'px';
 	    return {

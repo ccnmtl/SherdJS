@@ -107,10 +107,11 @@ var new_id = 0;
 			};
 		    }
 		},
-		remove:function(part) {
-		    part=(part)?part:'media';
+		remove:function() {
 		    self.clearListeners();
-		    self.components[part].parentNode.removeElement(self.components[part]);
+		    for (part in self.components) {
+			self.components[part].parentNode.removeChild(self.components[part]);
+		    }
 		},
 		
 		///utility functions for adding htmlstrings (e.g. output from create() ) into the dom.
