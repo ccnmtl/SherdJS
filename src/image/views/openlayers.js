@@ -7,7 +7,8 @@ if (!Sherd.Image.OpenLayers) {
 	Sherd.Base.AssetView.apply(this,arguments); //inherit
 
 	this.openlayers = {
-	    feature2json:function(feature) {
+	    'features':[],
+	    'feature2json':function(feature) {
 		if (self.openlayers.GeoJSON) {
 		    return {'geometry':self.openlayers.GeoJSON.extract.geometry.call(
 			self.openlayers.GeoJSON, feature.geometry
@@ -37,7 +38,7 @@ if (!Sherd.Image.OpenLayers) {
 	    var state = {
 		'x':0,//center of -180:180
 		'y':0,//center of -90:90
-		'zoom':0
+		'zoom':1
 	    };
 	    if (typeof obj=='object') {
 		if (obj.feature) {
@@ -52,8 +53,16 @@ if (!Sherd.Image.OpenLayers) {
 		}
 	    }
 	    if (self.currentfeature) {
+		var style = self.openlayers.vectors.styleMap.styles.select;
 		var bounds = self.currentfeature.geometry.getBounds();
-		self.openlayers.vectors.addFeatures( [self.currentfeature] );
+		self.openlayers.features = [self.currentfeature, self.currentfeature.clone()];
+
+		//self.currentfeature.style = self.openlayers.vectors.styleMap.styles['sky'];
+		self.openlayers.features[1].renderIntent = 'sky2';
+		self.currentfeature.renderIntent = 'sky';
+		//self.openlayers.features[1].style = self.openlayers.vectors.styleMap.styles['sky'];
+
+		self.openlayers.vectors.addFeatures( self.openlayers.features );
 		self.openlayers.map.zoomToExtent(bounds);
 		return;
 	    }
@@ -118,6 +127,18 @@ if (!Sherd.Image.OpenLayers) {
 		}
 
 		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer");
+		var styles  = {
+		    'sky':new OpenLayers.Style({fillOpacity:0,
+						strokeWidth:4,
+						strokeColor:'#000000'
+					       }),
+		    'sky2':new OpenLayers.Style({fillOpacity:0,
+						 strokeWidth:2
+						})
+		};
+		self.openlayers.vectors.styleMap = new OpenLayers.StyleMap(styles);
+
+
 		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
 
 		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'

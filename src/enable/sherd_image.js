@@ -2,13 +2,14 @@
 ****/
 jQuery(function(){
     var destination = 'http://sky.ccnmtl.columbia.edu:8000/save/?';
-    var img_file = jQuery('img').get(2).src;
-    var img_base = String(img_file).match(/images\/([^.]+)\./)[1];
+    var img_file = String(jQuery('img').get(2).src);
+    var img_base = img_file.match(/images\/([^.]+)\./)[1];
     var site_base = String(document.location).match(/(.*?)image/)[1];
+    var extension = img_file.substr(-3); //JPG or jpg--CRAZY!!!
     var args = {
 	'title':jQuery('#node-main h2.title').get(0).innerHTML,
 	'url':document.location,
-	'thumb':site_base+'files/tibet/images/'+img_base+'.thumbnail.JPG',
+	'thumb':site_base+'files/tibet/images/'+img_base+'.thumbnail.'+extension,
 	'xyztile':site_base+'files/tibet/tiles/'+img_base+'/z${z}/y${y}/x${x}.png',
 	'image':img_file,
 	'archive':site_base

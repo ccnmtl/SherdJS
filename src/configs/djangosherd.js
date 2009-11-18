@@ -79,6 +79,14 @@ function GenericAssetView(options) {
 	    );
 	}
     }
+    this.getState = function() {
+	if (current_type) {
+	    self.settings[current_type].view.getState.apply(
+		self.settings[current_type].view,
+		arguments//special JS magic
+	    );
+	}
+    }
 }
 
 function DjangoSherd_Asset_Config() {
@@ -144,7 +152,7 @@ function DjangoSherd_Asset_Config() {
 	connect(clip_tab,'onclick',function(evt){
 	    var view_state = ds.assetview.getState();
 	    //state unmanipulated
-	    if (view_state['default']) {
+	    if (view_state && view_state['default']) {
 		if (typeof ds.assetview.play=='function') {
 		    ds.assetview.play();
 		}
