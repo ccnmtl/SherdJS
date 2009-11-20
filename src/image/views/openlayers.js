@@ -17,6 +17,36 @@ if (!Sherd.Image.OpenLayers) {
 	    }
 	};
 
+
+	this.presentations = {
+	    'thumb':{
+		height:function(){return '100px'},
+		width:function(){return '100px'},
+		initialize:function(obj,presenter){
+		    ///remove controls
+		    var m = presenter.openlayers.map;
+		    while (m.controls.length) {
+			m.removeControl(m.controls[0]);
+		    }
+		}
+	    },
+	    'default':{
+		height:function(obj,presenter){return (Mochi.getViewportDimensions().h-250 )+'px'},
+		width:function(obj,presenter){return '100%'},
+		initialize:function(obj,presenter){
+		    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
+		    connect(window,'onresize',function() {
+			presenter.components.top.style.height = (Mochi.getViewportDimensions().h-250 )+'px';
+		    });
+		}
+	    },
+	    'small':{
+		height:function(){return '300px'},
+		width:function(){return '300px'},
+		initialize:function(){/*noop*/}
+	    }
+	}
+
 	this.currentfeature = false;
 
 	this.getState = function() {
@@ -82,12 +112,10 @@ if (!Sherd.Image.OpenLayers) {
 		maxExtent:new OpenLayers.Bounds(-180, -180, 180, 90)
 		//,units:'m'
 	    };
-	    var width = '100%';
-	    var height = (Mochi.getViewportDimensions().h-250 )+'px';
 	    return {
 		object:obj,
 		htmlID:wrapperID,
-		text:'<div id="'+wrapperID+'" class="sherd-openlayers-map" style="width:100%;height:'+height+'"></div>'
+		text:'<div id="'+wrapperID+'" class="sherd-openlayers-map"></div>'
 	    }
 	}
 	this.microformat.update = function(obj,html_dom) {
@@ -105,8 +133,18 @@ if (!Sherd.Image.OpenLayers) {
 		///ALL THIS Should all be in initialize() or something
 		var top = document.getElementById(create_obj.htmlID);
 		self.components = self.microformat.components(top,create_obj);
-		
+
+		var presentation;
+		switch (typeof create_obj.object.presentation) {
+		case 'string': presentation = self.presentations[create_obj.object.presentation]; break;
+		case 'object': presentation = create_obj.object.presentation; break;
+		case 'undefined': presentation = self.presentations['default']; break;
+		}
+		top.style.width = presentation.width(create_obj.object, self);
+		top.style.height = presentation.height(create_obj.object, self);
+
 		self.openlayers.map =  new OpenLayers.Map(create_obj.htmlID);
+
 		if (create_obj.object.xyztile) {
 		    create_obj.object.options.numZoomLevels = Math.ceil(create_obj.object.width/256) || 5;
 		    self.openlayers.graphic = new OpenLayers.Layer.XYZ(
@@ -140,18 +178,13 @@ if (!Sherd.Image.OpenLayers) {
 
 
 		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
-
 		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,
 		     'externalProjection': new OpenLayers.Projection(projection)}
 		);
 
-		///LISTENER!!! TODO: probably move this somewhere, so we can unload
-		///Mochi
-		connect(window,'onresize',function() {
-		    self.components.top.style.height = (Mochi.getViewportDimensions().h-250 )+'px';
-		});
+		presentation.initialize(create_obj.object,self);
 	    }
 	}
 	this.microformat.components = function(html_dom,create_obj) {

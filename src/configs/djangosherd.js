@@ -97,32 +97,30 @@ function DjangoSherd_Asset_Config() {
     ///# init sources with their format-understanders (and config on when to update or with a rescan-hook?)
     ///# init controller for presentation (one at a time, right?) ?with starting destination
     ///# new information?  who cares? (sources and listeners: observer pattern sounds like enough)
-
+    ///BEGIN DjangoSherd_Asset_Config()
     var ds = djangosherd;
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
-
     ds.noteform = new DjangoSherd_NoteForm();//see below
     //djangosherd.clipstrip = new ClipStrip();
 
     addLoadEvent(function() {
 	///# Find assets.
-	var assets = ds.findAssets();
-	if (!assets.length) return;//no assets!
+	ds.assets = ds.findAssets();
+	if (!ds.assets.length) return;//no assets!
 
 	ds.assetview = new GenericAssetView({'clipform':true,'storage':ds.noteform});
 
 	//ds.clipstrip.html.put($('clipstrip'));
 	var obj_div = getFirstElementByTagAndClassName('div','asset-display');//id=videoclip
-	ds.assetview.html.push(obj_div,{asset: assets[0] });
+	ds.assetview.html.push(obj_div,{asset: ds.assets[0] });
 
 	///# Editable? (i.e. note-form?)
 	ds.noteform.html.put($('clip-form'));
 	///#   load asset into note-form
 	ds.assetview.clipform.html.push('videonoteform',{asset:{} }); //write videoform
 	ds.assetview.clipform.initialize(); //build listeners
-
-	var orig_annotation_data = $('original-annotation');
+	var orig_annotation_data = $('original-annotation');///***faux layer
 	if (orig_annotation_data != null) {
 	    var obj = false;
 	    try {
@@ -131,12 +129,12 @@ function DjangoSherd_Asset_Config() {
 		///let assetview go first, because it might be able to give the
 		///obj hints for the clipform which should be stupider
 		ds.assetview.setState(obj);
-		ds.assetview.clipform.setState(obj);
+		ds.assetview.clipform.setState(obj); //TODO:maybe should just get notified on assetview's setState
 	    }catch(e){/*non-valid json?*/}
 	} else {
 	    var annotation_query = [];
 	    if (document.location.hash) {
-		///?why should queryformat be on clipform?  maybe local default?
+		///TODO:?why should queryformat be on clipform?  maybe local default?
 		annotation_query = ds.assetview.clipform.queryformat.find(document.location.hash);
 	    }
 	    if (annotation_query.length) {
@@ -160,6 +158,7 @@ function DjangoSherd_Asset_Config() {
 	    //state already manipulated, so bring it in.
 	    else if (ds.assetview.clipform.getState()['default']) {
 		//TODO: probably should let clipform decide whether to do this
+		//?based on signal from assetview's getState() above, even
 		ds.assetview.clipform.storage.update(view_state);
 	    }
 	});
@@ -245,16 +244,19 @@ function DjangoSherd_AnnotationMicroFormat() {
 	var asset_elt = getFirstElementByTagAndClassName('div','asset-links',found_obj.html);
 	if (asset_elt) 
 	    rv.asset = asset_mf.read({html:asset_elt});
+	///NOT compatible with many
+
 	var data_elt = getFirstElementByTagAndClassName('div','annotation-data',found_obj.html);
 	var ann_title = getFirstElementByTagAndClassName('div','annotation-title',found_obj.html);
 	if (ann_title)
 	    rv.metadata['title'] = ann_title.innerHTML;
 	var ann_data = evalJSON(data_elt.getAttribute('data-annotation'));
-	//var ann_data = evalJSON(data_elt.innerHTML);
-	ann_data.start = parseInt(data_elt.getAttribute('data-begin'),10);
-	ann_data.end = parseInt(data_elt.getAttribute('data-end'),10);
-	ann_data.startCode = video.secondsToCode(ann_data.start);
-	ann_data.endCode = video.secondsToCode(ann_data.end);
+
+	///TODO: remove these--maybe we can with no problem
+	ann_data.start = parseInt(data_elt.getAttribute('data-begin'),10);//CHOP
+	ann_data.end = parseInt(data_elt.getAttribute('data-end'),10);//CHOP
+	ann_data.startCode = video.secondsToCode(ann_data.start);//CHOP
+	ann_data.endCode = video.secondsToCode(ann_data.end);//CHOP
 	rv.annotations.push(ann_data);
 	return rv;
     }
@@ -320,15 +322,16 @@ function openCitation(url,no_autoplay) {
     addElementClass(current_citation,'active-annotation');
     showElement('videoclipbox');
 
-    var ann_obj = djangosherd.annotationMicroformat.read({html:current_citation});
+    var ann_obj = djangosherd.annotationMicroformat.read({html:current_citation});///***faux layer
     var obj_div = getFirstElementByTagAndClassName('div','asset-display' /*TODO:parent!*/);
 
 
     if (ann_obj.asset) {
 	ann_obj.asset.autoplay = (no_autoplay)?'false':'true'; //***
+	ann_obj.asset.presentation = 'small';
 	djangosherd.assetview.html.push(obj_div,{asset:ann_obj.asset});
 
-	var ann_data = ann_obj.annotations[0];
+	var ann_data = ann_obj.annotations[0];//***
 	djangosherd.assetview.setState(ann_data);
     } else {
 	djangosherd.assetview.html.remove();
@@ -340,9 +343,9 @@ function openCitation(url,no_autoplay) {
 
 /****random thoughts
 what is in the user's control context (C)?
-0. asset representations
+0. asset layers
    - announce they want focus (but need instantiation)
-   -- arguments are asset, and representations object
+   -- arguments are asset, and layers object
    --in place?  the presenter decides
 1. an asset presenter (in focus) (V)
    - some assets can announce that they've gained focus
@@ -350,7 +353,7 @@ what is in the user's control context (C)?
 2. an annotator (decorated on the presenter?) (C)
    - (edit/create mode): has state about how the user is entering info
    - connected (deeply) to the asset-type
-3. annotation representations (V):
+3. annotation layers (V):
    - has a storage/collection source 
    -signals selection,editing TO controller
    -receives signal to update (from storage), possibly with args (to narrow what should be updated)
@@ -360,11 +363,18 @@ what is in the user's control context (C)?
 
 STORIES:
   when an asset changes in the presenter
-    (?what happens to the representations, etc)
+    (?what happens to the layers, etc)
     (?annotators)
-  when a representation wants focus of an asset that's not in view
+  when a layer wants focus of an asset that's not in view
    -or two assets at once?
-   --maybe one 'annotation representation' is two presenters within it?
+   --maybe one 'annotation layer' is two presenters within it?
    --what would this do to 'focus' wrt replacement? 
       (just because focus went somewhere doesn't mean it should be the destination of other asset loads)
+
+IMMEDIATE USE CASES
+  1. form targets a layer (which is auto-generated)
+  2. all clips from class (navigation, only)
+     (all annotations - with colors)
+  3. all clips (read-only) from a certain person (navigation)
+
 */
