@@ -6,18 +6,8 @@ if (typeof djangosherd=='undefined'){djangosherd = {};}
 ///  id, microformat.update, microformat.write, microformat.create
 /// when attached to clipform: media.duration,media.movscale (and probably media.time)
 
-djangosherd.findAssets = function() {
-    var assets = [];
-    forEach(getElementsByTagAndClassName('div','asset-links'),
-	    function(asset_links) {
-		assets.push( djangosherd.assetMicroFormat.read({html:asset_links}) );
-	    });
-    return assets;
-}
-
 function GenericAssetView(options) {
     var self = this;
-
     ////INIT
     this.settings = {};
     if (Sherd.Video && Sherd.Video.QuickTime) {
@@ -90,14 +80,6 @@ function GenericAssetView(options) {
 }
 
 function DjangoSherd_Asset_Config() {
-    ///: currently (obv) assumes one asset
-    ///: editable derives from user.is_authenticated (true for all), and any particular annotation
-
-    ///: Meta (what should stay here)
-    ///# init sources with their format-understanders (and config on when to update or with a rescan-hook?)
-    ///# init controller for presentation (one at a time, right?) ?with starting destination
-    ///# new information?  who cares? (sources and listeners: observer pattern sounds like enough)
-    ///BEGIN DjangoSherd_Asset_Config()
     var ds = djangosherd;
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
@@ -106,14 +88,14 @@ function DjangoSherd_Asset_Config() {
 
     addLoadEvent(function() {
 	///# Find assets.
-	ds.assets = ds.findAssets();
-	if (!ds.assets.length) return;//no assets!
+	ds.dom_assets = ds.assetMicroFormat.find();
+	if (!ds.dom_assets.length) return;//no assets!
 
 	ds.assetview = new GenericAssetView({'clipform':true,'storage':ds.noteform});
 
 	//ds.clipstrip.html.put($('clipstrip'));
 	var obj_div = getFirstElementByTagAndClassName('div','asset-display');//id=videoclip
-	ds.assetview.html.push(obj_div,{asset: ds.assets[0] });
+	ds.assetview.html.push(obj_div,{asset: ds.assetMicroFormat.read(ds.assets[0]) });
 
 	///# Editable? (i.e. note-form?)
 	ds.noteform.html.put($('clip-form'));
@@ -170,6 +152,7 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
     ///# if (no_open_from_hash and hash)
     ///#   openCitation(annotation)
     var ds = djangosherd;
+    ds.thumbs = [];
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     ds.assetview = new GenericAssetView({/*no clipform*/});
 
@@ -182,7 +165,25 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 	}
     }
     addLoadEvent(function(){
-	forEach($$('a.materialCitation'),function(elt){
+	///TODO: unHACK HACK HACK
+	///need to make this more abstracted--where should we test for 'can thumb'?
+	forEach(ds.annotationMicroformat.find(),function(found_obj) {
+	    var ann_obj = ds.annotationMicroformat.read(found_obj);
+	    console.log(ann_obj);
+	    if (ann_obj.asset.type=='image') {//CAN THUMB?
+		var view = new Sherd.Image.OpenLayers();
+		ds.thumbs.push(view);
+		var obj_div = DIV({'class':'thumb'});
+		found_obj.html.parentNode.appendChild(obj_div);
+		//should probably be in .view
+		ann_obj.asset.presentation = 'thumb';
+		//.asset is the only thing used right now
+		view.html.push(obj_div, ann_obj);
+		view.setState(ann_obj.annotations[0]);
+	    }
+	});
+	///this is for published view
+	forEach($$('a.materialCitation'),function(elt){//MOCHI
 	    var url = elt.getAttribute('href');
 	    connect(elt,'onclick',function(evt){
 		openCitation(url);
@@ -193,6 +194,11 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 }
 
 function DjangoSherd_AssetMicroFormat() {
+    this.find = function(dom) {
+	dom = dom||document;
+	var assets = getElementsByTagAndClassName('div','asset-links',dom);
+	return map(function(e){return {html:e} },assets);
+    };
     this.read = function(found_obj) {
 	var rv = {};
 	forEach(getElementsByTagAndClassName('a','assetsource',found_obj.html),function(elt) {
@@ -235,16 +241,22 @@ function DjangoSherd_AssetMicroFormat() {
 function DjangoSherd_AnnotationMicroFormat() {
     var asset_mf = new DjangoSherd_AssetMicroFormat();
     var video = new Sherd.Video.Helpers();
+    this.find = function(dom) {
+	dom = dom||document;
+	var annotations = getElementsByTagAndClassName('div','annotation',dom);
+	return map(function(e){return {html:e} },annotations);
+    }
     this.read = function(found_obj) {
 	var rv = {
 	    metadata:{},
 	    view:{},
 	    annotations:[]
 	};
-	var asset_elt = getFirstElementByTagAndClassName('div','asset-links',found_obj.html);
-	if (asset_elt) 
-	    rv.asset = asset_mf.read({html:asset_elt});
-	///NOT compatible with many
+	var asset_elts = asset_mf.find(found_obj.html);
+	if (asset_elts.length) {
+	    ///NOT compatible with many
+	    rv.asset = asset_mf.read(asset_elts[0]);
+	}
 
 	var data_elt = getFirstElementByTagAndClassName('div','annotation-data',found_obj.html);
 	var ann_title = getFirstElementByTagAndClassName('div','annotation-title',found_obj.html);
@@ -324,7 +336,6 @@ function openCitation(url,no_autoplay) {
 
     var ann_obj = djangosherd.annotationMicroformat.read({html:current_citation});///***faux layer
     var obj_div = getFirstElementByTagAndClassName('div','asset-display' /*TODO:parent!*/);
-
 
     if (ann_obj.asset) {
 	ann_obj.asset.autoplay = (no_autoplay)?'false':'true'; //***
