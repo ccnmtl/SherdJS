@@ -95,7 +95,7 @@ function DjangoSherd_Asset_Config() {
 
 	//ds.clipstrip.html.put($('clipstrip'));
 	var obj_div = getFirstElementByTagAndClassName('div','asset-display');//id=videoclip
-	ds.assetview.html.push(obj_div,{asset: ds.assetMicroFormat.read(ds.assets[0]) });
+	ds.assetview.html.push(obj_div,{asset: ds.assetMicroFormat.read(ds.dom_assets[0]) });
 
 	///# Editable? (i.e. note-form?)
 	ds.noteform.html.put($('clip-form'));
@@ -169,7 +169,6 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 	///need to make this more abstracted--where should we test for 'can thumb'?
 	forEach(ds.annotationMicroformat.find(),function(found_obj) {
 	    var ann_obj = ds.annotationMicroformat.read(found_obj);
-	    console.log(ann_obj);
 	    if (ann_obj.asset.type=='image') {//CAN THUMB?
 		var view = new Sherd.Image.OpenLayers();
 		ds.thumbs.push(view);
