@@ -14,6 +14,25 @@ if (!Sherd.Image.OpenLayers) {
 			self.openlayers.GeoJSON, feature.geometry
 		    )};
 		}
+	    },
+	    'object2bounds':function(object) {
+		///TODO:figure these out better
+		///should fail without w/h better
+		///test image: 466x550, 1694x2000
+		///180/2000.0 * 1694 = 152.46 (/2 = 76.23)
+		var dim = {w:180,h:90};
+		var w = object.width||76.23;//180
+		var h = object.height||90;
+		if (w/2 > h) {
+		    dim.h = 180*h/w;
+		} else {
+		    dim.w = 90 *w/h;
+		}
+		return new OpenLayers.Bounds(-Math.ceil(dim.w),
+					     -Math.ceil(dim.h),
+					     Math.floor(dim.w),
+					     Math.floor(dim.h)
+					    );
 	    }
 	};
 
@@ -61,13 +80,18 @@ if (!Sherd.Image.OpenLayers) {
 		geojson['x']=center.lon; 
 		geojson['y']=center.lat;
 		geojson['zoom']=m.getZoom();
+		//TODO:should influence how we do setState() too, since
+		///feature is essentially relative to this
+		geojson['extent'] = m.getMaxExtent().toArray();
 	    }
 	    return geojson;
 	}
 	this.setState = function(obj) {
 	    var state = {
+		/*
 		'x':0,//center of -180:180
 		'y':0,//center of -90:90
+                */
 		'zoom':1
 	    };
 	    if (typeof obj=='object') {
@@ -95,10 +119,13 @@ if (!Sherd.Image.OpenLayers) {
 		self.openlayers.vectors.addFeatures( self.openlayers.features );
 		self.openlayers.map.zoomToExtent(bounds);
 		return;
+	    } else {
+		var center = ((state.x) ? new OpenLayers.LonLat(state.x, state.y)
+			      //default to center of map.  maybe bad idea
+			      : self.openlayers.map.getCenter()
+			     );
+		self.openlayers.map.setCenter(center, state.zoom);
 	    }
-	    self.openlayers.map.setCenter(
-		new OpenLayers.LonLat(state.x, state.y), state.zoom
-	    );
 	}
 	this.microformat = {};
 	this.microformat.create = function(obj,doc) {
@@ -108,8 +135,9 @@ if (!Sherd.Image.OpenLayers) {
 		numZoomLevels: 5, 
 		sphericalMercator: false,
 		projection:'Flatland:1',
-		///TODO figure out how the fuck this works
-		maxExtent:new OpenLayers.Bounds(-180, -180, 180, 90)
+		///extraneous, for tiling, but ?good? default?
+		///must be this way for tiling, in any case.
+		maxExtent:new OpenLayers.Bounds(-180, -90, 180, 90)
 		//,units:'m'
 	    };
 	    return {
@@ -146,19 +174,28 @@ if (!Sherd.Image.OpenLayers) {
 		self.openlayers.map =  new OpenLayers.Map(create_obj.htmlID);
 
 		if (create_obj.object.xyztile) {
-		    create_obj.object.options.numZoomLevels = Math.ceil(create_obj.object.width/256) || 5;
+		    var opt = create_obj.object.options;
+		    ///must be this way for tiling, in any case.
+		    opt.maxExtent=new OpenLayers.Bounds(-180, -90, 180, 90);
+		    opt.numZoomLevels = Math.ceil(create_obj.object.width/256) || 5;
+
 		    self.openlayers.graphic = new OpenLayers.Layer.XYZ(
 			create_obj.object.title||'Image',
 			create_obj.object.xyztile,
 			//"http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Portland/ESRI_LandBase_WebMercator/MapServer/tile/${z}/${y}/${x}",
-			create_obj.object.options
+			opt
 		    );
+		    ///HACK: to make the tiler work for partial tiles (e.g. not exactly 256x256)
+		    self.openlayers.graphic.getImageSize = function(){return null;};
 		} else {
+		    var o2b = self.openlayers.object2bounds;
+		    var bounds = o2b(create_obj.object);
+		    create_obj.object.options.maxExtent = o2b(create_obj.object);
+
 		    self.openlayers.graphic = new OpenLayers.Layer.Image(
 			create_obj.object.title||'Image',
 			create_obj.object.image,//url of image
-			///TODO:figure these out better
-			new OpenLayers.Bounds(-180, -90, 180, 90),
+			bounds,
 			new OpenLayers.Size(create_obj.object.width, create_obj.object.height),
 			create_obj.object.options
 		    );
