@@ -1,3 +1,9 @@
+if (!Math.log2) {
+    var div = Math.log(2);
+    Math.log2 = function(x) {
+	return Math.log(x)/div;
+    }
+}
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Image) {Sherd.Image = {};}
 if (!Sherd.Image.OpenLayers) {
@@ -15,23 +21,27 @@ if (!Sherd.Image.OpenLayers) {
 		    )};
 		}
 	    },
+	    'object_proportioned':function(object) {
+		var dim = {w:180,h:90};
+		var w = object.width||180;//76.23;//
+		var h = object.height||90;
+		if (w/2 > h) {
+		    dim.h = Math.ceil(180*h/w);
+		} else {
+		    dim.w = Math.ceil(90 *w/h);
+		}
+		return dim;
+	    },
 	    'object2bounds':function(object) {
 		///TODO:figure these out better
 		///should fail without w/h better
 		///test image: 466x550, 1694x2000
 		///180/2000.0 * 1694 = 152.46 (/2 = 76.23)
-		var dim = {w:180,h:90};
-		var w = object.width||76.23;//180
-		var h = object.height||90;
-		if (w/2 > h) {
-		    dim.h = 180*h/w;
-		} else {
-		    dim.w = 90 *w/h;
-		}
-		return new OpenLayers.Bounds(-Math.ceil(dim.w),
-					     -Math.ceil(dim.h),
-					     Math.floor(dim.w),
-					     Math.floor(dim.h)
+		var dim = self.openlayers.object_proportioned(object);
+		return new OpenLayers.Bounds(-dim.w,
+					     -dim.h,
+					     dim.w,
+					     dim.h
 					    );
 	    }
 	};
@@ -92,7 +102,8 @@ if (!Sherd.Image.OpenLayers) {
 		'x':0,//center of -180:180
 		'y':0,//center of -90:90
                 */
-		'zoom':1
+		//x:-135,y:45,
+		'zoom':2
 	    };
 	    if (typeof obj=='object') {
 		if (obj.feature) {
@@ -118,13 +129,12 @@ if (!Sherd.Image.OpenLayers) {
 
 		self.openlayers.vectors.addFeatures( self.openlayers.features );
 		self.openlayers.map.zoomToExtent(bounds);
-		return;
+	    } else if (state.x) {
+		self.openlayers.map.setCenter(
+		    new OpenLayers.LonLat(state.x, state.y), state.zoom
+		);
 	    } else {
-		var center = ((state.x) ? new OpenLayers.LonLat(state.x, state.y)
-			      //default to center of map.  maybe bad idea
-			      : self.openlayers.map.getCenter()
-			     );
-		self.openlayers.map.setCenter(center, state.zoom);
+		self.openlayers.map.zoomToMaxExtent();
 	    }
 	}
 	this.microformat = {};
@@ -176,8 +186,19 @@ if (!Sherd.Image.OpenLayers) {
 		if (create_obj.object.xyztile) {
 		    var opt = create_obj.object.options;
 		    ///must be this way for tiling, in any case.
-		    opt.maxExtent=new OpenLayers.Bounds(-180, -90, 180, 90);
-		    opt.numZoomLevels = Math.ceil(create_obj.object.width/256) || 5;
+		    opt.maxExtent=new OpenLayers.Bounds(-180, -25, -65, 90);
+		    //opt.maxExtent=new OpenLayers.Bounds(-180, -90, 180, 90);
+		    if (create_obj.object['xyztile-metadata']) {
+			var md = create_obj.object['xyztile-metadata'];
+			opt.numZoomLevels = Math.ceil(
+			    Math.log2(Math.max(md.height,md.width))-7);
+			var dim = self.openlayers.object_proportioned(md);
+			opt.maxExtent=new OpenLayers.Bounds(-180, 90-2*dim.h, -180+ 2*dim.w, 90);
+		    } else {
+			opt.maxExtent=new OpenLayers.Bounds(-180, -90, 180, 90);
+		    }
+		    ///so it doesn't cut off the bottom/right of the image--by partial tile
+		    opt.displayOutsideMaxExtent = true;
 
 		    self.openlayers.graphic = new OpenLayers.Layer.XYZ(
 			create_obj.object.title||'Image',
@@ -186,17 +207,24 @@ if (!Sherd.Image.OpenLayers) {
 			opt
 		    );
 		    ///HACK: to make the tiler work for partial tiles (e.g. not exactly 256x256)
+		    
 		    self.openlayers.graphic.getImageSize = function(){return null;};
+		    self.openlayers.graphic.zoomToMaxExtent=function(){
+			self.openlayers.map.setCenter(this.maxExtent.getCenterLonLat());
+		    };
 		} else {
 		    var o2b = self.openlayers.object2bounds;
 		    var bounds = o2b(create_obj.object);
-		    create_obj.object.options.maxExtent = o2b(create_obj.object);
+		    var dim = self.openlayers.object_proportioned(create_obj.object);
 
+		    create_obj.object.options.maxExtent = o2b(create_obj.object);
 		    self.openlayers.graphic = new OpenLayers.Layer.Image(
 			create_obj.object.title||'Image',
 			create_obj.object.image,//url of image
 			bounds,
-			new OpenLayers.Size(create_obj.object.width, create_obj.object.height),
+			//just proportional size: probably much smaller than the actual image
+			///this allows us to 'zoom out' to smaller than actual image size
+			new OpenLayers.Size(dim.w, dim.h),
 			create_obj.object.options
 		    );
 		}

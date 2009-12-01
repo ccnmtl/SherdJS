@@ -2,24 +2,31 @@
 ****/
 jQuery(function(){
     var destination = 'http://sky.ccnmtl.columbia.edu:8000/save/?';
-    var img_file = String(jQuery('img').get(2).src);
-    var img_base = img_file.match(/images\/([^.]+)\./)[1];
-    var site_base = String(document.location).match(/(.*?)image/)[1];
-    var extension = img_file.substr(-3); //JPG or jpg--CRAZY!!!
-    var args = {
-	'title':jQuery('#node-main h2.title').get(0).innerHTML,
-	'url':document.location,
-	'thumb':site_base+'files/tibet/images/'+img_base+'.thumbnail.'+extension,
-	'xyztile':site_base+'files/tibet/tiles/'+img_base+'/z${z}/y${y}/x${x}.png',
-	'image':img_file,
-	'archive':site_base
-    }
-    for (a in args) {
-	destination += ( a+'='+args[a] +'&' );
-    }
+    var img = jQuery('.node img').get(0);
+    if (img) {
+	var img_file = String(img.src);
+	var decontextualized_image = document.createElement('img');
+	decontextualized_image.src = img_file;
+	
+	var img_base = img_file.match(/images\/([^.]+)\./)[1];
+	var site_base = String(document.location).match(/(.*?)image/)[1];
+	var extension = img_file.substr(-3); //JPG or jpg--CRAZY!!!
+	var args = {
+	    'title':jQuery('#node-main h2.title').get(0).innerHTML,
+	    'url':document.location,
+	    'thumb':site_base+'files/tibet/images/'+img_base+'.thumbnail.'+extension,
+	    'xyztile':site_base+'files/tibet/tiles/'+img_base+'/z${z}/y${y}/x${x}.png',
+	    'image':img_file,
+	    'archive':site_base,
+	    'image-metadata':'w'+decontextualized_image.width+'h'+decontextualized_image.height,
+	    'xyztile-metadata':'w'+img.width+'h'+img.height
+	}
+	for (a in args) {
+	    destination += ( a+'='+args[a] +'&' );
+	}
 
-    jQuery('.byxor-control-slot div').prepend('<h2 style="display:block;float:left;margin:-2px 5px 0 5px;padding:0 5px 0 5px;background-color:white"><a href="'+destination+'" style="color:black;">Analyze This</a></h2>');
-
+	jQuery('.byxor-control-slot div').prepend('<h2 style="display:block;float:left;margin:-2px 5px 0 5px;padding:0 5px 0 5px;background-color:white"><a href="'+destination+'" style="color:black;">Analyze This</a></h2>');
+    }
 });
 
 

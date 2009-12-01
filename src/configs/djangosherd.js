@@ -167,20 +167,23 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
     addLoadEvent(function(){
 	///TODO: unHACK HACK HACK
 	///need to make this more abstracted--where should we test for 'can thumb'?
-	forEach(ds.annotationMicroformat.find(),function(found_obj) {
-	    var ann_obj = ds.annotationMicroformat.read(found_obj);
-	    if (ann_obj.asset.type=='image') {//CAN THUMB?
-		var view = new Sherd.Image.OpenLayers();
-		ds.thumbs.push(view);
-		var obj_div = DIV({'class':'thumb'});
-		found_obj.html.parentNode.appendChild(obj_div);
-		//should probably be in .view
-		ann_obj.asset.presentation = 'thumb';
-		//.asset is the only thing used right now
-		view.html.push(obj_div, ann_obj);
-		view.setState(ann_obj.annotations[0]);
-	    }
-	});
+	var materials = $('materials'); //asset table list
+	if (materials) {
+	    forEach(ds.annotationMicroformat.find(materials),function(found_obj) {
+		var ann_obj = ds.annotationMicroformat.read(found_obj);
+		if (ann_obj.asset.type=='image') {//CAN THUMB?
+		    var view = new Sherd.Image.OpenLayers();
+		    ds.thumbs.push(view);
+		    var obj_div = DIV({'class':'thumb'});
+		    found_obj.html.parentNode.appendChild(obj_div);
+		    //should probably be in .view
+		    ann_obj.asset.presentation = 'thumb';
+		    //.asset is the only thing used right now
+		    view.html.push(obj_div, ann_obj);
+		    view.setState(ann_obj.annotations[0]);
+		}
+	    });
+	}   
 	///this is for published view
 	forEach($$('a.materialCitation'),function(elt){//MOCHI
 	    var url = elt.getAttribute('href');
@@ -207,6 +210,16 @@ function DjangoSherd_AssetMicroFormat() {
 		///use getAttribute rather than href, to avoid urlencodings
 		rv[ reg[1] ] = elt.getAttribute('href');
 		///TODO: maybe look for some data attributes here, too, when we put them there.
+		var metadata = elt.getAttribute('data-metadata');
+		if (metadata != null) {
+		    var wh = metadata.match(/w(\d+)h(\d+)/);
+		    rv[reg[1]+'-metadata'] = {width:wh[1],
+					      height:wh[2]};
+		    if (hasElementClass(elt,'asset-primary')) {
+			rv['width']=wh[1];
+			rv['height']=wh[2];
+		    }
+		}
 	    }
 	});
 	if (rv.quicktime) {
