@@ -342,7 +342,7 @@ function openCitation(url,no_autoplay) {
     var id = url.match(/(\d+)\/$/).pop();
 
     if (current_citation) removeElementClass(current_citation,'active-annotation');
-    current_citation = getFirstElementByTagAndClassName(null,'annotation'+id);
+    current_citation = getFirstElementByTagAndClassName('div','annotation'+id);
     addElementClass(current_citation,'active-annotation');
     showElement('videoclipbox');
 

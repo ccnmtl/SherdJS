@@ -15,7 +15,7 @@ jQuery(function(){
 	    'title':jQuery('#node-main h2.title').get(0).innerHTML,
 	    'url':document.location,
 	    'thumb':site_base+'files/tibet/images/'+img_base+'.thumbnail.'+extension,
-	    'xyztile':site_base+'files/tibet/tiles/'+img_base+'/z${z}/y${y}/x${x}.png',
+	    'xyztile':site_base+'files/tibet/images/tiles/'+img_base+'/z${z}/y${y}/x${x}.png',
 	    'image':img_file,
 	    'archive':site_base,
 	    'image-metadata':'w'+decontextualized_image.width+'h'+decontextualized_image.height,
