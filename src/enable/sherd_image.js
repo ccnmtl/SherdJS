@@ -2,6 +2,9 @@
 ****/
 jQuery(function(){
     var destination = 'http://sky.ccnmtl.columbia.edu:8000/save/?';
+    //so we don't have to keep them on kodos while testing
+    var real_site = 'http://digitaltibet.ccnmtl.columbia.edu/';
+
     var img = jQuery('.node img').get(0);
     if (img) {
 	var img_file = String(img.src);
@@ -15,7 +18,7 @@ jQuery(function(){
 	    'title':jQuery('#node-main h2.title').get(0).innerHTML,
 	    'url':document.location,
 	    'thumb':site_base+'files/tibet/images/'+img_base+'.thumbnail.'+extension,
-	    'xyztile':site_base+'files/tibet/images/tiles/'+img_base+'/z${z}/y${y}/x${x}.png',
+	    'xyztile':real_site+'files/tibet/images/tiles/'+img_base+'/z${z}/y${y}/x${x}.png',
 	    'image':img_file,
 	    'archive':site_base,
 	    'image-metadata':'w'+decontextualized_image.width+'h'+decontextualized_image.height,

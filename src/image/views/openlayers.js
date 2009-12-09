@@ -215,6 +215,7 @@ if (!Sherd.Image.OpenLayers) {
 		} else {
 		    var o2b = self.openlayers.object2bounds;
 		    var bounds = o2b(create_obj.object);
+		    ///TODO: if no create_obj.object.width, test with createElement('img')
 		    var dim = self.openlayers.object_proportioned(create_obj.object);
 
 		    create_obj.object.options.maxExtent = o2b(create_obj.object);
