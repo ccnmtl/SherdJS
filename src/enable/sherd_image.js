@@ -1,7 +1,7 @@
 /***owned by Tibetan Civilization project, at the moment
 ****/
 jQuery(function(){
-    var destination = 'http://sky.ccnmtl.columbia.edu:8000/save/?';
+    var destination = 'http://mondrian.ccnmtl.columbia.edu/save/?';
     //so we don't have to keep them on kodos while testing
     var real_site = 'http://digitaltibet.ccnmtl.columbia.edu/';
 
