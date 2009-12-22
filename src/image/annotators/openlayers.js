@@ -36,13 +36,21 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		self.targetview.openlayers.vectors
 	    );
 	    self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
-	    self.openlayers.editingtoolbar.sherd.navigation.activate()
+	    //Q: this doubles mousewheel listening, e.g. why did we need it?
+	    //A: needed for not showing toolbar until clicking 'redo annotation' on an annotation
+	    //self.openlayers.editingtoolbar.sherd.navigation.activate();
+	    //Solution: just send signals or whatever.
+	    OpenLayers.Control.prototype.activate.call(
+		self.openlayers.editingtoolbar.sherd.navigation
+	    );
 
 	    //on creation of an annotation
 	    self.openlayers.editingtoolbar.featureAdded = function(feature) {
 		var geojson = self.targetview.openlayers.feature2json(feature);
 		///this should probably be through a signal?
-		self.targetview.setState({feature:feature});
+		self.targetview.setState({feature:feature,
+					  preserveCurrentFocus:true
+					 });
 		self.storage.update(geojson);
 	    }
 	    ///# 3. button listeners
@@ -70,11 +78,12 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	    CustomEditingToolbar :OpenLayers.Class(
 		OpenLayers.Control.EditingToolbar, {
 		    initialize: function(layer, options) {
-			//copied, just removing Path
+			//copied, just removing Path-drawing
 			var self = this;
 			OpenLayers.Control.Panel.prototype.initialize.apply(this, [options]);
+			//keep our own stuff contained;
 			this.sherd = {};
-			this.sherd.navigation = new OpenLayers.Control.Navigation();
+			this.sherd.navigation = new OpenLayers.Control.Navigation({autoActivate:true});
 			///NEEDS MORE WORK, SO it's a BOX
 			//new OpenLayers.Control.DrawFeature(layer, OpenLayers.Handler.Box, {'displayClass': 'olControlNavToolbar'}),
 			this.sherd.pointHandler = new OpenLayers.Control.DrawFeature(

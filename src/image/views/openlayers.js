@@ -4,9 +4,17 @@ if (!Math.log2) {
 	return Math.log(x)/div;
     }
 }
+if (!window.console) {
+    window.console = {log:function(){}};
+}
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Image) {Sherd.Image = {};}
 if (!Sherd.Image.OpenLayers) {
+    /*reference files 
+     * openlayers/openlayers/examples/image-layer.html
+     * openlayers/openlayers/examples/modify-feature.html
+     * openlayers/openlayers/examples/vector-formats.html
+     */
     Sherd.Image.OpenLayers = function() {
 	var self = this;
 	var Mochi = MochiKit.DOM;
@@ -128,13 +136,15 @@ if (!Sherd.Image.OpenLayers) {
 		//self.openlayers.features[1].style = self.openlayers.vectors.styleMap.styles['sky'];
 
 		self.openlayers.vectors.addFeatures( self.openlayers.features );
-		self.openlayers.map.zoomToExtent(bounds);
-	    } else if (state.x) {
-		self.openlayers.map.setCenter(
-		    new OpenLayers.LonLat(state.x, state.y), state.zoom
-		);
-	    } else {
-		self.openlayers.map.zoomToMaxExtent();
+		obj.preserveCurrentFocus || self.openlayers.map.zoomToExtent(bounds);
+	    } else if (!obj || !obj.preserveCurrentFocus) {
+		if (state.x) {
+		    self.openlayers.map.setCenter(
+			new OpenLayers.LonLat(state.x, state.y), state.zoom
+		    );
+		} else {
+		    self.openlayers.map.zoomToMaxExtent();
+		}
 	    }
 	}
 	this.microformat = {};
@@ -182,32 +192,52 @@ if (!Sherd.Image.OpenLayers) {
 		top.style.height = presentation.height(create_obj.object, self);
 
 		self.openlayers.map =  new OpenLayers.Map(create_obj.htmlID);
-
+		console.log(create_obj.object);
 		if (create_obj.object.xyztile) {
+		    ///DOC: Tile x0,y0 upper left starts at (-180,80)
+		    ///DOC: whereas single images start at (-180,90)
 		    var opt = create_obj.object.options;
-		    ///must be this way for tiling, in any case.
-		    opt.maxExtent=new OpenLayers.Bounds(-180, -25, -65, 90);
-		    //opt.maxExtent=new OpenLayers.Bounds(-180, -90, 180, 90);
 		    if (create_obj.object['xyztile-metadata']) {
 			var md = create_obj.object['xyztile-metadata'];
 			opt.numZoomLevels = Math.ceil(
 			    Math.log2(Math.max(md.height,md.width))-7);
 			var dim = self.openlayers.object_proportioned(md);
-			opt.maxExtent=new OpenLayers.Bounds(-180, 90-2*dim.h, -180+ 2*dim.w, 90);
+			console.log('h orig:'+md.height);
+			console.log('w orig:'+md.width);
+			
+			console.log('h:'+dim.h);
+			console.log('w:'+dim.w);
+			console.log('zooms: '+opt.numZoomLevels);
+			var px2deg = 180/Math.pow(2,opt.numZoomLevels+6);
+			console.log(Math.ceil(md.height*px2deg));
+			console.log(Math.ceil(md.width*px2deg));
+			/*
+Somehow the maxExtent.bottom affects positioning of annotations across zoom levels
+Futhermore, the top seems to matter also (setting to 90 also breaks at different places)
+                         */
+			opt.maxExtent=new OpenLayers.Bounds(-180, 
+							    -280,//80-Math.ceil(md.height*px2deg),
+							    -180+Math.ceil(md.width*px2deg), 
+							    80);
 		    } else {
-			opt.maxExtent=new OpenLayers.Bounds(-180, -90, 180, 90);
+			//everything should fit in this?
+			opt.maxExtent=new OpenLayers.Bounds(-180, (80-360), 180, 80);
+			//earth dimensions
+			//opt.maxExtent=new OpenLayers.Bounds(-180, -90, 180, 80);
 		    }
+		    //opt.maxExtent=new OpenLayers.Bounds(-180, -280, 180, 80);//DEBUG
 		    ///so it doesn't cut off the bottom/right of the image--by partial tile
-		    opt.displayOutsideMaxExtent = true;
+		    //opt.displayOutsideMaxExtent = true;
 
+		    //opt.transitionEffect='resize'; //bug: doesn't hide gutter tiles quickly enough
 		    self.openlayers.graphic = new OpenLayers.Layer.XYZ(
 			create_obj.object.title||'Image',
 			create_obj.object.xyztile,
 			//"http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Portland/ESRI_LandBase_WebMercator/MapServer/tile/${z}/${y}/${x}",
 			opt
 		    );
+		    console.log(self.openlayers.graphic);
 		    ///HACK: to make the tiler work for partial tiles (e.g. not exactly 256x256)
-		    
 		    self.openlayers.graphic.getImageSize = function(){return null;};
 		    self.openlayers.graphic.zoomToMaxExtent=function(){
 			self.openlayers.map.setCenter(this.maxExtent.getCenterLonLat());
@@ -230,7 +260,12 @@ if (!Sherd.Image.OpenLayers) {
 		    );
 		}
 
-		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer");
+		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
+		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer",
+								      {projection:projection
+
+								      }
+								     );
 		var styles  = {
 		    'sky':new OpenLayers.Style({fillOpacity:0,
 						strokeWidth:4,
@@ -242,9 +277,15 @@ if (!Sherd.Image.OpenLayers) {
 		};
 		self.openlayers.vectors.styleMap = new OpenLayers.StyleMap(styles);
 
+		//DEBUG
+		self.openlayers.map.addControl(new OpenLayers.Control.MousePosition());
 
 		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
-		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
+
+		console.log(self.openlayers.graphic.maxExtent);
+		console.log(self.openlayers.graphic.tileOrigin);
+		console.log(self.openlayers.vectors.maxExtent);
+
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,
 		     'externalProjection': new OpenLayers.Projection(projection)}
