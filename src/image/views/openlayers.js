@@ -192,36 +192,28 @@ if (!Sherd.Image.OpenLayers) {
 		top.style.height = presentation.height(create_obj.object, self);
 
 		self.openlayers.map =  new OpenLayers.Map(create_obj.htmlID);
-		console.log(create_obj.object);
+		var objopt = create_obj.object.options;
 		if (create_obj.object.xyztile) {
 		    ///DOC: Tile x0,y0 upper left starts at (-180,80)
 		    ///DOC: whereas single images start at (-180,90)
-		    var opt = create_obj.object.options;
 		    if (create_obj.object['xyztile-metadata']) {
 			var md = create_obj.object['xyztile-metadata'];
-			opt.numZoomLevels = Math.ceil(
+			objopt.numZoomLevels = Math.ceil(
 			    Math.log2(Math.max(md.height,md.width))-7);
 			var dim = self.openlayers.object_proportioned(md);
-			console.log('h orig:'+md.height);
-			console.log('w orig:'+md.width);
-			
-			console.log('h:'+dim.h);
-			console.log('w:'+dim.w);
-			console.log('zooms: '+opt.numZoomLevels);
-			var px2deg = 180/Math.pow(2,opt.numZoomLevels+6);
-			console.log(Math.ceil(md.height*px2deg));
-			console.log(Math.ceil(md.width*px2deg));
+			var px2deg = 180/Math.pow(2,objopt.numZoomLevels+6);
 			/*
-Somehow the maxExtent.bottom affects positioning of annotations across zoom levels
-Futhermore, the top seems to matter also (setting to 90 also breaks at different places)
+                         Somehow the maxExtent.bottom affects positioning of annotations across 
+                         zoom levels, Futhermore, the top seems to matter also 
+                         (setting to 90 also breaks at different places)
                          */
-			opt.maxExtent=new OpenLayers.Bounds(-180, 
+			objopt.maxExtent=new OpenLayers.Bounds(-180, 
 							    -280,//80-Math.ceil(md.height*px2deg),
 							    -180+Math.ceil(md.width*px2deg), 
 							    80);
 		    } else {
 			//everything should fit in this?
-			opt.maxExtent=new OpenLayers.Bounds(-180, (80-360), 180, 80);
+			objopt.maxExtent=new OpenLayers.Bounds(-180, (80-360), 180, 80);
 			//earth dimensions
 			//opt.maxExtent=new OpenLayers.Bounds(-180, -90, 180, 80);
 		    }
@@ -234,9 +226,8 @@ Futhermore, the top seems to matter also (setting to 90 also breaks at different
 			create_obj.object.title||'Image',
 			create_obj.object.xyztile,
 			//"http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Portland/ESRI_LandBase_WebMercator/MapServer/tile/${z}/${y}/${x}",
-			opt
+			objopt
 		    );
-		    console.log(self.openlayers.graphic);
 		    ///HACK: to make the tiler work for partial tiles (e.g. not exactly 256x256)
 		    self.openlayers.graphic.getImageSize = function(){return null;};
 		    self.openlayers.graphic.zoomToMaxExtent=function(){
@@ -248,7 +239,7 @@ Futhermore, the top seems to matter also (setting to 90 also breaks at different
 		    ///TODO: if no create_obj.object.width, test with createElement('img')
 		    var dim = self.openlayers.object_proportioned(create_obj.object);
 
-		    create_obj.object.options.maxExtent = o2b(create_obj.object);
+		    objopt.maxExtent = o2b(create_obj.object);
 		    self.openlayers.graphic = new OpenLayers.Layer.Image(
 			create_obj.object.title||'Image',
 			create_obj.object.image,//url of image
@@ -256,7 +247,7 @@ Futhermore, the top seems to matter also (setting to 90 also breaks at different
 			//just proportional size: probably much smaller than the actual image
 			///this allows us to 'zoom out' to smaller than actual image size
 			new OpenLayers.Size(dim.w, dim.h),
-			create_obj.object.options
+			objopt
 		    );
 		}
 
@@ -281,10 +272,6 @@ Futhermore, the top seems to matter also (setting to 90 also breaks at different
 		self.openlayers.map.addControl(new OpenLayers.Control.MousePosition());
 
 		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
-
-		console.log(self.openlayers.graphic.maxExtent);
-		console.log(self.openlayers.graphic.tileOrigin);
-		console.log(self.openlayers.vectors.maxExtent);
 
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,

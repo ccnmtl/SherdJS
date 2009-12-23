@@ -112,7 +112,7 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 		}
 	    });
 	}   
-	///this is for published view
+	///In published view: decorate annotation links
 	forEach($$('a.materialCitation'),function(elt){//MOCHI
 	    var url = elt.getAttribute('href');
 	    connect(elt,'onclick',function(evt){

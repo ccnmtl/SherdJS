@@ -38,6 +38,7 @@ if (!Sherd.GenericAssetView) {
 	    remove:function() {
 		if (current_type) {
 		    self.settings[current_type].view.html.remove();
+		    current_type = false;
 		}
 	    },
 	    push:function(html_dom,options) {
