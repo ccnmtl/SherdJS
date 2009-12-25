@@ -81,7 +81,6 @@ if (!Sherd.Video.Base) {
 		'complete':noop,
 		'unsupported':noop //,
 	    }
-
 	}
 
 	this.start = false; //current/last seek time
@@ -99,6 +98,7 @@ if (!Sherd.Video.Base) {
 	    ,seek:unimplemented//(seconds,endtime)
 	    ,pause:unimplemented
 	    ,pauseAt:unimplemented//(seconds)
+	    ,play:unimplemented
 
 	    //get information
 	    ,time:unimplemented//get current time in seconds
@@ -119,15 +119,10 @@ if (!Sherd.Video.Base) {
 
 	///BEGIN VITAL assumption -->relegate to quicktime.js when smarter
 	this.play = function() {
-	    if (theMovie) {
-		var mimetype = theMovie.GetMIMEType();
-		if (/image/.test(mimetype)) {
-		    theMovie.SetURL(theMovie.GetHREF());
-		} else {
-		    theMovie.Play();
-		}
-	    }
+	    this.media.play();
 	}
+	
+	// tell me where you are
 	this.getState = function() {
 	    var state = {
 		'start':self.media.time()
@@ -137,23 +132,13 @@ if (!Sherd.Video.Base) {
 	    state['timeScale'] = self.media.movscale;//correct after time()/duration() called
 	    return state;
 	}
+	
+	// did you give me a start point - cue?
+	// did you give me an end point -- pause at that end point or jump to the end point if you're past that point
+	// if not loaded -- then do this as soon as you load (if ready)
 	this.setState = function(obj) {
 	    if (typeof obj=='object') {
-		///VITAL
-		try {
-		    giveUp();
-		    prepareGrabber();
-		    if (obj.duration) movDuration = obj.duration; 
-		    if (obj.timeScale) movscale = obj.timeScale; 
-		    
-		    if (obj.startCode && obj.endCode) {
-			refresh_mymovie(obj.startCode, obj.endCode, 'Clip');
-		    } else if (typeof obj.start=='number') {
-			//?does this even work?
-			refresh_mymovie(obj.start, obj.start, 'Clip');
-		    }
-		    return true;
-		}catch(e){/*maybe no movie?*/}
+	        this.media.seek(obj.start) // TODO make this actually work for youtube (tostart) -- overridden by QT
 	    }
 	}
 	///END VITAL-specific

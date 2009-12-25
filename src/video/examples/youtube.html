@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>You Tube</title>
+  <script type="text/javascript" src="/site_media/js/sherdjs/lib/swfobject/swfobject.js"></script>
+  
+  <script type="text/javascript">
+      function onYouTubePlayerReady(playerId) 
+      {
+          ytplayer = document.getElementById(playerId);
+      }
+       
+     function playVideo()
+     {
+         if (ytplayer) {
+             ytplayer.playVideo();
+         }
+     }
+  </script>
+</head>
+
+<body>
+  <div id="userassets" class="sherd-collection">
+  </div>
+  <div class="sherd-youtube-wrapper">
+      <object width="425" height="344">
+        <param name="movie" value="http://www.youtube.com/v/OdBNxqJ-_60?fs=1&enablejsapi=1&playerapiid=youtube1"></param>
+        <param name="allowscriptaccess" value="always"></param>
+        <embed src="http://www.youtube.com/v/OdBNxqJ-_60?fs=1&enablejsapi=1&playerapiid=youtube1"
+          type="application/x-shockwave-flash"
+          allowScriptAccess="always"
+          width="425" height="344"
+          id="youtube1">
+        </embed>
+      </object>
+  </div>
+  
+  <a href="#" onclick="playVideo()">Play</a> 
+  
+  <table>
+      <tr>
+        <td class="noborder valignMiddle">Start at:</td>
+        <td class="noborder">
+          <input size="1" id="startseconds" value="0" type="text"> seconds
+        </td>
+
+      </tr>
+      <tr>
+        <td class="noborder" style="padding: 10px 0px 8px 10px;" colspan="2">
+          <input onclick="javascript:youtube1.loadVideoById(document.getElementById('videoid').value, document.getElementById('startseconds').value, 'default')" value="Load video" type="button">&nbsp;&nbsp;
+          <input onclick="javascript:youtube1.cueVideoById(document.getElementById('videoid').value, document.getElementById('startseconds').value, 'default')" value="Cue video" type="button">
+        </td>
+      </tr>
+  </table>
+  
+</body>
+</html>

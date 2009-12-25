@@ -21,6 +21,17 @@ if (!Sherd.GenericAssetView) {
 	    }
 	    this.settings.quicktime = quicktime;
 	}
+    if (Sherd.Video && Sherd.Video.YouTube) {
+        var youtube = {'view':new Sherd.Video.YouTube()};
+        if (options.clipform) {
+            youtube.clipform = new DjangoSherd_ClipForm();//see vitalwrapper.js
+            youtube.clipform.attachView(youtube.view);
+            if (options.storage) {
+                youtube.clipform.addStorage(options.storage);
+            }
+        }
+        this.settings.youtube = youtube;
+    }
 	if (Sherd.Image && Sherd.Image.OpenLayers) {
 	    var image = {'view':new Sherd.Image.OpenLayers()};
 	    if (options.clipform) {

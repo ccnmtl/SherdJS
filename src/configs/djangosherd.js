@@ -165,12 +165,9 @@ function DjangoSherd_AssetMicroFormat() {
 			      loadingposter:'/site_media/js/sherdjs/media/images/poster.gif'
 			     }
 			 );
-	} else if (rv.youtube) {
-	    return {type:'youtube',
-		    url:rv.youtube,
-		    height:240,
-		    width:320
-		   };
+    } else if (rv.youtube) {
+        rv.type = 'youtube';
+        return rv;
 	} else if (rv.image) {
 	    rv.type = 'image';
 	    return rv;

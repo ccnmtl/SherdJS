@@ -134,7 +134,7 @@ var new_id = 0;
 	    }
 
 	}//DomObject
-	,'AssetView':function() {
+	,'AssetView':function() { // TODO Document getState/setState and .play. (and anything else an AssetView does...) 
 	    var self = this;
 	    Sherd.Base.DomObject.apply(this);
 
