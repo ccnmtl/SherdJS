@@ -25,8 +25,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 
         // overrides video.js play
         this.play = function() {
-            // move to quicktime.js -- override the this.play
-            if (theMovie) {
+            if (theMovie) { // theMovie is defined in videoclipping.js. mondrian/media/js/vital3/videoclipping.js
                 var mimetype = theMovie.GetMIMEType();
                 if (/image/.test(mimetype)) {
                     theMovie.SetURL(theMovie.GetHREF());
@@ -45,15 +44,15 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             ///VITAL
             try {
                 giveUp(); // stop "pause" listener.
-                prepareGrabber(); // 
+                prepareGrabber(); // videoclipping.js
                 if (obj.duration) movDuration = obj.duration; // used by videoclipping.js
                 if (obj.timeScale) movscale = obj.timeScale; // used by videoclipping.js
                 
                 if (obj.startCode && obj.endCode) {
-                refresh_mymovie(obj.startCode, obj.endCode, 'Clip');
+                    refresh_mymovie(obj.startCode, obj.endCode, 'Clip');
                 } else if (typeof obj.start=='number') {
-                //?does this even work?
-                refresh_mymovie(obj.start, obj.start, 'Clip');
+                    //?does this even work?
+                    refresh_mymovie(obj.start, obj.start, 'Clip');
                 }
                 return true;
             }catch(e){/*maybe no movie?*/}
@@ -74,8 +73,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             var par = self.components.wrapper.parentNode;
             par.innerHTML = '';
         }
-
-        this.media = {};
+        
         this.media._updateMovScale = function() {
             if (!self.components.media) {
                 ///TODO:ASSUMING id() dependency for now
@@ -92,10 +90,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             self.media._updateMovScale();
             return self.components.media.GetDuration()/self.media.movscale;
         }
-        this.media.timeCode = function() {
-            return self.secondsToCode(self.media.time());
-        }
-
         this.media.play = function() {
             self.events.queue('play',[
                                       {test:self.media._test,
@@ -104,9 +98,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                       {call:function(){self.components.media.Play()}}
                                       ]);
         }
-        this.media.pause = function() {self.components.media.Stop();}
-        this.media.pauseAt = function(endtime) {
-            this.media._endtime = endtime;
+        this.media.pause = function() {
+            self.components.media.Stop();
         }
 
         this.media._test = function() {
@@ -128,9 +121,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             var url = self.components.media.GetURL();
             return (url && /^rtsp/.test(url));
         }
-        this.media.seek = function(seconds,endtime) {
+        this.media.seek = function(seconds) {
             var playRate = 0;
-            if (endtime) {self.media.pauseAt(endtime);}
+            
             self.events.queue('seek',[
                                       {test:self.media._test,
                                           poll:300
