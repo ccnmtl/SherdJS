@@ -96,9 +96,6 @@ if (!Sherd.GenericAssetView) {
                 self.settings[current_type].view.setState.apply(
                         self.settings[current_type].view, arguments //special JS magic -- this == view
                         );
-                
-                self.settings[current_type].clipform.setState.apply(
-                        self.settings[current_type].clipform, arguments);
             }
         }
         this.getState = function() {

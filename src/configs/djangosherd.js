@@ -51,6 +51,7 @@ function DjangoSherd_Asset_Config() {
                         .getAttribute('data-annotation'));
 
                 ds.assetview.setState(obj);
+                ds.assetview.clipform.setState(obj);
                
             } catch (e) {/* non-valid json? */
             }
