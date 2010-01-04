@@ -161,194 +161,198 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             };
         }
 
-        function _default_QTformat() {
-            this.type = function() {return 'quicktime';};
-            this.read = function(found_obj) {
-                //return asset object (with url:src, dimensions, etc)
-                // creates a serialized JSON format to be used for things like printing, or spitting out a description.
-                var obj = {
-                        url:'',//defaults
-                        quicktime:'',
-                        width:320,
-                        height:260,
-                        autoplay:'false',
-                        controller:'true',
-                        errortext:'Error text.',
-                        type:'video/quicktime',
-                };
-                var params = found_obj.html.getElementsByTagName('param');
-                for (var i=0;i<params.length;i++) {
-                    obj[params[i].getAttribute('name')] = params[i].getAttribute('value');
-                }
-                if (obj.src) {
-                    obj.url = obj.src;
-                    delete obj.src;
-                } else {
-                    obj.url = found_obj.html.getAttribute('data');
-                }
-                obj.quicktime = obj.url;
-                if (Number(found_obj.html.width)) obj.width=Number(found_obj.html.width);
-                if (Number(found_obj.html.height)) obj.height=Number(found_obj.html.height);
-                return obj;
+        
+        this.microformat.type = function() {return 'quicktime';};
+        
+        this.microformat.read = function(found_obj) {
+            //return asset object (with url:src, dimensions, etc)
+            // creates a serialized JSON format to be used for things like printing, or spitting out a description.
+            var obj = {
+                    url:'',//defaults
+                    quicktime:'',
+                    width:320,
+                    height:260,
+                    autoplay:'false',
+                    controller:'true',
+                    errortext:'Error text.',
+                    type:'video/quicktime',
             };
-            this.find = function(html_dom) {
-                // Find the objects based on the QT properties in the DOM
-                var found = [];
-                //SNOBBY:not embeds, since they're in objects--and not xhtml 'n' stuff
-                var objects = ((html_dom.tagName.toLowerCase()=='object')
-                        ?[html_dom]
-                          :html_dom.getElementsByTagName('object')
-                          //function is case-insensitive in IE and FFox,at least
-                );
-                for(var i=0;i<objects.length;i++) {
-                    if (objects[i].getAttribute('classid')=='clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B'
-                        || objects[i].getAttribute('type')=='video/quicktime'
-                    )
-                        found.push({'html':objects[i]});
+            var params = found_obj.html.getElementsByTagName('param');
+            for (var i=0;i<params.length;i++) {
+                obj[params[i].getAttribute('name')] = params[i].getAttribute('value');
+            }
+            if (obj.src) {
+                obj.url = obj.src;
+                delete obj.src;
+            } else {
+                obj.url = found_obj.html.getAttribute('data');
+            }
+            obj.quicktime = obj.url;
+            if (Number(found_obj.html.width)) obj.width=Number(found_obj.html.width);
+            if (Number(found_obj.html.height)) obj.height=Number(found_obj.html.height);
+            return obj;
+        };
+        
+        this.microformat.find = function(html_dom) {
+            // Find the objects based on the QT properties in the DOM
+            var found = [];
+            //SNOBBY:not embeds, since they're in objects--and not xhtml 'n' stuff
+            var objects = ((html_dom.tagName.toLowerCase()=='object')
+                    ?[html_dom]
+                      :html_dom.getElementsByTagName('object')
+                      //function is case-insensitive in IE and FFox,at least
+            );
+            for(var i=0;i<objects.length;i++) {
+                if (objects[i].getAttribute('classid')=='clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B'
+                    || objects[i].getAttribute('type')=='video/quicktime'
+                )
+                    found.push({'html':objects[i]});
+            }
+            return found;
+        };
+        
+        this.microformat.update = function(obj,html_dom) {
+            ///1. test if something exists in components now (else return false)
+            ///2. assert( obj ~= from_obj) (else return false)
+            ///3. 
+            if (!obj.quicktime) {return false;}
+            var compo = self.components || self.microformat.components(html_dom);
+            if (compo && compo.media && compo.media != null) {
+                try {
+                    compo.media.SetURL(obj.quicktime);
+                    return true;
+                } catch(e) { /*alert(e.message);*/ }
+            }
+            return false;
+        };
+        
+        this.microformat.write = function(create_obj,html_dom) {
+            if (create_obj && create_obj.text) {
+                html_dom.innerHTML = create_obj.text;
+                var top = document.getElementById(create_obj.htmlID);
+                ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
+                if (/Trident/.test(navigator.userAgent) && create_obj.object.autoplay=='true') {
+                    ///again!  just for IE.  nice IE, gentle IE
+                    setTimeout(function() {
+                        self.microformat.update(create_obj.object, top);
+                    },100);
                 }
-                return found;
+                self.components = self.microformat.components(top,create_obj);
+            }
+        }
+        
+        this.microformat.create = function(obj,doc) {
+            var wrapperID = Sherd.Base.newID('quicktime-wrapper');
+            var id = (typeof self.id=='function')?self.id():Sherd.Base.newID('quicktime');
+            var opt = {
+                    url:'',
+                    width:320,
+                    height:260,
+                    autoplay:'false',
+                    controller:'true',
+                    errortext:'Error text.',
+                    mimetype:'video/quicktime',
+                    poster:false,
+                    loadingposter:false,
+                    extra:''
             };
-            this.update = function(obj,html_dom) {
-                ///1. test if something exists in components now (else return false)
-                ///2. assert( obj ~= from_obj) (else return false)
-                ///3. 
-                if (!obj.quicktime) {return false;}
-                var compo = self.components || self.microformat.components(html_dom);
-                if (compo && compo.media && compo.media != null) {
-                    try {
-                        compo.media.SetURL(obj.quicktime);
-                        return true;
-                    } catch(e) { /*alert(e.message);*/ }
-                }
-                return false;
-            };
-            this.write = function(create_obj,html_dom) {
-                if (create_obj && create_obj.text) {
-                    html_dom.innerHTML = create_obj.text;
-                    var top = document.getElementById(create_obj.htmlID);
-                    ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
-                    if (/Trident/.test(navigator.userAgent) && create_obj.object.autoplay=='true') {
-                        ///again!  just for IE.  nice IE, gentle IE
-                        setTimeout(function() {
-                            self.microformat.update(create_obj.object, top);
-                        },100);
-                    }
-                    self.components = self.microformat.components(top,create_obj);
+            for (a in opt) {
+                if (obj[a]) opt[a] = obj[a];
+            }
+            opt.href= '';//for poster support
+            opt.autohref= '';//for poster support
+            if (!(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
+                    || /Linux/.test(navigator.userAgent)
+            )) {
+                if (opt.autoplay == 'true' && opt.loadingposter) {
+                    opt.mimetype = 'image/x-quicktime';
+                    opt.extra += '<param name="href" value="'+opt.url+'" /> \
+                    <param name="autohref" value="true" /> \
+                    <param name="target" value="myself" /> \
+                    ';
+                    opt.url = opt.poster;
+                    opt.controller = 'false';
+                } else if (opt.poster) {
+                    opt.mimetype = 'image/x-quicktime';
+                    opt.extra += '<param name="href" value="'+opt.url+'" /> \
+                    <param name="autohref" value="'+opt.autoplay+'" /> \
+                    <param name="target" value="myself" /> \
+                    ';
+                    opt.url = opt.poster;
+                    opt.controller = 'false';
                 }
             }
-            this.create = function(obj,doc) {
-                var wrapperID = Sherd.Base.newID('quicktime-wrapper');
-                var id = (typeof self.id=='function')?self.id():Sherd.Base.newID('quicktime');
-                var opt = {
-                        url:'',
-                        width:320,
-                        height:260,
-                        autoplay:'false',
-                        controller:'true',
-                        errortext:'Error text.',
-                        mimetype:'video/quicktime',
-                        poster:false,
-                        loadingposter:false,
-                        extra:''
-                };
-                for (a in opt) {
-                    if (obj[a]) opt[a] = obj[a];
-                }
-                opt.href= '';//for poster support
-                opt.autohref= '';//for poster support
-                if (!(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
-                        || /Linux/.test(navigator.userAgent)
-                )) {
-                    if (opt.autoplay == 'true' && opt.loadingposter) {
-                        opt.mimetype = 'image/x-quicktime';
-                        opt.extra += '<param name="href" value="'+opt.url+'" /> \
-                        <param name="autohref" value="true" /> \
-                        <param name="target" value="myself" /> \
-                        ';
-                        opt.url = opt.poster;
-                        opt.controller = 'false';
-                    } else if (opt.poster) {
-                        opt.mimetype = 'image/x-quicktime';
-                        opt.extra += '<param name="href" value="'+opt.url+'" /> \
-                        <param name="autohref" value="'+opt.autoplay+'" /> \
-                        <param name="target" value="myself" /> \
-                        ';
-                        opt.url = opt.poster;
-                        opt.controller = 'false';
-                    }
-                }
-                //we need to retest where the href usecase is needed
-                //since safari breaks
-                return {htmlID:wrapperID,
-                    mediaID:id,
-                    currentTimeID:'currtime',
-                    durationID:'totalcliplength',
-                    clickToPlayID:'clicktoplay',
-                    object:obj,
-                    text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
-                    <div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div>\
-                    <span id="clicktoplay" \
-                    onclick="theMovie.SetURL(theMovie.GetHREF());hideElement(event.target)"\
-                    >Click video to play</span>\
-                    <!--[if IE]><object id="'+id+'" \
-                    width="'+opt.width+'" height="'+opt.height+'" \
-                    style="behavior:url(#qt_event_source)"  \
-                    codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
-                    classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
-                    <[endif]--><!--[if !IE]><--><object id="'+id+'" type="'+opt.mimetype+'" \
-                    data="'+opt.url+'" \
-                    width="'+opt.width+'" height="'+opt.height+'">  \
+            //we need to retest where the href usecase is needed
+            //since safari breaks
+            return {htmlID:wrapperID,
+                mediaID:id,
+                currentTimeID:'currtime',
+                durationID:'totalcliplength',
+                clickToPlayID:'clicktoplay',
+                object:obj,
+                text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
+                <div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div>\
+                <span id="clicktoplay" \
+                onclick="theMovie.SetURL(theMovie.GetHREF());hideElement(event.target)"\
+                >Click video to play</span>\
+                <!--[if IE]><object id="'+id+'" \
+                width="'+opt.width+'" height="'+opt.height+'" \
+                style="behavior:url(#qt_event_source)"  \
+                codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
+                classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
+                <[endif]--><!--[if !IE]><--><object id="'+id+'" type="'+opt.mimetype+'" \
+                data="'+opt.url+'" \
+                width="'+opt.width+'" height="'+opt.height+'">  \
+                <!-- ><![endif]--> \
+                <param name="src" value="'+opt.url+'" /> \
+                <!--param name="postdomevents" value="true" /--> \
+                <param name="controller" value="'+opt.controller+'" /> \
+                <param name="type" value="'+opt.mimetype+'" /> \
+                <param name="enablejavascript" value="true" /> \
+                <param name="autoplay" value="'+opt.autoplay+'" /> \
+                '+opt.extra+'\
+                '+opt.errortext+'</object></div>'
+                /*
+		'<!--[if IE]><object id="'+id+'" \
+                     width="'+opt.width+'" height="'+opt.height+'" \
+                     style="behavior:url(#qt_event_source)"  \
+                 codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
+                 classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
+ 	                 <param name="src" value="'+opt.url+'" /> \
+                    <[endif]--><!--[if !IE]><--><object id="'+id+'" type="'+opt.type+'" \
+                            data="'+opt.url+'" \
+                            width="'+opt.width+'" height="'+opt.height+'">  \
                     <!-- ><![endif]--> \
-                    <param name="src" value="'+opt.url+'" /> \
-                    <!--param name="postdomevents" value="true" /--> \
-                    <param name="controller" value="'+opt.controller+'" /> \
-                    <param name="type" value="'+opt.mimetype+'" /> \
-                    <param name="enablejavascript" value="true" /> \
-                    <param name="autoplay" value="'+opt.autoplay+'" /> \
-                    '+opt.extra+'\
-                    '+opt.errortext+'</object></div>'
-                    /*
-			'<!--[if IE]><object id="'+id+'" \
-                         width="'+opt.width+'" height="'+opt.height+'" \
-                         style="behavior:url(#qt_event_source)"  \
-	                 codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
-	                 classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
-     	                 <param name="src" value="'+opt.url+'" /> \
-                        <[endif]--><!--[if !IE]><--><object id="'+id+'" type="'+opt.type+'" \
-	                            data="'+opt.url+'" \
-	                            width="'+opt.width+'" height="'+opt.height+'">  \
-                        <!-- ><![endif]--> \
-     	                 <!--param name="postdomevents" value="true" /--> \
-     	                 <param name="type" value="'+opt.type+'" /> \
-	                 <param name="autoplay" value="'+opt.autoplay+'" /> \
-	                 <!-- param name="autohref" value="true" /--> \
-	                 <!-- param name="href" value="'+opt.url+'" / --> \
-	                 <param name="controller" value="'+opt.controller+'" /> \
-	                 '+opt.errortext+'</object>'*/
-                };
+ 	                 <!--param name="postdomevents" value="true" /--> \
+ 	                 <param name="type" value="'+opt.type+'" /> \
+                 <param name="autoplay" value="'+opt.autoplay+'" /> \
+                 <!-- param name="autohref" value="true" /--> \
+                 <!-- param name="href" value="'+opt.url+'" / --> \
+                 <param name="controller" value="'+opt.controller+'" /> \
+                 '+opt.errortext+'</object>'*/
             };
-            this.components = function(html_dom,create_obj) {
-                try {
-                    var rv = {};
-                    if (html_dom) {
-                        rv.wrapper = html_dom;
+        };
+        
+        this.microformat.components = function(html_dom,create_obj) {
+            try {
+                var rv = {};
+                if (html_dom) {
+                    rv.wrapper = html_dom;
+                }
+                if (create_obj) {
+                    //the first works for everyone except safari
+                    //the latter probably works everywhere except IE
+                    rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
+                } else if (html_dom) {
+                    var media = html_dom.getElementsByTagName('object');
+                    if (media.length) {
+                        rv.media = media.item(0);
                     }
-                    if (create_obj) {
-                        //the first works for everyone except safari
-                        //the latter probably works everywhere except IE
-                        rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
-                    } else if (html_dom) {
-                        var media = html_dom.getElementsByTagName('object');
-                        if (media.length) {
-                            rv.media = media.item(0);
-                        }
-                    }
-                    return rv;
-                } catch(e) {}
-                return false;
-            };
-        }
-        this.attachMicroformat(new _default_QTformat());
+                }
+                return rv;
+            } catch(e) {}
+            return false;
+        };
     }//Sherd.AssetViews.QuickTime
 }
 /*
