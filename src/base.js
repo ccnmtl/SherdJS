@@ -164,24 +164,6 @@ Sherd.Base = {
         Sherd.Base.DomObject.apply(this);
 
         this.options = {};
-
-        /**
-         * TODO Ask Sky what he's doing with these two functions
-         */
-        var _controller;
-        this.attachController = function(controller) {
-            _controller = controller;
-        }
-
-        this.attachDOM = function(html_dom) {
-            var m = this.microformat();
-            var list = m.find(html_dom);
-            if (list.length == 1) {
-                this.components = m.components(list[0].html);
-            }
-            // subviews should be handled by attacher (assetmanager)
-            return list;
-        };
         
         if (this.html && !this.html.pull) {
             this.html.pull = function(dom_or_id, optional_microformat) {
