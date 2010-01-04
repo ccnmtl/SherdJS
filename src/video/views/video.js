@@ -148,7 +148,6 @@ if (!Sherd.Video.Base) {
         // /BEGIN VITAL assumption -->relegate to quicktime.js when smarter
         this.play = function() {
             this.media.play();
-            this.media.pauseAt();
         }
 
         // tell me where you are
@@ -170,8 +169,7 @@ if (!Sherd.Video.Base) {
         // if not loaded -- then do this as soon as you load (if ready)
         this.setState = function(obj) {
             if (typeof obj == 'object') {
-                this.media.seek(obj.start);
-                this.media.pauseAt(obj.end);
+                this.media.seek(obj.start, obj.end);
             }
         }
         // /END VITAL-specific

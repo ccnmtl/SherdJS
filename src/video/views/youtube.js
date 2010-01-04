@@ -19,21 +19,26 @@ if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.YouTube && Sherd.Video.Base) {
     Sherd.Video.YouTube = function() {
         var self = this;
+        var _playerId;
+        var _autoplay = 0;
+        
         Sherd.Base.AssetView.apply(this,arguments); //inherit -- base.js
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js
         
         // override create == asset->{html+information to make it}
         this.microformat.create = function(obj,doc) {
             var wrapperId = Sherd.Base.newID('youtube-wrapper');
-            var playerId = 'youtube-player'
+            _playerId = Sherd.Base.newID('youtube-player');
+            _autoplay = obj.autoplay ? 1 : 0;
             
             if (!obj.options) 
             {
                 obj.options = {
-                    width: 620, // youtube default
-                    height: 440, // youtube default
-                    playerId: playerId,
-                    wrapperId: wrapperId
+                    width: obj.presentation == 'small' ? 310 : 620, // youtube default
+                    height: obj.presentation == 'small' ? 220 : 440, // youtube default
+                    playerId: _playerId,
+                    wrapperId: wrapperId,
+                    autoplay: _autoplay
                 };
             }
 
@@ -42,21 +47,23 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 htmlID: wrapperId,
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
-                        '  <param name="movie" value="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
+                        '  <param name="movie" value="' + obj.youtube + '&enablejsapi=1&playerapiid=' + _playerId + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"></param>' + 
-                        '  <embed src="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"' + 
+                        '  <param name="autoplay" value="' + _autoplay + '"></param>' + 
+                        '  <embed src="' + obj.youtube + '&enablejsapi=1&playerapiid=' + _playerId + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
+                        '    autoplay="' + _autoplay + '"' + 
                         '    width="' + obj.options.width + '" height="' + obj.options.height + '"' + 
-                        '    id="' + playerId + '">' + 
+                        '    id="' + _playerId + '">' + 
                         '  </embed>' + 
                         '</object>' + 
                       '</div>'
             }
         }
         
-        this.media._cueVideo = function(seconds) {
-            ytplayer = document.getElementById('youtube-player');
+        this.media._cueVideo = function(starttime) {
+            ytplayer = document.getElementById(_playerId); // TODO -- getPlayer to wrap this 
             if (ytplayer) {
                 url = ytplayer.getVideoUrl();
                 
@@ -66,13 +73,19 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 // format: http://www.youtube.com/watch?v=MjdEEwzskck&feature=player_embedded
                 startIdx = url.indexOf('v=') + 2;
                 endIdx = url.indexOf('&', startIdx);
-                ytplayer.cueVideoById(url.slice(startIdx, endIdx), seconds);
+                
+                if (_autoplay) {
+                    ytplayer.loadVideoById(url.slice(startIdx, endIdx), starttime);
+                }
+                else {
+                    ytplayer.cueVideoById(url.slice(startIdx, endIdx), starttime);
+                }
             }
         }
         
         this.media._test = function() {
             try {
-                ytplayer = document.getElementById('youtube-player');
+                ytplayer = document.getElementById(_playerId);
                 if (ytplayer) {
                     state = ytplayer.getPlayerState();
                     return true;
@@ -93,14 +106,14 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
 
         this.media.play = function() {
-            ytplayer = document.getElementById('youtube-player');
+            ytplayer = document.getElementById(_playerId);
             if (ytplayer) {
                 ytplayer.playVideo();
             }
         }
         
         this.media.duration = function() {
-            ytplayer = document.getElementById('youtube-player');
+            ytplayer = document.getElementById(_playerId);
             if (ytplayer) {
                 duration = ytplayer.getDuration();
                 if (duration < 0)
@@ -111,7 +124,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         this.media.time = function() {
             time = 0;
-            ytplayer = document.getElementById('youtube-player');
+            ytplayer = document.getElementById(_playerId);
             if (ytplayer) {
                 time = ytplayer.getCurrentTime();
                 if (time < 0)
@@ -120,18 +133,23 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return time;
         }
 
-        this.media.seek = function(seconds) {
+        this.media.seek = function(starttime, endtime) {
             // Queue up a "_cueVideo" call. The YT player is not yet ready
+            ytplayer = document.getElementById(_playerId);
+            
             self.events.queue('seek',[
                                       {test:self.media._test, poll:500},
-                                      {data: seconds },
+                                      {data: starttime },
                                       {timeout: 2200}, //timeout to avoid seek competition
-                                      {call: function() { self.media._cueVideo(seconds); }}
+                                      {call: function() { self.media._cueVideo(starttime); }}
                                       ]);
+            
+            // Watch the video's running time & stop it when the endtime rolls around
+            this.pauseAt(endtime);
         }
         
         this.media.pause = function() {
-            ytplayer = document.getElementById('youtube-player');
+            ytplayer = document.getElementById(_playerId);
             if (ytplayer) {
                 ytplayer.pauseVideo();
             }

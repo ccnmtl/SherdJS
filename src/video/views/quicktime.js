@@ -121,7 +121,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             var url = self.components.media.GetURL();
             return (url && /^rtsp/.test(url));
         }
-        this.media.seek = function(seconds) {
+        this.media.seek = function(starttime, endtime) {
             var playRate = 0;
             
             self.events.queue('seek',[
@@ -165,6 +165,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             this.type = function() {return 'quicktime';};
             this.read = function(found_obj) {
                 //return asset object (with url:src, dimensions, etc)
+                // creates a serialized JSON format to be used for things like printing, or spitting out a description.
                 var obj = {
                         url:'',//defaults
                         quicktime:'',
@@ -191,6 +192,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 return obj;
             };
             this.find = function(html_dom) {
+                // Find the objects based on the QT properties in the DOM
                 var found = [];
                 //SNOBBY:not embeds, since they're in objects--and not xhtml 'n' stuff
                 var objects = ((html_dom.tagName.toLowerCase()=='object')
