@@ -129,20 +129,23 @@ if (!Sherd.Video.Base) {
         }
 
         this.microformat = {
-            create : function(obj) {
+            create : function(obj) { // Return the .html embed block for the embedded player 
                 return ''
             },
-            // update:function(obj){},
-            // remove:function(){},
-            find : function(html_dom) {
+            find : function(html_dom) { // Find embedded players. Note: Not currently in use.
                 return [ {
                     html : html_dom
                 } ]
             },
-            read : function(found_obj) {
+            read : function(found_obj) { // Return serialized description of embedded player. Note: Not currently in use.
                 var obj;
                 return obj;
+            },
+            remove: function() { // Destruction step. Note: Not Currently In Use
             }
+            type: function() { var type; return type; } // Return type of media. Note: Not currently in use;
+            update: function(obj,html_dom) {}, // Replace the video identifier within the .html embed block 
+            write: function(create_obj,html_dom) {} // Post-create step
         };
 
         // /BEGIN VITAL assumption -->relegate to quicktime.js when smarter
