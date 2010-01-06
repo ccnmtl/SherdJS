@@ -142,8 +142,8 @@ if (!Sherd.Video.Base) {
                 return obj;
             },
             remove: function() { // Destruction step. Note: Not Currently In Use
-            }
-            type: function() { var type; return type; } // Return type of media. Note: Not currently in use;
+            },
+            type: function() { var type; return type; }, // Return type of media. Note: Not currently in use;
             update: function(obj,html_dom) {}, // Replace the video identifier within the .html embed block 
             write: function(create_obj,html_dom) {} // Post-create step
         };
