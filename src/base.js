@@ -166,6 +166,7 @@ Sherd.Base = {
         this.options = {};
         
         if (this.html && !this.html.pull) {
+            // NOTE: html.pull is not currently used. 
             this.html.pull = function(dom_or_id, optional_microformat) {
                 // /argument resolution
                 if (typeof dom_or_id == 'string') {
