@@ -82,14 +82,13 @@ if (!Sherd.GenericAssetView) {
                     self.settings[current_type].view.html.push(html_dom,
                             options);
 
-                    // TODO: This is a bit of a hack...why expose clipform?
                     if (self.settings[current_type].clipform) {
                         self.clipform = self.settings[current_type].clipform;
                     }
                 } else {
                     throw "Your asset does not have a (supported) type marked";
                 }
-            }
+            },
         }
         this.setState = function() {
             if (current_type) {
