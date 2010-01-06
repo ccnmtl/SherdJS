@@ -164,9 +164,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         
         this.microformat.type = function() {return 'quicktime';};
         
+        // Return asset object description (parameters) in a serialized JSON format.
+        // NOTE: Not currently in use. Will be used for things like printing, or spitting out a description.
+        // works in conjunction with find
         this.microformat.read = function(found_obj) {
-            //return asset object (with url:src, dimensions, etc)
-            // creates a serialized JSON format to be used for things like printing, or spitting out a description.
             var obj = {
                     url:'',//defaults
                     quicktime:'',
@@ -193,6 +194,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             return obj;
         };
         
+        // Find the objects based on the individual player properties in the DOM
+        // NOTE: Not currently in use.
+        // Works in conjunction with find
         this.microformat.find = function(html_dom) {
             // Find the objects based on the QT properties in the DOM
             var found = [];
@@ -211,17 +215,15 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             return found;
         };
         
+        // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            ///1. test if something exists in components now (else return false)
-            ///2. assert( obj ~= from_obj) (else return false)
-            ///3. 
             if (!obj.quicktime) {return false;}
             var compo = self.components || self.microformat.components(html_dom);
             if (compo && compo.media && compo.media != null) {
                 try {
                     compo.media.SetURL(obj.quicktime);
                     return true;
-                } catch(e) { /*alert(e.message);*/ }
+                } catch(e) { }
             }
             return false;
         };
