@@ -1,18 +1,14 @@
 /*
-  support for the YouTube js-enabled player.  documentation at:
+  Support for the YouTube js-enabled player.  documentation at:
   http://code.google.com/apis/youtube/js_api_reference.html
   http://code.google.com/apis/youtube/chromeless_example_1.html
-
-  TODO: UNREQUIRE  dependency: Clipper() WaitUntil()
-  TODO: implement AssetView
-
-  http://localhost:8000/save/?url=http%3A//www.youtube.com/v/OdBNxqJ-_60&title=Night%20Parkour&youtube=http%3A//www.youtube.com/v/OdBNxqJ-_60&poster=http%3A//www.youtube.com/v/OdBNxqJ-_60
  */
 
 // global function required to catch YouTube player ready event
 // also, the place to register for events and state changes.
 // Currently, not utilizing either approach, opting for a timer instead.
 function onYouTubePlayerReady(playerId) {
+    
 }
 
 if (!Sherd) {Sherd = {};}
@@ -24,6 +20,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         Sherd.Base.AssetView.apply(this,arguments); //inherit -- base.js
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js
         
+        // Note: not currently in use
         this.microformat.type = function() { return 'youtube'; };
         
         // create == asset->{html+information to make it}
@@ -112,6 +109,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return false;
         };
         
+        // self.components -- Access to the internal player and any options needed at runtime
         this.microformat.components = function(html_dom,create_obj) {
             try {
                 var rv = {};
