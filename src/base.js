@@ -131,8 +131,10 @@ Sherd.Base = {
         remove : function() {
             self.clearListeners();
             for (part in self.components) {
-                self.components[part].parentNode
+                if (self.components[part].parentNode) {
+                    self.components[part].parentNode
                         .removeChild(self.components[part]);
+                }
             }
         },
 

@@ -20,8 +20,6 @@ if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.YouTube && Sherd.Video.Base) {
     Sherd.Video.YouTube = function() {
         var self = this;
-        var _playerId;
-        var _autoplay = 0;
         
         Sherd.Base.AssetView.apply(this,arguments); //inherit -- base.js
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js
@@ -30,38 +28,36 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         // create == asset->{html+information to make it}
         this.microformat.create = function(obj,doc) {
-            log('create');
             var wrapperId = Sherd.Base.newID('youtube-wrapper');
-            _playerId = Sherd.Base.newID('youtube-player-');
-            _autoplay = obj.autoplay ? 1 : 0;
+            var playerId = Sherd.Base.newID('youtube-player-');
+            var autoplay = obj.autoplay ? 1 : 0;
             
             if (!obj.options) 
             {
                 obj.options = {
                     width: obj.presentation == 'small' ? 310 : 620, // youtube default
                     height: obj.presentation == 'small' ? 220 : 440, // youtube default
-                    playerId: _playerId,
-                    wrapperId: wrapperId,
-                    autoplay: _autoplay
                 };
             }
 
             return {
                 object: obj,
                 htmlID: wrapperId,
+                mediaID: playerId, // Used by microformat.components initialization
+                autoplay: autoplay,
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
-                        '  <param name="movie" value="' + obj.youtube + '&enablejsapi=1&playerapiid=' + _playerId + '"></param>' + 
+                        '  <param name="movie" value="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"></param>' + 
-                        '  <param name="autoplay" value="' + _autoplay + '"></param>' + 
+                        '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
-                        '  <embed src="' + obj.youtube + '&enablejsapi=1&playerapiid=' + _playerId + '"' + 
+                        '  <embed src="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
-                        '    autoplay="' + _autoplay + '"' + 
+                        '    autoplay="' + autoplay + '"' + 
                         '    width="' + obj.options.width + '" height="' + obj.options.height + '"' + 
-                        '    id="' + _playerId + '">' + 
+                        '    id="' + playerId + '">' + 
                         '  </embed>' + 
                         '</object>' + 
                       '</div>'
@@ -97,11 +93,39 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return obj;
         };
         
+        // Post-create step. Overriding here to do a component create
+        this.microformat.write = function(create_obj,html_dom) {
+            if (create_obj && create_obj.text) {
+                html_dom.innerHTML = create_obj.text;
+                var top = document.getElementById(create_obj.htmlID);
+                self.components = self.microformat.components(top,create_obj);
+                log('self.components.autoplay: ' + self.components.autoplay);
+                log('self.components.media: ' + self.components.media);
+            }
+        }
+        
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
             // Replacing the 'url' within an existing YouTube player requires decisions on  
             // autoplay, starttime, etc. As this is more a function for .media, I'm punting
             // for the moment on the update thread and allowing it to fall through to create. 
+            return false;
+        };
+        
+        this.microformat.components = function(html_dom,create_obj) {
+            try {
+                var rv = {};
+                if (html_dom) {
+                    rv.wrapper = html_dom;
+                }
+                if (create_obj) {
+                    //the first works for everyone except safari
+                    //the latter probably works everywhere except IE
+                    rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
+                    rv.autoplay = create_obj.autoplay;
+                }
+                return rv;
+            } catch(e) {}
             return false;
         };
 
@@ -119,24 +143,22 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
         
         this.media._cueVideo = function(starttime) {
-            ytplayer = document.getElementById(_playerId); // TODO -- getPlayer to wrap this 
-            if (ytplayer) {
-                youtubeId = self.media._getVideoId(ytplayer);
+            if (self.components.media) {
+                youtubeId = self.media._getVideoId(self.components.media);
                 
-                if (_autoplay) {
-                    ytplayer.loadVideoById(youtubeId, starttime);
+                if (self.components.autoplay) {
+                    self.components.media.loadVideoById(youtubeId, starttime);
                 }
                 else {
-                    ytplayer.cueVideoById(youtubeId, starttime);
+                    self.components.media.cueVideoById(youtubeId, starttime);
                 }
             }
         }
         
         this.media._test = function() {
             try {
-                ytplayer = document.getElementById(_playerId);
-                if (ytplayer) {
-                    state = ytplayer.getPlayerState();
+                if (self.components.media) {
+                    state = self.components.media.getPlayerState();
                     return true;
                 }
             }
@@ -155,16 +177,14 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
 
         this.media.play = function() {
-            ytplayer = document.getElementById(_playerId);
-            if (ytplayer) {
-                ytplayer.playVideo();
+            if (self.components.media) {
+                self.components.media.playVideo();
             }
         }
         
         this.media.duration = function() {
-            ytplayer = document.getElementById(_playerId);
-            if (ytplayer) {
-                duration = ytplayer.getDuration();
+            if (self.components.media) {
+                duration = self.components.media.getDuration();
                 if (duration < 0)
                     duration = 0
                 return duration;
@@ -173,9 +193,8 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         this.media.time = function() {
             time = 0;
-            ytplayer = document.getElementById(_playerId);
-            if (ytplayer) {
-                time = ytplayer.getCurrentTime();
+            if (self.components.media) {
+                time = self.components.media.getCurrentTime();
                 if (time < 0)
                     time = 0
             }
@@ -184,8 +203,6 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
 
         this.media.seek = function(starttime, endtime) {
             // Queue up a "_cueVideo" call. The YT player is not yet ready
-            ytplayer = document.getElementById(_playerId);
-            
             self.events.queue('seek',[
                                       {test:self.media._test, poll:500},
                                       {data: starttime },
@@ -198,9 +215,8 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
         
         this.media.pause = function() {
-            ytplayer = document.getElementById(_playerId);
-            if (ytplayer) {
-                ytplayer.pauseVideo();
+            if (self.components.media) {
+                self.components.media.pauseVideo();
             }
         }
 
