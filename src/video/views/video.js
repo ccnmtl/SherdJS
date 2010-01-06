@@ -145,7 +145,7 @@ if (!Sherd.Video.Base) {
             },
             type: function() { var type; return type; }, // Return type of media. Note: Not currently in use;
             update: function(obj,html_dom) {}, // Replace the video identifier within the .html embed block 
-            write: function(create_obj,html_dom) {} // Post-create step
+            //write: function(create_obj,html_dom) {} // Post-create step
         };
 
         // /BEGIN VITAL assumption -->relegate to quicktime.js when smarter
