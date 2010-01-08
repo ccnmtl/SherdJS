@@ -8,7 +8,6 @@
 // also, the place to register for events and state changes.
 // Currently, not utilizing either approach, opting for a timer instead.
 function onYouTubePlayerReady(playerId) {
-    
 }
 
 if (!Sherd) {Sherd = {};}
@@ -41,7 +40,8 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 object: obj,
                 htmlID: wrapperId,
                 mediaID: playerId, // Used by microformat.components initialization
-                autoplay: autoplay,
+                autoplay: autoplay, // Used later by _cueVideo seeking behavior
+                youtube: obj.youtube, // Used by _cueVideo seeking behavior
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
                         '  <param name="movie" value="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
@@ -96,8 +96,6 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 html_dom.innerHTML = create_obj.text;
                 var top = document.getElementById(create_obj.htmlID);
                 self.components = self.microformat.components(top,create_obj);
-                log('self.components.autoplay: ' + self.components.autoplay);
-                log('self.components.media: ' + self.components.media);
             }
         }
         
@@ -121,34 +119,20 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     //the latter probably works everywhere except IE
                     rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
                     rv.autoplay = create_obj.autoplay;
+                    rv.youtube = create_obj.youtube;
                 }
                 return rv;
             } catch(e) {}
             return false;
         };
-
-        this.media._getVideoId = function(ytplayer) {
-            url = ytplayer.getVideoUrl();
-            
-            // the url returned by getVideoUrl doesn't work in cueVideo
-            // ideally, i'd stash the url around someplace, but I'm not sure where at the moment
-            // so, i'm just going to parse out the id from the rv of getVideoUrl
-            // format: http://www.youtube.com/watch?v=MjdEEwzskck&feature=player_embedded
-            startIdx = url.indexOf('v=') + 2;
-            endIdx = url.indexOf('&', startIdx);
-            youtubeId = url.slice(startIdx, endIdx);
-            return youtubeId;
-        }
         
         this.media._cueVideo = function(starttime) {
             if (self.components.media) {
-                youtubeId = self.media._getVideoId(self.components.media);
-                
                 if (self.components.autoplay) {
-                    self.components.media.loadVideoById(youtubeId, starttime);
+                    self.components.media.loadVideoByUrl(self.components.youtube, starttime);
                 }
                 else {
-                    self.components.media.cueVideoById(youtubeId, starttime);
+                    self.components.media.cueVideoByUrl(self.components.youtube, starttime);
                 }
             }
         }
@@ -157,7 +141,8 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             try {
                 if (self.components.media) {
                     state = self.components.media.getPlayerState();
-                    return true;
+                    if (state)
+                        return true;
                 }
             }
             catch (e) {
