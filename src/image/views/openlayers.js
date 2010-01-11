@@ -233,6 +233,49 @@ if (!Sherd.Image.OpenLayers) {
 		    self.openlayers.graphic.zoomToMaxExtent=function(){
 			self.openlayers.map.setCenter(this.maxExtent.getCenterLonLat());
 		    };
+                    ///HACK: to support Zoomify XYZ tiling as seen at thlib.org
+                    /* Zoomify groups tiles into directories each with a maximum of
+                       256 tiles.  This code changes the 'TileGroup' based on x,y,z
+                       tile coordinates.
+                     */
+                    if (/TileGroup\d/.test(create_obj.object.xyztile)) {
+                        var md = create_obj.object['xyztile-metadata'];
+                        var tiles_x = Math.ceil(md.width/256)*2;
+                        var tiles_y = Math.ceil(md.height/256)*2;
+                        var tiles = [];
+                        while (tiles_x >1 && tiles_y>1) {
+                            tiles_x = Math.ceil(tiles_x/2);
+                            tiles_y = Math.ceil(tiles_y/2);
+                            tiles.push({'all':tiles_x * tiles_y,
+                                        'x':tiles_x
+                                       });
+                        }
+                        tiles.push({all:1,x:1}); //z=0
+                        tiles = tiles.reverse();
+
+                        self.openlayers.graphic.getURL = function(bounds) {
+                            var res = this.map.getResolution();
+                            var x = Math.round((bounds.left - this.maxExtent.left) 
+                                               / (res * this.tileSize.w));
+                            var y = Math.round((this.maxExtent.top - bounds.top) 
+                                               / (res * this.tileSize.h));
+                            var z = this.map.getZoom();
+                            var limit = Math.pow(2, z);
+                            var url = this.url;
+                            ///BEGIN different from XYZ.js
+                            var tile_sum = tiles[z].x * y + x;
+                            for (var i=0;i<z;i++) {
+                                tile_sum += tiles[i].all;
+                            }
+                            var tilegroup = Math.floor(tile_sum/256);
+                            if (tilegroup) {
+                                url = url.replace(/TileGroup\d/,'TileGroup'+tilegroup);
+                            }
+                            ///END different from XYZ.js                            
+                            var path = OpenLayers.String.format(url,{'x': x, 'y': y, 'z': z});
+                            return path;
+                        }
+                    }
 		} else {
 		    var o2b = self.openlayers.object2bounds;
 		    var bounds = o2b(create_obj.object);
