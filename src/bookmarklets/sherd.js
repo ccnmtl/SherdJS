@@ -20,32 +20,33 @@ var vietnam_update = function(obj) {
                 "poster":$(".media img").get(0).src
                 /*,"thumb": XXXX */
             }
-           }
+           };
 };
 
 var hosthandler = {
     "youtube.com": {
-        find:function() {
+        find:function(callback) {
         },
         decorate:function(objs) {
         }
     },
     "vietnamwararchive.ccnmtl.columbia.edu": {
-        find:function() {
-            if (document.location.pathname.search("/record/display") != 0) 
-                return [];
-            return [ vietnam_update() ];
+        find:function(callback) {
+            var rv = [];
+            if (document.location.pathname.search("/record/display") == 0) 
+                rv = [ vietnam_update() ];
+            callback(rv);
         },
         decorate:function(objs) {
         },
         update:vietnam_update
     },
     "digitaltibet.ccnmtl.columbia.edu": {
-        find:function() {
+        find:function(callback) {
             var real_site = "http://digitaltibet.ccnmtl.columbia.edu/";
             var img = jQuery(".node img").get(0);
             if (!img || document.location.pathname.search("/image/") != 0) 
-                return [];            
+                return callback([]);            
 
 	    var img_file = String(img.src);
 	    var decontextualized_image = document.createElement("img");
@@ -63,15 +64,49 @@ var hosthandler = {
 	            "image-metadata":"w"+decontextualized_image.width+"h"+decontextualized_image.height,
 	            "xyztile-metadata":"w"+img.width+"h"+img.height
 	    };
-            console.log(sources);
-            return [ {html:img, sources:sources} ];
+            callback( [ {html:img, sources:sources} ] );
         },
         decorate:function(objs) {
         }
     },
     "thlib.org": {
-        /*e.g. http://www.thlib.org/places/monasteries/meru-nyingpa/murals/ */
-        find:function() {
+        /*e.g. those on http://www.thlib.org/places/monasteries/meru-nyingpa/murals/ */
+        find:function(callback) {
+            var myloc = window.frames["gallery"].location.href; 
+            var matches =  myloc.match(/(.*)\/([^\/]+)\/([^\/]+)\/([^\/]+)$/);/*split last 3 "/" */
+            if(typeof(myloc) == "string" && matches[4] != "gallery.html") { 
+                var img_key = matches[3];
+                var img_root = matches[1];
+                var tile_root = img_root+"/source/"+img_key+"/"+img_key;
+                var thumb = img_root+"/preview/"+img_key.toLowerCase()+".jpg";
+                var img = document.createElement("img");
+                img.src = tile_root+"/TileGroup0/0-0-0.jpg";
+                var sources = {
+                    "archive":String(document.location),
+                    /*must be unique, but no good return link :-(*/
+                    "url":tile_root+".htm", 
+                    "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
+                    "image-metadata":"w"+img.width+"h"+img.height,
+                    "thumb":thumb,
+                    "image":img.src /*nothing bigger available*/
+                };
+                /*do a query to see what the full dimensions are of the tiles
+                  but instead of this hack what about using 
+                  img_root+"/source/"+img_key+"/"+img_key+"/ImageProperties.xml"
+                 */
+                jQuery.get(tile_root+"/ImageProperties.xml",null,function(dir) {
+                    /*was for url = tile_root+"/TileGroup0/" parsing:
+                    var zooms = dir.split("\">").reverse()[3].match(/\d+/);
+                    var exp = Math.pow(2,zooms);
+                    sources["xyztile-metadata"] = "w"+(img.width*exp)+"h"+(img.height*exp);
+                    */
+                    var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
+                    sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
+                    callback( [{"html": window.frames["gallery"].document["Zoomify Dynamic Flash"], 
+                                "sources": sources
+                               } ]);
+                },"text");
+            } else callback([]);
         },
         decorate:function(objs) {
         }
@@ -107,13 +142,17 @@ var runners = {
             alert("Sorry, this website is not supported.");
             return;
         }
-        var assets = handler.find();
-        console.log(assets);
-        console.log(jump_now);
-        if (assets.length == 1 && jump_now) {
-            console.log(obj2url(mondrian_url, assets[0]));
-            document.location = obj2url(mondrian_url, assets[0]);
-        }
+        var my_callback = function(assets) {
+            switch (assets.length) {
+            case 0: 
+                return alert("This page does not contain an asset. Try going to an asset page.");
+            case 1:
+                if (jump_now) {
+                    document.location = obj2url(mondrian_url, assets[0]);
+                }
+            }
+        };
+        var assets = handler.find(my_callback);
     },
     decorate: function(mondrian_url) {
 
