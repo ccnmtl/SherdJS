@@ -26,6 +26,35 @@ var vietnam_update = function(obj) {
 var hosthandler = {
     "youtube.com": {
         find:function(callback) {
+            var video = document.getElementById("movie_player");
+            if (video && video != null) {
+                function getTitle() {
+                    if (/www.youtube.com\/watch/.test(document.location)) {
+                        return document.getElementsByTagName("h1")[0].innerHTML;
+                    } else {
+                        var for_channels = document.getElementById("playnav-curvideo-title");
+                        if (for_channels != null) {
+                            return document.getElementById("playnav-curvideo-title")
+                            .textContent.replace(/^\s*/,"").replace(/\s*$/,"");
+                        }
+                    }
+                }
+                var VIDEO_ID = video.getVideoUrl().match(/\?v=([^&]*)&/)[1];
+                video.pauseVideo();
+                var obj = {
+                    "html":video,
+                    "hash":"start="+video.getCurrentTime(),
+                    "sources":{
+                        "title":getTitle(),
+                        "url":"http://www.youtube.com/watch?v="+VIDEO_ID,
+                        "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1"
+                    }
+                };
+                if (video.getCurrentTime() == video.getDuration()) 
+                    delete obj.hash;
+                return callback([obj]);
+
+            } else callback([]);
         },
         decorate:function(objs) {
         }
@@ -48,21 +77,19 @@ var hosthandler = {
             if (!img || document.location.pathname.search("/image/") != 0) 
                 return callback([]);            
 
-	    var img_file = String(img.src);
-	    var decontextualized_image = document.createElement("img");
-	    decontextualized_image.src = img_file;
-	    
-	    var img_base = img_file.match(/images\/([^.]+)\./)[1];
+            var images = ImageAnnotator.images[0].imager.images; /*annotationfield*/
+            var max_image = images[images.length-1];
+	    var img_base = max_image.src.match(/images\/([^.]+)\./)[1];
 	    var site_base = String(document.location).match(/(.*?)image/)[1];
-	    var extension = img_file.substr(-3); /*JPG or jpg--CRAZY!!!*/
+	    var extension = max_image.src.substr(-3); /*JPG or jpg--CRAZY!!!*/
 	    var sources = {
 	            "title":jQuery("#node-main h2.title").get(0).innerHTML,
 	            "thumb":site_base+"files/tibet/images/"+img_base+".thumbnail."+extension,
 	            "xyztile":real_site+"files/tibet/images/tiles/"+img_base+"/z${z}/y${y}/x${x}.png",
-	            "image":img_file,
+	            "image":max_image.src,
 	            "archive":site_base,
-	            "image-metadata":"w"+decontextualized_image.width+"h"+decontextualized_image.height,
-	            "xyztile-metadata":"w"+img.width+"h"+img.height
+	            "image-metadata":"w"+max_image.width+"h"+max_image.height,
+	            "xyztile-metadata":"w"+max_image.width+"h"+max_image.height
 	    };
             callback( [ {html:img, sources:sources} ] );
         },
@@ -152,7 +179,7 @@ var runners = {
                 }
             }
         };
-        var assets = handler.find(my_callback);
+        var assets = handler.find.call(handler, my_callback);
     },
     decorate: function(mondrian_url) {
 
