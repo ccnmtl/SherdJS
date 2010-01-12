@@ -1,12 +1,12 @@
 [submodule "lib/tiny_mce3"]
 	path = lib/tiny_mce3
-	url = http://github.com/ccnmtl/TinyMCE-clone.git
+	url = git://github.com/ccnmtl/TinyMCE-clone.git
 [submodule "lib/openlayers"]
 	path = lib/openlayers
 	url = git://github.com/ccnmtl/openlayers.git
 [submodule "lib/mcePlugin_editorwindow"]
 	path = lib/mcePlugin_editorwindow
-	url = http://github.com/ccnmtl/TinyMCE-EditorWindow-plugin.git
+	url = git://github.com/ccnmtl/TinyMCE-EditorWindow-plugin.git
 [submodule "lib/mcePlugin_citation"]
 	path = lib/mcePlugin_citation
-	url = http://github.com/ccnmtl/TinyMCE-Citation-plugin.git
+	url = git://github.com/ccnmtl/TinyMCE-Citation-plugin.git
