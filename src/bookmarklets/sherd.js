@@ -109,6 +109,7 @@ var hosthandler = {
                 var img = document.createElement("img");
                 img.src = tile_root+"/TileGroup0/0-0-0.jpg";
                 var sources = {
+                    "title":img_key,
                     "archive":String(document.location),
                     /*must be unique, but no good return link :-(*/
                     "url":tile_root+".htm", 
