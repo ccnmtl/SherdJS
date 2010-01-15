@@ -146,9 +146,38 @@ MondrianBookmarklet = {
     }
   },/*hosthandler*/
   "assethandler":{
-      "youtube": {
+      "embeds": {
+          players:{
+              "youtube":{
+                  match:function(emb) {
+                      return String(emb.src).match(/^http:\/\/www.youtube.com\/v\/([\w-]*)/);
+                  },
+                  object:function(emb,match) {
+                      /*use http://gdata.youtube.com/feeds/api/videos/?q=KP-nVpOLW88&v=2&alt=json-in-script&callback=myFunction
+                        so we need to pass in the callback stuff here.
+                        http://code.google.com/apis/youtube/2.0/reference.html#Searching_for_videos
+                       */
+                      return {
+                      };
+                  }
+              }
+          },
           find:function(callback) {
-              callback([]);
+              var result = [];
+              var embeds = document.getElementsByTagName("embed");
+              for (var i=0;i<embeds.length;i++) {
+                  var emb = embeds[i];
+                  for (p in this.players) {
+                      var m = this.players[p].match(emb);
+                      if (m != null) {
+                          result.push({html:emb,
+                                       sources:this.players[p].object(emb,m)
+                                      });
+                          break;
+                      }
+                  }
+              }
+              callback(result);
           }
       },
       "image": {
@@ -294,6 +323,7 @@ MondrianBookmarklet = {
       this.handler_count = 1;
       this.assets_found = [];
       this.findAssets = function() {
+          comp.ul.innerHTML = "";
           var handler = MondrianBookmarklet.gethosthandler();
           if (handler) {
               handler.find.call(handler, self.collectAssets);
@@ -329,7 +359,6 @@ MondrianBookmarklet = {
       };
       this.finishedCollecting = function() {
           comp.message.innerHTML = "";/*erase searching message*/
-          console.log(self.assets_found);
           if (self.assets_found.length ==0) {
               comp.ul.innerHTML = "<li>Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.</li>";
           }
