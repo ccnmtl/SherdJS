@@ -40,8 +40,8 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 object: obj,
                 htmlID: wrapperId,
                 mediaID: playerId, // Used by microformat.components initialization
-                autoplay: autoplay, // Used later by _cueVideo seeking behavior
-                youtube: obj.youtube, // Used by _cueVideo seeking behavior
+                autoplay: autoplay, // Used later by _seek seeking behavior
+                youtube: obj.youtube, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
                         '  <param name="movie" value="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
@@ -126,7 +126,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return false;
         };
         
-        this.media._cueVideo = function(starttime) {
+        this.media._seek = function(starttime) {
             if (self.components.media) {
                 if (self.components.autoplay) {
                     self.components.media.loadVideoByUrl(self.components.youtube, starttime);
@@ -152,6 +152,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         this.media.movscale = 1; //movscale is a remnant from QT. vitalwrapper.js uses it. TODO: verify we need it.
        
+        // NOTE: Copied from QT. Reimplement for clipstrip.
         this.media.timestrip = function() {
             return {w:25,
                 x:(16*2),
@@ -166,12 +167,13 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
         
         this.media.duration = function() {
+            duration = 0;
             if (self.components.media) {
                 duration = self.components.media.getDuration();
                 if (duration < 0)
                     duration = 0
-                return duration;
             }
+            return duration;
         }
         
         this.media.time = function() {
@@ -185,12 +187,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
 
         this.media.seek = function(starttime, endtime) {
-            // Queue up a "_cueVideo" call. The YT player is not yet ready
+            // Queue up a "_seek" call. The YT player is not yet ready
             self.events.queue('seek',[
                                       {test:self.media._test, poll:500},
                                       {data: starttime },
                                       {timeout: 2200}, //timeout to avoid seek competition
-                                      {call: function() { self.media._cueVideo(starttime); }}
+                                      {call: function() { self.media._seek(starttime); }}
                                       ]);
             
             // Watch the video's running time & stop it when the endtime rolls around

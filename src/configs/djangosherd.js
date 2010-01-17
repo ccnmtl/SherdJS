@@ -170,6 +170,9 @@ function DjangoSherd_AssetMicroFormat() {
                         }
                     }
                 });
+        
+        // TODO: "Do You Support this type"
+        
         if (rv.quicktime) {
             // TODO refactor this into a quicktime specific file
             var poster = getFirstElementByTagAndClassName('img',
@@ -193,6 +196,9 @@ function DjangoSherd_AssetMicroFormat() {
                     });
         } else if (rv.youtube) {
             rv.type = 'youtube';
+            return rv;
+        } else if (rv.flv || rv.flv_pseudo || rv.mp4 || rv.mp4_pseudo) {
+            rv.type = 'flowplayer';
             return rv;
         } else if (rv.image) {
             rv.type = 'image';

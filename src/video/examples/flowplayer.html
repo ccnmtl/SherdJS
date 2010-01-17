@@ -1,0 +1,37 @@
+<html><head>
+
+
+<META HTTP-EQUIV="Expires" CONTENT="Mon, 04 Dec 1999 21:29:02 GMT">
+<META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">
+
+
+<!-- 
+    This is Flowplayer standalone demo. The fastest way to get started. 
+    You can freely copy things on your site. All demos can be found from: 
+    
+    http://flowplayer.org/demos/
+    
+    Enjoy!
+-->
+
+<!-- DOCTYPE is always recommended. see: http://www.quirksmode.org/css/quirksmode.html -->
+ 
+
+<!-- flowplayer scripts should be loaded from your servers NOT from static.flowplayer.org  -->
+
+<script type="text/javascript" src="../../../lib/flowplayer/flowplayer-3.1.4.min.js"></script>
+
+
+<!-- some styling for the standalone page. this line can (or must) be removed -->
+<link rel="stylesheet" type="text/css" href="/demos/standalone.css">
+</head><div FirebugVersion="1.4.5" style="display: none;" id="_firebugConsole"></div><body>
+
+<!-- player container-->
+<a href="http://ccnmtl.columbia.edu/broadcast/hs/socialwork/worth/amanda01.flv" style="display: block; width: 425px; height: 300px;" id="player"><object id="player_api" data="http://releases.flowplayer.org/swf/flowplayer-3.1.4.swf" type="application/x-shockwave-flash" height="100%" width="100%"><param name="allowfullscreen" value="true"><param name="allowscriptaccess" value="always"><param name="quality" value="high"><param name="cachebusting" value="false"><param name="bgcolor" value="#000000"><param name="flashvars" value="config={&quot;playerId&quot;:&quot;player&quot;,&quot;clip&quot;:{&quot;url&quot;:&quot;http://ccnmtl.columbia.edu/broadcast/hs/socialwork/worth/amanda01.flv&quot;},&quot;playlist&quot;:[{&quot;url&quot;:&quot;http://ccnmtl.columbia.edu/broadcast/hs/socialwork/worth/amanda01.flv&quot;}]}"></object></a>
+
+<!-- this script block will install Flowplayer inside previous A tag -->
+<script language="JavaScript">
+    flowplayer("player", "http://releases.flowplayer.org/swf/flowplayer-3.1.4.swf");
+</script>   
+
+</body></html>
