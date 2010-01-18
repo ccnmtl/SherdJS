@@ -23,18 +23,18 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var playerId = Sherd.Base.newID('flowplayer-player-');
             var url = '';
             var pseudo = 0;
-                        
-            if (obj.flv) {
-                url = obj.flv;
-            } else if (obj.flv_pseudo) {
+                   
+            if (obj.flv_pseudo) {
                 url = obj.flv_pseudo;
                 pseudo = 1;
-            } else if (obj.mp4) {
-                url = obj.mp4;
             } else if (obj.mp4_pseudo) {
                 url = obj.mp4_pseudo;
                 pseudo = 1;
-            }
+            } else if (obj.mp4) {
+                url = obj.mp4;
+            } else if (obj.flv) {
+                url = obj.flv;
+            }  
             
             if (!obj.options) {
                 obj.options = {
@@ -101,7 +101,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            // @todo. maybe.
+            // @todo. maybe. again, there's a lot to configure for update besides tweaking the .html
+            // i'm not sure this model works well for videos.
             return false;
         };
         

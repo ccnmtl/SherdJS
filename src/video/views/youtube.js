@@ -168,9 +168,13 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         this.media.duration = function() {
             duration = 0;
             if (self.components.media) {
-                duration = self.components.media.getDuration();
-                if (duration < 0)
-                    duration = 0
+                try {
+                    duration = self.components.media.getDuration();
+                    if (duration < 0)
+                        duration = 0
+                } catch(e) {
+                    // media probably not yet initialized
+                }
             }
             return duration;
         }
