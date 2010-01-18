@@ -87,10 +87,16 @@ if (!Sherd.GenericAssetView) {
             push : function(html_dom, options) {
                 if (options.asset && options.asset.type
                         && (options.asset.type in self.settings)) {
-                    if (current_type && current_type != options.asset.type) {
-                        self.settings[current_type].view.html.remove();
+                    
+                    if (current_type) {
+                        self.settings[current_type].view.html.suspend();
+                        if (current_type != options.asset.type) {
+                            self.settings[current_type].view.html.remove();
+                        }
                     }
+                    
                     current_type = options.asset.type;
+                    
                     // /the main pass
                     self.settings[current_type].view.html.push(html_dom,
                             options);

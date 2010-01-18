@@ -10,8 +10,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
     Sherd.Video.Flowplayer = function() {
         var self = this;
         
-        Sherd.Base.AssetView.apply(this,arguments); // inherit -- base.js
-        Sherd.Video.Base.apply(this,arguments); // inherit -- video.js
+        Sherd.Video.Base.apply(this,arguments); // inherit -- video.js -- base.js
         
         // Note: not currently in use
         this.microformat.type = function() { return 'flowplayer'; };
@@ -24,7 +23,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var playerId = Sherd.Base.newID('flowplayer-player-');
             var url = '';
             var pseudo = 0;
-            
+                        
             if (obj.flv) {
                 url = obj.flv;
             } else if (obj.flv_pseudo) {
@@ -71,7 +70,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         onStart: function() {
                             if (self.components.media && self.components.starttime > 0) {
                                 self.events.queue('seek',[
-                                                          {test: function() { 
+                                                          {test: function() {
                                                                     return self.components.media.isLoaded(); 
                                                                  }, 
                                                               poll:500
@@ -175,7 +174,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 if (self.components.media.getClip().fullDuration)
                     duration = self.components.media.getClip().fullDuration;
             }
-            log('Flowplayer.media.duration: ' + duration);
             return duration;
         }
         

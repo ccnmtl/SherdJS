@@ -160,12 +160,15 @@ Sherd.Base = {
 
 }// DomObject
 ,
-'AssetView' : function() { // TODO Document getState/setState and .play. (and
-                            // anything else an AssetView does...)
+'AssetView' : function() { 
         var self = this;
         Sherd.Base.DomObject.apply(this);
 
         this.options = {};
+        
+        // get/set functions to communicate current state to other players
+        this.getState = function() {}
+        this.setState = function(obj) {}
         
         if (this.html && !this.html.pull) {
             // NOTE: html.pull is not currently used. 
@@ -209,6 +212,8 @@ Sherd.Base = {
                     }
                 }
             }
+            this.html.remove = function {}
+            this.html.suspend = function() {} // pause any playback or animation for the current state
         }
 
     }// AssetView

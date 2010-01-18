@@ -5,7 +5,6 @@
  * TODO: make sure overlapping seeks don't trip over each other
  * 
  */
-
 if (typeof Sherd == 'undefined') {
     Sherd = {};
 }
@@ -69,8 +68,8 @@ if (!Sherd.Video.Base) {
 
     Sherd.Video.Base = function(options) {
         var self = this;
-        Sherd.Video.Helpers.apply(this);
-        Sherd.Base.AssetView.apply(this);
+        Sherd.Video.Helpers.apply(this,arguments);
+        Sherd.Base.AssetView.apply(this,arguments);
 
         this.options = {
             src : null,
@@ -92,6 +91,7 @@ if (!Sherd.Video.Base) {
             }
         }
 
+        /** What is this for? **/
         this.start = false; // current/last seek time
         this.end = false; // current/last pause time
         this.seeking = false;
@@ -99,6 +99,11 @@ if (!Sherd.Video.Base) {
         this.paused = false;
         this.ended = false;
         this.ready = false;
+        
+        this.html.suspend = function() {
+            self.events.clearTimers();
+            self.media.pause(); // may not be necessary
+        }
 
         this.media = {
             load : unimplemented// (obj,start_from_scratch)
@@ -141,9 +146,9 @@ if (!Sherd.Video.Base) {
                 var obj;
                 return obj;
             },
-            remove: function() { // Destruction step. Note: Not Currently In Use
-            },
-            type: function() { var type; return type; }, // Return type of media. Note: Not currently in use;
+            remove: function() {}, // Destruction step. Note: Not Currently In Use
+            supports: function() { return []; },  // Return list of types supported. Note: Not currently in use
+            type: function() { var type; return type; }, // Return current type of media playing. Note: Not currently in use;
             update: function(obj,html_dom) {}, // Replace the video identifier within the .html embed block 
             write: function(create_obj,html_dom) {} // Post-create step
         };
@@ -175,20 +180,12 @@ if (!Sherd.Video.Base) {
                 this.media.seek(obj.start, obj.end);
             }
         }
-        // /END VITAL-specific
-
-        this.get = function() {
-            return self.components['media'];
-        }
-
-        // convenience functions
-        this.write = function(obj) {
-            this.html.write(this.microformat.create(obj));
-        }
 
         if (!this.events) {
             this.events = {};
         }
+        
+        /** CURRENTLY UNUSED **/
         this.events.fired = {
             'load' : false,
             'unload' : false,
@@ -214,7 +211,19 @@ if (!Sherd.Video.Base) {
                 }
             }
         }
+        /*********************/
+        
+        this.events._timers = {};
+        this.events.registerTimer = function(name, timeoutID) {
+            this._timers[name] = timeoutID;
+        }
 
+        this.events.clearTimers = function() {
+            for (name in this._timers) {
+                window.clearTimeout(this._timers[name]);
+            }
+        }
+        
         /*
          * queue() takes a plan of tasks and will perform one after another with
          * the opportunity to keep trying a step until it's ready to proceed
@@ -251,13 +260,13 @@ if (!Sherd.Video.Base) {
                 }
                 next = function() {
                     var fired = false;
-                    var self = (cur.self) ? cur.self : this;
+                    var curself = (cur.self) ? cur.self : this;
                     try {
                         if (cur.call)
-                            cur.call.apply(self);
+                            cur.call.apply(curself);
                     } catch (e) {
                         if (cur.log)
-                            cur.log.apply(self, [ e, 'call failed' ]);
+                            cur.log.apply(curself, [ e, 'call failed' ]);
                     }
                     function go() {
                         if (fired) {
@@ -270,15 +279,15 @@ if (!Sherd.Video.Base) {
                                 : '';
                         try {
                             if (cur.check)
-                                v = cur.check.apply(self, [ data ]);
+                                v = cur.check.apply(curself, [ data ]);
                             if (cur.test) {
-                                rv = cur.test.apply(self, [ v, data ]);
+                                rv = cur.test.apply(curself, [ v, data ]);
                             }
                             if (cur.log)
-                                cur.log.apply(self, [ [ v, rv, data ] ]);
+                                cur.log.apply(curself, [ [ v, rv, data ] ]);
                             if (rv) {
                                 if (cur.callback) {
-                                    cur.callback.apply(self, [ rv, data ]);
+                                    cur.callback.apply(curself, [ rv, data ]);
                                 }
                                 fired = true;
                                 advance();
@@ -290,18 +299,23 @@ if (!Sherd.Video.Base) {
                                 pollID = window.setTimeout(arguments.callee,
                                         cur.poll);
                             if (cur.log)
-                                cur.log.apply(self, [ e, data ]);
+                                cur.log.apply(curself, [ e, data ]);
                         }
-                    }
-                    if (cur.check || cur.poll || cur.test)
+                        self.events.registerTimer(name + 'poll', pollID);
+                    } // endgo
+                    
+                    if (cur.check || cur.poll || cur.test) {
                         pollID = window.setTimeout(go, 0);
-                    else
+                        self.events.registerTimer(name + 'poll', pollID);
+                    } else {
                         advance();
+                    }
                     if (cur.timeout) {
-                        window.setTimeout(function() {
+                        timeoutID = window.setTimeout(function() {
                             fired = true;
                             advance();
                         }, cur.timeout);
+                        self.events.registerTimer(name + 'timeout', timeoutID);
                     }
                 }//next()
                 advance();

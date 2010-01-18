@@ -16,8 +16,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
     Sherd.Video.YouTube = function() {
         var self = this;
         
-        Sherd.Base.AssetView.apply(this,arguments); //inherit -- base.js
-        Sherd.Video.Base.apply(this,arguments); //inherit -- video.js
+        Sherd.Video.Base.apply(this,arguments); //inherit -- video.js -- base.js
         
         // Note: not currently in use
         this.microformat.type = function() { return 'youtube'; };
@@ -179,9 +178,13 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         this.media.time = function() {
             time = 0;
             if (self.components.media) {
-                time = self.components.media.getCurrentTime();
-                if (time < 0)
-                    time = 0
+                try {
+                    time = self.components.media.getCurrentTime();
+                    if (time < 0)
+                        time = 0
+                } catch (e) {
+                    // media probably not yet initialized
+                }
             }
             return time;
         }

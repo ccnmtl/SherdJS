@@ -20,8 +20,7 @@ if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
     Sherd.Video.QuickTime = function() {
         var self = this;
-        Sherd.Base.AssetView.apply(this,arguments); //inherit
-        Sherd.Video.Base.apply(this,arguments); //inherit
+        Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
 
         // overrides video.js play
         this.play = function() {
