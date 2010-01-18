@@ -212,7 +212,7 @@ Sherd.Base = {
                     }
                 }
             }
-            this.html.remove = function {}
+            this.html.remove = function() {}
             this.html.suspend = function() {} // pause any playback or animation for the current state
         }
 
