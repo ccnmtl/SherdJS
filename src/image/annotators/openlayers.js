@@ -27,6 +27,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		///show buttons
 		self.components.center.style.display = 'inline';
 		self.components.redo.style.display = 'inline';
+                self.components.instructions.style.display = 'none';
 		mode = 'browse';
 	    }
 	};
@@ -70,6 +71,9 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		    self.targetview.openlayers.vectors.removeFeatures(
 			self.targetview.openlayers.vectors.features
 		    );
+                    self.components.instructions.style.display = 'inline';                    
+		    self.components.center.style.display = 'none';
+		    self.components.redo.style.display = 'none';
 		}
 	    });
 
@@ -133,7 +137,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
 		    htmlID:id,
-		    text:'<div id="'+id+'" style="height:3em;"><button style="display:none;" class="sherd-image-center">Center Annotation</button> <button style="display:none;" class="sherd-image-redo">Redo Annotation</button></div>'
+		    text:'<div id="'+id+'" style="height:3em;"><button style="display:none;" class="sherd-image-center">Center Annotation</button> <button style="display:none;" class="sherd-image-redo">Redo Annotation</button><p class="sherd-image-instructions">Choose a drawing tool.  The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p></div>'
 		};
 	    },
 	    'components':function(html_dom,create_obj) {
@@ -141,7 +145,8 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		return {
 		    'top':html_dom,
 		    'center':buttons[0],
-		    'redo':buttons[1]
+		    'redo':buttons[1],
+                    'instructions':html_dom.getElementsByTagName('p')[0]
 		}
 	    }
 	}
