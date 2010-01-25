@@ -137,11 +137,10 @@ if (!Sherd.Image.OpenLayers) {
 
 		self.openlayers.vectors.addFeatures( self.openlayers.features );
                 if (!obj.preserveCurrentFocus) {
-                    if (obj.zoom) {
-                        self.openlayers.map.setCenter(
-                            bounds.getCenterLonLat(),
-                            obj.zoom
-                        );
+                    if (obj.zoom &&
+                        obj.zoom < self.openlayers.map.getZoomForExtent(bounds)
+                       ) {
+                        self.openlayers.map.setCenter(bounds.getCenterLonLat(), obj.zoom );
                     } else {
 		        self.openlayers.map.zoomToExtent(bounds);
                     }
