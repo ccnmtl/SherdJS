@@ -86,8 +86,14 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         this.media.duration = function() {
             //TODO:test for loaded-ness
-            self.media._updateMovScale();
-            return self.components.media.GetDuration()/self.media.movscale;
+            duration = 0;
+            try {
+                self.media._updateMovScale();
+                duration = self.components.media.GetDuration()/self.media.movscale;
+            } catch (e) {
+            }
+            return duration;
+            
         }
         this.media.play = function() {
             self.events.queue('play',[
@@ -153,13 +159,14 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                       }
                                       ]);
         }
+        
         this.media.timestrip = function() {
-            return {w:parseInt(self.components.media.width,10)-(16*5),
-                x:(16*2),
+            return {w: self.components.media.width,
+                trackX: 34,
+                trackWidth: 230,
                 visible:true
             };
         }
-
         
         this.microformat.type = function() {return 'quicktime';};
         
@@ -238,7 +245,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                         self.microformat.update(create_obj.object, top);
                     },100);
                 }
-                self.components = self.microformat.components(top,create_obj);
             }
         }
         
@@ -292,45 +298,31 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 clickToPlayID:'clicktoplay',
                 object:obj,
                 text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
-                <div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div>\
-                <span id="clicktoplay" \
+                <div id="clicktoplay" \
                 onclick="theMovie.SetURL(theMovie.GetHREF());hideElement(event.target)"\
-                >Click video to play</span>\
-                <!--[if IE]><object id="'+id+'" \
-                width="'+opt.width+'" height="'+opt.height+'" \
-                style="behavior:url(#qt_event_source)"  \
-                codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
-                classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
-                <[endif]--><!--[if !IE]><--><object id="'+id+'" type="'+opt.mimetype+'" \
-                data="'+opt.url+'" \
-                width="'+opt.width+'" height="'+opt.height+'">  \
+                >Click video to play</div>\
+                <!--[if IE]>\
+                    <object id="'+id+'" \
+                    width="'+opt.width+'" height="'+opt.height+'" \
+                    style="behavior:url(#qt_event_source)"  \
+                    codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
+                    classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
+                <![endif]--> \
+                <!--[if !IE]><--> \
+                    <object id="'+id+'" type="'+opt.mimetype+'" \
+                    data="'+opt.url+'" \
+                    width="'+opt.width+'" height="'+opt.height+'">  \
                 <!-- ><![endif]--> \
                 <param name="src" value="'+opt.url+'" /> \
-                <!--param name="postdomevents" value="true" /--> \
                 <param name="controller" value="'+opt.controller+'" /> \
                 <param name="type" value="'+opt.mimetype+'" /> \
                 <param name="enablejavascript" value="true" /> \
                 <param name="autoplay" value="'+opt.autoplay+'" /> \
+                <param name="width" value="320"> \
+                <param name="height" value="256"> \
                 '+opt.extra+'\
-                '+opt.errortext+'</object></div>'
-                /*
-		'<!--[if IE]><object id="'+id+'" \
-                     width="'+opt.width+'" height="'+opt.height+'" \
-                     style="behavior:url(#qt_event_source)"  \
-                 codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
-                 classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
- 	                 <param name="src" value="'+opt.url+'" /> \
-                    <[endif]--><!--[if !IE]><--><object id="'+id+'" type="'+opt.type+'" \
-                            data="'+opt.url+'" \
-                            width="'+opt.width+'" height="'+opt.height+'">  \
-                    <!-- ><![endif]--> \
- 	                 <!--param name="postdomevents" value="true" /--> \
- 	                 <param name="type" value="'+opt.type+'" /> \
-                 <param name="autoplay" value="'+opt.autoplay+'" /> \
-                 <!-- param name="autohref" value="true" /--> \
-                 <!-- param name="href" value="'+opt.url+'" / --> \
-                 <param name="controller" value="'+opt.controller+'" /> \
-                 '+opt.errortext+'</object>'*/
+                '+opt.errortext+'</object></div>\
+                <div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div>'
             };
         };
         
@@ -356,6 +348,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         };
     }//Sherd.AssetViews.QuickTime
 }
+
+
 /*
 			var args = ['images/poster.gif',
 			  '320', '256', '',
@@ -381,4 +375,45 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 			   args.splice(6,2); //remove href
 			}
 			QT_WriteOBJECT_XHTML.apply(this,args);
+ */
+
+
+
+/**
+ GENERATED HTML
+    <div class="asset-display">
+        <div id="quicktime-wrapper1" class="sherd-quicktime-wrapper">                
+        <div id="clicktoplay" onclick="theMovie.SetURL(theMovie.GetHREF());hideElement(event.target)">Click video to play</div>                
+        <!--[if IE]>
+           <object id="movie1" width="320" height="256"                 
+               style="behavior:url(#qt_event_source)"                  
+               codebase="http://www.apple.com/qtactivex/qtplugin.cab"
+               classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B">                 
+        <[endif]-->
+        
+        <!--[if !IE]>
+        <-->
+        <object id="movie1" 
+                type="image/x-quicktime" 
+                data="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large" 
+                height="256" 
+                width="320">                  
+        <!-- >
+        <![endif]-->                 
+            
+            <param name="src" value="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large">                 
+            <param name="controller" value="false">                 
+            <param name="type" value="image/x-quicktime">                 
+            <param name="enablejavascript" value="true">                 
+            <param name="autoplay" value="false">                 
+            <param name="href" value="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy">
+            <param name="autohref" value="false">
+            <param name="width" value="320">
+            <param name="height" value="256">
+            <param name="target" value="myself">                                     
+            Error text.
+      </object>
+      </div>   
+ 
+ 
  */

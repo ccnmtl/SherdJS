@@ -66,14 +66,6 @@ function DjangoSherd_ClipForm() {
             } else if (start) {
                 self.components.endField.value = start;
             }
-            /**
-            if (start) {// clipstrip
-                try {
-                    formToClip();
-                } catch (e) {// eh, nevermind
-                }
-            }
-            **/
             return true;
         }
     }
@@ -106,6 +98,10 @@ function DjangoSherd_ClipForm() {
                     self.components.endField.value = timecode; // update end time if start time is greater
                 
                 self.storage.update(self.getState(), true);
+                
+                // @todo - factor this into clipstrip and/or into QT. Needed?
+                //moveClipStrip(self.components.startField.value, self.components.endField.value);
+                initQtDuration();
             });
         connect(self.components.endButton, 'onclick', function(evt) {
                 time = self.targetview.media.time();
@@ -121,6 +117,10 @@ function DjangoSherd_ClipForm() {
                 }
             
                 self.storage.update(self.getState(), true);
+
+                // @todo - factor this into clipstrip and/or into QT. Needed?
+                // moveClipStrip(self.components.startField.value, self.components.endField.value); 
+                initQtDuration(); 
             });
         connect(self.components.startField, 'onchange', function(evt) {
             var obj = self.getState();

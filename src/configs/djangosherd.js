@@ -14,7 +14,6 @@ function DjangoSherd_Asset_Config() {
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     ds.noteform = new DjangoSherd_NoteForm();// see below
-    // djangosherd.clipstrip = new ClipStrip();
 
     addLoadEvent(function() {
         // /# Find assets.
@@ -24,23 +23,29 @@ function DjangoSherd_Asset_Config() {
         // GenericAssetView is a wrapper in ../assets.js.
         ds.assetview = new Sherd.GenericAssetView( {
             'clipform' : true,
+            'clipstrip' : true,
             'storage' : ds.noteform
         });
 
-        // ds.clipstrip.html.put($('clipstrip'));
-        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-        ds.assetview.html.push(obj_div, {
+        // ?? var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');
+        ds.assetview.html.push('asset-display', {
             asset : ds.assetMicroFormat.read(ds.dom_assets[0])
         });
 
-        // /# Editable? (i.e. note-form?)
+        // /# Editable? (i.e. note-form?)...is this used still?
         ds.noteform.html.put($('clip-form'));
-        // /# load asset into note-form
+        
+        // /# Setup the asset annotator form
         ds.assetview.clipform.html.push('videonoteform', {
             asset : {}
-        }); // write videoform
-        
+        });
         ds.assetview.clipform.initialize(); // build listeners
+        
+        // load clipstrip into html
+        if (ds.assetview.clipstrip) {
+            ds.assetview.clipstrip.html.push('clipstrip-display', { asset: {} });
+            ds.assetview.clipstrip.initialize(); // build listeners
+        }
         
         var orig_annotation_data = $('original-annotation');// /***faux layer
         if (orig_annotation_data != null) {
@@ -51,7 +56,12 @@ function DjangoSherd_Asset_Config() {
                         .getAttribute('data-annotation'));
 
                 ds.assetview.setState(obj);
-                ds.assetview.clipform.setState(obj);
+                
+                if (ds.assetview.clipform)
+                    ds.assetview.clipform.setState(obj);
+                
+                if (ds.assetview.clipstrip)
+                    ds.assetview.clipstrip.setState(obj);
                
             } catch (e) {/* non-valid json? */
             }

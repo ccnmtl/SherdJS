@@ -1,224 +1,104 @@
-/**********
- * display strip underneath time line.
- * This is mostly stolen inspired from (my code in) the VITAL project
+var CLIP_MARKER_WIDTH = 7;
 
-  TODO UNREQUIRE: jQuery 
-  TODO IMPLEMENT: AssetLayer
+function DjangoSherd_ClipStrip() {
+    var self = this;
+    Sherd.Base.AssetView.apply(this, arguments); // inherit
 
-  TODO IMPLEMENT:
-    * need to create annotation objects
-    * need to listen for events
-    1. multiple annotations
-    2. editable annotations (by dragging)
-  video_interface.get() returns the DOMobj for the video //used to be movie()
-  video_interface.GetDuration() returns duration (in seconds)
-  video_interface.TimeStrip() returns {x:OFFSET,w:WIDTH,visible:TRUE}
- 
-  video annotation object:
-  {view:{
-      color:'white'
-   }
-   annotations:[ {start:<seconds>, end:<seconds>}
-   ]
-  }
- *********/
-
-function ClipStrip() {
-    Sherd.Base.DomObject.call(this);//inherit
-    this.supports = {
-	multiple_annotations:false, creatable:false, editable:false, extra_fields:false
+    this.attachView = function(view) {
+        this.targetview = view;
     }
 
-    var self = this; //for binding when necessary
-    var _video;
-    var _storage;
-    var _ready;
-    this.options = {
-	//connected to the width of the bookend*.gif files in the styling
-	CLIP_MARKER_WIDTH:7
-    }
-    function _default_LayerMicroformat() {
-	var self = this;
-	this.type = function(){return 'clipstrip'};
-	this.write = function(obj,doc) {
-	    doc = (doc)?doc:document;
-	    var dom = doc.createElement('div');
-	    dom.setAttribute('class','clipStrip');
-	    dom.innerHTML = '<div class="clipStripLabel"><!-- nothing --></div><div class="clipStripTrack"><div class="clipStripStart clipSlider" style="display:none"></div><div class="clipStripRange" style="display:none"></div><div class="clipStripEnd" style="display:none"></div></div>';
-	    return dom;
-	};
-	this.components=function(html_dom) {
-	    var rv =  {
-		'top':html_dom,
-		'clipStripTrack':jQuery('.clipStripTrack',html_dom).get(0),
-		'clipStripTarget':jQuery('.clipStripTrack',html_dom).get(0),
-		'clipStripStart': jQuery('.clipStripStart',html_dom).get(0),
-		'clipStripRange': jQuery('.clipStripRange',html_dom).get(0),
-		'clipStripEnd':jQuery('.clipStripEnd',html_dom).get(0)
-	    };
-	    rv.clipStripLength = self.length(rv);
-	    return rv;
-	};
-	//custom
-	this.length=function(components) {
-	    return parseInt(components.clipStripTarget.offsetWidth,10);
-	};
+    this.getState = function() {
+        var obj = {};
+        // not sure what's needed here
+        return obj;
     }
 
-    this.attachMicroformat(new _default_LayerMicroformat()); //default
-
-
-    ///NOT USED YET: FUTURE: for multiple annotations
-    function _default_AnnotationMicroformat() {
-	var self = this;
-	this.type = function(){return 'annotation/video'};
-	this.write = function(obj,doc) {
-	    doc = (doc)?doc:document;
-	    var dom = doc.createElement('div');
-	    dom.setAttribute('class','clipStripAnnotation');
-	    dom.innerHTML = '<div class="clipStripStart clipSlider" style="display:none"></div><div class="clipStripRange" style="display:none"></div><div class="clipStripEnd" style="display:none"></div>';
-	    return dom;
-	};
-	this.components=function(html_dom) {
-	    var rv =  {
-		'top':html_dom,
-		'clipStripStart': jQuery('.clipStripStart',html_dom).get(0),
-		'clipStripRange': jQuery('.clipStripRange',html_dom).get(0),
-		'clipStripEnd':jQuery('.clipStripEnd',html_dom).get(0)
-	    };
-	    rv.clipStripLength = self.length(rv);
-	    return rv;
-	};
-	//custom
-	this.length=function(components) {
-	    return parseInt(components.clipStripRange.offsetWidth,10);
-	};
+    this.setState = function(obj) {
+        if (typeof obj == 'object') {
+            self.components.starttime = 0;
+            self.components.endtime = obj.duration;
+            if (obj.start) {
+                self.components.starttime = obj.start
+            }
+            if (obj.end) {
+                self.components.endtime = obj.end;
+            }
+            if (obj.duration < 1) {
+                // listen for an event -- video duration is available
+            } else {
+                left = self.utilities.timeToPixels(self.components.starttime, obj.duration, self.components.timestrip.trackWidth);
+                right = self.utilities.timeToPixels(self.components.endtime, obj.duration, self.components.timestrip.trackWidth);
+                
+                self.components.clipStartMarker.style.left = (left - CLIP_MARKER_WIDTH) + 'px';
+                self.components.clipEndMarker.style.left = right + 'px';
+                self.components.clipRange.style.left = left + "px";
+                self.components.clipRange.style.width = (right - left) + 'px';
+                
+                self.components.clipStartMarker.style.display = 'block';
+                self.components.clipRange.style.display = 'block';
+                self.components.clipEndMarker.style.display = 'block';
+            }
+            return true;
+        }
     }
 
-
-    this.positionStrip = function(components) {
-	var dim = _video.TimeStrip();
-	this.components.top.style.paddingRight=dim.x+'px';
-	this.components.top.style.width=dim.w+'px';
-
-	this.components.clipStripTrack.style.left=dim.x+'px';
-	this.components.clipStripTrack.style.width=dim.w+'px';
-	
-	this.components.clipStripLength = dim.w;
-    }
-    this.clipStripPos = function(timeCodeSeconds) {
-	try {
-	    this.movDuration = _video.GetDuration();
-	} catch(err) {/*who cares?*/}
-	var ratio = this.components.clipStripLength/this.movDuration;
-	return Math.floor(ratio * timeCodeSeconds);
-    }
-    //setup up layer
     this.initialize = function() {
-	var microformat = this.microformat();
-	var html_dom = microformat.write();
-	html_dom = _video.html(html_dom, this, null, 'clipstrip');
-	//should some/all of this be above the html() call?
-	if (html_dom) {//place strip
-	    this.components = microformat.components(html_dom);
-	    this.positionStrip(this.components);
-	    jQuery(_video.get()).after(html_dom);
-	}
-	if (this.options.createable) {
-	    //TODO:add dom
-	    //TODO:add listener
-	}
-	if (_storage && !_ready) {
-	    _storage.ready();
-	    _ready = true;
-	}
+        // MochiKit!!!
+        connect(self.components.clipStartMarker, 'onclick', function(evt) {
+                self.targetview.media.seek(self.components.starttime);
+             });
+        connect(self.components.clipEndMarker, 'onclick', function(evt) {
+                self.targetview.media.seek(self.components.endtime);
+            });
     }
-    this.get = function() {return this.components.top;}
-    this.attachView = function(view, options) {
-	if (_video) {
-	    //TODO: stop listening to current view
-	}
-	_video = view;
-	if (options) {
-	    for (a in options) {
-		this.options[a] = options[a];
-	    }
-	}
-	this.initialize();
-
-	//TODO:start listening to view
+    
+    this.microformat.create = function(obj) {
+        var htmlID = 'clipStrip';
+        timestrip = self.targetview.media.timestrip();
+        return {
+            htmlID : htmlID,
+            timestrip : timestrip,
+            text : '<div id="clipStrip" style="width: ' + timestrip.w + 'px">' + 
+                        '<div id="clipStripTrack"  style="width: ' + timestrip.trackWidth + 'px; left: ' + timestrip.trackX + 'px">' + 
+                            '<div id="clipStripStart" class="clipSlider" onmouseover="return escape(\'Go to note start time\')" style="display:none"></div>' + 
+                            '<div id="clipStripRange" class="clipStripRange" style="display:none"></div>' + 
+                            '<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>' + 
+                        '</div>' + 
+                    '</div>'
+        }
     }
-    this.attachStorage = function(storage) {
-	if (_storage) {
-	    //TODO: stop listening to current storage
-	}
-	_storage = storage;
-	if (!_ready) {
-	    _storage.ready();
-	    _ready = true;
-	}
-	//TODO: start listening to storage
+    
+    // Post-create step. Overriding here to do a component create
+    this.microformat.postcreate = function(create_obj, html_dom) {
+        if (create_obj) {
+            var top = document.getElementById(create_obj.htmlID);
+            self.components = self.microformat.components(top,create_obj);
+        }
     }
-
-
-    //public interface?
-    this.annotations = {
-	'create':function(ann){
-	    return self.annotations.update(ann);
-	},
-	'update':function(ann){
-	    //just one for now
-	    if(ann.annotations.length) {
-		var left = self.clipStripPos(obj.annotations[0].start);
-		var right = self.clipStripPos(obj.annotations[0].end);
-
-		self.components.clipStripStart.style.left = parseInt(left-self.options.CLIP_MARKER_WIDTH+2,10)+'px';
-		self.components.clipStripRange.style.left = left+'px';
-		self.components.clipStripRange.style.width = parseInt(right-left,10)+'px';
-		self.components.clipStripEnd.style.left = right+'px';
-	
-		self.components.clipStripStart.style.display = 'block';
-		self.components.clipStripRange.style.display = 'block';
-		self.components.clipStripEnd.style.display = 'block';
-
-	    }
-	},
-	'focus':function(annId){},
-	'hide':function(annId){
-	    self.components.clipStripStart.style.display='none';
-	    self.components.clipStripRange.style.display='none';
-	    self.components.clipStripEnd.style.display='none';
-	},
-	'show':function(annId){
-	    self.components.clipStripStart.style.display = 'block';
-	    self.components.clipStripRange.style.display = 'block';
-	    self.components.clipStripEnd.style.display = 'block';
-	},
-	'remove':function(annId){
-	    self.annotations.hide(annId);
-	},
-	'microformat':new _default_AnnotationMicroformat()
-    };//this.annotations
-
-    //STORAGE: only necessary once we are editable
-    function save(ann) {
-	_storage.save(ann,this);
+    
+    // self.components -- Access to the internal player and any options needed at runtime
+    this.microformat.components = function(html_dom,create_obj) {
+        try {
+            return {
+                clipStrip : document.getElementById('clipStrip'),
+                clipStartMarker : document.getElementById('clipStripStart'),
+                clipRange : document.getElementById('clipStripRange'),
+                clipEndMarker : document.getElementById('clipStripEnd'),
+                timestrip: create_obj.timestrip,
+            }
+        } catch(e) {}
+        return false;
     }
-    function remove(ann) {
-	_storage.remove(ann,this);
+    
+    this.utilities = {
+       timeToPixels: function(seconds, duration, width) {
+           if (duration > 0) {
+               var ratio = width / duration;
+               return ratio * seconds;
+           } else {
+               return 0;
+           }
+       }
     }
-
-    //VIEW
-    function fakeFunction() {
-	//setting up annotation
-	var ann_dom = this.annotations.microformat().write(ann);
-	ann_dom = _video.html(ann_dom, this, ann, 'annotation');
-	if (ann_dom) {
-	    //place annotation
-	}
-	_video.html(this.microformat().write() );
-    }
-
-
-
 }

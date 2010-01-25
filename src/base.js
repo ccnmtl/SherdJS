@@ -116,20 +116,26 @@ Sherd.Base = {
             part = (part) ? part : 'media';
             return self.components[part];
         },
-        put : function(dom) {
+        put : function(dom, create_obj) {
             // maybe should update instead of clobber,
             // /but we should have it clobber
             // /until we need it
             if (self.microformat && self.microformat.components) {
-                self.components = self.microformat.components(dom);
+                self.components = self.microformat.components(dom, create_obj);
             } else {
                 self.components = {
                     'top' : dom
                 };
             }
+            
+            if (self.initialize) {
+                self.initialize(create_obj);
+            }
         },
         remove : function() {
             self.clearListeners();
+            if (self.deinitialize)
+                self.deinitialize(); 
             for (part in self.components) {
                 if (self.components[part].parentNode) {
                     self.components[part].parentNode
@@ -197,22 +203,23 @@ Sherd.Base = {
                 }
                 if (options.asset) {
                     if (options.asset != self._asset) {
-                        var updated = (options.microformat.update // replace
-                                                                    // or update
-                        && options.microformat.update(options.asset, dom_or_id.firstChild));
+                        if (self.deinitialize)
+                            self.deinitialize(); 
+                        
+                        var updated = options.microformat.update || options.microformat.update(options.asset, dom_or_id.firstChild));
+                        
                         if (!updated) {
                             var asset_html = options.microformat.create(options.asset);
-                            if (options.microformat.write) {
-                                options.microformat.write(asset_html, dom_or_id);
-                            } else if (asset_html.text) {
+                            
+                            if (asset_html.text)
                                 dom_or_id.innerHTML = asset_html.text;
-                                self.html.put(document.getElementById(asset_html.htmlID));
-                            }
+                            
+                            // create components and call initialize
+                            self.html.put(dom_or_id, asset_html);
                         }
                     }
                 }
             }
-            this.html.remove = function() {}
             this.html.suspend = function() {} // pause any playback or animation for the current state
         }
 

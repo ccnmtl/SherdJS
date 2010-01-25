@@ -111,14 +111,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         this.microformat.find = function(html_dom) {
             var found = [];
             //SNOBBY:not embeds, since they're in objects--and not xhtml 'n' stuff
-            var objects = ((html_dom.tagName.toLowerCase()=='object')
-                    ? [html_dom] : html_dom.getElementsByTagName('object')
+            var objects = html_dom.getElementsByTagName('object');
                       //function is case-insensitive in IE and FFox,at least
-            );
             for(var i=0; i<objects.length; i++) {
-                if (objects[i].getAttribute('id').search('flowplayer-player'))
+                if (objects[i].getAttribute('id').search('flowplayer-player') > -1)
                     found.push({'html':objects[i]});
             }
+            log('this.microformat.find: ' + found.length);
             return found;
         };
         
@@ -142,11 +141,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.wrapper = html_dom;
                 }
                 if (create_obj) {
-                    //the first works for everyone except safari
-                    //the latter probably works everywhere except IE
                     rv.media = $f(create_obj.mediaID); 
                     rv.starttime = 0;
                     rv.endtime = 0;
+                    rv.width = create_obj.object.options.width;
                 }
                 return rv;
             } catch(e) {}
@@ -155,11 +153,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         this.media.movscale = 1; //movscale is a remnant from QT. vitalwrapper.js uses it. TODO: verify we need it.
 
-        // NOTE: Copied from QT. Reimplement for clipstrip.
         this.media.timestrip = function() {
-            return {w:25,
-                x:(16*2),
-                visible:true
+            return {w: self.components.width,
+                    trackX: 30,
+                    trackWidth: 395,
+                    visible:true
             };
         }
 

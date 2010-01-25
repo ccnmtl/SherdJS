@@ -33,6 +33,10 @@ if (!Sherd.GenericAssetView) {
                 if (options.storage) {
                     quicktime.clipform.addStorage(options.storage);
                 }
+                if (options.clipstrip) {
+                    quicktime.clipstrip = new DjangoSherd_ClipStrip();
+                    quicktime.clipstrip.attachView(quicktime.view);
+                }
             }
             this.settings.quicktime = quicktime;
         }
@@ -47,6 +51,10 @@ if (!Sherd.GenericAssetView) {
                     youtube.clipform.addStorage(options.storage);
                 }
             }
+            if (options.clipstrip) {
+                youtube.clipstrip = new DjangoSherd_ClipStrip();
+                youtube.clipstrip.attachView(youtube.view);
+            }
             this.settings.youtube = youtube;
         }
         if (Sherd.Video && Sherd.Video.Flowplayer) {
@@ -59,6 +67,10 @@ if (!Sherd.GenericAssetView) {
                 if (options.storage) {
                     flowplayer.clipform.addStorage(options.storage);
                 }
+            }
+            if (options.clipstrip) {
+                flowplayer.clipstrip = new DjangoSherd_ClipStrip();
+                flowplayer.clipstrip.attachView(flowplayer.view);
             }
             this.settings.flowplayer = flowplayer;
         }
@@ -89,7 +101,6 @@ if (!Sherd.GenericAssetView) {
                         && (options.asset.type in self.settings)) {
                     
                     if (current_type) {
-                        self.settings[current_type].view.html.suspend();
                         if (current_type != options.asset.type) {
                             self.settings[current_type].view.html.remove();
                         }
@@ -103,6 +114,9 @@ if (!Sherd.GenericAssetView) {
 
                     if (self.settings[current_type].clipform) {
                         self.clipform = self.settings[current_type].clipform;
+                    }
+                    if (self.settings[current_type].clipstrip) {
+                        self.clipstrip = self.settings[current_type].clipstrip;
                     }
                 } else {
                     throw "Your asset does not have a (supported) type marked";

@@ -4,12 +4,6 @@
   http://code.google.com/apis/youtube/chromeless_example_1.html
  */
 
-// global function required to catch YouTube player ready event
-// also, the place to register for events and state changes.
-// Currently, not utilizing either approach, opting for a timer instead.
-function onYouTubePlayerReady(playerId) {
-}
-
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.YouTube && Sherd.Video.Base) {
@@ -17,7 +11,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         var self = this;
         
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js -- base.js
-        
+                
         // Note: not currently in use
         this.microformat.type = function() { return 'youtube'; };
         
@@ -26,6 +20,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             var wrapperId = Sherd.Base.newID('youtube-wrapper');
             var playerId = Sherd.Base.newID('youtube-player-');
             var autoplay = obj.autoplay ? 1 : 0;
+            self._ready = false;
             
             if (!obj.options) 
             {
@@ -38,7 +33,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return {
                 object: obj,
                 htmlID: wrapperId,
-                mediaID: playerId, // Used by microformat.components initialization
+                mediaId: playerId, // Used by microformat.components initialization
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 youtube: obj.youtube, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
@@ -65,12 +60,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         this.microformat.find = function(html_dom) {
             var found = [];
             //SNOBBY:not embeds, since they're in objects--and not xhtml 'n' stuff
-            var objects = ((html_dom.tagName.toLowerCase()=='object')
-                    ? [html_dom] : html_dom.getElementsByTagName('object')
+            var objects = html_dom.getElementsByTagName('object');
                       //function is case-insensitive in IE and FFox,at least
-            );
             for(var i=0; i<objects.length; i++) {
-                if (objects[i].getAttribute('id').search('youtube-player'))
+                if (objects[i].getAttribute('id').search('youtube-player') > -1)
                     found.push({'html':objects[i]});
             }
             return found;
@@ -90,13 +83,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         };
         
         // Post-create step. Overriding here to do a component create
-        this.microformat.write = function(create_obj,html_dom) {
-            if (create_obj && create_obj.text) {
-                html_dom.innerHTML = create_obj.text;
+        this.microformat.postcreate = function(create_obj, html_dom) {
+            if (create_obj) {
                 var top = document.getElementById(create_obj.htmlID);
                 self.components = self.microformat.components(top,create_obj);
             }
-        }
+        };
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
@@ -116,45 +108,60 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 if (create_obj) {
                     //the first works for everyone except safari
                     //the latter probably works everywhere except IE
-                    rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
+                    rv.media = document[create_obj.mediaId] || document.getElementById(create_obj.mediaId);
                     rv.autoplay = create_obj.autoplay;
                     rv.youtube = create_obj.youtube;
+                    rv.mediaId = create_obj.mediaId;
                 }
                 return rv;
             } catch(e) {}
             return false;
         };
         
-        this.media._seek = function(starttime) {
-            if (self.components.media) {
-                if (self.components.autoplay) {
-                    self.components.media.loadVideoByUrl(self.components.youtube, starttime);
-                }
-                else {
-                    self.components.media.cueVideoByUrl(self.components.youtube, starttime);
-                }
+        // Global function required for the player
+        window.onYouTubePlayerReady = function(playerId) {
+            if (playerId == self.components.mediaId) {
+                self._ready = true;
+                
+                // reset the state
+                self.setState({ start: self.components.starttime, end: self.components.endtime});
+                
+                // register a state change function
+                // @todo -- YouTube limitation does not allow anonymous functions. Will need to address for 
+                // multiple YT players on a page
+                self.components.media.addEventListener("onStateChange", 'onYTStateChange');
+                
+                // let everyone know that the player is ready
             }
         }
+
+        // This event is fired whenever the player's state changes. Possible values are unstarted 
+        // (-1), ended (0), playing (1), paused (2), buffering (3), video cued (5). When the SWF is first loaded 
+        // it will broadcast an unstarted (-1) event. 
+        // When the video is cued and ready to play it will broadcast a video cued event (5).
+        // 
+        // @todo -- onYTStateChange does not pass the playerId into the function, which will be 
+        // a problem if we ever have multiple players on the page
+        window.onYTStateChange = function(newState) {
+            log('window.onYTStateChange: ' + newState);
+            
+            if (newState == 1) {
+                // @todo if the duration is good now, then broadcast a "valid metadata" event
+            } else if (newState == 2 || newState == 0) {
+                // @todo kill any end timers
+            }
+        };
         
-        this.media._test = function() {
-            try {
-                if (self.components.media) {
-                    state = self.components.media.getPlayerState();
-                    if (state)
-                        return true;
-                }
-            }
-            catch (e) {
-            }
-            return false;
+        this.media.ready = function() {
+            return self._ready;
         }
         
         this.media.movscale = 1; //movscale is a remnant from QT. vitalwrapper.js uses it. TODO: verify we need it.
        
-        // NOTE: Copied from QT. Reimplement for clipstrip.
         this.media.timestrip = function() {
-            return {w:25,
-                x:(16*2),
+            return {w: self.components.media.width,
+                trackX: 42,
+                trackWidth: 384,
                 visible:true
             };
         }
@@ -194,16 +201,29 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
 
         this.media.seek = function(starttime, endtime) {
-            // Queue up a "_seek" call. The YT player is not yet ready
-            self.events.queue('seek',[
-                                      {test:self.media._test, poll:500},
-                                      {data: starttime },
-                                      {timeout: 2200}, //timeout to avoid seek competition
-                                      {call: function() { self.media._seek(starttime); }}
-                                      ]);
+            if (self.media.ready()) {
+                if (starttime) {
+                    if (self.components.autoplay) {
+                        self.components.media.loadVideoByUrl(self.components.youtube, starttime);
+                    }
+                    else {
+                        self.components.media.cueVideoByUrl(self.components.youtube, starttime);
+                    }
+                }
             
-            // Watch the video's running time & stop it when the endtime rolls around
-            this.pauseAt(endtime);
+                if (endtime) {
+                    // Watch the video's running time & stop it when the endtime rolls around
+                    this.pauseAt(endtime);
+                }
+                
+                // clear any saved values if they exist
+                delete self.components.starttime;
+                delete self.components.endtime;
+            } else {
+                // store the values away for when the player is ready
+                self.components.starttime = starttime;
+                self.components.endtime = endtime;
+            }
         }
         
         this.media.pause = function() {
