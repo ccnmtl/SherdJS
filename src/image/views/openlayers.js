@@ -136,7 +136,16 @@ if (!Sherd.Image.OpenLayers) {
 		//self.openlayers.features[1].style = self.openlayers.vectors.styleMap.styles['sky'];
 
 		self.openlayers.vectors.addFeatures( self.openlayers.features );
-		obj.preserveCurrentFocus || self.openlayers.map.zoomToExtent(bounds);
+                if (!obj.preserveCurrentFocus) {
+                    if (obj.zoom) {
+                        self.openlayers.map.setCenter(
+                            bounds.getCenterLonLat(),
+                            obj.zoom
+                        );
+                    } else {
+		        self.openlayers.map.zoomToExtent(bounds);
+                    }
+                }
 	    } else if (!obj || !obj.preserveCurrentFocus) {
 		if (state.x) {
 		    self.openlayers.map.setCenter(

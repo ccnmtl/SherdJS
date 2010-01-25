@@ -47,12 +47,15 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 
 	    //on creation of an annotation
 	    self.openlayers.editingtoolbar.featureAdded = function(feature) {
-		var geojson = self.targetview.openlayers.feature2json(feature);
+                var current_state = self.targetview.getState();
+                var geojson = self.targetview.openlayers.feature2json(feature);
+                for (a in geojson) {current_state[a] = geojson[a]};
+                console.log(current_state);
 		///this should probably be through a signal?
 		self.targetview.setState({feature:feature,
 					  preserveCurrentFocus:true
 					 });
-		self.storage.update(geojson);
+		self.storage.update(current_state);
 	    }
 	    ///# 3. button listeners
 	    connect(self.components.center,'onclick',function(evt) {
