@@ -9,6 +9,7 @@ if (typeof djangosherd == 'undefined') {
 // / when attached to clipform: media.duration,media.movscale (and probably
 // media.time)
 
+
 function DjangoSherd_Asset_Config() {
     var ds = djangosherd;
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
@@ -36,11 +37,13 @@ function DjangoSherd_Asset_Config() {
         // /# Editable? (i.e. note-form?)
         ds.noteform.html.put($('clip-form'));
         // /# load asset into note-form
-        ds.assetview.clipform.html.push('videonoteform', {
-            asset : {}
-        }); // write videoform
-        
-        ds.assetview.clipform.initialize(); // build listeners
+        var videonoteform = $('videonoteform');
+        if (videonoteform) {
+            ds.assetview.clipform.html.push('videonoteform', {
+                asset : {}
+            }); // write videoform
+            ds.assetview.clipform.initialize(); // build listeners
+        }
         
         var orig_annotation_data = $('original-annotation');// /***faux layer
         if (orig_annotation_data != null) {
