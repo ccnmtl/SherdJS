@@ -71,18 +71,27 @@ MondrianBookmarklet = {
             var embs = document.getElementsByTagName("embed");
             if (embs.length) {
                 var e = embs[0];
-                try{
-                    e.Stop();
-                    hash = "start="+Math.floor(e.GetTime()/e.GetTimeScale());
-                } finally{}
+                if (e && e.Stop) {
+                    try{
+                        e.Stop();
+                        hash = "start="+Math.floor(e.GetTime()/e.GetTimeScale());
+                    } finally{}
+                }
+            }
+            var thumb;
+            if (SHARETHIS 
+                && typeof SHARETHIS.shareables == "object"
+                && SHARETHIS.shareables.length
+               ) {
+                thumb = SHARETHIS.shareables[0].properties.icon;
             }
             return {"html":$(".media").get(0),
                     "hash": hash||undefined,
                     "sources":{
                         "title":document.title,
                         "quicktime":$(".media").media("api").options.src,
-                        "poster":$(".media img").get(0).src
-                        /*,"thumb": XXXX */
+                        "poster":$(".media img").get(0).src,
+                        "thumb": thumb
                     }
                    };
         }
