@@ -43,7 +43,7 @@ function DjangoSherd_ClipStrip() {
         }
     }
 
-    this.initialize = function() {
+    this.initialize = function(create_obj) {
         // MochiKit!!!
         connect(self.components.clipStartMarker, 'onclick', function(evt) {
                 self.targetview.media.seek(self.components.starttime);
@@ -66,14 +66,6 @@ function DjangoSherd_ClipStrip() {
                             '<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>' + 
                         '</div>' + 
                     '</div>'
-        }
-    }
-    
-    // Post-create step. Overriding here to do a component create
-    this.microformat.postcreate = function(create_obj, html_dom) {
-        if (create_obj) {
-            var top = document.getElementById(create_obj.htmlID);
-            self.components = self.microformat.components(top,create_obj);
         }
     }
     

@@ -32,7 +32,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	    }
 	};
 
-	this.initialize = function() {
+	this.initialize = function(create_obj) {
 	    self.openlayers.editingtoolbar = new self.openlayers.CustomEditingToolbar(
 		self.targetview.openlayers.vectors
 	    );

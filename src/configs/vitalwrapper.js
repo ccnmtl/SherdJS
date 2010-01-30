@@ -81,7 +81,7 @@ function DjangoSherd_ClipForm() {
         }
     }
 
-    this.initialize = function() {
+    this.initialize = function(create_obj) {
         // MochiKit!!!
         connect(self.components.startButton, 'onclick', function(evt) {
                 // @todo -- icky assumption here that if the time exists, the movie is playing

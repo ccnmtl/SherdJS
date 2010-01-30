@@ -33,7 +33,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return {
                 object: obj,
                 htmlID: wrapperId,
-                mediaId: playerId, // Used by microformat.components initialization
+                mediaID: playerId, // Used by microformat.components initialization
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 youtube: obj.youtube, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
@@ -60,10 +60,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         this.microformat.find = function(html_dom) {
             var found = [];
             //SNOBBY:not embeds, since they're in objects--and not xhtml 'n' stuff
-            var objects = html_dom.getElementsByTagName('object');
+            var objects = ((html_dom.tagName.toLowerCase()=='object')
+                    ? [html_dom] : html_dom.getElementsByTagName('object')
                       //function is case-insensitive in IE and FFox,at least
+            );
             for(var i=0; i<objects.length; i++) {
-                if (objects[i].getAttribute('id').search('youtube-player') > -1)
+                if (objects[i].getAttribute('id').search('youtube-player'))
                     found.push({'html':objects[i]});
             }
             return found;
@@ -80,14 +82,6 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             obj.url = obj.movie;
             obj.youtube = obj.movie;
             return obj;
-        };
-        
-        // Post-create step. Overriding here to do a component create
-        this.microformat.postcreate = function(create_obj, html_dom) {
-            if (create_obj) {
-                var top = document.getElementById(create_obj.htmlID);
-                self.components = self.microformat.components(top,create_obj);
-            }
         };
         
         // Replace the video identifier within the rendered .html
@@ -108,10 +102,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 if (create_obj) {
                     //the first works for everyone except safari
                     //the latter probably works everywhere except IE
-                    rv.media = document[create_obj.mediaId] || document.getElementById(create_obj.mediaId);
+                    rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
                     rv.autoplay = create_obj.autoplay;
                     rv.youtube = create_obj.youtube;
-                    rv.mediaId = create_obj.mediaId;
+                    rv.mediaID = create_obj.mediaID;
                 }
                 return rv;
             } catch(e) {}
@@ -120,7 +114,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         // Global function required for the player
         window.onYouTubePlayerReady = function(playerId) {
-            if (playerId == self.components.mediaId) {
+            if (playerId == self.components.mediaID) {
                 self._ready = true;
                 
                 // reset the state
@@ -143,11 +137,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         // @todo -- onYTStateChange does not pass the playerId into the function, which will be 
         // a problem if we ever have multiple players on the page
         window.onYTStateChange = function(newState) {
-            log('window.onYTStateChange: ' + newState);
+            //log('window.onYTStateChange: ' + newState);
             
             if (newState == 1) {
                 // @todo if the duration is good now, then broadcast a "valid metadata" event
-            } else if (newState == 2 || newState == 0) {
+                
+            } else if (newState == 2 || newState == 0) { // stopped or ended
                 // @todo kill any end timers
             }
         };
@@ -234,7 +229,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
 
         this.media.pauseAt = function(endtime) {
             if (endtime) {
-                self.events.queue('pause',[
+                self.events.queue('yt pause',[
                                           {test: function() { return self.media.time() >= endtime}, poll:500},
                                           {call: function() { self.media.pause(); }}
                                           ]);

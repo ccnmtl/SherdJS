@@ -181,15 +181,10 @@ if (!Sherd.Image.OpenLayers) {
 	    ///TODO (replace map (as a new layer--hide/show?)
 	    
 	}
-	this.microformat.write = function(create_obj,html_dom) {
-	    if (create_obj && create_obj.text) {
-		///boilerplate
-		html_dom.innerHTML = create_obj.text;
-
-		///ALL THIS Should all be in initialize() or something
-		var top = document.getElementById(create_obj.htmlID);
-		self.components = self.microformat.components(top,create_obj);
-
+	this.initialize = function(create_obj) {
+	    if (create_obj) {
+	    var top = document.getElementById(create_obj.htmlID);
+	    
 		var presentation;
 		switch (typeof create_obj.object.presentation) {
 		case 'string': presentation = self.presentations[create_obj.object.presentation]; break;

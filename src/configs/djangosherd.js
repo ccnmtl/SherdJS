@@ -27,24 +27,24 @@ function DjangoSherd_Asset_Config() {
             'storage' : ds.noteform
         });
 
-        // ?? var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');
-        ds.assetview.html.push('asset-display', {
+        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+        ds.assetview.html.push(obj_div, {
             asset : ds.assetMicroFormat.read(ds.dom_assets[0])
         });
 
-        // /# Editable? (i.e. note-form?)...is this used still?
+        // /# Editable? (i.e. note-form?)
         ds.noteform.html.put($('clip-form'));
-        
-        // /# Setup the asset annotator form
-        ds.assetview.clipform.html.push('videonoteform', {
-            asset : {}
-        });
-        ds.assetview.clipform.initialize(); // build listeners
+        // /# load asset into note-form
+        var videonoteform = $('videonoteform');
+        if (videonoteform) {
+            ds.assetview.clipform.html.push('videonoteform', {
+                asset : {}
+            }); // write videoform
+        }
         
         // load clipstrip into html
         if (ds.assetview.clipstrip) {
             ds.assetview.clipstrip.html.push('clipstrip-display', { asset: {} });
-            ds.assetview.clipstrip.initialize(); // build listeners
         }
         
         var orig_annotation_data = $('original-annotation');// /***faux layer
@@ -327,6 +327,7 @@ function openCitation(url, no_autoplay) {
     if (ann_obj.asset) {
         ann_obj.asset.autoplay = (no_autoplay) ? 'false' : 'true'; //***
         ann_obj.asset.presentation = 'small';
+        
         djangosherd.assetview.html.push(obj_div, {
             asset : ann_obj.asset
         });

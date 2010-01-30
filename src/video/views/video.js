@@ -91,9 +91,9 @@ if (!Sherd.Video.Base) {
             }
         }
         
-        this.html.suspend = function() {
+        this.deinitialize = function() {
+            log('video.js this.deinitialize');
             self.events.clearTimers();
-            self.media.pause(); // may not be necessary
         }
 
         this.media = {
@@ -141,7 +141,6 @@ if (!Sherd.Video.Base) {
             supports: function() { return []; },  // Return list of types supported. Note: Not currently in use
             type: function() { var type; return type; }, // Return current type of media playing. Note: Not currently in use;
             update: function(obj,html_dom) {}, // Replace the video identifier within the .html embed block 
-            write: undefined
         };
 
         // /BEGIN VITAL assumption -->relegate to quicktime.js when smarter
@@ -173,7 +172,7 @@ if (!Sherd.Video.Base) {
             this.events = {};
         }
         
-        /** CURRENTLY UNUSED **/
+        /** CURRENTLY UNUSED **
         this.events.fired = {
             'load' : false,
             'unload' : false,
@@ -199,7 +198,7 @@ if (!Sherd.Video.Base) {
                 }
             }
         }
-        /*********************/
+        *********************/
         
         this.events._timers = {};
         this.events.registerTimer = function(name, timeoutID) {
@@ -207,6 +206,7 @@ if (!Sherd.Video.Base) {
         }
 
         this.events.clearTimers = function() {
+            log('this.events.clearTimers');
             for (name in this._timers) {
                 window.clearTimeout(this._timers[name]);
             }
@@ -257,6 +257,7 @@ if (!Sherd.Video.Base) {
                             cur.log.apply(curself, [ e, 'call failed' ]);
                     }
                     function go() {
+                        log(name + ' go');
                         if (fired) {
                             advance();
                             return;

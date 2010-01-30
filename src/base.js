@@ -128,14 +128,15 @@ Sherd.Base = {
                 };
             }
             
-            if (self.initialize) {
+            // Do self configuration post create
+            if (self.initialize)
                 self.initialize(create_obj);
-            }
         },
         remove : function() {
             self.clearListeners();
             if (self.deinitialize)
-                self.deinitialize(); 
+                self.deinitialize();
+
             for (part in self.components) {
                 if (self.components[part].parentNode) {
                     self.components[part].parentNode
@@ -206,23 +207,21 @@ Sherd.Base = {
                         if (self.deinitialize)
                             self.deinitialize(); 
                         
-                        var updated = options.microformat.update || options.microformat.update(options.asset, dom_or_id.firstChild));
-                        
+                        var updated = (options.microformat.update && options.microformat.update(options.asset, dom_or_id.firstChild));
                         if (!updated) {
-                            var asset_html = options.microformat.create(options.asset);
+                            var create_obj = options.microformat.create(options.asset);
                             
-                            if (asset_html.text)
-                                dom_or_id.innerHTML = asset_html.text;
+                            if (create_obj.text)
+                                dom_or_id.innerHTML = create_obj.text;
                             
-                            // create components and call initialize
-                            self.html.put(dom_or_id, asset_html);
+                            // Create microformat.components (self.components)
+                            var top = document.getElementById(create_obj.htmlID);
+                            self.html.put(top, create_obj);
                         }
                     }
                 }
             }
-            this.html.suspend = function() {} // pause any playback or animation for the current state
         }
-
     }// AssetView
     ,
     'AssetManager' : function(config) {

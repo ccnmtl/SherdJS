@@ -65,12 +65,11 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             }
         }
         ///OVERRIDE  ??hack?
-        this.html.remove = function(part) {
+        this.deinitialize = function(part) {
+            log('quicktime this.deinitialize');
             try {
                 giveUp();//VITAL
             }catch(e){alert(e);}
-            var par = self.components.wrapper.parentNode;
-            par.innerHTML = '';
         }
         
         this.media._updateMovScale = function() {
@@ -86,14 +85,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         this.media.duration = function() {
             //TODO:test for loaded-ness
-            duration = 0;
-            try {
-                self.media._updateMovScale();
-                duration = self.components.media.GetDuration()/self.media.movscale;
-            } catch (e) {
-            }
-            return duration;
-            
+            self.media._updateMovScale();
+            return self.components.media.GetDuration()/self.media.movscale;
         }
         this.media.play = function() {
             self.events.queue('play',[
@@ -234,9 +227,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             return false;
         };
         
-        this.microformat.write = function(create_obj,html_dom) {
+        this.initialize = function(create_obj) {
             if (create_obj && create_obj.text) {
-                html_dom.innerHTML = create_obj.text;
                 var top = document.getElementById(create_obj.htmlID);
                 ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
                 if (/Trident/.test(navigator.userAgent) && create_obj.object.autoplay=='true') {
@@ -414,6 +406,4 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             Error text.
       </object>
       </div>   
- 
- 
- */
+ **/
