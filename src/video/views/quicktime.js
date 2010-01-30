@@ -164,7 +164,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         this.microformat.type = function() {return 'quicktime';};
         
         // Return asset object description (parameters) in a serialized JSON format.
-        // NOTE: Not currently in use. Will be used for things like printing, or spitting out a description.
+        // NOTE: Not currently in use. 
+        // Will be used for things like printing, or spitting out a description.
         // works in conjunction with find
         this.microformat.read = function(found_obj) {
             var obj = {
@@ -195,7 +196,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         
         // Find the objects based on the individual player properties in the DOM
         // NOTE: Not currently in use.
-        // Works in conjunction with find
+        // Works in conjunction with read
         this.microformat.find = function(html_dom) {
             // Find the objects based on the QT properties in the DOM
             var found = [];

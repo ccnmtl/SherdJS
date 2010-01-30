@@ -92,7 +92,6 @@ if (!Sherd.Video.Base) {
         }
         
         this.deinitialize = function() {
-            log('video.js this.deinitialize');
             self.events.clearTimers();
         }
 
@@ -206,7 +205,6 @@ if (!Sherd.Video.Base) {
         }
 
         this.events.clearTimers = function() {
-            log('this.events.clearTimers');
             for (name in this._timers) {
                 window.clearTimeout(this._timers[name]);
             }
@@ -257,7 +255,6 @@ if (!Sherd.Video.Base) {
                             cur.log.apply(curself, [ e, 'call failed' ]);
                     }
                     function go() {
-                        log(name + ' go');
                         if (fired) {
                             advance();
                             return;

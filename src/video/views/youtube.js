@@ -86,9 +86,17 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            // Replacing the 'url' within an existing YouTube player requires decisions on  
-            // autoplay, starttime, etc. As this is more a function for .media, I'm punting
-            // for the moment on the update thread and allowing it to fall through to create. 
+            if (obj.youtube && document.getElementById(self.components.mediaID) && self.media.ready()) {
+                try {
+                    if (obj.youtube != self.components.youtube) {
+                        // Replacing the 'url' by cue'ing the video with the new url
+                        self.components.youtube = obj.youtube;
+                        self.components.media.cueVideoByUrl(self.components.youtube, 0);
+                    }
+                    return true;
+                }
+                catch (e) {}
+            }
             return false;
         };
         
@@ -143,7 +151,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 // @todo if the duration is good now, then broadcast a "valid metadata" event
                 
             } else if (newState == 2 || newState == 0) { // stopped or ended
-                // @todo kill any end timers
+                self.events.clearTimers();
             }
         };
         
@@ -197,16 +205,16 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
 
         this.media.seek = function(starttime, endtime) {
             if (self.media.ready()) {
-                if (starttime) {
+                if (starttime != undefined) {
                     if (self.components.autoplay) {
-                        self.components.media.loadVideoByUrl(self.components.youtube, starttime);
+                        self.components.media.seekTo(starttime, true);
                     }
                     else {
                         self.components.media.cueVideoByUrl(self.components.youtube, starttime);
                     }
                 }
             
-                if (endtime) {
+                if (endtime != undefined) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     this.pauseAt(endtime);
                 }
