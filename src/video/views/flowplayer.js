@@ -23,18 +23,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var playerId = Sherd.Base.newID('flowplayer-player-');
             var url = '';
             var pseudo = 0;
+            self._ready = false;
                    
-            if (obj.flv_pseudo) {
-                url = obj.flv_pseudo;
-                pseudo = 1;
-            } else if (obj.mp4_pseudo) {
-                url = obj.mp4_pseudo;
-                pseudo = 1;
-            } else if (obj.mp4) {
-                url = obj.mp4;
-            } else if (obj.flv) {
-                url = obj.flv;
-            }  
+            url = self.utilities.getUrl(obj);
+            pseudo = self.utilities.isPseudostreaming(obj);
             
             if (!obj.options) {
                 obj.options = {
@@ -47,7 +39,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 object: obj,
                 htmlID: wrapperId,
                 mediaID: playerId, // Used by .initialize post initialization
-                pseudostreaming: pseudo, // Used by .initialize post initialization
+                pseudo: pseudo, // Used by .initialize post initialization
+                mediaUrl: url,
                 text: '<div id="' + wrapperId + '" class="sherd-flowplayer-wrapper">' + 
                       '   <a href="' + url + '" style="display:block; width:' + obj.options.width + 'px;' + 
                           'height:' + obj.options.height + 'px;" id="' + playerId + '">' +  
@@ -65,26 +58,25 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                             autoPlay: create_obj.object.autoplay ? true : false,
                             autoBuffering: true,
                         },
-                        onSeek: function() { state = self.components.media.getState(); },
-                        onStart: function() {
-                            if (self.components.media && self.components.starttime > 0) {
-                                self.events.queue('flowplayer seek',[
-                                                          {test: function() {
-                                                                    return self.components.media.isLoaded(); 
-                                                                 }, 
-                                                              poll:500
-                                                          },
-                                                          {call: function() { self.components.media.seek(self.components.starttime); }},
-                                                          {timeout: 2200}, //timeout to avoid seek competition
-                                                          ]);
-                            }
-                            
-                            // Watch the video's running time & stop it when the endtime rolls around
-                            self.media.pauseAt(self.components.endtime);
-                       },
+                        onLoad: function(player) { 
+                            self._ready = true;
+                        },
+                        onSeek: function(player, targetTime) {
+                            // log('onSeek: ' + player.bufferLength + " " + targetTime);
+                        },
+                        onStart: function(player) {
+                            // Flowplayer Bug: this is called incorrectly when autoBuffering is set to true. 
+                            // They are theoretically working on it. Leaving this comment for future developers.
+
+                            // reset the state so that the seek can be performed and work (theoretically)
+                            // note that seek will only work with videos that are being pseudostreamed or really streamed
+                            self.setState({ start: self.components.starttime, end: self.components.endtime});
+                        },
+                        onUpdate: function(player) {
+                        }
                    };
                 
-                if (create_obj.pseudostreaming) {
+                if (create_obj.pseudo) {
                     options.plugins = { pseudo: { url: 'flowplayer.pseudostreaming-3.1.3.swf' } } 
                     options.clip.provider = "pseudo";
                 }
@@ -92,7 +84,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 flowplayer(create_obj.mediaID, 
                            "http://releases.flowplayer.org/swf/flowplayer-3.1.5.swf",
                            options);
-                
     
                 self.components.media = $f(create_obj.mediaID);
             }
@@ -100,8 +91,25 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            // @todo. maybe. again, there's a lot to configure for update besides tweaking the .html
-            // i'm not sure this model works well for videos.
+            /** This is SO NOT WORKING. Flowplayer is not happy about getting a new url 
+            newUrl = self.utilities.getUrl(obj);
+            if (newUrl && document.getElementById(self.components.mediaID) && self.media.ready()) {
+                try {
+                    self.components.media.pause();
+                    pseudo = self.utilities.isPseudostreaming(obj);
+                    if (pseudo != self.components.pseudo) {
+                        //@todo - remove or add the pseudostreaming plugins from the fp options
+                    }
+                    if (newUrl != self.components.mediaUrl) {
+                        self._ready = false;
+                        log('newUrl: ' + newUrl);
+                        self.components.media.getClip(0).update({url: newUrl});
+                        log('~newUrl');
+                    }
+                    log('UPDATE UPDATE UPDATE');
+                    return true;
+                } catch(e) {}
+            } **/
             return false;
         };
         
@@ -144,6 +152,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.starttime = 0;
                     rv.endtime = 0;
                     rv.width = create_obj.object.options.width;
+                    rv.mediaID = create_obj.mediaID;
+                    rv.mediaUrl = create_obj.mediaUrl;
+                    rv.pseudo = create_obj.pseudo;
                 }
                 return rv;
             } catch(e) {}
@@ -152,6 +163,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         };
         
         this.media.movscale = 1; //movscale is a remnant from QT. vitalwrapper.js uses it. TODO: verify we need it.
+        
+        this.media.ready = function() {
+            return self._ready;
+        }
 
         this.media.timestrip = function() {
             return {w: self.components.width,
@@ -187,8 +202,22 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         }
         
         this.media.seek = function(starttime, endtime) {
-            self.components.starttime = starttime;
-            self.components.endtime = endtime;
+            if (self.media.ready()) {
+                if (starttime != undefined) {
+                    self.components.media.seek(starttime);
+                }
+                
+                if (endtime != undefined) {
+                    self.media.pauseAt(endtime);
+                }
+                
+                // clear any saved values if they exist
+                delete self.components.starttime;
+                delete self.components.endtime;
+            } else {
+                self.components.starttime = starttime;
+                self.components.endtime = endtime;
+            }
         }
         
         this.media.pause = function() {
@@ -203,10 +232,35 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         // the whole thing. Would be great clip functionality, but not for us.
         this.media.pauseAt = function(endtime) {
             if (endtime) {
+                
+                // This is great, but there's no way to programmatically remove a cuepoint
+                // this is problematic for us, so am sticking with timers for the moment
+                // self.components.media.onCuepoint(endtime * 1000, function(clip, cuepoint) { self.media.pause(); }); 
+                
                 self.events.queue('flowplayer pause',[
                                           {test: function() { return self.media.time() >= endtime}, poll:500},
                                           {call: function() { self.media.pause(); }}
                                           ]);
+            }
+        }
+        
+        this.utilities = {
+            getUrl: function(obj) {
+                var url;
+            
+                if (obj.flv_pseudo) {
+                    url = obj.flv_pseudo;
+                } else if (obj.mp4_pseudo) {
+                    url = obj.mp4_pseudo;
+                } else if (obj.mp4) {
+                    url = obj.mp4;
+                } else if (obj.flv) {
+                    url = obj.flv;
+                }
+                return url;
+            },
+            isPseudostreaming: function(obj) {
+                return obj.flv_pseudo || obj.mp4_pseudo;
             }
         }
     }
