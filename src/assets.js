@@ -33,10 +33,10 @@ if (!Sherd.GenericAssetView) {
                 if (options.storage) {
                     quicktime.clipform.addStorage(options.storage);
                 }
-                if (options.clipstrip) {
-                    quicktime.clipstrip = new DjangoSherd_ClipStrip();
-                    quicktime.clipstrip.attachView(quicktime.view);
-                }
+            }
+            if (options.clipstrip) {
+                quicktime.clipstrip = new DjangoSherd_ClipStrip();
+                quicktime.clipstrip.attachView(quicktime.view);
             }
             this.settings.quicktime = quicktime;
         }
