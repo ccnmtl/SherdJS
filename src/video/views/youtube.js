@@ -29,25 +29,35 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     height: obj.presentation == 'small' ? 220 : 440, // youtube default
                 };
             }
+            
+            // massage the url options if needed, take off everything after the ? mark
+            idx = obj.youtube.indexOf('?');
+            if (idx > -1) {
+                url = obj.youtube.substr(0, idx);
+            } else {
+                url = obj.youtube;
+            }
 
             return {
                 object: obj,
                 htmlID: wrapperId,
                 mediaID: playerId, // Used by microformat.components initialization
                 autoplay: autoplay, // Used later by _seek seeking behavior
-                youtube: obj.youtube, // Used by _seek seeking behavior
+                youtube: url, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
-                        '  <param name="movie" value="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
+                        '  <param name="movie" value="' + url + '&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"></param>' + 
                         '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
-                        '  <embed src="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"' + 
+                        '  <param name="allowfullscreen" value="false"></param>' +
+                        '  <embed src="' + url + '&enablejsapi=1&playerapiid=' + playerId + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
                         '    autoplay="' + autoplay + '"' + 
                         '    width="' + obj.options.width + '" height="' + obj.options.height + '"' + 
+                        '    allowfullscreen="false"' + 
                         '    id="' + playerId + '">' + 
                         '  </embed>' + 
                         '</object>' + 
