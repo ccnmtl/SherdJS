@@ -90,19 +90,9 @@ if (!Sherd.Video.Base) {
             // ,
             }
         }
-
-        /** What is this for? **/
-        this.start = false; // current/last seek time
-        this.end = false; // current/last pause time
-        this.seeking = false;
-
-        this.paused = false;
-        this.ended = false;
-        this.ready = false;
         
-        this.html.suspend = function() {
+        this.deinitialize = function() {
             self.events.clearTimers();
-            self.media.pause(); // may not be necessary
         }
 
         this.media = {
@@ -118,7 +108,7 @@ if (!Sherd.Video.Base) {
 
             // get information
             ,
-            time : unimplemented// get current time in seconds
+            time : unimplemented // get current time in seconds
             ,
             timeCode: function() { // get current time as a time code string
                 return self.secondsToCode(self.media.time());
@@ -150,7 +140,6 @@ if (!Sherd.Video.Base) {
             supports: function() { return []; },  // Return list of types supported. Note: Not currently in use
             type: function() { var type; return type; }, // Return current type of media playing. Note: Not currently in use;
             update: function(obj,html_dom) {}, // Replace the video identifier within the .html embed block 
-            write: function(create_obj,html_dom) {} // Post-create step
         };
 
         // /BEGIN VITAL assumption -->relegate to quicktime.js when smarter
@@ -160,14 +149,11 @@ if (!Sherd.Video.Base) {
 
         // tell me where you are
         this.getState = function() {
-            var state = {
-                'start' : self.media.time()
-            };
+            var state = {};
+            state['start'] = self.media.time();
             state['default'] = (!state.start);
             state['duration'] = self.media.duration();
-            state['timeScale'] = self.media.movscale;// correct after
-                                                        // time()/duration()
-                                                        // called
+            state['timeScale'] = self.media.movscale; // For QT, correct after time()/duration() called
             return state;
         }
 
@@ -185,7 +171,7 @@ if (!Sherd.Video.Base) {
             this.events = {};
         }
         
-        /** CURRENTLY UNUSED **/
+        /** CURRENTLY UNUSED **
         this.events.fired = {
             'load' : false,
             'unload' : false,
@@ -211,7 +197,7 @@ if (!Sherd.Video.Base) {
                 }
             }
         }
-        /*********************/
+        *********************/
         
         this.events._timers = {};
         this.events.registerTimer = function(name, timeoutID) {

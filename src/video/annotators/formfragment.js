@@ -1,3 +1,4 @@
+// Theoretically, the replacement for vitalwrapper.js. But, it's not there yet and will probably be replaced.
 if (typeof Sherd == 'undefined') {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.Annotators) {Sherd.Video.Annotators = {};}

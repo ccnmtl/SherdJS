@@ -46,8 +46,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             return {
                 object: obj,
                 htmlID: wrapperId,
-                mediaID: playerId, // Used by .write post initialization
-                pseudostreaming: pseudo, // Used by .write post initialization
+                mediaID: playerId, // Used by .initialize post initialization
+                pseudostreaming: pseudo, // Used by .initialize post initialization
                 text: '<div id="' + wrapperId + '" class="sherd-flowplayer-wrapper">' + 
                       '   <a href="' + url + '" style="display:block; width:' + obj.options.width + 'px;' + 
                           'height:' + obj.options.height + 'px;" id="' + playerId + '">' +  
@@ -57,9 +57,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         }
         
         // Post-create step. Overriding here to do a component create using the Flowplayer API
-        this.microformat.write = function(create_obj,html_dom) {
-            if (create_obj && create_obj.text) {
-                html_dom.innerHTML = create_obj.text;
+        this.initialize = function(create_obj) {
+            if (create_obj) {
                 
                 options = {
                         clip: {
@@ -69,7 +68,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         onSeek: function() { state = self.components.media.getState(); },
                         onStart: function() {
                             if (self.components.media && self.components.starttime > 0) {
-                                self.events.queue('seek',[
+                                self.events.queue('flowplayer seek',[
                                                           {test: function() {
                                                                     return self.components.media.isLoaded(); 
                                                                  }, 
@@ -94,8 +93,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                            "http://releases.flowplayer.org/swf/flowplayer-3.1.5.swf",
                            options);
                 
-                var top = document.getElementById(create_obj.htmlID);
-                self.components = self.microformat.components(top,create_obj);
+    
+                self.components.media = $f(create_obj.mediaID);
             }
         }
         
@@ -142,24 +141,23 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.wrapper = html_dom;
                 }
                 if (create_obj) {
-                    //the first works for everyone except safari
-                    //the latter probably works everywhere except IE
-                    rv.media = $f(create_obj.mediaID); 
                     rv.starttime = 0;
                     rv.endtime = 0;
+                    rv.width = create_obj.object.options.width;
                 }
                 return rv;
             } catch(e) {}
+            
             return false;
         };
         
         this.media.movscale = 1; //movscale is a remnant from QT. vitalwrapper.js uses it. TODO: verify we need it.
 
-        // NOTE: Copied from QT. Reimplement for clipstrip.
         this.media.timestrip = function() {
-            return {w:25,
-                x:(16*2),
-                visible:true
+            return {w: self.components.width,
+                    trackX: 30,
+                    trackWidth: 395,
+                    visible:true
             };
         }
 
@@ -205,7 +203,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         // the whole thing. Would be great clip functionality, but not for us.
         this.media.pauseAt = function(endtime) {
             if (endtime) {
-                self.events.queue('pause',[
+                self.events.queue('flowplayer pause',[
                                           {test: function() { return self.media.time() >= endtime}, poll:500},
                                           {call: function() { self.media.pause(); }}
                                           ]);

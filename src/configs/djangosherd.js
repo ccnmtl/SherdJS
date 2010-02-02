@@ -15,7 +15,6 @@ function DjangoSherd_Asset_Config() {
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     ds.noteform = new DjangoSherd_NoteForm();// see below
-    // djangosherd.clipstrip = new ClipStrip();
 
     addLoadEvent(function() {
         // /# Find assets.
@@ -25,10 +24,10 @@ function DjangoSherd_Asset_Config() {
         // GenericAssetView is a wrapper in ../assets.js.
         ds.assetview = new Sherd.GenericAssetView( {
             'clipform' : true,
+            'clipstrip' : true,
             'storage' : ds.noteform
         });
 
-        // ds.clipstrip.html.put($('clipstrip'));
         var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
         ds.assetview.html.push(obj_div, {
             asset : ds.assetMicroFormat.read(ds.dom_assets[0])
@@ -45,6 +44,11 @@ function DjangoSherd_Asset_Config() {
             ds.assetview.clipform.initialize(); // build listeners
         }
         
+        // load clipstrip into html
+        if (ds.assetview.clipstrip) {
+            ds.assetview.clipstrip.html.push('clipstrip-display', { asset: {} });
+        }
+        
         var orig_annotation_data = $('original-annotation');// /***faux layer
         if (orig_annotation_data != null) {
             var obj = false;
@@ -54,7 +58,12 @@ function DjangoSherd_Asset_Config() {
                         .getAttribute('data-annotation'));
 
                 ds.assetview.setState(obj);
-                ds.assetview.clipform.setState(obj);
+                
+                if (ds.assetview.clipform)
+                    ds.assetview.clipform.setState(obj);
+                
+                if (ds.assetview.clipstrip)
+                    ds.assetview.clipstrip.setState(obj);
                
             } catch (e) {/* non-valid json? */
             }
@@ -320,6 +329,7 @@ function openCitation(url, no_autoplay) {
     if (ann_obj.asset) {
         ann_obj.asset.autoplay = (no_autoplay) ? 'false' : 'true'; //***
         ann_obj.asset.presentation = 'small';
+        
         djangosherd.assetview.html.push(obj_div, {
             asset : ann_obj.asset
         });
