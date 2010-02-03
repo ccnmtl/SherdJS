@@ -8,7 +8,7 @@ MondrianBookmarklet = {
         find:function(callback) {
             var video = document.getElementById("movie_player");
             if (video && video != null) {
-                function getTitle() {
+                function getTitle(VIDEO_ID) {
                     if (/www.youtube.com\/watch/.test(document.location)) {
                         return document.getElementsByTagName("h1")[0].innerHTML;
                     } else {
@@ -19,15 +19,30 @@ MondrianBookmarklet = {
                         }
                     }
                 }
+                function getThumb(VIDEO_ID) {
+                    var tries = [/*last-first*/
+                        [document.getElementById("playnav-video-play-uploads-0-"+VIDEO_ID)],
+                        goog.dom.getElementsByTagNameAndClass("div","playnav-item-selected"),
+                        goog.dom.getElementsByTagNameAndClass("div","watch-playlist-row-playing")
+                    ]; var i=tries.length;
+                    while (--i >= 0) {
+                        if (tries[i].length && tries[i][0] != null) {
+                            return tries[i][0].getElementsByTagName("img")[0].src;
+                        }
+                    }
+                    return undefined;
+                }
                 var VIDEO_ID = video.getVideoUrl().match(/[?&]v=([^&]*)/)[1];
                 video.pauseVideo();
                 var obj = {
                     "html":video,
                     "hash":"start="+video.getCurrentTime(),
                     "sources":{
-                        "title":getTitle(),
+                        "title":getTitle(VIDEO_ID),
+                        "thumb":getThumb(VIDEO_ID),
                         "url":"http://www.youtube.com/watch?v="+VIDEO_ID,
-                        "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1"
+                        "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
+                        "gdata":"http://gdata.youtube.com/feeds/api/videos/"+VIDEO_ID
                     }
                 };
                 if (video.getCurrentTime() == video.getDuration()) 
@@ -56,18 +71,27 @@ MondrianBookmarklet = {
             var embs = document.getElementsByTagName("embed");
             if (embs.length) {
                 var e = embs[0];
-                try{
-                    e.Stop();
-                    hash = "start="+Math.floor(e.GetTime()/e.GetTimeScale());
-                } finally{}
+                if (e && e.Stop) {
+                    try{
+                        e.Stop();
+                        hash = "start="+Math.floor(e.GetTime()/e.GetTimeScale());
+                    } finally{}
+                }
+            }
+            var thumb;
+            if (SHARETHIS 
+                && typeof SHARETHIS.shareables == "object"
+                && SHARETHIS.shareables.length
+               ) {
+                thumb = SHARETHIS.shareables[0].properties.icon;
             }
             return {"html":$(".media").get(0),
                     "hash": hash||undefined,
                     "sources":{
                         "title":document.title,
                         "quicktime":$(".media").media("api").options.src,
-                        "poster":$(".media img").get(0).src
-                        /*,"thumb": XXXX */
+                        "poster":$(".media img").get(0).src,
+                        "thumb": thumb
                     }
                    };
         }
@@ -245,6 +269,7 @@ MondrianBookmarklet = {
     if (!obj.sources["url"]) obj.sources["url"] = document.location;
     var destination =  mondrian_url;
     for (a in obj.sources) {
+        if (typeof obj.sources[a] =="undefined") continue;
 	destination += ( a+"="+escape(obj.sources[a]) +"&" );
     }
     if (obj.hash) {
