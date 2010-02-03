@@ -1,0 +1,144 @@
+<!--
+    Run tests via:  
+    http://localhost:8000/site_media/js/sherdjs/tests/run-tests.html?testframe=testframe;testframe_no_clear
+ -->
+
+<html>
+<head>
+    <script type="text/javascript" src="/site_media/js/mochikit/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/site_media/js/sherdjs/src/base.js"></script>
+    <script type="text/javascript" src="/site_media/js/sherdjs/src/assets.js"></script>
+
+    <script type="text/javascript" src="/site_media/js/vital3/ac_quicktime.js"></script>
+    <script type="text/javascript" src="/site_media/js/sherdjs/src/video/views/video.js"></script>
+    <script type="text/javascript" src="/site_media/js/sherdjs/src/video/views/youtube.js"></script>
+
+    <script type="text/javascript">
+        function test_definition(t)
+        {
+           t.plan(2);
+           t.ok(Sherd.Video, "Verify video.js is defined");
+           t.ok(Sherd.Video.YouTube, "Verify youtube.js is defined");
+        }
+
+        function test_create(t)
+        {
+           // t.plan(5)
+           view = new Sherd.Video.YouTube();
+           t.ok(view, "Verify view instantiated");
+     
+           create_obj = view.microformat.create({autoplay: 0, 
+                                                 presentation: 'large', 
+                                                 youtube: 'http://www.youtube.com/watch/v/uOSuhxFo76o'});
+
+           // Verify create_obj has expected return parameters
+           t.ok(create_obj.object);
+           t.like(create_obj.htmlID, /youtube-wrapper-[\d]+/, 'Starts with youtube-wrapper- then a number [' + create_obj.htmlID + ']');
+           t.like(create_obj.playerID, /youtube-player-[\d]+/, 'Starts with youtube-player- then a number [' + create_obj.playerID + ']');
+           t.eq(create_obj.autoplay, 0, 'Autoplay is set to false');
+           t.eq(create_obj.youtube, 'http://www.youtube.com/watch/v/uOSuhxFo76o', 'Verify youtube url value is populated');
+           t.ok(create_obj.text);
+           t.html_eq(create_obj.text, 
+              '<div id="youtube-wrapper-1" class="sherd-youtube-wrapper"> \
+               <object width="620" height="440"> <param name="movie" \
+               value="http://www.youtube.com/watch/v/uOSuhxFo76o?fs=0&enablejsapi=1&playerapiid=youtube-player-1"></param>\
+               <param name="allowscriptaccess" value="always"></param> <param name="autoplay" value="0">\
+               </param> <param name="width" value="620"></param> <param name="height" value="440"></param>\
+               <param name="allowfullscreen" value="false"></param>\
+               <embed src="http://www.youtube.com/watch/v/uOSuhxFo76o?fs=0&enablejsapi=1&playerapiid=youtube-player-1"\
+               type="application/x-shockwave-flash" allowScriptAccess="always" autoplay="0" width="620" height="440"\
+               allowfullscreen="false" id="youtube-player-1"> </embed></object></div>',
+               'Verify html is constructed');
+           
+           delete view;           
+        }
+
+        function test_push(t) {
+            view = new Sherd.Video.YouTube();
+            t.ok(view, "Verify view instantiated");
+            
+            asset = { type: 'youtube',
+                      presentation: 'large',
+                      youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            
+            view.html.push(obj_div, {asset: asset});
+        }
+
+        function test_media_interface(t) {
+            view = new Sherd.Video.YouTube();
+            asset = { type: 'youtube',
+                      presentation: 'large',
+                      youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
+
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            view.html.push(obj_div, {asset: asset});
+            
+            t.delay_call(5, /* seconds. up this value if tests start to fail */
+                         function() {
+                              // Check State  
+                              t.eq(view.media.state(), 5, 'Player is ready');
+                              t.eq(view.media.time(), 0, 'No time yet');
+                              t.eq(view.media.duration(), 0, 'No duration yet');
+
+                              // Test Play
+                              view.media.play();
+                         },
+                         3,
+                         function() {
+                             // Check Play
+                             t.eq(view.media.state(), 1, 'Video is playing');
+                             t.eq(view.media.duration(), 375.375, 'Duration is now accurate');
+                             t.ok(view.media.time() > 0, 'Elapsed time is going');
+
+                             // Test PauseAt
+                             view.media.pauseAt(5);
+                         },
+                         5,
+                         function() {
+                             // Check PauseAt
+                             t.eq(view.media.state(), 2, 'Video is paused');
+                             t.ok(view.media.time() >= 5 && view.media.time() <= 6);
+
+                             // Start Playing Again
+                             view.media.play();
+                         },
+                         3,
+                         function() {
+                             t.eq(view.media.state(), 1, 'Video is playing');
+
+                             // Test Pause
+                             view.media.pause();
+                         },
+                         3,
+                         function() {
+                             // Check Pause
+                             t.eq(view.media.state(), 2, 'Video is paused');
+
+                             // Test Seek
+                             view.media.seek(25, 30);
+                         },
+                         3,
+                         function() {
+                             t.eq(view.media.state(), 5, 'Video is ready to go. And, is not playing');
+                             view.media.play();
+                         },
+                         3,
+                         function() {
+                             // Check Seek 
+                             t.ok(view.media.time() > 25, 'Video cued up properly, now lets wait on the stop')
+                         },
+                         6,
+                         function() {
+                             // Check PauseAt via Seek
+                             t.eq(view.media.state(), 2, 'Video is paused');
+                             t.ok(view.media.time() > 30, 'Video stopped at the requested time');
+                         });
+        }
+  </script>
+</head>
+<body>
+<div id='asset-display' class="asset-display"></div>
+</body>
+</html>
+
