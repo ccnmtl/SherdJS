@@ -17,11 +17,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         // create == asset->{html+information to make it}
         this.microformat.create = function(obj) {
-            var wrapperId = Sherd.Base.newID('youtube-wrapper-');
+            var wrapperID = Sherd.Base.newID('youtube-wrapper-');
             var playerID = Sherd.Base.newID('youtube-player-');
             var autoplay = obj.autoplay ? 1 : 0;
             self.media._ready = false;
-            self.media._state = -1;
             
             if (!obj.options) 
             {
@@ -42,11 +41,11 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
 
             return {
                 object: obj,
-                htmlID: wrapperId,
+                htmlID: wrapperID,
                 playerID: playerID, // Used by microformat.components initialization
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 mediaUrl: url, // Used by _seek seeking behavior
-                text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
+                text: '<div id="' + wrapperID + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
                         '  <param name="movie" value="' + url + '?fs=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"></param>' + 
@@ -155,9 +154,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         // @todo -- onYTStateChange does not pass the playerID into the function, which will be 
         // a problem if we ever have multiple players on the page
         window.onYTStateChange = function(newState) {
-            self.media._state = newState;
-            
-            log('window.onYTStateChange: ' + self.media._state);
+            //log('window.onYTStateChange: ' + newState);
             
             if (newState == 1) {
                 // @todo if the duration is good now, then broadcast a "valid metadata" event
@@ -168,7 +165,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         };
         
         this.media.state = function() {
-            return self.media._state; 
+            return self.components.player.getPlayerState(); 
         }
         
         this.media.ready = function() {

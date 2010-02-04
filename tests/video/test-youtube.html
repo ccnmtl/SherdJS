@@ -14,14 +14,14 @@
     <script type="text/javascript" src="/site_media/js/sherdjs/src/video/views/youtube.js"></script>
 
     <script type="text/javascript">
-        function test_definition(t)
+        function testDefinition(t)
         {
            t.plan(2);
            t.ok(Sherd.Video, "Verify video.js is defined");
            t.ok(Sherd.Video.YouTube, "Verify youtube.js is defined");
         }
 
-        function test_create(t)
+        function testCreate(t)
         {
            // t.plan(5)
            view = new Sherd.Video.YouTube();
@@ -51,7 +51,7 @@
                'Verify html is constructed');
         }
 
-        function test_push(t) {
+        function testPushAndUpdate(t) {
             view = new Sherd.Video.YouTube();
             t.ok(view, "Verify view instantiated");
             
@@ -61,9 +61,12 @@
             var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
             
             view.html.push(obj_div, {asset: asset});
+
+            // @todo -- verify push 
+            // @todo -- verify update path
         }
 
-        function test_media_interface(t) {
+        function testMediaInterface(t) {
             view = new Sherd.Video.YouTube();
             asset = { type: 'youtube',
                       presentation: 'large',

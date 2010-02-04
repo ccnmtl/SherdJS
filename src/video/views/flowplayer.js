@@ -19,8 +19,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         // create == asset->{html+information to make it}
         // setup the flowplayer div. will be replaced on write using the flowplayer API
         this.microformat.create = function(obj,doc) {
-            var wrapperId = Sherd.Base.newID('flowplayer-wrapper-');
-            var playerId = Sherd.Base.newID('flowplayer-player-');
+            var wrapperID = Sherd.Base.newID('flowplayer-wrapper-');
+            var playerID = Sherd.Base.newID('flowplayer-player-');
             var url = '';
             var pseudo = 0;
             self.media._ready = false;
@@ -37,13 +37,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             
             create_obj = {
                 object: obj,
-                htmlID: wrapperId,
-                playerId: playerId, // Used by .initialize post initialization
+                htmlID: wrapperID,
+                playerID: playerID, // Used by .initialize post initialization
                 pseudo: pseudo, // Used by .initialize post initialization
                 mediaUrl: url,
-                text: '<div id="' + wrapperId + '" class="sherd-flowplayer-wrapper">' + 
+                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper">' + 
                       '   <a href="' + url + '" style="display:block; width:' + obj.options.width + 'px;' + 
-                          'height:' + obj.options.height + 'px;" id="' + playerId + '">' +  
+                          'height:' + obj.options.height + 'px;" id="' + playerID + '">' +  
                       '   </a>' + 
                       '</div>'
             }
@@ -81,11 +81,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     options.clip.provider = "pseudo";
                 }
                 
-                flowplayer(create_obj.playerId, 
+                flowplayer(create_obj.playerID, 
                            "http://releases.flowplayer.org/swf/flowplayer-3.1.5.swf",
                            options);
     
-                self.components.player = $f(create_obj.playerId);
+                self.components.player = $f(create_obj.playerID);
             }
         }
         
@@ -93,7 +93,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         this.microformat.update = function(obj,html_dom) {
             /** This is SO NOT WORKING. Flowplayer is not happy about getting a new url 
             newUrl = self.utilities.getUrl(obj);
-            if (newUrl && document.getElementById(self.components.playerId) && self.media.ready()) {
+            if (newUrl && document.getElementById(self.components.playerID) && self.media.ready()) {
                 try {
                     self.components.player.pause();
                     pseudo = self.utilities.isPseudostreaming(obj);
@@ -152,7 +152,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.starttime = 0;
                     rv.endtime = 0;
                     rv.width = create_obj.object.options.width;
-                    rv.playerId = create_obj.playerId;
+                    rv.playerID = create_obj.playerID;
                     rv.mediaUrl = create_obj.mediaUrl;
                     rv.pseudo = create_obj.pseudo;
                 }
@@ -165,6 +165,20 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         this.media.ready = function() {
             return self.media._ready;
+        }
+        
+        /**
+        Returns the state of the player. Possible values are:
+            -1  unloaded
+            0   loaded
+            1   unstarted
+            2   buffering
+            3   playing
+            4   paused
+            5   ended
+        **/
+        this.media.state = function() {
+            return self.components.player.getState(); 
         }
 
         this.media.timestrip = function() {
