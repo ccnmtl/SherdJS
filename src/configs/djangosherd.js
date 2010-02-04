@@ -9,6 +9,7 @@ if (typeof djangosherd == 'undefined') {
 // / when attached to clipform: media.duration,media.timescale (and probably
 // media.time)
 
+
 function DjangoSherd_Asset_Config() {
     var ds = djangosherd;
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
@@ -40,6 +41,7 @@ function DjangoSherd_Asset_Config() {
             ds.assetview.clipform.html.push('videonoteform', {
                 asset : {}
             }); // write videoform
+            ds.assetview.clipform.initialize(); // build listeners
         }
         
         // load clipstrip into html
