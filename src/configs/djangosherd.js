@@ -9,7 +9,6 @@ if (typeof djangosherd == 'undefined') {
 // / when attached to clipform: media.duration,media.timescale (and probably
 // media.time)
 
-
 function DjangoSherd_Asset_Config() {
     var ds = djangosherd;
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
@@ -41,14 +40,15 @@ function DjangoSherd_Asset_Config() {
             ds.assetview.clipform.html.push('videonoteform', {
                 asset : {}
             }); // write videoform
-            ds.assetview.clipform.initialize(); // build listeners
         }
-        
+
         // load clipstrip into html
         if (ds.assetview.clipstrip) {
-            ds.assetview.clipstrip.html.push('clipstrip-display', { asset: {} });
+            ds.assetview.clipstrip.html.push('clipstrip-display', {
+                asset : {}
+            });
         }
-        
+
         var orig_annotation_data = $('original-annotation');// /***faux layer
         if (orig_annotation_data != null) {
             var obj = false;
@@ -58,13 +58,13 @@ function DjangoSherd_Asset_Config() {
                         .getAttribute('data-annotation'));
 
                 ds.assetview.setState(obj);
-                
+
                 if (ds.assetview.clipform)
                     ds.assetview.clipform.setState(obj);
-                
+
                 if (ds.assetview.clipstrip)
                     ds.assetview.clipstrip.setState(obj);
-               
+
             } catch (e) {/* non-valid json? */
             }
         } else {
@@ -144,7 +144,8 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 // Find and Return the assets listed in the page
 // Assets are within a div called "asset-links"
 // asset-primary -- the actual link to the media (image/video/etc.)
-// assetlabel-X -- tells you what type the asset is. e.g. assetlabel-youtube is youtube, assetlabel-url is the "viewable" link to the media
+// assetlabel-X -- tells you what type the asset is. e.g. assetlabel-youtube is
+// youtube, assetlabel-url is the "viewable" link to the media
 function DjangoSherd_AssetMicroFormat() {
     this.find = function(dom) {
         dom = dom || document;
@@ -182,9 +183,9 @@ function DjangoSherd_AssetMicroFormat() {
                         }
                     }
                 });
-        
+
         // TODO: "Do You Support this type"
-        
+
         if (rv.quicktime) {
             // TODO refactor this into a quicktime specific file
             var poster = getFirstElementByTagAndClassName('img',
@@ -281,7 +282,8 @@ function DjangoSherd_NoteForm() {
             // top is the form
             self.components.top['annotation-range1'].value = range1;
             self.components.top['annotation-range2'].value = range2;
-            self.components.top['annotation-annotation_data'].value = serializeJSON(obj);// TODO obj!
+            self.components.top['annotation-annotation_data'].value = serializeJSON(obj);// TODO
+                                                                                            // obj!
         }
     }
     // TODO: less barebones
@@ -309,9 +311,9 @@ function openCitation(url, no_autoplay) {
     // /# load asset
     // /# else: load asset
     // /# is annotation not-present?
-    ///#    load annotation (with options (e.g. autoplay)
-    ///# update local views
-    ///#    e.g. location.hash
+    // /# load annotation (with options (e.g. autoplay)
+    // /# update local views
+    // /# e.g. location.hash
     var id = url.match(/(\d+)\/$/).pop();
 
     if (current_citation)
@@ -323,18 +325,18 @@ function openCitation(url, no_autoplay) {
 
     var ann_obj = djangosherd.annotationMicroformat.read( {
         html : current_citation
-    });///***faux layer
-    var obj_div = getFirstElementByTagAndClassName('div', 'asset-display' /*TODO:parent!*/);
+    });// /***faux layer
+    var obj_div = getFirstElementByTagAndClassName('div', 'asset-display' /* TODO:parent! */);
 
     if (ann_obj.asset) {
-        ann_obj.asset.autoplay = (no_autoplay) ? 'false' : 'true'; //***
+        ann_obj.asset.autoplay = (no_autoplay) ? 'false' : 'true'; // ***
         ann_obj.asset.presentation = 'small';
-        
+
         djangosherd.assetview.html.push(obj_div, {
             asset : ann_obj.asset
         });
 
-        var ann_data = ann_obj.annotations[0];//***
+        var ann_data = ann_obj.annotations[0];// ***
         djangosherd.assetview.setState(ann_data);
     } else {
         djangosherd.assetview.html.remove();
@@ -342,40 +344,29 @@ function openCitation(url, no_autoplay) {
     document.location = '#annotation=annotation' + id;
 }
 
-/****random thoughts
- what is in the user's control context (C)?
- 0. asset layers
- - announce they want focus (but need instantiation)
- -- arguments are asset, and layers object
- --in place?  the presenter decides
- 1. an asset presenter (in focus) (V)
- - some assets can announce that they've gained focus
- - e.g. when someone clicks play or starts panning/zooming, etc.
- 2. an annotator (decorated on the presenter?) (C)
- - (edit/create mode): has state about how the user is entering info
- - connected (deeply) to the asset-type
- 3. annotation layers (V):
- - has a storage/collection source 
- -signals selection,editing TO controller
- -receives signal to update (from storage), possibly with args (to narrow what should be updated)
- (only for creating/editing mode)
- 3. a collection (i.e. storage) of annotations (M)
- - for default 'save' target
-
- STORIES:
- when an asset changes in the presenter
- (?what happens to the layers, etc)
- (?annotators)
- when a layer wants focus of an asset that's not in view
- -or two assets at once?
- --maybe one 'annotation layer' is two presenters within it?
- --what would this do to 'focus' wrt replacement? 
- (just because focus went somewhere doesn't mean it should be the destination of other asset loads)
-
- IMMEDIATE USE CASES
- 1. form targets a layer (which is auto-generated)
- 2. all clips from class (navigation, only)
- (all annotations - with colors)
- 3. all clips (read-only) from a certain person (navigation)
-
+/**
+ * **random thoughts what is in the user's control context (C)? 0. asset layers -
+ * announce they want focus (but need instantiation) -- arguments are asset, and
+ * layers object --in place? the presenter decides 1. an asset presenter (in
+ * focus) (V) - some assets can announce that they've gained focus - e.g. when
+ * someone clicks play or starts panning/zooming, etc. 2. an annotator
+ * (decorated on the presenter?) (C) - (edit/create mode): has state about how
+ * the user is entering info - connected (deeply) to the asset-type 3.
+ * annotation layers (V): - has a storage/collection source -signals
+ * selection,editing TO controller -receives signal to update (from storage),
+ * possibly with args (to narrow what should be updated) (only for
+ * creating/editing mode) 3. a collection (i.e. storage) of annotations (M) -
+ * for default 'save' target
+ * 
+ * STORIES: when an asset changes in the presenter (?what happens to the layers,
+ * etc) (?annotators) when a layer wants focus of an asset that's not in view
+ * -or two assets at once? --maybe one 'annotation layer' is two presenters
+ * within it? --what would this do to 'focus' wrt replacement? (just because
+ * focus went somewhere doesn't mean it should be the destination of other asset
+ * loads)
+ * 
+ * IMMEDIATE USE CASES 1. form targets a layer (which is auto-generated) 2. all
+ * clips from class (navigation, only) (all annotations - with colors) 3. all
+ * clips (read-only) from a certain person (navigation)
+ * 
  */
