@@ -32,7 +32,7 @@ function DjangoSherd_ClipForm() {
 
     this.getState = function() {
         var duration = self.targetview.media.duration();
-        var timeScale = self.targetview.media.movscale;
+        var timeScale = self.targetview.media.timescale();
         
         var obj = {
             'startCode' : self.components.startField.value,
@@ -49,16 +49,14 @@ function DjangoSherd_ClipForm() {
 
     this.setState = function(obj) {
         if (typeof obj == 'object') {
-            var start = false;
+            
+            var start;
             if (obj.startCode) {
                 start = self.components.startField.value = obj.startCode;
             } else if (obj.start) {
                 start = self.components.startField.value = secondsToCode(obj.start);
             }
-            if (obj.duration)
-                movDuration = obj.duration;
-            if (obj.timeScale)
-                movscale = obj.timeScale;
+
             if (obj.endCode) {
                 self.components.endField.value = obj.endCode;
             } else if (obj.end) {
@@ -66,7 +64,6 @@ function DjangoSherd_ClipForm() {
             } else if (start) {
                 self.components.endField.value = start;
             }
-            return true;
         }
     }
 
@@ -98,10 +95,6 @@ function DjangoSherd_ClipForm() {
                     self.components.endField.value = timecode; // update end time if start time is greater
                 
                 self.storage.update(self.getState(), true);
-                
-                // @todo - factor this into clipstrip and/or into QT. Needed?
-                //moveClipStrip(self.components.startField.value, self.components.endField.value);
-                initQtDuration();
             });
         connect(self.components.endButton, 'onclick', function(evt) {
                 time = self.targetview.media.time();
@@ -117,10 +110,6 @@ function DjangoSherd_ClipForm() {
                 }
             
                 self.storage.update(self.getState(), true);
-
-                // @todo - factor this into clipstrip and/or into QT. Needed?
-                // moveClipStrip(self.components.startField.value, self.components.endField.value); 
-                initQtDuration(); 
             });
         connect(self.components.startField, 'onchange', function(evt) {
             var obj = self.getState();

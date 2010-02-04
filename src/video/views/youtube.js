@@ -16,11 +16,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         this.microformat.type = function() { return 'youtube'; };
         
         // create == asset->{html+information to make it}
-        this.microformat.create = function(obj,doc) {
-            var wrapperId = Sherd.Base.newID('youtube-wrapper');
-            var playerId = Sherd.Base.newID('youtube-player-');
+        this.microformat.create = function(obj) {
+            var wrapperId = Sherd.Base.newID('youtube-wrapper-');
+            var playerID = Sherd.Base.newID('youtube-player-');
             var autoplay = obj.autoplay ? 1 : 0;
-            self._ready = false;
+            self.media._ready = false;
+            self.media._state = -1;
             
             if (!obj.options) 
             {
@@ -31,6 +32,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             }
             
             // massage the url options if needed, take off everything after the ? mark
+            var url;
             idx = obj.youtube.indexOf('?');
             if (idx > -1) {
                 url = obj.youtube.substr(0, idx);
@@ -41,24 +43,24 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return {
                 object: obj,
                 htmlID: wrapperId,
-                mediaID: playerId, // Used by microformat.components initialization
+                playerID: playerID, // Used by microformat.components initialization
                 autoplay: autoplay, // Used later by _seek seeking behavior
-                youtube: url, // Used by _seek seeking behavior
+                mediaUrl: url, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
-                        '  <param name="movie" value="' + url + '&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
+                        '  <param name="movie" value="' + url + '?fs=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"></param>' + 
                         '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="false"></param>' +
-                        '  <embed src="' + url + '&enablejsapi=1&playerapiid=' + playerId + '"' + 
+                        '  <embed src="' + url + '?fs=0&enablejsapi=1&playerapiid=' + playerID + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
                         '    autoplay="' + autoplay + '"' + 
                         '    width="' + obj.options.width + '" height="' + obj.options.height + '"' + 
                         '    allowfullscreen="false"' + 
-                        '    id="' + playerId + '">' + 
+                        '    id="' + playerID + '">' + 
                         '  </embed>' + 
                         '</object>' + 
                       '</div>'
@@ -89,19 +91,18 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             for (var i=0;i<params.length;i++) {
                 obj[params[i].getAttribute('name')] = params[i].getAttribute('value');
             }
-            obj.url = obj.movie;
-            obj.youtube = obj.movie;
+            obj.mediaUrl = obj.movie;
             return obj;
         };
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            if (obj.youtube && document.getElementById(self.components.mediaID) && self.media.ready()) {
+            if (obj.youtube && document.getElementById(self.components.playerID) && self.media.ready()) {
                 try {
-                    if (obj.youtube != self.components.youtube) {
+                    if (obj.youtube != self.components.mediaUrl) {
                         // Replacing the 'url' by cue'ing the video with the new url
-                        self.components.youtube = obj.youtube;
-                        self.components.media.cueVideoByUrl(self.components.youtube, 0);
+                        self.components.mediaUrl = obj.youtube;
+                        self.components.player.cueVideoByUrl(self.components.mediaUrl, 0);
                     }
                     return true;
                 }
@@ -120,10 +121,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 if (create_obj) {
                     //the first works for everyone except safari
                     //the latter probably works everywhere except IE
-                    rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
+                    rv.player = document[create_obj.playerID] || document.getElementById(create_obj.playerID);
                     rv.autoplay = create_obj.autoplay;
-                    rv.youtube = create_obj.youtube;
-                    rv.mediaID = create_obj.mediaID;
+                    rv.mediaUrl = create_obj.mediaUrl;
+                    rv.playerID = create_obj.playerID;
                 }
                 return rv;
             } catch(e) {}
@@ -131,9 +132,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         };
         
         // Global function required for the player
-        window.onYouTubePlayerReady = function(playerId) {
-            if (playerId == self.components.mediaID) {
-                self._ready = true;
+        window.onYouTubePlayerReady = function(playerID) {
+            log('window.onYouTubePlayerReady');
+            if (playerID == self.components.playerID) {
+                self.media._ready = true;
                 
                 // reset the state
                 self.setState({ start: self.components.starttime, end: self.components.endtime});
@@ -141,21 +143,21 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 // register a state change function
                 // @todo -- YouTube limitation does not allow anonymous functions. Will need to address for 
                 // multiple YT players on a page
-                self.components.media.addEventListener("onStateChange", 'onYTStateChange');
-                
-                // let everyone know that the player is ready
+                self.components.player.addEventListener("onStateChange", 'onYTStateChange');
             }
-        }
+        };
 
         // This event is fired whenever the player's state changes. Possible values are unstarted 
         // (-1), ended (0), playing (1), paused (2), buffering (3), video cued (5). When the SWF is first loaded 
         // it will broadcast an unstarted (-1) event. 
         // When the video is cued and ready to play it will broadcast a video cued event (5).
         // 
-        // @todo -- onYTStateChange does not pass the playerId into the function, which will be 
+        // @todo -- onYTStateChange does not pass the playerID into the function, which will be 
         // a problem if we ever have multiple players on the page
         window.onYTStateChange = function(newState) {
-            //log('window.onYTStateChange: ' + newState);
+            self.media._state = newState;
+            
+            log('window.onYTStateChange: ' + self.media._state);
             
             if (newState == 1) {
                 // @todo if the duration is good now, then broadcast a "valid metadata" event
@@ -165,14 +167,18 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             }
         };
         
-        this.media.ready = function() {
-            return self._ready;
+        this.media.state = function() {
+            return self.media._state; 
         }
         
-        this.media.movscale = 1; //movscale is a remnant from QT. vitalwrapper.js uses it. TODO: verify we need it.
+        this.media.ready = function() {
+            return self.media._ready;
+        }
+        
+        this.media.timescale = function() { return 1; }
        
         this.media.timestrip = function() {
-            return {w: self.components.media.width,
+            return {w: self.components.player.width,
                 trackX: 42,
                 trackWidth: 384,
                 visible:true
@@ -180,16 +186,16 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
 
         this.media.play = function() {
-            if (self.components.media) {
-                self.components.media.playVideo();
+            if (self.components.player) {
+                self.components.player.playVideo();
             }
         }
         
         this.media.duration = function() {
             duration = 0;
-            if (self.components.media) {
+            if (self.components.player) {
                 try {
-                    duration = self.components.media.getDuration();
+                    duration = self.components.player.getDuration();
                     if (duration < 0)
                         duration = 0
                 } catch(e) {
@@ -201,9 +207,9 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         this.media.time = function() {
             time = 0;
-            if (self.components.media) {
+            if (self.components.player) {
                 try {
-                    time = self.components.media.getCurrentTime();
+                    time = self.components.player.getCurrentTime();
                     if (time < 0)
                         time = 0
                 } catch (e) {
@@ -217,16 +223,16 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             if (self.media.ready()) {
                 if (starttime != undefined) {
                     if (self.components.autoplay) {
-                        self.components.media.seekTo(starttime, true);
+                        self.components.player.seekTo(starttime, true);
                     }
                     else {
-                        self.components.media.cueVideoByUrl(self.components.youtube, starttime);
+                        self.components.player.cueVideoByUrl(self.components.mediaUrl, starttime);
                     }
                 }
             
                 if (endtime != undefined) {
                     // Watch the video's running time & stop it when the endtime rolls around
-                    this.pauseAt(endtime);
+                    self.media.pauseAt(endtime);
                 }
                 
                 // clear any saved values if they exist
@@ -240,8 +246,8 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
         
         this.media.pause = function() {
-            if (self.components.media) {
-                self.components.media.pauseVideo();
+            if (self.components.player) {
+                self.components.player.pauseVideo();
             }
         }
 

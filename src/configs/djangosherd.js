@@ -6,7 +6,7 @@ if (typeof djangosherd == 'undefined') {
 // /assetview: html.pull,html.push,html.remove,setState,getState,&OPTIONAL:play
 // / pull,push are supported by Base.AssetView, but in, turn, call:
 // / id, microformat.update, microformat.write, microformat.create
-// / when attached to clipform: media.duration,media.movscale (and probably
+// / when attached to clipform: media.duration,media.timescale (and probably
 // media.time)
 
 function DjangoSherd_Asset_Config() {

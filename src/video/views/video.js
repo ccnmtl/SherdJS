@@ -110,6 +110,8 @@ if (!Sherd.Video.Base) {
             ,
             time : unimplemented // get current time in seconds
             ,
+            timescale : unimplemented // get the movie's timescale. only QT is not 1
+            ,
             timeCode: function() { // get current time as a time code string
                 return self.secondsToCode(self.media.time());
             }
@@ -153,7 +155,7 @@ if (!Sherd.Video.Base) {
             state['start'] = self.media.time();
             state['default'] = (!state.start);
             state['duration'] = self.media.duration();
-            state['timeScale'] = self.media.movscale; // For QT, correct after time()/duration() called
+            state['timeScale'] = self.media.timescale();
             return state;
         }
 

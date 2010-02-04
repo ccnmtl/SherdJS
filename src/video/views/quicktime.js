@@ -1,8 +1,8 @@
 //status: porting
 /*
-  http://developer.apple.com/documentation/quicktime/Conceptual/QTScripting_JavaScript/bQTScripting_JavaScri_Document/QuickTimeandJavaScri.html#//apple_ref/doc/uid/TP40001526-CH001-SW7
-  TODO: implement AssetView
-
+ 
+ http://developer.apple.com/mac/library/documentation/QuickTime/Conceptual/QTScripting_JavaScript/aQTScripting_Javascro_AIntro/Introduction%20to%20JavaScript%20QT.html
+ 
   SERIALIZATION of asset
        {url:''
 	,width:320
@@ -21,136 +21,100 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
     Sherd.Video.QuickTime = function() {
         var self = this;
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
-
-        // overrides video.js play
-        this.play = function() {
-            if (theMovie) { // theMovie is defined in videoclipping.js. mondrian/media/js/vital3/videoclipping.js
-                var mimetype = theMovie.GetMIMEType();
-                if (/image/.test(mimetype)) {
-                    theMovie.SetURL(theMovie.GetHREF());
-                } else {
-                    theMovie.Play();
-                }
-            }
-        } 
         
-        // overrides video.js
-        // did you give me a start point - cue?
-        // did you give me an end point -- pause at that end point or jump to the end point if you're past that point
-        // if not loaded -- then do this as soon as you load (if ready)
-        this.setState = function(obj) {
-            if (typeof obj=='object') {
-            ///VITAL
-            try {
-                giveUp(); // stop "pause" listener.
-                prepareGrabber(); // videoclipping.js
-                if (obj.duration) movDuration = obj.duration; // used by videoclipping.js
-                if (obj.timeScale) movscale = obj.timeScale; // used by videoclipping.js
-                
-                if (obj.startCode && obj.endCode) {
-                    refresh_mymovie(obj.startCode, obj.endCode, 'Clip');
-                } else if (typeof obj.start=='number') {
-                    //?does this even work?
-                    refresh_mymovie(obj.start, obj.start, 'Clip');
-                }
-                return true;
-            }catch(e){/*maybe no movie?*/}
-            }
-        }
-        ///END VITAL-specific
-
-        this.supported = function(asset_obj) {
-            if (asset_obj.url) {
-                return (/(rtsp:|\.mov$|\.mp4$|\.qtl$)/.test(asset_obj.url))?'quicktime':false;
-            }
-        }
-        ///OVERRIDE  ??hack?
-        this.deinitialize = function(part) {
-            log('quicktime this.deinitialize');
-            try {
-                giveUp();//VITAL
-            }catch(e){alert(e);}
+        this.media.isLoaded = function() {
+            return self.media._loaded;
         }
         
-        this.media._updateMovScale = function() {
-            if (!self.components.media) {
-                ///TODO:ASSUMING id() dependency for now
-                self.components.media = self.microformat.components( false, {mediaID:self.id()} );
+        this.media.timescale = function() {
+            var timescale = 1;
+            if (self.media.isLoaded()) {
+                timescale = self.components.media.GetTimeScale();
             }
-            self.media.movscale = self.components.media.GetTimeScale();
+            return timescale;
         }
+        
         this.media.time = function() {
-            self.media._updateMovScale();
-            return self.components.media.GetTime()/self.media.movscale;
+            var time = 0;
+            if (self.media.isLoaded())
+                time = self.components.media.GetTime()/self.media.timescale();
+            return time;
         }
+        
         this.media.duration = function() {
-            //TODO:test for loaded-ness
-            self.media._updateMovScale();
-            return self.components.media.GetDuration()/self.media.movscale;
+            var duration = 0;
+            if (self.media.isLoaded()) {
+                duration = self.components.media.GetDuration()/self.media.timescale();
+            }
+            return duration;
         }
+        
         this.media.play = function() {
-            self.events.queue('play',[
-                                      {test:self.media._test,
-                                          poll:100
-                                      },
-                                      {call:function(){self.components.media.Play()}}
-                                      ]);
+            if (self.media.isLoaded()) {
+                var mimetype = self.components.media.GetMIMEType();
+                if (/image/.test(mimetype)) {
+                    self.components.media.SetURL(self.components.media.GetHREF());
+                } else {
+                    self.components.media.Play();
+                }       
+            } else {
+                self.events.queue('qt play',[
+                                          {test: self.media.ready, poll:500},
+                                          {call: self.media.play }
+                                          ]);
+            }
         }
+        
         this.media.pause = function() {
             self.components.media.Stop();
         }
-
-        this.media._test = function() {
-            //are we ready?
-            if (typeof self.components.media == 'undefined') 
-                throw "movie object does not exist";
-            var movie = self.components.media;
-            var status = movie.GetPluginStatus();
-            if (status != 'Playable' && status != 'Complete') 
-                throw "not ready to play yet";
-            if (self.media.duration() >= 2147483647) 
-                throw "invalid duration returned";
-            self.media._updateMovScale();
-            return true;
+        
+        this.media.pauseAt = function(endtime) {
+            if (endtime) {
+                self.events.queue('qt pause',[
+                                          {test: function() { return self.media.time() >= endtime}, poll:500},
+                                          {call: function() { self.media.pause(); }}
+                                          ]);
+            }
         }
+        
         //returns true, if we're sure it is
         this.media.isStreaming = function() {
             //2147483647 (=0x7FFFFFFF) 0x7FFFFFFF is quicktime's magic number for streaming.
             var url = self.components.media.GetURL();
             return (url && /^rtsp/.test(url));
         }
+        
         this.media.seek = function(starttime, endtime) {
-            var playRate = 0;
+            log('this.media.seek');
             
-            self.events.queue('seek',[
-                                      {test:self.media._test,
-                                          poll:300
-                                      },
-                                      {check:self.media.isStreaming
-                                          ,test:function(streaming){//only for non-streaming
-                                          return (streaming //ASSUME: _test above got the movscale
-                                                  ||seconds<=self.components.media.GetMaxTimeLoaded()/self.media.movscale);
-                                      }
-                                      ,poll:300
-                                      },
-                                      {call:function(){
-                                          playRate = parseInt(self.components.media.GetRate(),10);
-                                          //HACK: QT doesn't rebuffer if we don't stop-start
-                                          self.media.pause();
-                                      }//call
-                                      },
-                                      {check:function(){
-                                          self.media._updateMovScale();
-                                          //window.console.log(['movscale',seconds,self.media.movscale]);
-                                          self.components.media.SetTime(seconds*self.media.movscale);
-                                          self.components.media.SetRate(playRate);
-                                          return self.media.time();
-                                      }//check
-                                      ,test:function(t){return (t>=seconds)}
-                                      ,poll:300
-                                      ,timeout:2200//timeout to avoid seek competition
-                                      }
-                                      ]);
+            if (self.media.isLoaded()) {
+                if (starttime != undefined) {
+                    playRate = parseInt(self.components.media.GetRate(), 10);
+                    self.components.media.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
+                    self.components.media.SetTime(starttime * self.media.timescale());
+                    if (!self.components.autoplay) {
+                        self.components.media.SetRate(playRate);
+                    }
+                    if (self.components.autoplay || playRate != 0) {
+                        self.components.media.Play();
+                    }
+                    log('sought');
+                }
+            
+                if (endtime != undefined) {
+                    // Watch the video's running time & stop it when the endtime rolls around
+                    //self.media.pauseAt(endtime*self.media.timescale());
+                }
+                
+                // clear any saved values if they exist
+                delete self.components.starttime;
+                delete self.components.endtime;
+            } else {
+                // store the values away for when the player is ready
+                self.components.starttime = starttime;
+                self.components.endtime = endtime;
+            }
         }
         
         this.media.timestrip = function() {
@@ -161,7 +125,19 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             };
         }
         
-        this.microformat.type = function() {return 'quicktime';};
+        this.media.isPlaying = function() { return self.media._playing; }
+        
+        // Return false while playing, return true while paused
+        this.media.updateTickCount = function() {
+            if (self.media.isPlaying()) { 
+                self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
+                return false; 
+            } else { 
+                return true; 
+            } 
+        }
+        
+        this.microformat.type = function() { return 'quicktime'; };
         
         // Return asset object description (parameters) in a serialized JSON format.
         // NOTE: Not currently in use. 
@@ -228,17 +204,54 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             return false;
         };
         
-        this.initialize = function(create_obj) {
-            if (create_obj && create_obj.text) {
-                var top = document.getElementById(create_obj.htmlID);
-                ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
-                if (/Trident/.test(navigator.userAgent) && create_obj.object.autoplay=='true') {
-                    ///again!  just for IE.  nice IE, gentle IE
-                    setTimeout(function() {
-                        self.microformat.update(create_obj.object, top);
-                    },100);
-                }
+        this.deinitialize = function() {
+            self.media._loaded = false;
+            self.media._playing = false;
+            if (self.components.timedisplay) {
+                self.components.timedisplay.style.display = 'none';
             }
+            self.events.clearTimers();
+        }
+        
+        this.initialize = function(create_obj) {
+            var top = document.getElementById(create_obj.htmlID);
+            ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
+            if (/Trident/.test(navigator.userAgent) && create_obj.object.autoplay=='true') {
+                ///again!  just for IE.  nice IE, gentle IE
+                setTimeout(function() {
+                    self.microformat.update(create_obj.object, top);
+                },100);
+            }
+            
+            // MochiKit!!!
+            connect(self.components.media, 'onqt_begin', function() {
+                    log('qt_begin');
+                    self.media._loaded = true; 
+
+                    // reset the state
+                    self.setState({ start: self.components.starttime, end: self.components.endtime});
+                 });
+            
+            connect(self.components.media, 'onqt_durationchange', function() { 
+                    log('qt_durationchange');
+                    self.components.duration.innerHTML = self.secondsToCode(self.media.duration());
+                });
+            
+            connect(self.components.media, 'onqt_play', function() {
+                    log('onqt_play');
+                    self.media._playing = true;
+                    self.events.queue('qt tick',[{test: self.media.updateTickCount, poll:500}]);
+                    self.components.timedisplay.style.display = 'inline';
+                });
+            
+            connect(self.components.media, 'onqt_pause', function() {
+                    log('onqt_pause');
+                    self.media._playing = false;
+                });
+            connect(self.components.media, 'onqt_ended', function() {
+                    log('onqt_ended');
+                    self.media._playing = false;
+                });
         }
         
         this.microformat.create = function(obj,doc) {
@@ -288,12 +301,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 mediaID:id,
                 currentTimeID:'currtime',
                 durationID:'totalcliplength',
-                clickToPlayID:'clicktoplay',
                 object:obj,
                 text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
-                <div id="clicktoplay" \
-                onclick="theMovie.SetURL(theMovie.GetHREF());hideElement(event.target)"\
-                >Click video to play</div>\
                 <!--[if IE]>\
                     <object id="'+id+'" \
                     width="'+opt.width+'" height="'+opt.height+'" \
@@ -313,9 +322,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 <param name="autoplay" value="'+opt.autoplay+'" /> \
                 <param name="width" value="320"> \
                 <param name="height" value="256"> \
+                <param name="postdomevents" value="true" /> \
                 '+opt.extra+'\
                 '+opt.errortext+'</object></div>\
-                <div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div>'
+                <div id="time-display" style="display: none;"><div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div></div>'
             };
         };
         
@@ -329,12 +339,11 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     //the first works for everyone except safari
                     //the latter probably works everywhere except IE
                     rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
-                } else if (html_dom) {
-                    var media = html_dom.getElementsByTagName('object');
-                    if (media.length) {
-                        rv.media = media.item(0);
-                    }
-                }
+                    rv.duration = document.getElementById(create_obj.durationID);
+                    rv.elapsed = document.getElementById(create_obj.currentTimeID);
+                    rv.timedisplay = document.getElementById('time-display');
+                    rv.autoplay = create_obj.object.autoplay == 'true';
+                } 
                 return rv;
             } catch(e) {}
             return false;
