@@ -81,32 +81,25 @@ function DjangoSherd_ClipForm() {
     this.initialize = function(create_obj) {
         // MochiKit!!!
         connect(self.components.startButton, 'onclick', function(evt) {
-                // @todo -- icky assumption here that if the time exists, the movie is playing
-                // not true of all players. Add an "isplaying" method on media to abstract this concept
-                time = self.targetview.media.time();
-                timecode = self.targetview.media.timeCode();
-                
-                if (time) { // movie is playing
+                if (self.targetview.media.isPlaying()) { // movie is playing
                     self.components.startField.value = timecode; // update start time with movie time
                 } else { // movie is paused
                     self.targetview.play(); // play the movie if it is paused
                 }
-                if (time > codeToSeconds(self.components.endField.value))
-                    self.components.endField.value = timecode; // update end time if start time is greater
+                if (self.targetview.media.time() > codeToSeconds(self.components.endField.value))
+                    self.components.endField.value = self.targetview.media.timeCode(); // update end time if start time is greater
                 
                 self.storage.update(self.getState(), true);
             });
         connect(self.components.endButton, 'onclick', function(evt) {
-                time = self.targetview.media.time();
-                timecode = self.targetview.media.timeCode();
-            
-                if (time)
+                if (self.targetview.media.isPlaying()) // movie is playing
                     self.targetview.media.pause(); // stop the movie if it is playing
-                self.components.endField.value = timecode; // update the end time
+                
+                self.components.endField.value = self.targetview.media.timeCode(); // update the end time
                 
                 // if the start time is greater then the endtime, make start time match end time
-                if (time < codeToSeconds(self.components.startField.value)) { 
-                    self.components.startField.value = timecode;
+                if (self.targetview.media.time() < codeToSeconds(self.components.startField.value)) { 
+                    self.components.startField.value = self.targetview.media.timeCode();
                 }
             
                 self.storage.update(self.getState(), true);

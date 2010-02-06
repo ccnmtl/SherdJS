@@ -94,6 +94,7 @@
                          function() {
                              // Check Play
                              t.eq(view.media.state(), 1, 'Video is playing');
+                             t.ok(view.media.isPlaying(), 'Video is playing (api)');
                              t.eq(view.media.duration(), 375.375, 'Duration is now accurate');
                              t.ok(view.media.time() > 0, 'Elapsed time is going');
 
@@ -112,6 +113,7 @@
                          3,
                          function() {
                              t.eq(view.media.state(), 1, 'Video is playing');
+                             t.ok(view.media.isPlaying(), 'Video is playing (api)');
 
                              // Test Pause
                              view.media.pause();

@@ -167,6 +167,14 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             return self.media._ready;
         }
         
+        this.media.isPlaying = function() {
+            var playing = false;
+            try {
+                playing = self.media.state() == 3;
+            } catch(e) {}
+            return playing;
+        }
+        
         /**
         Returns the state of the player. Possible values are:
             -1  unloaded

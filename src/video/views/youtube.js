@@ -132,7 +132,6 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         // Global function required for the player
         window.onYouTubePlayerReady = function(playerID) {
-            log('window.onYouTubePlayerReady');
             if (playerID == self.components.playerID) {
                 self.media._ready = true;
                 
@@ -163,6 +162,14 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 self.events.clearTimers();
             }
         };
+        
+        this.media.isPlaying = function() {
+            var playing = false;
+            try {
+                playing = self.media.state() == 1;
+            } catch(e) {}
+            return playing;
+        }
         
         this.media.state = function() {
             return self.components.player.getPlayerState(); 

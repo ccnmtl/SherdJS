@@ -22,6 +22,14 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         var self = this;
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
         
+        this.media.isPlaying = function() {
+            var playing = false;
+            try {
+                playing = self.components.player.GetRate() > 0;
+            } catch(e) {}
+            return playing;
+        }
+        
         this.media.ready = function() {
             var status;
             try {
@@ -50,7 +58,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         this.media.duration = function() {
             var duration = 0;
             try {
-                duration = self.components.player.GetDuration()/self.media.timescale();
+                qt_duration = self.components.player.GetDuration();
+                if (qt_duration > 0)
+                    duration = qtduration/self.media.timescale();
             } catch(e) {}
             return duration;
         }
@@ -76,7 +86,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         
         this.media.pauseAt = function(endtime) {
-            log('this.media.pauseAt');
             if (endtime) {
                 self.events.queue('qt pause',[
                                           {test: function() { return self.media.time() >= endtime}, poll:500},
@@ -93,15 +102,18 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         
         this.media.seek = function(starttime, endtime) {
-            log('this.media.seek');
+            log('this.media.seek: ' + starttime + " " + endtime + " " + self.media.duration());
             
             if (self.media.ready()) {
                 if (starttime != undefined) {
-                    playRate = parseInt(self.components.player.GetRate(), 10);
-                    self.components.player.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
-                    self.components.player.SetTime(starttime * self.media.timescale());
-                    if (!self.components.autoplay) {
-                        self.components.player.SetRate(playRate);
+                    playRate = self.components.player.GetRate();
+                    if (playRate > 0)
+                        self.components.player.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
+                    try {
+                        inMovieTime = starttime * self.media.timescale();
+                        self.components.player.SetTime(inMovieTime);
+                    } catch(e) {
+                        log('SetTime Exception: ' + e);
                     }
                     if (self.components.autoplay || playRate != 0) {
                         self.components.player.Play();

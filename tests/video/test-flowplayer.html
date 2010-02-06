@@ -97,6 +97,7 @@
                          5, 
                          function() {
                              t.eq(view.media.state(), 3, 'Video is playing');
+                             t.ok(view.media.isPlaying(), 'Video is playing (api)');
                              t.ok(view.media.time() > 10, 'Video time has advanced past 10 seconds');
 
                              // Test Pause
