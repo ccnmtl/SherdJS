@@ -22,40 +22,46 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         var self = this;
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
         
-        this.media.isLoaded = function() {
-            return self.media._loaded;
+        this.media.ready = function() {
+            var status;
+            try {
+                status = self.components.player.GetPluginStatus();
+            } catch(e) {} // player is not yet ready
+
+            return status == 'Playable' || status == 'Complete';
         }
         
         this.media.timescale = function() {
             var timescale = 1;
-            if (self.media.isLoaded()) {
-                timescale = self.components.media.GetTimeScale();
-            }
+            try {
+                timescale = self.components.player.GetTimeScale();
+            } catch(e) {}
             return timescale;
         }
         
         this.media.time = function() {
             var time = 0;
-            if (self.media.isLoaded())
-                time = self.components.media.GetTime()/self.media.timescale();
+            try {
+                time = self.components.player.GetTime()/self.media.timescale();
+            } catch(e) {}
             return time;
         }
         
         this.media.duration = function() {
             var duration = 0;
-            if (self.media.isLoaded()) {
-                duration = self.components.media.GetDuration()/self.media.timescale();
-            }
+            try {
+                duration = self.components.player.GetDuration()/self.media.timescale();
+            } catch(e) {}
             return duration;
         }
         
         this.media.play = function() {
-            if (self.media.isLoaded()) {
-                var mimetype = self.components.media.GetMIMEType();
+            if (self.media.ready()) {
+                var mimetype = self.components.player.GetMIMEType();
                 if (/image/.test(mimetype)) {
-                    self.components.media.SetURL(self.components.media.GetHREF());
+                    self.components.player.SetURL(self.components.player.GetHREF());
                 } else {
-                    self.components.media.Play();
+                    self.components.player.Play();
                 }       
             } else {
                 self.events.queue('qt play',[
@@ -66,10 +72,11 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         
         this.media.pause = function() {
-            self.components.media.Stop();
+            self.components.player.Stop();
         }
         
         this.media.pauseAt = function(endtime) {
+            log('this.media.pauseAt');
             if (endtime) {
                 self.events.queue('qt pause',[
                                           {test: function() { return self.media.time() >= endtime}, poll:500},
@@ -81,30 +88,29 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         //returns true, if we're sure it is
         this.media.isStreaming = function() {
             //2147483647 (=0x7FFFFFFF) 0x7FFFFFFF is quicktime's magic number for streaming.
-            var url = self.components.media.GetURL();
+            var url = self.components.player.GetURL();
             return (url && /^rtsp/.test(url));
         }
         
         this.media.seek = function(starttime, endtime) {
             log('this.media.seek');
             
-            if (self.media.isLoaded()) {
+            if (self.media.ready()) {
                 if (starttime != undefined) {
-                    playRate = parseInt(self.components.media.GetRate(), 10);
-                    self.components.media.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
-                    self.components.media.SetTime(starttime * self.media.timescale());
+                    playRate = parseInt(self.components.player.GetRate(), 10);
+                    self.components.player.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
+                    self.components.player.SetTime(starttime * self.media.timescale());
                     if (!self.components.autoplay) {
-                        self.components.media.SetRate(playRate);
+                        self.components.player.SetRate(playRate);
                     }
                     if (self.components.autoplay || playRate != 0) {
-                        self.components.media.Play();
+                        self.components.player.Play();
                     }
-                    log('sought');
                 }
             
                 if (endtime != undefined) {
                     // Watch the video's running time & stop it when the endtime rolls around
-                    //self.media.pauseAt(endtime*self.media.timescale());
+                    self.media.pauseAt(endtime);
                 }
                 
                 // clear any saved values if they exist
@@ -118,22 +124,17 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         
         this.media.timestrip = function() {
-            return {w: self.components.media.width,
-                trackX: 34,
-                trackWidth: 230,
+            return {w: self.components.player.width,
+                trackX: 40,
+                trackWidth: 228,
                 visible:true
             };
         }
         
-        this.media.isPlaying = function() { return self.media._playing; }
-        
         // Return false while playing, return true while paused
         this.media.updateTickCount = function() {
-            if (self.media.isPlaying()) { 
+            if (self.components.player.GetRate() > 0) { 
                 self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
-                return false; 
-            } else { 
-                return true; 
             } 
         }
         
@@ -203,28 +204,51 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             }
             return false;
         };
-        
-        this.deinitialize = function() {
-            self.media._loaded = false;
-            self.media._playing = false;
-            if (self.components.timedisplay) {
-                self.components.timedisplay.style.display = 'none';
-            }
-            self.events.clearTimers();
-        }
-        
+
         this.initialize = function(create_obj) {
-            var top = document.getElementById(create_obj.htmlID);
             ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
             if (/Trident/.test(navigator.userAgent) && create_obj.object.autoplay=='true') {
                 ///again!  just for IE.  nice IE, gentle IE
+                var top = document.getElementById(create_obj.htmlID);
                 setTimeout(function() {
                     self.microformat.update(create_obj.object, top);
                 },100);
             }
             
+            self.media._duration = self.media.duration();
+            
+            // kickoff some timers
+            self.events.queue('quicktime ready',[
+                                                  {test: function() { return self.media.ready(); }, poll:500},
+                                                  {call: function() { 
+                                                      self.setState({ start: self.components.starttime, end: self.components.endtime});
+                                                      self.components.timedisplay.style.display = 'inline';
+                                                      }
+                                                  }
+                                                  ]);
+                                                  
+            self.events.queue('quicktime duration watcher & tick count',[
+                                               {test: function() {
+                                                   // Update the duration
+                                                   newDuration = self.media.duration();
+                                                   if (newDuration != self.media._duration) {
+                                                       self.media._duration = newDuration;
+                                                       self.components.duration.innerHTML = self.secondsToCode(newDuration);
+                                                   }
+                                                   
+                                                   // Update the tick count
+                                                   self.media.updateTickCount();
+                                                   
+                                                   return false;
+                                               }, poll:400},
+                                               ]);           
+            
+            /** Domevents apparently don't play well with IE. Switching to timers until
+             *  we can switch back to an event driv
+             * Domevents are available in QT v. 7.1.2 -- released in October 2007
+             
             // MochiKit!!!
-            connect(self.components.media, 'onqt_begin', function() {
+            connect(self.components.player, 'onqt_begin', function() {
                     log('qt_begin');
                     self.media._loaded = true; 
 
@@ -232,27 +256,36 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     self.setState({ start: self.components.starttime, end: self.components.endtime});
                  });
             
-            connect(self.components.media, 'onqt_durationchange', function() { 
+            connect(self.components.player, 'onqt_durationchange', function() { 
                     log('qt_durationchange');
                     self.components.duration.innerHTML = self.secondsToCode(self.media.duration());
                 });
             
-            connect(self.components.media, 'onqt_play', function() {
+            connect(self.components.player, 'onqt_play', function() {
                     log('onqt_play');
                     self.media._playing = true;
                     self.events.queue('qt tick',[{test: self.media.updateTickCount, poll:500}]);
                     self.components.timedisplay.style.display = 'inline';
                 });
             
-            connect(self.components.media, 'onqt_pause', function() {
+            connect(self.components.player, 'onqt_pause', function() {
                     log('onqt_pause');
                     self.media._playing = false;
                 });
-            connect(self.components.media, 'onqt_ended', function() {
+            connect(self.components.player, 'onqt_ended', function() {
                     log('onqt_ended');
                     self.media._playing = false;
                 });
+            */
         }
+        
+        this.deinitialize = function() {
+            if (self.components.timedisplay) {
+                self.components.timedisplay.style.display = 'none';
+            }
+            self.events.clearTimers();
+        }
+        
         
         this.microformat.create = function(obj,doc) {
             var wrapperID = Sherd.Base.newID('quicktime-wrapper');
@@ -338,7 +371,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 if (create_obj) {
                     //the first works for everyone except safari
                     //the latter probably works everywhere except IE
-                    rv.media = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
+                    rv.player = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
                     rv.duration = document.getElementById(create_obj.durationID);
                     rv.elapsed = document.getElementById(create_obj.currentTimeID);
                     rv.timedisplay = document.getElementById('time-display');
