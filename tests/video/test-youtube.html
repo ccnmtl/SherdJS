@@ -38,17 +38,6 @@
            t.eq(create_obj.autoplay, 0, 'Autoplay is set to false');
            t.eq(create_obj.mediaUrl, 'http://www.youtube.com/watch/v/uOSuhxFo76o', 'Verify youtube url value is populated');
            t.ok(create_obj.text);
-           t.html_eq(create_obj.text, 
-              '<div id="youtube-wrapper-1" class="sherd-youtube-wrapper"> \
-               <object width="620" height="440"> <param name="movie" \
-               value="http://www.youtube.com/watch/v/uOSuhxFo76o?fs=0&enablejsapi=1&playerapiid=youtube-player-1"></param>\
-               <param name="allowscriptaccess" value="always"></param> <param name="autoplay" value="0">\
-               </param> <param name="width" value="620"></param> <param name="height" value="440"></param>\
-               <param name="allowfullscreen" value="false"></param>\
-               <embed src="http://www.youtube.com/watch/v/uOSuhxFo76o?fs=0&enablejsapi=1&playerapiid=youtube-player-1"\
-               type="application/x-shockwave-flash" allowScriptAccess="always" autoplay="0" width="620" height="440"\
-               allowfullscreen="false" id="youtube-player-1"> </embed></object></div>',
-               'Verify html is constructed');
         }
 
         function testPushAndUpdate(t) {
@@ -62,8 +51,24 @@
             
             view.html.push(obj_div, {asset: asset});
 
-            // @todo -- verify push 
-            // @todo -- verify update path
+            // Verify Push
+            t.delay_call(5, /* seconds. up this value if tests start to fail */
+                         function() {
+                              // Check State  
+                              t.eq(view.media.state(), 5, 'Player is ready');
+                              t.eq(view.media.url(), 'http://www.youtube.com/watch?v=uOSuhxFo76o&feature=player_embedded', 'Correct Url is loaded');
+
+                              // Check Update
+                              new_asset = { type: 'youtube',
+                                      presentation: 'large',
+                                      youtube: 'http://www.youtube.com/v/QVC0_CRW9tA?enablejsapi=1&amp;fs=1'};
+                              view.html.push(obj_div, {asset: new_asset});
+                         },
+                         5,
+                         function() {
+                             t.eq(view.media.state(), 5, 'Player is ready');
+                             t.eq(view.media.url(), 'http://www.youtube.com/watch?v=QVC0_CRW9tA&feature=player_embedded', 'Correct Url is loaded');
+                         });                  
         }
 
         function testMediaInterface(t) {

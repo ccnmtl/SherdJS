@@ -256,5 +256,9 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                                           ]);
             }
         }
+        
+        this.media.url = function() {
+            return self.components.player.getVideoUrl();
+        }
     }
 }
