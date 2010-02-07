@@ -83,7 +83,7 @@ function DjangoSherd_ClipStrip() {
                 clipStartMarker : document.getElementById('clipStripStart'),
                 clipRange : document.getElementById('clipStripRange'),
                 clipEndMarker : document.getElementById('clipStripEnd'),
-                timestrip: create_obj.timestrip,
+                timestrip: create_obj.timestrip
             }
         } catch(e) {}
         return false;

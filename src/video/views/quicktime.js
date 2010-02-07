@@ -163,7 +163,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     autoplay:'false',
                     controller:'true',
                     errortext:'Error text.',
-                    type:'video/quicktime',
+                    type:'video/quicktime'
             };
             var params = found_obj.html.getElementsByTagName('param');
             for (var i=0;i<params.length;i++) {

@@ -118,7 +118,7 @@ if (!Sherd.GenericAssetView) {
                 } else {
                     throw "Your asset does not have a (supported) type marked";
                 }
-            },
+            }
         }
         this.setState = function() {
             if (current_type) {

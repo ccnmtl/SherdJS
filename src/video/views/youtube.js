@@ -30,7 +30,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             {
                 obj.options = {
                     width: obj.presentation == 'small' ? 310 : 620, // youtube default
-                    height: obj.presentation == 'small' ? 220 : 440, // youtube default
+                    height: obj.presentation == 'small' ? 220 : 440 // youtube default
                 };
             }
             
@@ -178,7 +178,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
         
         this.media.state = function() {
-            return self.components.player.getPlayerState(); 
+           return self.components.player.getPlayerState();
         }
         
         this.media.ready = function() {

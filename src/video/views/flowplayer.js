@@ -31,7 +31,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             if (!obj.options) {
                 obj.options = {
                     width: obj.presentation == 'small' ? 310 : 620, 
-                    height: obj.presentation == 'small' ? 220 : 440, 
+                    height: obj.presentation == 'small' ? 220 : 440 
                 };
             }
             
@@ -56,7 +56,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 options = {
                         clip: {
                             autoPlay: create_obj.object.autoplay ? true : false,
-                            autoBuffering: true,
+                            autoBuffering: true
                         },
                         onLoad: function(player) { 
                             self.media._ready = true;

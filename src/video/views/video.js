@@ -141,7 +141,7 @@ if (!Sherd.Video.Base) {
             remove: function() {}, // Destruction step. Note: Not Currently In Use
             supports: function() { return []; },  // Return list of types supported. Note: Not currently in use
             type: function() { var type; return type; }, // Return current type of media playing. Note: Not currently in use;
-            update: function(obj,html_dom) {}, // Replace the video identifier within the .html embed block 
+            update: function(obj,html_dom) {} // Replace the video identifier within the .html embed block 
         };
 
         // /BEGIN VITAL assumption -->relegate to quicktime.js when smarter
