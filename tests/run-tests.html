@@ -2344,9 +2344,20 @@ onload=function()
 <span id="debug_tab" class="inactive_tab" style="visibility:hidden">Debug</span>
 </div>
 <div id="right_frame">
-<div id="results"></div>
-<div id="debug"></div>
+    <table width="100%">
+    <tr>
+        <td width="50%" valign="top">
+            <div id="results"></div>
+            <div id="debug"></div>
+        </td>
+        <td width="50%">
+            <div id="testframe"><iframe width="100%" height="375px" name="testframe"></iframe></div>
+        </td>
+        <td width="2%"></td>
+    </tr>
+    </table>
 </div>
+
 </div>
 
 <span style="display:none">
@@ -2413,7 +2424,4 @@ checkpoints:
 
 <br />
 <br />
-<h1>Test Frame</h1>
-<iframe name="testframe" width="750" height="500">
-</iframe>
 </body></html>

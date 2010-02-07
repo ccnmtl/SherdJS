@@ -58,9 +58,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         this.media.duration = function() {
             var duration = 0;
             try {
-                qt_duration = self.components.player.GetDuration();
-                if (qt_duration > 0)
-                    duration = qtduration/self.media.timescale();
+                duration = self.components.player.GetDuration()/self.media.timescale();
             } catch(e) {}
             return duration;
         }
@@ -102,19 +100,15 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         
         this.media.seek = function(starttime, endtime) {
-            log('this.media.seek: ' + starttime + " " + endtime + " " + self.media.duration());
-            
             if (self.media.ready()) {
+                
                 if (starttime != undefined) {
                     playRate = self.components.player.GetRate();
                     if (playRate > 0)
                         self.components.player.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
                     try {
-                        inMovieTime = starttime * self.media.timescale();
-                        self.components.player.SetTime(inMovieTime);
-                    } catch(e) {
-                        log('SetTime Exception: ' + e);
-                    }
+                        self.components.player.SetTime(starttime * self.media.timescale());
+                    } catch(e) {}
                     if (self.components.autoplay || playRate != 0) {
                         self.components.player.Play();
                     }
@@ -148,6 +142,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             if (self.components.player.GetRate() > 0) { 
                 self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
             } 
+        }
+        
+        this.media.url = function() {
+            return self.components.player.GetURL();
         }
         
         this.microformat.type = function() { return 'quicktime'; };
@@ -230,15 +228,24 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             self.media._duration = self.media.duration();
             
             // kickoff some timers
-            self.events.queue('quicktime ready',[
-                                                  {test: function() { return self.media.ready(); }, poll:500},
-                                                  {call: function() { 
-                                                      self.setState({ start: self.components.starttime, end: self.components.endtime});
-                                                      self.components.timedisplay.style.display = 'inline';
-                                                      }
-                                                  }
-                                                  ]);
-                                                  
+            self.events.queue('quicktime ready to seek',[
+                                                  {test: function() {
+                                                      // Is the duration valid yet?
+                                                      var movDuration = self.components.player.GetDuration();
+                                                      var adjustedDuration = self.media.duration();
+                                                      ready = self.media.ready() && 
+                                                              movDuration < 2147483647 && 
+                                                              adjustedDuration >= 1;
+                                                      
+                                                      return ready; 
+                                                  }, poll:500},
+                                                  {call: function() {
+                                                            self.setState({ start: self.components.starttime, end: self.components.endtime});
+                                                            self.components.timedisplay.style.display = 'inline';
+                                                          
+                                                            // @todo broadcast a "valid metadata" event
+                                                         }
+                                                  }]);
             self.events.queue('quicktime duration watcher & tick count',[
                                                {test: function() {
                                                    // Update the duration
@@ -253,42 +260,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                    
                                                    return false;
                                                }, poll:400},
-                                               ]);           
-            
-            /** Domevents apparently don't play well with IE. Switching to timers until
-             *  we can switch back to an event driv
-             * Domevents are available in QT v. 7.1.2 -- released in October 2007
-             
-            // MochiKit!!!
-            connect(self.components.player, 'onqt_begin', function() {
-                    log('qt_begin');
-                    self.media._loaded = true; 
-
-                    // reset the state
-                    self.setState({ start: self.components.starttime, end: self.components.endtime});
-                 });
-            
-            connect(self.components.player, 'onqt_durationchange', function() { 
-                    log('qt_durationchange');
-                    self.components.duration.innerHTML = self.secondsToCode(self.media.duration());
-                });
-            
-            connect(self.components.player, 'onqt_play', function() {
-                    log('onqt_play');
-                    self.media._playing = true;
-                    self.events.queue('qt tick',[{test: self.media.updateTickCount, poll:500}]);
-                    self.components.timedisplay.style.display = 'inline';
-                });
-            
-            connect(self.components.player, 'onqt_pause', function() {
-                    log('onqt_pause');
-                    self.media._playing = false;
-                });
-            connect(self.components.player, 'onqt_ended', function() {
-                    log('onqt_ended');
-                    self.media._playing = false;
-                });
-            */
+                                               ]);
         }
         
         this.deinitialize = function() {
@@ -300,8 +272,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         
         
         this.microformat.create = function(obj,doc) {
-            var wrapperID = Sherd.Base.newID('quicktime-wrapper');
-            var id = (typeof self.id=='function')?self.id():Sherd.Base.newID('quicktime');
+            var wrapperID = Sherd.Base.newID('quicktime-wrapper-');
+            var playerID = Sherd.Base.newID('quicktime-player-');
             var opt = {
                     url:'',
                     width:320,
@@ -343,20 +315,20 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             //we need to retest where the href usecase is needed
             //since safari breaks
             return {htmlID:wrapperID,
-                mediaID:id,
+                playerID:playerID,
                 currentTimeID:'currtime',
                 durationID:'totalcliplength',
                 object:obj,
                 text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
                 <!--[if IE]>\
-                    <object id="'+id+'" \
+                    <object id="'+playerID+'" \
                     width="'+opt.width+'" height="'+opt.height+'" \
                     style="behavior:url(#qt_event_source)"  \
                     codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
                     classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
                 <![endif]--> \
                 <!--[if !IE]><--> \
-                    <object id="'+id+'" type="'+opt.mimetype+'" \
+                    <object id="'+playerID+'" type="'+opt.mimetype+'" \
                     data="'+opt.url+'" \
                     width="'+opt.width+'" height="'+opt.height+'">  \
                 <!-- ><![endif]--> \
@@ -383,7 +355,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 if (create_obj) {
                     //the first works for everyone except safari
                     //the latter probably works everywhere except IE
-                    rv.player = document[create_obj.mediaID] || document.getElementById(create_obj.mediaID);
+                    rv.player = document[create_obj.playerID] || document.getElementById(create_obj.playerID);
                     rv.duration = document.getElementById(create_obj.durationID);
                     rv.elapsed = document.getElementById(create_obj.currentTimeID);
                     rv.timedisplay = document.getElementById('time-display');

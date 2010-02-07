@@ -1,0 +1,179 @@
+<!--
+    Run tests via:  
+    http://localhost:8000/site_media/js/sherdjs/tests/run-tests.html?testframe=testframe;testframe_no_clear
+    
+    Note: I discovered that Quicktime must be visible within the browser for the Plugin to record a "ready" status
+    If there are failures, this could be why.
+ -->
+
+<html>
+<head>
+    <script type="text/javascript" src="/site_media/js/mochikit/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/site_media/js/sherdjs/src/base.js"></script>
+    <script type="text/javascript" src="/site_media/js/sherdjs/src/assets.js"></script>
+    <script type="text/javascript" src="/site_media/js/sherdjs/src/video/views/video.js"></script>
+    <script type="text/javascript" src="/site_media/js/sherdjs/src/video/views/quicktime.js"></script>
+
+    <script type="text/javascript">
+        function testDefinition(t)
+        {
+           t.plan(2);
+           t.ok(Sherd.Video, "Verify video.js is defined");
+           t.ok(Sherd.Video.QuickTime, "Verify quicktime.js is defined");
+        }
+
+        function testCreate(t)
+        {
+           // t.plan(5)
+           view = new Sherd.Video.QuickTime();
+           t.ok(view, "Verify view instantiated");
+     
+           create_obj = view.microformat.create({url: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
+                                                 poster: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large', 
+                                                 quicktime: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
+                                                 type: 'quicktime', 
+                                                 height: 256, 
+                                                 width: 320,
+                                                 autoplay: false,
+                                                 loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' });
+
+           // Verify create_obj has expected return parameters
+           t.ok(create_obj.object);
+           t.like(create_obj.htmlID, /quicktime-wrapper-[\d]+/, 'Starts with quicktime-wrapper- then a number [' + create_obj.htmlID + ']');
+           t.like(create_obj.playerID, /quicktime-player-[\d]+/, 'Starts with quicktime-player- then a number [' + create_obj.playerID + ']');
+           t.eq(create_obj.object.autoplay, false, 'Autoplay is set to false');
+           t.ok(create_obj.text);
+        }
+
+        function testPushAndUpdate(t) {
+            view = new Sherd.Video.QuickTime();
+            t.ok(view, "Verify view instantiated");
+            
+            asset = {url: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
+                poster: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large', 
+                quicktime: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
+                type: 'quicktime', 
+                height: 256, 
+                width: 320,
+                autoplay: false,
+                loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' }
+                
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            view.html.push(obj_div, {asset: asset});
+
+            // Verify Push
+            t.delay_call(3, /* seconds. up this value if tests start to fail */
+                         function() {
+                              // Check State  
+                              t.ok(view.media.ready(), 'Player is ready');
+                              t.eq(view.media.url(), 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large', 'Correct Url is loaded');
+
+                              new_asset = {
+                                 url: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:0ab69e668489c086bfbb26714a51c292a1089838/StreamingProxy',
+                                 poster: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:0ab69e668489c086bfbb26714a51c292a1089838/sdef:THUMBNAIL/large',
+                                 quicktime: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:0ab69e668489c086bfbb26714a51c292a1089838/StreamingProxy',
+                                 type: 'quicktime',
+                                 height: 256,
+                                 width: 320,
+                                 autoplay: false,
+                                 loadingposter: '/site_media/js/sherdjs/media/images/poster.gif'} 
+                              
+                              // Check Update
+                              view.html.push(obj_div, {asset: new_asset});
+                         },
+                         3,
+                         function() {
+                             t.ok(view.media.ready(), 'Player is ready');
+                             t.eq(view.media.url(), 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:0ab69e668489c086bfbb26714a51c292a1089838/sdef:THUMBNAIL/large', 'Correct Url is loaded');
+                         });                  
+        }
+
+        function testMediaInterface(t) {
+            view = new Sherd.Video.QuickTime();
+            asset = {url: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
+                    poster: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large', 
+                    quicktime: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
+                    type: 'quicktime', 
+                    height: 256, 
+                    width: 320,
+                    autoplay: false,
+                    loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' }
+
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            view.html.push(obj_div, {asset: asset});
+            
+            t.delay_call(5, /* seconds. up this value if tests start to fail */
+                         function() {
+                              // Check State  
+                              t.ok(view.media.ready(), 'Player is ready');
+                              t.eq(view.media.time(), 0, 'No time yet');
+                              t.eq(view.media.duration(), 0.06666666666666667, 'No duration yet');
+
+                              // Test Play
+                              view.media.play();
+                         },
+                         3,
+                         function() {
+                             // Check Play
+                             t.ok(view.media.isPlaying(), 'Video is playing (api)');
+                             t.eq(view.media.duration(), 68.35833333333333, 'Duration is now accurate');
+                             t.ok(view.media.time() > 0, 'Elapsed time is going');
+
+                             // Test PauseAt
+                             view.media.pauseAt(5);
+                         },
+                         5,
+                         function() {
+                             // Check PauseAt
+                             t.eq(view.media.isPlaying(), false, 'Video is paused');
+                             t.ok(view.media.time() >= 5 && view.media.time() <= 6, "Time is between 5 & 6 seconds");
+
+                             // Start Playing Again
+                             t.ok(view.media.ready(), 'Video is ready to be played');
+
+                             // @todo -- figure out how to restart the video 
+                             //view.media.play();
+                             view.components.player.Play(); 
+                         },
+                         7,
+                         function() {
+                             t.eq(view.media.isPlaying(), true, 'Video is playing (api)');
+
+                             // Test Pause
+                             view.media.pause();
+                         },
+                         5,
+                         function() {
+                             // Check Pause
+                             t.eq(view.media.isPlaying(), false, 'Video is paused');
+
+                             // Test Seek
+                             view.media.seek(25, 30);
+                         },
+                         5,
+                         function() {
+                             t.eq(view.media.isPlaying(), false, 'Video is still paused');
+                             
+                             // @todo -- figure out how to restart the video 
+                             //view.media.play();
+                             view.components.player.Play();
+                         },
+                         5,
+                         function() {
+                             // Check Seek 
+                             t.ok(view.media.time() > 25, 'Video cued up properly, now lets wait on the stop')
+                         },
+                         6,
+                         function() {
+                             // Check PauseAt via Seek
+                             t.eq(view.media.isPlaying(), false, 'Video is paused');
+                             t.ok(view.media.time() > 30, 'Video stopped at the requested time');
+                         });
+        }
+  </script>
+</head>
+<body>
+<div id='asset-display' class="asset-display"></div>
+</body>
+</html>
+

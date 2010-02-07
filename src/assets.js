@@ -24,9 +24,6 @@ if (!Sherd.GenericAssetView) {
             var quicktime = {
                 'view' : new Sherd.Video.QuickTime()
             };
-            quicktime.view.id = function() {
-                return 'movie1';
-            }// hackity-hack. TODO: create multiple ids for multiple players per page
             if (options.clipform) {
                 quicktime.clipform = new DjangoSherd_ClipForm();// see vitalwrapper.js
                 quicktime.clipform.attachView(quicktime.view);
