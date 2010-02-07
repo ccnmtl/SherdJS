@@ -86,6 +86,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                            options);
     
                 self.components.player = $f(create_obj.playerID);
+                
+                self.events.connect(self.media, 'seek', self.media, 'seek');
             }
         }
         

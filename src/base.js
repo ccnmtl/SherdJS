@@ -296,8 +296,8 @@ if (typeof MochiKit != 'undefined') {
                 }
             }
         },
-        'signal' : function(subject, event) {
-            MochiKit.Signal.signal(subject, event);
+        'signal' : function(subject, event, param) {
+            MochiKit.Signal.signal(subject, event, param);
         }
     }
 } //mochikit

@@ -82,7 +82,7 @@ function DjangoSherd_ClipForm() {
         // MochiKit!!!
         connect(self.components.startButton, 'onclick', function(evt) {
                 if (self.targetview.media.isPlaying()) { // movie is playing
-                    self.components.startField.value = timecode; // update start time with movie time
+                    self.components.startField.value = self.targetview.media.timeCode(); // update start time with movie time
                 } else { // movie is paused
                     self.targetview.play(); // play the movie if it is paused
                 }

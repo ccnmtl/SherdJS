@@ -11,6 +11,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         var self = this;
         
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js -- base.js
+        
+        this.initialize = function(create_obj) {
+            self.events.connect(self.media, 'seek', self.media, 'seek');
+        }
                 
         // Note: not currently in use
         this.microformat.type = function() { return 'youtube'; };
@@ -47,13 +51,13 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 mediaUrl: url, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperID + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
-                        '  <param name="movie" value="' + url + '?fs=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
+                        '  <param name="movie" value="' + url + '?fs=0&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"></param>' + 
                         '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="false"></param>' +
-                        '  <embed src="' + url + '?fs=0&enablejsapi=1&playerapiid=' + playerID + '"' + 
+                        '  <embed src="' + url + '?fs=0&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
                         '    autoplay="' + autoplay + '"' + 
@@ -156,8 +160,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             //log('window.onYTStateChange: ' + newState);
             
             if (newState == 1) {
-                // @todo if the duration is good now, then broadcast a "valid metadata" event
-                
+                var duration = self.media.duration();
+                if (duration > 1) {
+                    self.events.signal(self.media, 'duration', { duration: duration });
+                }
             } else if (newState == 2 || newState == 0) { // stopped or ended
                 self.events.clearTimers();
             }

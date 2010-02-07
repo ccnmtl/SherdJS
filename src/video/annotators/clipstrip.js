@@ -16,17 +16,20 @@ function DjangoSherd_ClipStrip() {
 
     this.setState = function(obj) {
         if (typeof obj == 'object') {
-            self.components.starttime = 0;
-            self.components.endtime = obj.duration;
+            
             if (obj.start) {
                 self.components.starttime = obj.start
+            } else if (!self.components.starttime) {
+                self.components.starttime = 0;
             }
+            
             if (obj.end) {
                 self.components.endtime = obj.end;
+            } else if (!self.components.endtime && obj.duration > 1) {
+                self.components.endtime = obj.duration; 
             }
-            if (obj.duration < 1) {
-                // listen for an event -- video duration is available
-            } else {
+            
+            if (obj.duration > 1) {
                 left = self.utilities.timeToPixels(self.components.starttime, obj.duration, self.components.timestrip.trackWidth);
                 right = self.utilities.timeToPixels(self.components.endtime, obj.duration, self.components.timestrip.trackWidth);
                 
@@ -46,11 +49,14 @@ function DjangoSherd_ClipStrip() {
     this.initialize = function(create_obj) {
         // MochiKit!!!
         connect(self.components.clipStartMarker, 'onclick', function(evt) {
-                self.targetview.media.seek(self.components.starttime);
+                self.events.signal(self.targetview.media, 'seek', self.components.starttime);
              });
         connect(self.components.clipEndMarker, 'onclick', function(evt) {
-                self.targetview.media.seek(self.components.endtime);
+                self.events.signal(self.targetview.media, 'seek', self.components.endtime);
             });
+        
+        // listen for changes in duration from the movie
+        self.events.connect(self.targetview.media, 'duration', self, 'setState');
     }
     
     this.microformat.create = function(obj) {

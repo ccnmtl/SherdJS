@@ -253,6 +253,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                    if (newDuration != self.media._duration) {
                                                        self.media._duration = newDuration;
                                                        self.components.duration.innerHTML = self.secondsToCode(newDuration);
+                                                       self.events.signal(self.media, 'duration', { duration: newDuration });
                                                    }
                                                    
                                                    // Update the tick count
@@ -261,6 +262,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                    return false;
                                                }, poll:400},
                                                ]);
+            
+            self.events.connect(self.media, 'seek', self.media, 'seek');
         }
         
         this.deinitialize = function() {
