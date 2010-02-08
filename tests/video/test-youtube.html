@@ -89,7 +89,7 @@
                               // Test Play
                               view.media.play();
                          },
-                         3,
+                         7,
                          function() {
                              // Check Play
                              t.eq(view.media.state(), 1, 'Video is playing');
@@ -135,7 +135,7 @@
                              // Check Seek 
                              t.ok(view.media.time() > 25, 'Video cued up properly, now lets wait on the stop')
                          },
-                         6,
+                         7,
                          function() {
                              // Check PauseAt via Seek
                              t.eq(view.media.state(), 2, 'Video is paused');

@@ -70,7 +70,11 @@
                               // Check State  
                               t.ok(view.media.state() == -1 || view.media.state() == 4 || view.media.state() == 2, 'Player state is -1 (not ready) or 4 (paused) or 2 (buffering). Actual state: [' + view.media.state() + ']');
                               t.eq(view.media.time(), 0, 'No time yet');
-                              t.eq(view.media.duration(), 0, 'Duration is not yet available');
+
+                              if (view.media.state() == 4 || view.media.state() == 2)
+                                  t.eq(view.media.duration(), 240.807, 'Duration is available');
+                              else
+                                  t.eq(view.media.duration(), 0, 'Duration is not yet available');
 
                               // Test Play
                               view.media.play();
