@@ -3,7 +3,6 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <title>You Tube</title>
-  <script type="text/javascript" src="/site_media/js/sherdjs/lib/swfobject/swfobject.js"></script>
   
   <script type="text/javascript">
       function onYouTubePlayerReady(playerId) 
@@ -23,7 +22,7 @@
 <body>
   <div id="userassets" class="sherd-collection">
   </div>
-  <div class="sherd-youtube-wrapper">
+  <div id="sherd-youtube-wrapper">
       <object width="425" height="344">
         <param name="movie" value="http://www.youtube.com/v/OdBNxqJ-_60?fs=1&enablejsapi=1&playerapiid=youtube1"></param>
         <param name="allowscriptaccess" value="always"></param>
@@ -35,7 +34,7 @@
         </embed>
       </object>
   </div>
-  
+  <br />
   <a href="#" onclick="playVideo()">Play</a> 
   
   <table>

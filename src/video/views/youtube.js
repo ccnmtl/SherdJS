@@ -42,6 +42,16 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             } else {
                 url = obj.youtube;
             }
+            
+            // For IE, the id needs to be placed in the object.
+            // For FF, the id needs to be placed in the embed.
+            var objectID = '';
+            var embedID = '';
+            if (navigator.userAgent.indexOf("MSIE") > -1) {
+                objectID = 'id="' + playerID + '"';
+            } else {
+                embedID = 'id="' + playerID + '"';
+            }
 
             return {
                 object: obj,
@@ -50,9 +60,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 mediaUrl: url, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperID + '" class="sherd-youtube-wrapper">' + 
-                      '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
+                      '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' +
+                        ' classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' + objectID + '>' + 
                         '  <param name="movie" value="' + url + '?fs=0&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
-                        '  <param name="allowscriptaccess" value="always"></param>' + 
+                        '  <param name="allowscriptaccess" value="always"/></param>' + 
                         '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
@@ -62,8 +73,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                         '    allowScriptAccess="always"' + 
                         '    autoplay="' + autoplay + '"' + 
                         '    width="' + obj.options.width + '" height="' + obj.options.height + '"' + 
-                        '    allowfullscreen="false"' + 
-                        '    id="' + playerID + '">' + 
+                        '    allowfullscreen="false" ' + embedID +  
                         '  </embed>' + 
                         '</object>' + 
                       '</div>'
