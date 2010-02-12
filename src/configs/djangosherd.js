@@ -251,7 +251,7 @@ function DjangoSherd_AnnotationMicroFormat() {
         if (ann_title)
             rv.metadata['title'] = ann_title.innerHTML;
         var ann_data = evalJSON(data_elt.getAttribute('data-annotation'));
-
+        
         // /TODO: remove these--maybe we can with no problem
         ann_data.start = parseInt(data_elt.getAttribute('data-begin'), 10);// CHOP
         ann_data.end = parseInt(data_elt.getAttribute('data-end'), 10);// CHOP
@@ -272,7 +272,7 @@ function DjangoSherd_NoteForm() {
         update : function(obj) {
             var range1 = '0';
             var range2 = '0';
-            if (obj.start) {// video
+            if (obj.start || obj.end) {// video
                 range1 = obj.start;
                 range2 = obj.end;
             } else if (obj.x) {// image
