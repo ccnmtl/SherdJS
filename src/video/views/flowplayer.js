@@ -70,6 +70,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
 
                             // reset the state so that the seek can be performed and work (theoretically)
                             // note that seek will only work with videos that are being pseudostreamed or really streamed
+                            self.events.signal(self.media, 'duration', { start: self.components.starttime, end: self.components.endtime, duration: self.media.duration() });
+                            
                             self.setState({ start: self.components.starttime, end: self.components.endtime});
                         },
                         onUpdate: function(player) {

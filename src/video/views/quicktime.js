@@ -118,10 +118,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     self.media.pauseAt(endtime);
                 }
-                
-                // clear any saved values if they exist
-                delete self.components.starttime;
-                delete self.components.endtime;
             } else {
                 // store the values away for when the player is ready
                 self.components.starttime = starttime;
@@ -253,7 +249,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                    if (newDuration != self.media._duration) {
                                                        self.media._duration = newDuration;
                                                        self.components.duration.innerHTML = self.secondsToCode(newDuration);
-                                                       self.events.signal(self.media, 'duration', { duration: newDuration });
+                                                       self.events.signal(self.media, 'duration', { start: self.components.starttime, end: self.components.endtime, duration: newDuration });
                                                    }
                                                    
                                                    // Update the tick count

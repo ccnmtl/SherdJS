@@ -16,7 +16,6 @@ function DjangoSherd_ClipStrip() {
 
     this.setState = function(obj) {
         if (typeof obj == 'object') {
-            
             if (obj.start) {
                 self.components.starttime = obj.start
             } else if (!self.components.starttime) {
@@ -25,7 +24,7 @@ function DjangoSherd_ClipStrip() {
             
             if (obj.end) {
                 self.components.endtime = obj.end;
-            } else if (!self.components.endtime && obj.duration > 1) {
+            } else if (obj.duration > 1) {
                 self.components.endtime = obj.duration; 
             }
             

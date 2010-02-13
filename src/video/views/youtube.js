@@ -172,7 +172,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             if (newState == 1) {
                 var duration = self.media.duration();
                 if (duration > 1) {
-                    self.events.signal(self.media, 'duration', { duration: duration });
+                    self.events.signal(self.media, 'duration', { start: self.components.starttime, end: self.components.endtime, duration: duration });
                 }
             } else if (newState == 2 || newState == 0) { // stopped or ended
                 self.events.clearTimers();
@@ -254,10 +254,6 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     self.media.pauseAt(endtime);
                 }
-                
-                // clear any saved values if they exist
-                delete self.components.starttime;
-                delete self.components.endtime;
             } else {
                 // store the values away for when the player is ready
                 self.components.starttime = starttime;
