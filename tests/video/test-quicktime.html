@@ -61,6 +61,10 @@
             var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
             view.html.push(obj_div, {asset: asset});
 
+            // Verify components were created
+            t.ok(view.components.player, 'Player is initialized');
+            t.eq(view.components.autoplay, false, 'Autoplay is false');
+          
             // Verify Push
             t.delay_call(3, /* seconds. up this value if tests start to fail */
                          function() {

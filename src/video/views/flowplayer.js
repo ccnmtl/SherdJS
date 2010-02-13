@@ -188,6 +188,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
     
                 self.components.player = $f(create_obj.playerID);
                 
+                // register for notifications from clipstrip to seek to various times in the video
                 self.events.connect(self.media, 'seek', self.media, 'seek');
             }
         }

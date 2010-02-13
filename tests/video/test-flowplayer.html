@@ -65,6 +65,12 @@
             var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
             view.html.push(obj_div, {asset: asset});
 
+            // Verify components were created && initialize was called
+            t.ok(view.components.player, 'Player is initialized');
+            t.eq(view.components.mediaUrl, 'http://vod01.netdna.com/vod/demo.flowplayer/Extremists.flv', 'Url is correct');
+            t.like(view.components.playerID, /flowplayer-player-[\d]+/, 'Starts with flowplayer-player- then a number [' + view.components.playerID + ']');
+            t.eq(view.components.pseudo, true, 'is pseudostreaming');
+
             t.eq(view.media.timescale(), 1, 'Should always be 1 for Flowplayer');
 
             t.delay_call(1, // seconds. up this value if tests start to fail

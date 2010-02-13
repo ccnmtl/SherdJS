@@ -47,8 +47,15 @@
                       presentation: 'large',
                       youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
             var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-            
+
+            // Do the push
             view.html.push(obj_div, {asset: asset});
+
+            // Verify components were created
+            t.ok(view.components.player, 'Player is initialized');
+            t.eq(view.components.autoplay, 0, 'Autoplay is false');
+            t.eq(view.components.mediaUrl, 'http://www.youtube.com/v/uOSuhxFo76o', 'Url is correct');
+            t.like(view.components.playerID, /youtube-player-[\d]+/, 'Starts with youtube-player- then a number [' + view.components.playerID + ']');
 
             // Verify Push
             t.delay_call(5, /* seconds. up this value if tests start to fail */

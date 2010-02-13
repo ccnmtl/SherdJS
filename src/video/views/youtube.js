@@ -147,6 +147,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         // AssetView Overrides
         
         this.initialize = function(create_obj) {
+            // register for notifications from clipstrip to seek to various times in the video
             self.events.connect(self.media, 'seek', self.media, 'seek');
         }
         
