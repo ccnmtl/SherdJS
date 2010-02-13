@@ -12,12 +12,8 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js -- base.js
         
-        this.initialize = function(create_obj) {
-            self.events.connect(self.media, 'seek', self.media, 'seek');
-        }
-                
-        // Note: not currently in use
-        this.microformat.type = function() { return 'youtube'; };
+        ////////////////////////////////////////////////////////////////////////
+        // Microformat
         
         // create == asset->{html+information to make it}
         this.microformat.create = function(obj) {
@@ -78,7 +74,27 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                         '</object>' + 
                       '</div>'
             }
-        }
+        };
+        
+        // self.components -- Access to the internal player and any options needed at runtime
+        this.microformat.components = function(html_dom,create_obj) {
+            try {
+                var rv = {};
+                if (html_dom) {
+                    rv.wrapper = html_dom;
+                }
+                if (create_obj) {
+                    //the first works for everyone except safari
+                    //the latter probably works everywhere except IE
+                    rv.player = document[create_obj.playerID] || document.getElementById(create_obj.playerID);
+                    rv.autoplay = create_obj.autoplay;
+                    rv.mediaUrl = create_obj.mediaUrl;
+                    rv.playerID = create_obj.playerID;
+                }
+                return rv;
+            } catch(e) {}
+            return false;
+        };
 
         // Find the objects based on the individual player properties in the DOM
         // NOTE: Not currently in use. 
@@ -108,6 +124,9 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return obj;
         };
         
+        // Note: not currently in use
+        this.microformat.type = function() { return 'youtube'; };
+        
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
             if (obj.youtube && document.getElementById(self.components.playerID) && self.media.ready()) {
@@ -124,25 +143,15 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return false;
         };
         
-        // self.components -- Access to the internal player and any options needed at runtime
-        this.microformat.components = function(html_dom,create_obj) {
-            try {
-                var rv = {};
-                if (html_dom) {
-                    rv.wrapper = html_dom;
-                }
-                if (create_obj) {
-                    //the first works for everyone except safari
-                    //the latter probably works everywhere except IE
-                    rv.player = document[create_obj.playerID] || document.getElementById(create_obj.playerID);
-                    rv.autoplay = create_obj.autoplay;
-                    rv.mediaUrl = create_obj.mediaUrl;
-                    rv.playerID = create_obj.playerID;
-                }
-                return rv;
-            } catch(e) {}
-            return false;
-        };
+        ////////////////////////////////////////////////////////////////////////
+        // AssetView Overrides
+        
+        this.initialize = function(create_obj) {
+            self.events.connect(self.media, 'seek', self.media, 'seek');
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Media & Player Specific
         
         // Global function required for the player
         window.onYouTubePlayerReady = function(playerID) {
@@ -179,38 +188,6 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             }
         };
         
-        this.media.isPlaying = function() {
-            var playing = false;
-            try {
-                playing = self.media.state() == 1;
-            } catch(e) {}
-            return playing;
-        }
-        
-        this.media.state = function() {
-           return self.components.player.getPlayerState();
-        }
-        
-        this.media.ready = function() {
-            return self.media._ready;
-        }
-        
-        this.media.timescale = function() { return 1; }
-       
-        this.media.timestrip = function() {
-            return {w: self.components.player.width,
-                trackX: 42,
-                trackWidth: 384,
-                visible:true
-            };
-        }
-
-        this.media.play = function() {
-            if (self.components.player) {
-                self.components.player.playVideo();
-            }
-        }
-        
         this.media.duration = function() {
             duration = 0;
             if (self.components.player) {
@@ -223,21 +200,30 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 }
             }
             return duration;
+        };
+        
+        
+        this.media.pause = function() {
+            if (self.components.player)
+                self.components.player.pauseVideo();
+        };
+        
+        this.media.play = function() {
+            if (self.components.player)
+                self.components.player.playVideo();
+        };
+        
+        this.media.ready = function() {
+            return self.media._ready;
         }
         
-        this.media.time = function() {
-            time = 0;
-            if (self.components.player) {
-                try {
-                    time = self.components.player.getCurrentTime();
-                    if (time < 0)
-                        time = 0
-                } catch (e) {
-                    // media probably not yet initialized
-                }
-            }
-            return time;
-        }
+        this.media.isPlaying = function() {
+            var playing = false;
+            try {
+                playing = self.media.state() == 1;
+            } catch(e) {}
+            return playing;
+        };
 
         this.media.seek = function(starttime, endtime) {
             if (self.media.ready()) {
@@ -259,23 +245,36 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 self.components.starttime = starttime;
                 self.components.endtime = endtime;
             }
+        };
+        
+        this.media.time = function() {
+            time = 0;
+            if (self.components.player) {
+                try {
+                    time = self.components.player.getCurrentTime();
+                    if (time < 0)
+                        time = 0
+                } catch (e) {
+                    // media probably not yet initialized
+                }
+            }
+            return time;
         }
         
-        this.media.pause = function() {
-            if (self.components.player) {
-                self.components.player.pauseVideo();
-            }
+        this.media.timestrip = function() {
+            return {w: self.components.player.width,
+                trackX: 42,
+                trackWidth: 384,
+                visible:true
+            };
         }
 
-        this.media.pauseAt = function(endtime) {
-            if (endtime) {
-                self.events.queue('yt pause',[
-                                          {test: function() { return self.media.time() >= endtime}, poll:500},
-                                          {call: function() { self.media.pause(); }}
-                                          ]);
-            }
-        }
-        
+        // Used by tests. Might be nice to refactor state out so that
+        // there's a consistent interpretation across controls
+        this.media.state = function() {
+            return self.components.player.getPlayerState();
+         }
+
         this.media.url = function() {
             return self.components.player.getVideoUrl();
         }

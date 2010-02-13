@@ -48,12 +48,12 @@
             t.ok(view, "Verify view instantiated");
 
             obj = { flv_pseudo: 'flv_pseudo_url' }
-            t.eq(view.utilities.getUrl(obj), 'flv_pseudo_url', 'Obtained the correct url');
-            t.eq(view.utilities.isPseudostreaming(obj), true, 'Pseudostreaming');
+            t.eq(view.microformat._getUrl(obj), 'flv_pseudo_url', 'Obtained the correct url');
+            t.eq(view.microformat._isPseudostreaming(obj), true, 'Pseudostreaming');
 
             obj = { flv: 'flv' }
-            t.eq(view.utilities.getUrl(obj), 'flv', 'Obtained the correct url');
-            t.eq(view.utilities.isPseudostreaming(obj), false, 'Not Pseudostreaming');
+            t.eq(view.microformat._getUrl(obj), 'flv', 'Obtained the correct url');
+            t.eq(view.microformat._isPseudostreaming(obj), false, 'Not Pseudostreaming');
         }
 
         function testMediaInterface(t) {

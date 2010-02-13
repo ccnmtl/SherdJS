@@ -104,7 +104,7 @@
                          function() {
                              // Check PauseAt
                              t.eq(view.media.state(), 2, 'Video is paused');
-                             t.ok(view.media.time() >= 5 && view.media.time() <= 6);
+                             t.ok(view.media.time() >= 5 && view.media.time() <= 6.5, 'Time is between 5/6 seconds. Actual time: [' + view.media.time() + ']');
 
                              // Start Playing Again
                              view.media.play();

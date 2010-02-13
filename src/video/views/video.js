@@ -71,80 +71,75 @@ if (!Sherd.Video.Base) {
         Sherd.Video.Helpers.apply(this,arguments);
         Sherd.Base.AssetView.apply(this,arguments);
 
-        this.options = {
-            src : null,
-            start : false,
-            end : false,
-            eventdispatch : {
-                // events represent the completion of their name.
-                // e.g. 'seek' means when a seek is successful
-                'load' : noop,
-                'unload' : noop,
-                'firstplay' : noop,
-                'play' : noop,
-                'tick' : noop,
-                'pause' : noop,
-                'seek' : noop,
-                'complete' : noop,
-                'unsupported' : noop
-            // ,
+        this.microformat = {
+            create : function(obj) { // Return the .html embed block for the embedded player 
+                return ''
             }
-        }
+            ,
+            components: unimplemented // Save the player and other necessary state for the control to be updated
+            ,
+            find : function(html_dom) { // Find embedded players. Note: Not currently in use.
+                return [ {
+                    html : html_dom
+                } ]
+            }
+            ,
+            read : function(found_obj) { // Return serialized description of embedded player. Note: Not currently in use.
+                var obj;
+                return obj;
+            }
+            ,
+            supports: function() { return []; }  // Idea: Return list of types supported. Note: Not currently in use or implemented by anyone
+            , 
+            type: function() { var type; return type; } // Return current type of media playing. Note: Not currently in use;
+            ,
+            update: function(obj,html_dom) {} // Replace the video identifier within the .html embed block 
+        };
+        
+        // AssetView overrides to initialize and deinitialize timers/ui/etc.
+        this.initialize = function() {}
         
         this.deinitialize = function() {
             self.events.clearTimers();
         }
 
+        // Player specific controls
         this.media = {
-            load : unimplemented// (obj,start_from_scratch)
+            duration : unimplemented// get duration in seconds
             ,
-            unload : unimplemented,
-            seek : unimplemented// (seconds,endtime)
+            pause : unimplemented
             ,
-            pause : unimplemented,
-            pauseAt : unimplemented// (seconds)
+            pauseAt : function(endtime) {  
+                if (endtime) {
+                    self.events.queue(self.microformat.type() + ' pause',[
+                                              {test: function() { return self.media.time() >= endtime}, poll:500},
+                                              {call: function() { self.media.pause(); }}
+                                              ]);
+                }
+            }
             ,
             play : unimplemented
-
-            // get information
+            ,
+            isPlaying : function() { 
+                return false; // Used by ClipForm to determine whether the media is playing. 
+                // Maybe should be one level up so that ClipForm doesn't know about media 
+            }
+            ,
+            seek: unimplemented // (starttime, endtime)
+            ,
+            ready: unimplemented // whether the player is ready to go. mostly used internally.
             ,
             time : unimplemented // get current time in seconds
             ,
-            timescale : unimplemented // get the movie's timescale. only QT is not 1
+            timescale : function() { return 1; } // get the movie's timescale. only QT is not 1 (so far)
             ,
             timeCode: function() { // get current time as a time code string
                 return self.secondsToCode(self.media.time());
             }
-
             ,
-            duration : unimplemented// get duration in seconds
-            ,
-            timeStrip : unimplemented,
-            isStreaming : function() {
-                return false;
-            }// true if we're sure it's streaming
+            timeStrip : unimplemented
         }
 
-        this.microformat = {
-            create : function(obj) { // Return the .html embed block for the embedded player 
-                return ''
-            },
-            find : function(html_dom) { // Find embedded players. Note: Not currently in use.
-                return [ {
-                    html : html_dom
-                } ]
-            },
-            read : function(found_obj) { // Return serialized description of embedded player. Note: Not currently in use.
-                var obj;
-                return obj;
-            },
-            remove: function() {}, // Destruction step. Note: Not Currently In Use
-            supports: function() { return []; },  // Return list of types supported. Note: Not currently in use
-            type: function() { var type; return type; }, // Return current type of media playing. Note: Not currently in use;
-            update: function(obj,html_dom) {} // Replace the video identifier within the .html embed block 
-        };
-
-        // /BEGIN VITAL assumption -->relegate to quicktime.js when smarter
         this.play = function() {
             this.media.play();
         }
@@ -172,34 +167,6 @@ if (!Sherd.Video.Base) {
         if (!this.events) {
             this.events = {};
         }
-        
-        /** CURRENTLY UNUSED **
-        this.events.fired = {
-            'load' : false,
-            'unload' : false,
-            'firstplay' : false,
-            'pause' : false,
-            'firstcomplete' : false,
-            'unsupported' : false
-        }
-        this.events._waiters = {};
-        this.events.wait = function(event, waiter) {
-            var w = this.events._waiters;
-            if (!w[event])
-                w[event] = [];
-            w[event].push(waiter);
-        }
-        this.events.fire = function(event) {
-            this.events.fired[event] = true;
-            var w = this.event._waiters;
-            if (w[event]) {
-                var m;
-                while (m = w[event].shift()) {
-                    m.trigger(event);
-                }
-            }
-        }
-        *********************/
         
         this.events._timers = {};
         this.events.registerTimer = function(name, timeoutID) {
