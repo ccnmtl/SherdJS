@@ -112,6 +112,8 @@
                               t.ok(view.media.duration() == 0.06666666666666667 ||
                                       view.media.duration() == 3579139.4116666666, 'No duration yet');
 
+                              t.eq(view.media.timescale(), 600, 'Valid timescale');
+                              
                               // Test Play
                               view.media.play();
                          },

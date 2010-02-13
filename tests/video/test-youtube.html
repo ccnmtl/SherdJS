@@ -78,11 +78,14 @@
 
             var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
             view.html.push(obj_div, {asset: asset});
+
+            t.eq(view.media.timescale(), 1, 'Should always be 1 for YouTube');
             
             t.delay_call(5, /* seconds. up this value if tests start to fail */
                          function() {
                               // Check State  
                               t.eq(view.media.state(), 5, 'Player is ready');
+                              t.ok(view.media.ready(), 'Player is ready (api)');
                               t.eq(view.media.time(), 0, 'No time yet');
                               t.eq(view.media.duration(), 0, 'No duration yet');
 
