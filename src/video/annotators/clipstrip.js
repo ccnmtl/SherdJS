@@ -10,7 +10,10 @@ function DjangoSherd_ClipStrip() {
 
     this.getState = function() {
         var obj = {};
-        // not sure what's needed here
+        
+        obj.starttime = self.components.starttime;
+        obj.endtime = self.components.endtime;
+        obj.timestrip = self.components.timestrip;
         return obj;
     }
 
@@ -29,8 +32,8 @@ function DjangoSherd_ClipStrip() {
             }
             
             if (obj.duration > 1) {
-                left = self.utilities.timeToPixels(self.components.starttime, obj.duration, self.components.timestrip.trackWidth);
-                right = self.utilities.timeToPixels(self.components.endtime, obj.duration, self.components.timestrip.trackWidth);
+                left = self.microformat._timeToPixels(self.components.starttime, obj.duration, self.components.timestrip.trackWidth);
+                right = self.microformat._timeToPixels(self.components.endtime, obj.duration, self.components.timestrip.trackWidth);
                 
                 self.components.clipStartMarker.style.left = (left - CLIP_MARKER_WIDTH) + 'px';
                 self.components.clipEndMarker.style.left = right + 'px';
@@ -88,14 +91,12 @@ function DjangoSherd_ClipStrip() {
         return false;
     }
     
-    this.utilities = {
-       timeToPixels: function(seconds, duration, width) {
-           if (duration > 0) {
-               var ratio = width / duration;
-               return ratio * seconds;
-           } else {
-               return 0;
-           }
+    this.microformat._timeToPixels = function(seconds, duration, width) {
+       if (duration > 0) {
+           var ratio = width / duration;
+           return ratio * seconds;
+       } else {
+           return 0;
        }
     }
 }
