@@ -63,6 +63,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.playerID = create_obj.playerID;
                     rv.mediaUrl = create_obj.mediaUrl;
                     rv.pseudo = create_obj.pseudo;
+                    rv.presentation = create_obj.object.presentation;
                 }
                 return rv;
             } catch(e) {}
@@ -267,11 +268,19 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         }
         
         this.media.timestrip = function() {
-            return {w: self.components.width,
+            if (self.components.presentation == 'small') {
+                return {w: self.components.width,
                     trackX: 30,
-                    trackWidth: 395,
+                    trackWidth: 85,
                     visible:true
-            };
+                }
+            } else {
+                return {w: self.components.width,
+                        trackX: 30,
+                        trackWidth: 395,
+                        visible:true
+                }
+            }
         }
         
         /**

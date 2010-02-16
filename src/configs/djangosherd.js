@@ -94,7 +94,7 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
     ds.thumbs = [];
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     // GenericAssetView is a wrapper in ../assets.js
-    ds.assetview = new Sherd.GenericAssetView( {/* no clipform */});
+    ds.assetview = new Sherd.GenericAssetView( { clipform: false, clipstrip: true });
 
     if (!no_open_from_hash) {
         var annotation_to_open = String(document.location.hash).match(
@@ -335,9 +335,20 @@ function openCitation(url, no_autoplay) {
         djangosherd.assetview.html.push(obj_div, {
             asset : ann_obj.asset
         });
+        
+        // load clipstrip into html
+        if (djangosherd.assetview.clipstrip) {
+            djangosherd.assetview.clipstrip.html.push('clipstrip-display', {
+                asset : {}
+            });
+        }
 
         var ann_data = ann_obj.annotations[0];// ***
         djangosherd.assetview.setState(ann_data);
+        
+        if (djangosherd.assetview.clipstrip) {
+            djangosherd.assetview.clipstrip.setState(ann_data);
+        }
     } else {
         djangosherd.assetview.html.remove();
     }

@@ -90,6 +90,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     rv.autoplay = create_obj.autoplay;
                     rv.mediaUrl = create_obj.mediaUrl;
                     rv.playerID = create_obj.playerID;
+                    rv.presentation = create_obj.object.presentation;
                 }
                 return rv;
             } catch(e) {}
@@ -263,11 +264,19 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
         
         this.media.timestrip = function() {
-            return {w: self.components.player.width,
-                trackX: 42,
-                trackWidth: 384,
-                visible:true
-            };
+            if (self.components.presentation == 'small') {
+                return {w: self.components.player.width,
+                    trackX: 40,
+                    trackWidth: 166,
+                    visible:true
+                }
+            } else {
+                return {w: self.components.player.width,
+                    trackX: 42,
+                    trackWidth: 384,
+                    visible:true
+                }
+            }
         }
 
         // Used by tests. Might be nice to refactor state out so that
