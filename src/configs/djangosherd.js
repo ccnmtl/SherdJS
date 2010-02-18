@@ -93,6 +93,7 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
     var ds = djangosherd;
     ds.thumbs = [];
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
+    ds.storage = new DjangoSherd_Storage();
     // GenericAssetView is a wrapper in ../assets.js
     ds.assetview = new Sherd.GenericAssetView( { clipform: false, clipstrip: true });
 
@@ -138,6 +139,30 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
                         });
                 });
     });
+}
+
+
+function DjangoSherd_Storage() {
+    var current_citation = false;
+    this.get = function(subject, callback) {
+        var id = subject.id;
+        var ann_obj = null;
+        if (id) {
+            if (current_citation)
+                removeElementClass(current_citation, 'active-annotation');
+            current_citation = getFirstElementByTagAndClassName('div',
+                                                                'annotation' + id);
+            addElementClass(current_citation, 'active-annotation');
+            showElement('videoclipbox');
+
+            ann_obj = djangosherd.annotationMicroformat.read( {
+                html : current_citation
+            });// /***faux layer
+        }
+        if (callback) {
+            callback(ann_obj);
+        }
+    }
 }
 
 // Object: DjangSherd_AssetMicroFormat
@@ -301,7 +326,6 @@ function currentUID() {
     // just returning true, will show the markers at 0, but hey, so what
 }
 
-var current_citation = false;
 function openCitation(url, no_autoplay) {
     // /# where is my destination?
     // /# is there an annotation/asset already there?
@@ -316,43 +340,38 @@ function openCitation(url, no_autoplay) {
     // /# e.g. location.hash
     var id = url.match(/(\d+)\/$/).pop();
 
-    if (current_citation)
-        removeElementClass(current_citation, 'active-annotation');
-    current_citation = getFirstElementByTagAndClassName('div',
-            'annotation' + id);
-    addElementClass(current_citation, 'active-annotation');
-    showElement('videoclipbox');
-
-    var ann_obj = djangosherd.annotationMicroformat.read( {
-        html : current_citation
-    });// /***faux layer
-    var obj_div = getFirstElementByTagAndClassName('div', 'asset-display' /* TODO:parent! */);
-
-    if (ann_obj.asset) {
-        ann_obj.asset.autoplay = (no_autoplay) ? 'false' : 'true'; // ***
-        ann_obj.asset.presentation = 'small';
-
-        djangosherd.assetview.html.push(obj_div, {
-            asset : ann_obj.asset
-        });
-        
-        // load clipstrip into html
-        if (djangosherd.assetview.clipstrip) {
-            djangosherd.assetview.clipstrip.html.push('clipstrip-display', {
-                asset : {}
+    djangosherd.storage.get({id:id}, function(ann_obj) {
+        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display' /* TODO:parent! */);
+        if (ann_obj.asset) {
+            ann_obj.asset.autoplay = (no_autoplay) ? 'false' : 'true'; // ***
+            ann_obj.asset.presentation = 'small';
+            
+            djangosherd.assetview.html.push(obj_div, {
+                asset : ann_obj.asset
             });
+        
+            // load clipstrip into html
+            if (djangosherd.assetview.clipstrip) {
+                djangosherd.assetview.clipstrip.html.push('clipstrip-display', {
+                    asset : {}
+                });
+            }
+
+            var ann_data = ann_obj.annotations[0];// ***
+            djangosherd.assetview.setState(ann_data);
+        
+            if (djangosherd.assetview.clipstrip) {
+                djangosherd.assetview.clipstrip.setState(ann_data);
+            }
+        } else {
+            djangosherd.assetview.html.remove();
         }
 
-        var ann_data = ann_obj.annotations[0];// ***
-        djangosherd.assetview.setState(ann_data);
-        
-        if (djangosherd.assetview.clipstrip) {
-            djangosherd.assetview.clipstrip.setState(ann_data);
+        if (!/WebKit/.test(navigator.userAgent)) {
+            //WebKit doesn't replace history correctly
+            document.location.replace('#annotation=annotation' + id);
         }
-    } else {
-        djangosherd.assetview.html.remove();
-    }
-    document.location = '#annotation=annotation' + id;
+    });
 }
 
 /**
