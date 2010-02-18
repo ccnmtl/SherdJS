@@ -143,26 +143,69 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 
 
 function DjangoSherd_Storage() {
-    var current_citation = false;
+    var _current_citation = false;
+    var _annotations = {};
+    var _projects = {};
+    this.initialize = function() {
+        var A = MochiKit.Async;
+        var def = MochiKit.Async.loadJSONDoc('');
+        def.addCallback(this.json_update)
+    }
+    
     this.get = function(subject, callback) {
         var id = subject.id;
         var ann_obj = null;
         if (id) {
-            if (current_citation)
-                removeElementClass(current_citation, 'active-annotation');
-            current_citation = getFirstElementByTagAndClassName('div',
+            if (_current_citation)
+                removeElementClass(_current_citation, 'active-annotation');
+            _current_citation = getFirstElementByTagAndClassName('div',
                                                                 'annotation' + id);
-            addElementClass(current_citation, 'active-annotation');
-            showElement('videoclipbox');
+            if (_current_citation != null) {
+                addElementClass(_current_citation, 'active-annotation');
 
-            ann_obj = djangosherd.annotationMicroformat.read( {
-                html : current_citation
-            });// /***faux layer
+                ann_obj = djangosherd.annotationMicroformat.read( {
+                    html : _current_citation
+                });// /***faux layer
+            } else if (id in _annotations) {
+                ann_obj = _annotations[id];
+            }
+            showElement('videoclipbox');
         }
         if (callback) {
             callback(ann_obj);
         }
+    };
+    this.json_update = function(json) {
+        if (json.project) {
+            _projects[json.project.id] = json.project;
+        }
+        for (asset_key in json.assets) {
+            var a = json.assets[asset_key];
+            for (j in a.sources) {
+                a[j] = a.sources[j].url;
+                
+                if (a.sources[j].width) {
+                    if (a.sources[j].primary) {
+                        a.width = a.sources[j].width;
+                        a.height = a.sources[j].height;
+                    }
+                    a[a.sources[j].label+'-metadata'] = {
+                        'width':a.sources[j].width,
+                        'height':a.sources[j].height
+                    };
+                }
+            }
+        }
+        var i = json.annotations.length-1;
+        while (i--) {
+            var ann = json.annotations[i];
+            ann.asset = json.assets[ann.asset_key];
+            ann.annotations = [ann.annotation];
+            _annotations[ann.id] = ann;
+            //console.log(ann);
+        }
     }
+    this.initialize();
 }
 
 // Object: DjangSherd_AssetMicroFormat
