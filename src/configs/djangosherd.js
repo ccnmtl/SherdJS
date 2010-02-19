@@ -143,6 +143,7 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
 
 
 function DjangoSherd_Storage() {
+    var self = this;
     var _current_citation = false;
     var _annotations = {};
     var _projects = {};
@@ -156,9 +157,11 @@ function DjangoSherd_Storage() {
     this.get = function(subject, callback) {
         var id = subject.id;
         var ann_obj = null;
+        var delay = false;
         if (id) {
-            if (_current_citation)
+            if (_current_citation) {
                 removeElementClass(_current_citation, 'active-annotation');
+            }
             _current_citation = getFirstElementByTagAndClassName('div',
                                                                 'annotation' + id);
             if (_current_citation != null) {
@@ -169,10 +172,18 @@ function DjangoSherd_Storage() {
                 });// /***faux layer
             } else if (id in _annotations) {
                 ann_obj = _annotations[id];
+            } else {
+                var def = MochiKit.Async.loadJSONDoc('/annotations/json/'+id+'/');
+                def.addCallback(function(json) {
+                    if (self.json_update(json)) {
+                        callback(_annotations[id]);
+                    }
+                });
+                delay = true;
             }
             showElement('videoclipbox');
         }
-        if (callback) {
+        if (!delay && callback) {
             callback(ann_obj);
         }
     };
@@ -204,6 +215,7 @@ function DjangoSherd_Storage() {
             _annotations[ann.id] = ann;
             //console.log(ann);
         }
+        return true;//success?
     }
     this.initialize();
 }
