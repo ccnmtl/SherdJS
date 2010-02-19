@@ -113,7 +113,9 @@ if (!Sherd.Image.OpenLayers) {
 		//x:-135,y:45,
 		'zoom':2
 	    };
-	    if (typeof obj=='object') {
+            if (obj==null) obj = {};
+
+	    if (typeof obj=='object' && obj!=null) {
 		if (obj.feature) {
 		    self.currentfeature = obj.feature;
 		} else if (obj.geometry) {//obj is a json feature

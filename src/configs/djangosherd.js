@@ -147,8 +147,9 @@ function DjangoSherd_Storage() {
     var _annotations = {};
     var _projects = {};
     this.initialize = function() {
-        var A = MochiKit.Async;
-        var def = MochiKit.Async.loadJSONDoc('');
+        ///'json' is used to avoid cache-poisoning the html version of the page
+        ///in GoogleChrome when we do Accept:application/json (so back button works)
+        var def = MochiKit.Async.loadJSONDoc('json');
         def.addCallback(this.json_update)
     }
     
@@ -196,8 +197,7 @@ function DjangoSherd_Storage() {
                 }
             }
         }
-        var i = json.annotations.length-1;
-        while (i--) {
+        for (var i=0;i<json.annotations.length;i++) {
             var ann = json.annotations[i];
             ann.asset = json.assets[ann.asset_key];
             ann.annotations = [ann.annotation];
