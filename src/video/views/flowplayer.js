@@ -2,8 +2,13 @@
  * Using Flowplayer to support the flash video and mp4 formats
  * Support for the Flowplayer js-enabled player.  documentation at:
  * http://flowplayer.org/doc    umentation/api/index.html
+ * 
+ * Example Files:
+ * file: http://vod01.netdna.com/vod/demo.flowplayer/Extremists.flv
+ * 
+ * file: http://content.bitsontherun.com/videos/LJSVMnCF-327.mp4
+ * queryString: ?starttime=${start}
  */
-
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
@@ -22,8 +27,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var playerID = Sherd.Base.newID('flowplayer-player-');
             var url = '';
             var pseudo = 0;
-            self.media._ready = false;
-                   
+            
             url = self.microformat._getUrl(obj);
             pseudo = self.microformat._isPseudostreaming(obj);
             
@@ -40,10 +44,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 playerID: playerID, // Used by .initialize post initialization
                 pseudo: pseudo, // Used by .initialize post initialization
                 mediaUrl: url,
-                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper">' + 
-                      '   <a href="' + url + '" style="display:block; width:' + obj.options.width + 'px;' + 
+                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper">' +
+                      '   <div style="display:block; width:' + obj.options.width + 'px;' + 
                           'height:' + obj.options.height + 'px;" id="' + playerID + '">' +  
-                      '   </a>' + 
+                      '   </div>' + 
                       '</div>'
             }
             return create_obj;
@@ -64,6 +68,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.mediaUrl = create_obj.mediaUrl;
                     rv.pseudo = create_obj.pseudo;
                     rv.presentation = create_obj.object.presentation;
+                    rv.autoplay = create_obj.object.autoplay ? true : false;
                 }
                 return rv;
             } catch(e) {}
@@ -103,26 +108,35 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            /** This is SO NOT WORKING. Flowplayer is not happy about getting a new url 
-            newUrl = self.utilities.getUrl(obj);
-            if (newUrl && document.getElementById(self.components.playerID) && self.media.ready()) {
-                try {
-                    self.components.player.pause();
-                    pseudo = self.utilities.isPseudostreaming(obj);
-                    if (pseudo != self.components.pseudo) {
-                        //@todo - remove or add the pseudostreaming plugins from the fp options
+            rc = false;
+            newUrl = self.microformat._getUrl(obj);
+            if (newUrl && document.getElementById(self.components.playerID) && self.media.state() > 0) {
+                playlist = self.components.player.getPlaylist();
+                /**
+                 * If a new url is requested --
+                 * The clip switches properly. But, it will not seek properly
+                 * Ditching this until I have some more time to screw around with it
+                    if (playlist[0].url != newUrl) {
+                        if (self.media.state() == 3)
+                            self.components.player.pause();
+    
+                        log('setClip to newUrl: ' + newUrl + ' ' + self.components.autoplay);
+                        var clip = { 
+                                    url: newUrl, 
+                                    autoPlay: self.components.autoplay, 
+                                    autoBuffering: true
+                                };
+                        self.components.player.setClip(clip);
+                        
+                        self.microformat._queueReadyToSeekEvent();
                     }
-                    if (newUrl != self.components.mediaUrl) {
-                        self.media._ready = false;
-                        log('newUrl: ' + newUrl);
-                        self..getClip(0).update({url: newUrl});
-                        log('~newUrl');
-                    }
-                    log('UPDATE UPDATE UPDATE');
-                    return true;
-                } catch(e) {}
-            } **/
-            return false;
+                **/
+
+                // If the url is the same as the previous, just seek to the right spot.
+                // This works just fine.
+                rc = true;
+            }
+            return rc;
         };
         
         this.microformat._getUrl = function(obj) {
@@ -147,6 +161,21 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 return false;
         }
         
+        this.microformat._queueReadyToSeekEvent = function() {
+            self.events.queue('flowplayer ready to seek',[
+                 {test: function() {
+                     // Is the player ready yet?
+                     return self.media.state() > 2;
+                 }, poll:500},
+                 {call: function() {
+                     if (self.components.starttime || self.components.endtime) {
+                         self.events.signal(self.media, 'duration', { start: self.components.starttime, end: self.components.endtime, duration: self.media.duration() });
+                     }
+                     self.setState({ start: self.components.starttime, end: self.components.endtime});
+                     }
+                 }]);
+        }
+        
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
         // Post-create step. Overriding here to do a component create using the Flowplayer API
@@ -155,31 +184,24 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             if (create_obj) {
                 options = {
                         clip: {
+                            // these are the common clip properties & event handlers
+                            // they (theoretically) apply to all the clips
                             autoPlay: create_obj.object.autoplay ? true : false,
-                            autoBuffering: true
+                            autoBuffering: true,
                         },
-                        onLoad: function(player) { 
-                            self.media._ready = true;
-                        },
-                        onSeek: function(player, targetTime) {
-                            // log('onSeek: ' + player.bufferLength + " " + targetTime);
-                        },
-                        onStart: function(player) {
-                            // Flowplayer Bug: this is called incorrectly when autoBuffering is set to true. 
-                            // They are theoretically working on it. Leaving this comment for future developers.
-
-                            // reset the state so that the seek can be performed and work (theoretically)
-                            // note that seek will only work with videos that are being pseudostreamed or really streamed
-                            self.events.signal(self.media, 'duration', { start: self.components.starttime, end: self.components.endtime, duration: self.media.duration() });
-                            
-                            self.setState({ start: self.components.starttime, end: self.components.endtime});
-                        },
-                        onUpdate: function(player) {
-                        }
+                        playlist: [ create_obj.mediaUrl ], 
                    };
                 
                 if (create_obj.pseudo) {
-                    options.plugins = { pseudo: { url: 'flowplayer.pseudostreaming-3.1.3.swf' } } 
+                    options.plugins = { 
+                        pseudo: { 
+                            url: 'http://releases.flowplayer.org/swf/flowplayer.pseudostreaming-3.1.3.swf'
+                        } 
+                    } 
+                    
+                    if (create_obj.object.querystring)
+                        options.plugins.pseudo.queryString = create_obj.object.querystring;
+                    
                     options.clip.provider = "pseudo";
                 }
                 
@@ -189,10 +211,14 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
     
                 self.components.player = $f(create_obj.playerID);
                 
+                self.microformat._queueReadyToSeekEvent();
+                
                 // register for notifications from clipstrip to seek to various times in the video
                 self.events.connect(self.media, 'seek', self.media, 'seek');
             }
         }
+        
+
         
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
@@ -222,8 +248,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         // self.components.player.onCuepoint(endtime * 1000, function(clip, cuepoint) { self.media.pause(); }); 
         
         this.media.play = function() {
-            if (self.components.player)
+            if (self.components.player) {
                 self.components.player.play();
+            }
         }
 
         this.media.isPlaying = function() {
@@ -235,11 +262,17 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         }
         
         this.media.ready = function() {
-            return self.media._ready;
+            return self.media.state() > 2;
         }
         
         this.media.seek = function(starttime, endtime) {
-            if (self.media.ready()) {
+            
+            // this might need to be a timer to determine "when" the media player is ready
+            // it's working differently from initial load to the update method
+            if (!self.media.ready()) {
+                self.components.starttime = starttime;
+                self.components.endtime = endtime;   
+            } else {
                 if (starttime != undefined) {
                     self.components.player.seek(starttime);
                 }
@@ -251,9 +284,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 // clear any saved values if they exist
                 delete self.components.starttime;
                 delete self.components.endtime;
-            } else {
-                self.components.starttime = starttime;
-                self.components.endtime = endtime;
+                
+                if (self.components.autoplay && self.media.state() != 3) {
+                    setTimeout(function() {
+                        self.media.play();
+                    },100);
+                }
             }
         }
         
