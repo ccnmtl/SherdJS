@@ -215,7 +215,7 @@ MondrianBookmarklet = {
                           "sources": {
                               "title":imgs[i].title || imgs[i].src,
                               "image":imgs[i].src,
-                              "image-metadata":"w"+imgs[i].width+"h"+imgs[i].height,
+                              "image-metadata":"w"+imgs[i].width+"h"+imgs[i].height
                           }
                       });
                   }
@@ -395,6 +395,9 @@ MondrianBookmarklet = {
 
 if (typeof mondrian_url == "string" && typeof mondrian_action == "string") {
     MondrianBookmarklet.runners[mondrian_action](mondrian_url,true);
+} else if (typeof SherdBookmarkletOptions == "object") {
+    var o = SherdBookmarkletOptions;
+    MondrianBookmarklet.runners[o.action](o.mondrian_url,true);
 } else {
     var scripts = document.getElementsByTagName("script");
     var me_embedded = scripts[scripts.length-1];
