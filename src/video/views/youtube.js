@@ -43,12 +43,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 youtube: obj.youtube, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperId + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '">' + 
-                        '  <param name="movie" value="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
+                        '  <param name="movie" value="' + obj.youtube + '&rel=0&enablejsapi=1&playerapiid=' + playerId + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"></param>' + 
                         '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
-                        '  <embed src="' + obj.youtube + '&enablejsapi=1&playerapiid=' + playerId + '"' + 
+                        '  <embed src="' + obj.youtube + '&rel=0&enablejsapi=1&playerapiid=' + playerId + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
                         '    autoplay="' + autoplay + '"' + 
