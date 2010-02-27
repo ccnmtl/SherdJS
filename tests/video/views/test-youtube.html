@@ -39,19 +39,9 @@
         }
 
         function testPushAndUpdate(t) {
-            view = new Sherd.Video.YouTube();
-            t.ok(view, "Verify view instantiated");
-            
-            asset = { type: 'youtube',
-                      presentation: 'large',
-                      youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
-            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-
-            // Do the push
-            view.html.push(obj_div, {asset: asset});
+            view = _initializeView(t);
 
             // Verify components were created
-            t.ok(view.components.player, 'Player is initialized');
             t.eq(view.components.autoplay, 0, 'Autoplay is false');
             t.eq(view.components.mediaUrl, 'http://www.youtube.com/v/uOSuhxFo76o', 'Url is correct');
             t.like(view.components.playerID, /youtube-player-[\d]+/, 'Starts with youtube-player- then a number [' + view.components.playerID + ']');
@@ -64,6 +54,7 @@
                               t.eq(view.media.url(), 'http://www.youtube.com/watch?v=uOSuhxFo76o&feature=player_embedded', 'Correct Url is loaded');
 
                               // Check Update
+                              var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
                               new_asset = { type: 'youtube',
                                       presentation: 'large',
                                       youtube: 'http://www.youtube.com/v/QVC0_CRW9tA?enablejsapi=1&amp;fs=1'};
@@ -77,13 +68,7 @@
         }
 
         function testMediaInterface(t) {
-            view = new Sherd.Video.YouTube();
-            asset = { type: 'youtube',
-                      presentation: 'large',
-                      youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
-
-            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-            view.html.push(obj_div, {asset: asset});
+            view = _initializeView(t);
 
             t.eq(view.media.timescale(), 1, 'Should always be 1 for YouTube');
             
@@ -153,14 +138,8 @@
         }
 
         function testSetState(t) {
-            view = new Sherd.Video.YouTube();
-            asset = { type: 'youtube',
-                      presentation: 'large',
-                      youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
-
-            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-            view.html.push(obj_div, {asset: asset});
-         
+            view = _initializeView(t);
+                     
             // Set state on the player and verify video is cued to seek point and end time is set (if available)
             view.setState({ start: 11, end: 25 });
 
@@ -186,6 +165,40 @@
                         t.eq(view.media.state(), 2, 'Video is paused');
                         t.ok(view.media.time() > 25, 'Video stopped at the requested time');
                     });
+        }
+
+        function testDurationSignal(t) {
+            var duration = 0;
+            var view = _initializeView(t);
+
+            view.events.connect(view.media, 'duration', function(obj) { duration = obj.duration; });
+
+            t.delay_call(3, 
+                function() {
+                     t.eq(duration, 0, 'no duration yet');
+                     
+                     view.media.play();
+                },
+                5,
+                function() {
+                    t.ok(duration > 375 && duration <= 376, 'Duration is now accurate');
+                    
+                    view.media.pause();
+                });
+        }
+
+        function _initializeView(t) {
+            view = new Sherd.Video.YouTube();
+            asset = { type: 'youtube',
+                      presentation: 'large',
+                      youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
+
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            view.html.push(obj_div, {asset: asset});
+
+            t.ok(view.components.player, 'Player is initialized');
+            
+            return view;
         }
            
   </script>

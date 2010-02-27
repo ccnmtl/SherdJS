@@ -54,16 +54,10 @@
         }
 
         function testMediaInterface(t) {
-            view = new Sherd.Video.Flowplayer();
-            asset = { type: 'flv_pseudo',
-                      presentation: 'large',
-                      flv_pseudo: 'http://vod01.netdna.com/vod/demo.flowplayer/Extremists.flv'};
-
             var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-            view.html.push(obj_div, {asset: asset});
+            var view = _initializeView(t);
 
             // Verify components were created && initialize was called
-            t.ok(view.components.player, 'Player is initialized');
             t.eq(view.components.mediaUrl, 'http://vod01.netdna.com/vod/demo.flowplayer/Extremists.flv', 'Url is correct');
             t.like(view.components.playerID, /flowplayer-player-[\d]+/, 'Starts with flowplayer-player- then a number [' + view.components.playerID + ']');
             t.eq(view.components.pseudo, true, 'is pseudostreaming');
@@ -141,13 +135,7 @@
         }
 
         function testSetState(t) {
-            view = new Sherd.Video.Flowplayer();
-            asset = { type: 'flv_pseudo',
-                      presentation: 'large',
-                      flv_pseudo: 'http://vod01.netdna.com/vod/demo.flowplayer/Extremists.flv'};
-
-            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-            view.html.push(obj_div, {asset: asset});
+            view = _initializeView(t);
          
             // Set state on the player and verify video is cued to seek point and end time is set (if available)
             view.setState({ start: 11, end: 25 });
@@ -171,6 +159,39 @@
                         t.eq(view.media.state(), 4, 'Video is paused');
                     });
         }
+
+        function testDurationSignal(t) {
+            var duration = 0;
+            var view = _initializeView(t);
+
+            view.events.connect(view.media, 'duration', function(obj) { duration = obj.duration; });
+
+            t.delay_call(3, 
+                function() {
+                     view.media.play();
+                },
+                5,
+                function() {
+                    t.ok(duration > 240 && duration <= 241, 'Duration is now accurate');
+                    
+                    view.media.pause();
+                });
+        }
+
+        function _initializeView(t) {
+            view = new Sherd.Video.Flowplayer();
+            asset = { type: 'flv_pseudo',
+                      presentation: 'large',
+                      flv_pseudo: 'http://vod01.netdna.com/vod/demo.flowplayer/Extremists.flv'};
+
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            view.html.push(obj_div, {asset: asset});
+
+            t.ok(view.components.player, 'Player is initialized');
+            
+            return view;
+        }
+        
            
   </script>
 </head>

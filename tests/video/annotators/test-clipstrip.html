@@ -118,6 +118,26 @@
         _testRangeWidth(t, 52, 53);
     }
 
+    function testSeekSignal(t) {
+        var seekCalled = false;
+
+        // Some browsers don't support click for a Div element. Adding this to allow mocking up the receiver end of a signal
+        function clickProto(){
+            var evt = this.ownerDocument.createEvent('MouseEvents');
+            evt.initMouseEvent('click', true, true, this.ownerDocument.defaultView, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+            this.dispatchEvent(evt);
+        }
+
+        HTMLDivElement.prototype.click = clickProto;
+        
+        view = _initializeView(t);
+        view.events.connect(view.media, 'seek', function() { seekCalled = true; });
+        
+        var startMarker = document.getElementById("clipStripStart");
+        startMarker.click();
+        t.ok(seekCalled, 'The clipstrip signalled seek properly');
+    }
+
     function _initializeView(t) {
         view = new Sherd.Video.YouTube();
         t.ok(view, "Verify view instantiated");

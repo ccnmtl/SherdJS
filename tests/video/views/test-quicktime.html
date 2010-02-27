@@ -46,20 +46,7 @@
         }
 
         function testPushAndUpdate(t) {
-            view = new Sherd.Video.QuickTime();
-            t.ok(view, "Verify view instantiated");
-            
-            asset = {url: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
-                poster: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large', 
-                quicktime: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
-                type: 'quicktime', 
-                height: 256, 
-                width: 320,
-                autoplay: false,
-                loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' }
-                
-            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-            view.html.push(obj_div, {asset: asset});
+            view = _initializeView(t);
 
             // Verify components were created
             t.ok(view.components.player, 'Player is initialized');
@@ -84,6 +71,7 @@
                                  loadingposter: '/site_media/js/sherdjs/media/images/poster.gif'} 
                               
                               // Check Update
+                              var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
                               view.html.push(obj_div, {asset: new_asset});
                          },
                          3,
@@ -95,18 +83,7 @@
         }
 
         function testMediaInterface(t) {
-            view = new Sherd.Video.QuickTime();
-            asset = {url: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
-                    poster: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large', 
-                    quicktime: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
-                    type: 'quicktime', 
-                    height: 256, 
-                    width: 320,
-                    autoplay: false,
-                    loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' }
-
-            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-            view.html.push(obj_div, {asset: asset});
+            view = _initializeView(t);
             
             t.delay_call(4, /* seconds. up this value if tests start to fail */
                          function() {
@@ -181,19 +158,8 @@
         }
 
         function testSetState(t) {
-            view = new Sherd.Video.QuickTime();
-            asset = {url: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
-                    poster: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large', 
-                    quicktime: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
-                    type: 'quicktime', 
-                    height: 256, 
-                    width: 320,
-                    autoplay: false,
-                    loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' }
-
-            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-            view.html.push(obj_div, {asset: asset});
-         
+            view = _initializeView(t);
+            
             // Set state on the player and verify video is cued to seek point and end time is set (if available)
             view.setState({ start: 11, end: 25 });
 
@@ -217,6 +183,42 @@
                         t.ok(view.media.time() > 25, 'Video stopped at the requested time');
                     });
         }
+
+        function testDurationSignal(t) {
+            var duration = 0;
+            var view = _initializeView(t);
+
+            view.events.connect(view.media, 'duration', function(obj) { duration = obj.duration; });
+
+            t.delay_call(3, 
+                function() {
+                     view.media.play();
+                },
+                5,
+                function() {
+                    t.ok(duration > 68 && duration <= 69, 'Duration is now accurate');
+                    
+                    view.media.pause();
+                });
+        }
+
+        function _initializeView(t) {
+            view = new Sherd.Video.QuickTime();
+            asset = {url: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
+                    poster: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large', 
+                    quicktime: 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy',
+                    type: 'quicktime', 
+                    height: 256, 
+                    width: 320,
+                    autoplay: false,
+                    loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' }
+
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            view.html.push(obj_div, {asset: asset});
+            
+            return view;
+        }
+        
         
   </script>
 </head>

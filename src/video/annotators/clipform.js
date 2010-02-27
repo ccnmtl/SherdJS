@@ -5,7 +5,8 @@
 ///4. on tab-change, set startTime (and from that run DjangoSherd_UpdateHack)
 
 // Listens for:
-//
+// Nothing
+// 
 // Signals:
 // clipstart - the clip start time has changed. signals self.targetview.media
 // clipend -- the clip end time has changed. signals self.targetview.media
