@@ -10,13 +10,12 @@
 // clipstart - the clip start time has changed. signals self.targetview.media
 // clipend -- the clip end time has changed. signals self.targetview.media
 
-
 function DjangoSherd_ClipForm() {
     var secondsToCode = Sherd.Video.secondsToCode;
     var codeToSeconds = Sherd.Video.codeToSeconds;
-    var nofraction = true;
+    
     var self = this;
-    // Sherd.Video.Annotators.FormFragment.apply(this,arguments);//inherit
+    
     Sherd.Base.AssetView.apply(this, arguments);// inherit
 
     // TODO: when create-clip is tabbed to, we also need to gettime/pause
@@ -27,6 +26,7 @@ function DjangoSherd_ClipForm() {
     this.attachView = function(view) {
         this.targetview = view;
     }
+    
     this.addStorage = function(stor) {
         this.targetstorage.push(stor);
     }
@@ -135,44 +135,42 @@ function DjangoSherd_ClipForm() {
             }
             self.storage.update(obj, false);
         });
-
     }
-
-    this.microformat = {
-        create : function(obj) {
-            var htmlID = 'vitalcrap1';
-            return {
-                htmlID : htmlID,
-                text : '<div id="' + htmlID + '"><div class="vitalcrap" style="display:none">\
-                	       <input type="radio" name="clipType" value="Clip" checked="checked" />\
-                	       <input type="radio" name="clipType" value="Marker"/>\
-                	    </div>\
-                  	    <div id="clipcontrols"><!--stolen from vital-->\
-                	       <div class="cliptimeboxtable" style="width: 320px;">\
-                	          <table border="0" cellspacing="0" cellpadding="0">\
-                	              <tr>\
-                        		  <td style="padding: 2px;"><input type="button" class="regButton" style="width: 70px" value="start time:" /></td>\
-                        		  <td style="padding: 2px 10px 2px 2px; border-right: 1px dotted #999;">\
-                        		    <input type="text" class="timecode" name="clipBegin" value="00:00:00" /></td><!-- Do not change the name "clipBegin" -->\
-                        		    <td style="padding: 2px 2px 2px 7px;"><input type="button" class="regButton" style="width: 70px" value="end time:" /></td>\
-                        		    <td style="padding: 2px;">\
-                        		      <input type="text" class="timecode" name="clipEnd" value="00:00:00" /></td><!-- Do not change the name "clipEnd" -->\
-                        		</tr>\
-                              </table>\
-                	      </div>\
-                	    </div></div>'
-            };
-        },//create function
-        components : function(html_dom, create_obj) {
-            var inputs = html_dom.getElementsByTagName('input');
-            return {
-                'form' : html_dom,
-                'startButton' : inputs[2],
-                'endButton' : inputs[4],
-                'startField' : inputs[3],
-                'endField' : inputs[5]
-            }
+    
+    this.microformat.create = function(obj) {
+        var htmlID = 'clipform';
+        return {
+            htmlID : htmlID,
+            text : '<div id="' + htmlID + '"><div class="clipform" style="display:none">\
+                       <input type="radio" name="clipType" value="Clip" checked="checked" />\
+                       <input type="radio" name="clipType" value="Marker"/>\
+                    </div>\
+                    <div id="clipcontrols">\
+                       <div class="cliptimeboxtable" style="width: 320px;">\
+                          <table border="0" cellspacing="0" cellpadding="0">\
+                              <tr>\
+                              <td style="padding: 2px;"><input type="button" class="regButton" style="width: 70px" value="start time:" /></td>\
+                              <td style="padding: 2px 10px 2px 2px; border-right: 1px dotted #999;">\
+                                <input type="text" class="timecode" name="clipBegin" value="00:00:00" /></td><!-- Do not change the name "clipBegin" -->\
+                                <td style="padding: 2px 2px 2px 7px;"><input type="button" class="regButton" style="width: 70px" value="end time:" /></td>\
+                                <td style="padding: 2px;">\
+                                  <input type="text" class="timecode" name="clipEnd" value="00:00:00" /></td><!-- Do not change the name "clipEnd" -->\
+                            </tr>\
+                          </table>\
+                      </div>\
+                    </div></div>'
         }
-    }//microformat
-
+    }
+    
+    this.microformat.components = function(html_dom, create_obj) 
+    {
+        var inputs = html_dom.getElementsByTagName('input');
+        return {
+            'form' : html_dom,
+            'startButton' : inputs[2],
+            'endButton' : inputs[4],
+            'startField' : inputs[3],
+            'endField' : inputs[5]
+        }
+    }
 }

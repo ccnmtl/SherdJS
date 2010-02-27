@@ -25,7 +25,7 @@ if (!Sherd.GenericAssetView) {
                 'view' : new Sherd.Video.QuickTime()
             };
             if (options.clipform) {
-                quicktime.clipform = new DjangoSherd_ClipForm();// see vitalwrapper.js
+                quicktime.clipform = new DjangoSherd_ClipForm();// see clipform.js
                 quicktime.clipform.attachView(quicktime.view);
                 if (options.storage) {
                     quicktime.clipform.addStorage(options.storage);
@@ -42,7 +42,7 @@ if (!Sherd.GenericAssetView) {
                 'view' : new Sherd.Video.YouTube()
             };
             if (options.clipform) {
-                youtube.clipform = new DjangoSherd_ClipForm();// see vitalwrapper.js
+                youtube.clipform = new DjangoSherd_ClipForm();// see clipform.js
                 youtube.clipform.attachView(youtube.view);
                 if (options.storage) {
                     youtube.clipform.addStorage(options.storage);
@@ -59,7 +59,7 @@ if (!Sherd.GenericAssetView) {
                 'view' : new Sherd.Video.Flowplayer()
             };
             if (options.clipform) {
-                flowplayer.clipform = new DjangoSherd_ClipForm(); // see vitalwrapper.js
+                flowplayer.clipform = new DjangoSherd_ClipForm(); // see clipform.js
                 flowplayer.clipform.attachView(flowplayer.view);
                 if (options.storage) {
                     flowplayer.clipform.addStorage(options.storage);
