@@ -1,0 +1,230 @@
+<!--
+    Run tests via:  
+    http://localhost:8000/site_media/js/sherdjs/tests/run-tests.html?testframe=testframe;testframe_no_clear
+ -->
+
+<html>
+<head>
+    <script type="text/javascript" src="../../../lib/MochiKit.js"></script>
+    <script type="text/javascript" src="../../../src/base.js"></script>
+    <script type="text/javascript" src="../../../src/assets.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/video.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/youtube.js"></script>
+    <script type="text/javascript" src="../../../src/video/annotators/clipform.js"></script>
+    
+    <script type="text/javascript">
+    function testDefault(t) {
+        view = _initializeView(t);
+
+        state = view.clipform.getState();
+        t.eq(state.startCode, '00:00:00', 'Start time == 0');
+        t.eq(state.endCode, '00:00:00', 'End time == 0');
+        t.eq(state.start, 0, 'Start time == 0');
+        t.eq(state.end, 0, 'End time == 0');
+    }
+
+    function testSetState(t) {
+        view = _initializeView(t);
+
+        // Connect start/end events for testing
+        var start = 0;
+        var end = 0;
+        view.events.connect(view.media, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(view.media, 'clipend', function(obj) { end = obj.end });
+
+        // Partial state set
+        view.clipform.setState({ start: 10 });
+        
+        state = view.clipform.getState();
+        t.eq(state.startCode, '00:00:10', 'Start time set');
+        t.eq(state.endCode, '00:00:10', 'End time defaults to start');
+        t.eq(state.start, 10, 'Start time set');
+        t.eq(state.end, 10, 'End time defaults to start');
+        t.eq(start, 10, 'Start time signalled');
+        t.eq(end, 10, 'End time signalled');
+
+        // Full state set
+        start = 0;
+        end = 0;
+
+        view.clipform.setState({ start: 20, end: 80 });
+        
+        state = view.clipform.getState();
+        t.eq(state.startCode, '00:00:20', 'Start time set');
+        t.eq(state.endCode, '00:01:20', 'End time set');
+        t.eq(state.start, 20, 'Start time set');
+        t.eq(state.end, 80, 'End time set');
+
+        t.eq(start, 20, 'Start time signalled');
+        t.eq(end, 80, 'End time signalled');
+    }
+
+    function testClickStart(t) {
+        view = _initializeView(t);
+
+        btnClipStart = document.getElementById('btnClipStart');
+        t.ok(btnClipStart);
+
+        var start = 0;
+        var end = 0;
+        view.events.connect(view.media, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(view.media, 'clipend', function(obj) { end = obj.end });
+
+        view.clipform.setState({ start: 10 });
+
+        t.delay_call(1,
+                     function() {
+                          view.media.play();
+                     },
+                     5,
+                     function() {
+                         btnClipStart.click();
+
+                         // Start time is current movie running time
+                         // End time defaults to the original start time
+                         state = view.clipform.getState();
+                         t.ok(state.start >=4 && state.start <= 6, 'Start time set to current running time');
+                         t.eq(state.end, 10, 'End time defaults to original start time');
+                         t.ok(start >=4 && start <= 6, 'Clipstart called');
+                         t.eq(end, 10, 'Clipend called');
+                     },
+                     10,
+                     function() {
+                         btnClipStart.click();
+                         
+                         // Start time is current movie running time
+                         // End time adjusts to the new start time as start > prev. end
+                         state = view.clipform.getState();
+                         t.ok(state.start >=14 && state.start <= 15, 'Start time set to current running time');
+                         t.ok(state.end >=14 && state.start <= 15, 'End time defaults to original start time');
+                         t.ok(start >= 14 && start <= 15, 'Clipstart called');
+                         t.ok(end >= 14 && end <= 15, 'Clipend called');
+
+                         view.media.pause();
+                     });
+        
+    }
+
+    function testClickEnd(t) {
+        view = _initializeView(t);
+
+        btnClipEnd = document.getElementById('btnClipEnd');
+        t.ok(btnClipEnd, 'Clip End Not Null');
+
+        var start = 0;
+        var end = 0;
+        view.events.connect(view.media, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(view.media, 'clipend', function(obj) { end = obj.end });
+
+        view.clipform.setState({ start: 10, end: 25 });
+
+        t.delay_call(1,
+                     function() {
+                        view.media.play();
+                     },
+                     5,
+                     function() {
+                         btnClipEnd.click();
+
+                         // End time is current running movie time
+                         // Start time defaults to end time as end time is < start time
+                         state = view.clipform.getState();
+                         t.ok(state.start >=4 && state.start <= 5, 'Start time defaults to end time');
+                         t.ok(state.end >=4 && state.end <= 5, 'End time set to current running time');
+                         t.ok(start >=4 && start <= 5, 'Clipstart called');
+                         t.ok(end >=4 && end <= 5, 'Clipend called');
+                     },
+                     10,
+                     function() {
+                         btnClipEnd.click();
+
+                         // End time is current running movie time
+                         // Start time remains unchanged at its previous value
+                         state = view.clipform.getState();
+                         t.ok(state.start >=4 && state.start <= 5, 'Start time is previous time');
+                         t.ok(state.end >= 14 && state.end <= 15, 'End time set to current running time');
+                         t.ok(start >=4 && start <= 5, 'Clipstart called');
+                         t.ok(end >= 14 && end <= 15, 'Clipend called');
+
+                         view.media.pause();
+                     });
+        
+    }
+
+    function testOnChangeClipStart(t) {
+        view = _initializeView(t);
+
+        clipstart = document.getElementById('clipStart');
+        t.ok(clipstart, 'Clip Start Not Null');
+
+        clipstart.value = "00:00:10";
+        view.events.signal(view.clipform.components.startField, 'onchange', {});
+
+        // if the start time is greater then the endtime, make end time match start time
+        state = view.clipform.getState();
+        t.eq(state.start, 10, 'Start time is 10');
+        t.eq(state.end, 10, 'End time defaults to match start time. (Default value was 0)');
+
+        clipstart.value = "00:00:05";
+        view.events.signal(view.clipform.components.startField, 'onchange', {});
+        state = view.clipform.getState();
+        t.eq(state.start, 5, 'Start time is 5');
+        t.eq(state.end, 10, 'End time remains unchanged');
+    }
+    
+    function testOnChangeClipEnd(t) {
+        view = _initializeView(t);
+
+        clipend = document.getElementById('clipEnd');
+        t.ok(clipend, 'Clip End Not Null');
+
+        clipend.value = "00:00:10";
+        view.events.signal(view.clipform.components.endField, 'onchange', {});
+
+        // basic case -- end set with no changes
+        state = view.clipform.getState();
+        t.eq(state.start, 0, 'Start time is 0');
+        t.eq(state.end, 10, 'End time is 10');
+
+        // if the start time is greater then the endtime, make start time match end time
+        document.getElementById('clipStart').value = "00:00:15";
+        clipend.value = "00:00:12";
+        view.events.signal(view.clipform.components.endField, 'onchange', {});
+        state = view.clipform.getState();
+        t.eq(state.start, 12, 'Start time changed to match end time -- 12');
+        t.eq(state.end, 12, 'End time is 12');
+    }
+
+    function _initializeView(t) {
+        view = new Sherd.Video.YouTube();
+        t.ok(view, "Verify view instantiated");
+
+        view.clipform = new DjangoSherd_ClipForm();
+        t.ok(view.clipform, 'Verify clipstrip instantiated');
+        view.clipform.attachView(view);
+
+        // load view into html
+        asset = { type: 'youtube',
+                  presentation: 'large',
+                  youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
+        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');
+
+        view.html.push(obj_div, {asset: asset});
+
+        view.clipform.html.push('clipform-display', {asset : {}});
+
+        t.ok(document.getElementById('clipform'), 'clipstrip push worked');
+
+        return view;
+    }
+
+    </script>
+</head>
+<body>
+<div id='asset-display' class="asset-display"></div>
+<div id="clipform-display"></div>
+</body>
+</html>  
+        
+        
+    

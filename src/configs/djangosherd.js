@@ -37,9 +37,9 @@ function DjangoSherd_Asset_Config() {
         // /# Editable? (i.e. note-form?)
         ds.noteform.html.put($('clip-form'));
         // /# load asset into note-form
-        var videonoteform = $('videonoteform');
-        if (videonoteform) {
-            ds.assetview.clipform.html.push('videonoteform', {
+        var clipform = $('clipform-display');
+        if (clipform) {
+            ds.assetview.clipform.html.push('clipform-display', {
                 asset : {}
             }); // write videoform
         }

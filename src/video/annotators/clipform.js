@@ -1,7 +1,7 @@
-///videonoteform
+///clipform-display
 ///1. update noteform field: DjangoSherd_UpdateHack()
-///2. initialize videonoteform field vals
-///3. onchange of text fields in videonoteform to run: DjangoSherd_UpdateHack
+///2. initialize clipform field vals
+///3. onchange of text fields in clipform to run: DjangoSherd_UpdateHack
 ///4. on tab-change, set startTime (and from that run DjangoSherd_UpdateHack)
 
 // Listens for:
@@ -12,26 +12,25 @@
 // clipend -- the clip end time has changed. signals self.targetview.media
 
 function DjangoSherd_ClipForm() {
-    var secondsToCode = Sherd.Video.secondsToCode;
-    var codeToSeconds = Sherd.Video.codeToSeconds;
+    var secondsToCode = Sherd.Video.secondsToCode; // @todo -- consider moving these functions out of Video  
+    var codeToSeconds = Sherd.Video.codeToSeconds; // and into a separate Utilities or Helpers file?
     
     var self = this;
-    
     Sherd.Base.AssetView.apply(this, arguments);// inherit
-
-    // TODO: when create-clip is tabbed to, we also need to gettime/pause
-    this._asset = {};// to be 'true'
-    this.targetstorage = [];
-
-    // /will this work? this is all so hacky!
+    
     this.attachView = function(view) {
         this.targetview = view;
     }
     
+    this.targetstorage = [];
     this.addStorage = function(stor) {
         this.targetstorage.push(stor);
     }
 
+    // @todo -- this getState is what is used for storing
+    // all the data about the video. would be better if
+    // it were a compilation of information from both clipform & player itself
+    // eg. duration & timescale aren't clipform properties
     this.getState = function() {
         var duration = self.targetview.media.duration();
         var timeScale = self.targetview.media.timescale();
@@ -40,11 +39,10 @@ function DjangoSherd_ClipForm() {
             'startCode' : self.components.startField.value,
             'endCode' : self.components.endField.value,
             'duration' : duration,
-            'timeScale' : timeScale
+            'timeScale' : timeScale,
+            'start' : codeToSeconds(self.components.startField.value),
+            'end' : codeToSeconds(self.components.endField.value),
         };
-        obj.start = codeToSeconds(obj.startCode);
-        obj.end = codeToSeconds(obj.endCode);
-        obj['default'] = (obj.start == 0 && obj.end == 0);
        
         return obj;
     }
@@ -82,8 +80,10 @@ function DjangoSherd_ClipForm() {
             if (!just_downstream) {
                 self.setState(obj);
             }
-            for ( var i = 0; i < self.targetstorage.length; i++) {
-                self.targetstorage[i].storage.update(obj);
+            if (self.targetstorage) {
+                for ( var i = 0; i < self.targetstorage.length; i++) {
+                    self.targetstorage[i].storage.update(obj);
+                }
             }
         }
     }
@@ -91,32 +91,30 @@ function DjangoSherd_ClipForm() {
     this.initialize = function(create_obj) {
         // MochiKit!!!
         connect(self.components.startButton, 'onclick', function(evt) {
-                //if (self.targetview.media.isPlaying()) { // movie is playing
-                    self.components.startField.value = self.targetview.media.timeCode(); // update start time with movie time
-                //}
-                //else { // movie is paused
-                //    self.targetview.play(); // play the movie if it is paused
-                //}
-                if (self.targetview.media.time() > codeToSeconds(self.components.endField.value))
-                    self.components.endField.value = self.targetview.media.timeCode(); // update end time if start time is greater
+                var movieTime = self.targetview.media.time();
+                var movieTimeCode = secondsToCode(movieTime);
+                self.components.startField.value = movieTimeCode; // update start time with movie time
+                
+                if (movieTime > codeToSeconds(self.components.endField.value))
+                    self.components.endField.value = movieTimeCode; // update end time if start time is greater
                 
                 self.storage.update(self.getState(), false);
             });
         connect(self.components.endButton, 'onclick', function(evt) {
-                //if (self.targetview.media.isPlaying()) // movie is playing
-                //    self.targetview.media.pause(); // stop the movie if it is playing
-                
-                self.components.endField.value = self.targetview.media.timeCode(); // update the end time with movie time
+                var movieTime = self.targetview.media.time();
+                var movieTimeCode = secondsToCode(movieTime);
+            
+                self.components.endField.value = movieTimeCode; // update the end time with movie time
                 
                 // if the start time is greater then the endtime, make start time match end time
-                if (self.targetview.media.time() < codeToSeconds(self.components.startField.value)) 
-                    self.components.startField.value = self.targetview.media.timeCode();
+                if (movieTime < codeToSeconds(self.components.startField.value)) 
+                    self.components.startField.value = movieTimeCode;
                 
                 self.storage.update(self.getState(), false);
             });
         connect(self.components.startField, 'onchange', function(evt) {
             var obj = self.getState();
-            
+
             // if the start time is greater then the endtime, make end time match start time
             if (obj.end < obj.start) {
                 obj.end = obj.start;
@@ -150,12 +148,12 @@ function DjangoSherd_ClipForm() {
                        <div class="cliptimeboxtable" style="width: 320px;">\
                           <table border="0" cellspacing="0" cellpadding="0">\
                               <tr>\
-                              <td style="padding: 2px;"><input type="button" class="regButton" style="width: 70px" value="start time:" /></td>\
+                              <td style="padding: 2px;"><input type="button" class="regButton" style="width: 70px" value="start time:" id="btnClipStart"/></td>\
                               <td style="padding: 2px 10px 2px 2px; border-right: 1px dotted #999;">\
-                                <input type="text" class="timecode" name="clipBegin" value="00:00:00" /></td><!-- Do not change the name "clipBegin" -->\
-                                <td style="padding: 2px 2px 2px 7px;"><input type="button" class="regButton" style="width: 70px" value="end time:" /></td>\
+                                <input type="text" class="timecode" id="clipStart" value="00:00:00" /></td>\
+                                <td style="padding: 2px 2px 2px 7px;"><input type="button" class="regButton" style="width: 70px" value="end time:" id="btnClipEnd"/></td>\
                                 <td style="padding: 2px;">\
-                                  <input type="text" class="timecode" name="clipEnd" value="00:00:00" /></td><!-- Do not change the name "clipEnd" -->\
+                                  <input type="text" class="timecode" id="clipEnd" value="00:00:00" /></td>\
                             </tr>\
                           </table>\
                       </div>\

@@ -59,6 +59,7 @@ if (!Sherd.Video.Helpers) {
         this.codeToSeconds = Sherd.Video.codeToSeconds;
     }
 }
+
 if (!Sherd.Video.Base) {
     var noop = function() {
     };
