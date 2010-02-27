@@ -112,11 +112,16 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             newUrl = self.microformat._getUrl(obj);
             if (newUrl && document.getElementById(self.components.playerID) && self.media.state() > 0) {
                 playlist = self.components.player.getPlaylist();
-                /**
-                 * If a new url is requested --
-                 * The clip switches properly. But, it will not seek properly
-                 * Ditching this until I have some more time to screw around with it
-                    if (playlist[0].url != newUrl) {
+                if (playlist[0].url == newUrl) {
+                    // If the url is the same as the previous, just seek to the right spot.
+                    // This works just fine.
+                    rc = true;
+                }
+                else {
+                    /**
+                     * If a new url is requested --
+                     * The clip switches properly. But, it will not seek properly
+                     * Ditching this until I have some more time to screw around with it
                         if (self.media.state() == 3)
                             self.components.player.pause();
     
@@ -129,12 +134,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         self.components.player.setClip(clip);
                         
                         self.microformat._queueReadyToSeekEvent();
-                    }
-                **/
-
-                // If the url is the same as the previous, just seek to the right spot.
-                // This works just fine.
-                rc = true;
+                    **/
+                }
             }
             return rc;
         };
@@ -168,11 +169,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                      return self.media.state() > 2;
                  }, poll:500},
                  {call: function() {
-                     if (self.components.starttime || self.components.endtime) {
-                         self.events.signal(self.media, 'duration', { start: self.components.starttime, end: self.components.endtime, duration: self.media.duration() });
-                     }
+                     self.events.signal(self.media, 'duration', { duration: self.media.duration() });
                      self.setState({ start: self.components.starttime, end: self.components.endtime});
-                     }
+                 }
                  }]);
         }
         

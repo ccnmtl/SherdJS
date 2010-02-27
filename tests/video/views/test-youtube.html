@@ -5,11 +5,11 @@
 
 <html>
 <head>
-    <script type="text/javascript" src="../../lib/MochiKit.js"></script>
-    <script type="text/javascript" src="../../src/base.js"></script>
-    <script type="text/javascript" src="../../src/assets.js"></script>
-    <script type="text/javascript" src="../../src/video/views/video.js"></script>
-    <script type="text/javascript" src="../../src/video/views/youtube.js"></script>
+    <script type="text/javascript" src="../../../lib/MochiKit.js"></script>
+    <script type="text/javascript" src="../../../src/base.js"></script>
+    <script type="text/javascript" src="../../../src/assets.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/video.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/youtube.js"></script>
 
     <script type="text/javascript">
         function testDefinition(t)
@@ -151,6 +151,43 @@
                              t.ok(view.media.time() > 30, 'Video stopped at the requested time');
                          });
         }
+
+        function testSetState(t) {
+            view = new Sherd.Video.YouTube();
+            asset = { type: 'youtube',
+                      presentation: 'large',
+                      youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
+
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            view.html.push(obj_div, {asset: asset});
+         
+            // Set state on the player and verify video is cued to seek point and end time is set (if available)
+            view.setState({ start: 11, end: 25 });
+
+            t.delay_call(3, 
+                    function() {
+                         // Check State  
+                         t.eq(view.media.state(), 5, 'Player is ready');
+                         t.ok(view.media.ready(), 'Player is ready (api)');
+                         t.eq(view.media.time(), 0, 'No time yet');
+                         t.eq(view.media.duration(), 0, 'No duration yet');
+
+                         // Test Play
+                         view.media.play();
+                    },
+                    5,
+                    function() {
+                        // Check Play
+                        t.ok(view.media.isPlaying(), 'Video is playing (api)');
+                        t.ok(view.media.time() > 11, 'Elapsed time is going');
+                    },
+                    15,
+                    function() {
+                        t.eq(view.media.state(), 2, 'Video is paused');
+                        t.ok(view.media.time() > 25, 'Video stopped at the requested time');
+                    });
+        }
+           
   </script>
 </head>
 <body>

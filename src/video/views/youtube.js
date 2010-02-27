@@ -2,6 +2,12 @@
   Support for the YouTube js-enabled player.  documentation at:
   http://code.google.com/apis/youtube/js_api_reference.html
   http://code.google.com/apis/youtube/chromeless_example_1.html
+  
+  Signals:
+  duration: signals duration change
+  
+  Listens For:
+  seek: seek to a particular starttime
  */
 
 if (!Sherd) {Sherd = {};}
@@ -183,12 +189,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             if (newState == 1) {
                 var duration = self.media.duration();
                 if (duration > 1) {
-                    self.events.signal(self.media, 'duration', { start: self.components.starttime, end: self.components.endtime, duration: duration });
+                    self.events.signal(self.media, 'duration', { duration: duration });
                 }
             } else if (newState == 2 || newState == 0) { // stopped or ended
                 self.events.clearTimers();
             }
-        };
+        }
         
         this.media.duration = function() {
             duration = 0;
@@ -202,18 +208,17 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 }
             }
             return duration;
-        };
-        
+        }
         
         this.media.pause = function() {
             if (self.components.player)
                 self.components.player.pauseVideo();
-        };
+        }
         
         this.media.play = function() {
             if (self.components.player)
                 self.components.player.playVideo();
-        };
+        }
         
         this.media.ready = function() {
             return self.media._ready;
@@ -283,7 +288,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         // there's a consistent interpretation across controls
         this.media.state = function() {
             return self.components.player.getPlayerState();
-         }
+        }
 
         this.media.url = function() {
             return self.components.player.getVideoUrl();

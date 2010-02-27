@@ -6,12 +6,12 @@
 
 <html>
 <head>
-    <script type="text/javascript" src="../../lib/MochiKit.js"></script>
-    <script type="text/javascript" src="../../src/base.js"></script>
-    <script type="text/javascript" src="../../src/assets.js"></script>
-    <script type="text/javascript" src="../../src/video/views/video.js"></script>
-    <script type="text/javascript" src="../../lib/flowplayer/flowplayer-3.1.4.min.js"></script>
-    <script type="text/javascript" src="../../src/video/views/flowplayer.js"></script>
+    <script type="text/javascript" src="../../../lib/MochiKit.js"></script>
+    <script type="text/javascript" src="../../../src/base.js"></script>
+    <script type="text/javascript" src="../../../src/assets.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/video.js"></script>
+    <script type="text/javascript" src="../../../lib/flowplayer/flowplayer-3.1.4.min.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/flowplayer.js"></script>
 
 
     <script type="text/javascript">
@@ -139,6 +139,39 @@
                          });
             
         }
+
+        function testSetState(t) {
+            view = new Sherd.Video.Flowplayer();
+            asset = { type: 'flv_pseudo',
+                      presentation: 'large',
+                      flv_pseudo: 'http://vod01.netdna.com/vod/demo.flowplayer/Extremists.flv'};
+
+            var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+            view.html.push(obj_div, {asset: asset});
+         
+            // Set state on the player and verify video is cued to seek point and end time is set (if available)
+            view.setState({ start: 11, end: 25 });
+
+            t.delay_call(3, 
+                    function() {
+                         // Check State  
+                         t.ok(view.media.ready(), 'Player is ready (api)');
+
+                         // Test Play
+                         view.media.play();
+                    },
+                    5,
+                    function() {
+                        // Check Play
+                        t.ok(view.media.isPlaying(), 'Video is playing (api)');
+                        t.ok(view.media.time() > 11, 'Elapsed time is going');
+                    },
+                    15,
+                    function() {
+                        t.eq(view.media.state(), 4, 'Video is paused');
+                    });
+        }
+           
   </script>
 </head>
 <body>

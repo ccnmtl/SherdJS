@@ -1,3 +1,28 @@
+//
+// Use Cases:
+// Default 
+// -- starttime:0, endtime:0, duration:0 
+// -- left/right markers appear together at the 0px position, left-side of player
+//
+// Start & Duration 
+// -- starttime:x, endtime:undefined, duration:y 
+// -- endtime defaults to starttime -- left/right markers appear together at the start position  
+// >>> This case is from a queryString start parameter 
+//
+// Start & End & Duration
+// -- startime: x, endtime: y, duration: z
+// -- Markers appear at start/end times appropriately
+//
+// Listens for: 
+// duration: changes in duration from the movie player. Some players don't get duration until playback begins
+//           the clipstrip will resize itself appropriately when the correct data is received.
+//      
+// clipstart: changes in the clipstart from the clipform
+// clipend: changes in the clipend from the clipform
+//
+// Signals:
+// seek: when a user clicks on the start/end time of the clipstrip, sends a seek event to the self.targetview.media
+
 var CLIP_MARKER_WIDTH = 7;
 
 function DjangoSherd_ClipStrip() {
@@ -13,38 +38,56 @@ function DjangoSherd_ClipStrip() {
         
         obj.starttime = self.components.starttime;
         obj.endtime = self.components.endtime;
+        obj.duration = self.components.duration;
         obj.timestrip = self.components.timestrip;
         return obj;
     }
 
     this.setState = function(obj) {
         if (typeof obj == 'object') {
-            if (obj.start) {
-                self.components.starttime = obj.start
-            } else if (!self.components.starttime) {
-                self.components.starttime = 0;
-            }
             
-            if (obj.end) {
+            if (obj.start)
+                self.components.starttime = obj.start
+            else
+                self.components.starttime = 0;
+            
+            if (obj.end)
                 self.components.endtime = obj.end;
-            } else if (obj.duration > 1) {
-                self.components.endtime = obj.duration; 
-            }
+            else 
+                self.components.endtime = self.components.starttime;
             
             if (obj.duration > 1) {
-                left = self.microformat._timeToPixels(self.components.starttime, obj.duration, self.components.timestrip.trackWidth);
-                right = self.microformat._timeToPixels(self.components.endtime, obj.duration, self.components.timestrip.trackWidth);
-                
-                self.components.clipStartMarker.style.left = (left - CLIP_MARKER_WIDTH) + 'px';
-                self.components.clipEndMarker.style.left = right + 'px';
-                self.components.clipRange.style.left = left + "px";
-                self.components.clipRange.style.width = (right - left) + 'px';
-                
-                self.components.clipStartMarker.style.display = 'block';
-                self.components.clipRange.style.display = 'block';
-                self.components.clipEndMarker.style.display = 'block';
+                self.components.duration = obj.duration
+                self.microformat._resize();
             }
             return true;
+        }
+    }
+    
+    // Event Listener: duration - from player
+    // Assumes start & end times have been initialized through setState or are defaulted
+    this.setClipDuration = function(obj) {
+        if (obj.duration > 1) {
+            self.components.duration = obj.duration;
+            self.microformat._resize();
+        }
+    }
+    
+    // Event Listener: clipstart - from clipform
+    // Assumes self.components.duration has been initialized either through setState or setClipDuration
+    this.setClipStart = function(obj) {
+        if (obj.start && self.components.duration) {
+            self.components.starttime = obj.start;
+            self.microformat._resize();
+        }
+    }
+    
+    // Event Listener: clipend - from clipform
+    // Assumes self.components.duration has been initialized
+    this.setClipEnd = function(obj) {
+        if (obj.end && self.components.duration) {
+            self.components.endtime = obj.end;
+            self.microformat._resize();
         }
     }
 
@@ -57,8 +100,13 @@ function DjangoSherd_ClipStrip() {
                 self.events.signal(self.targetview.media, 'seek', self.components.endtime);
             });
         
-        // listen for changes in duration from the movie
-        self.events.connect(self.targetview.media, 'duration', self, 'setState');
+        // listen for changes in duration from the movie and clipstart/end changes from clipform
+        self.events.connect(self.targetview.media, 'duration', self, 'setClipDuration'); //player
+        self.events.connect(self.targetview.media, 'clipstart', self, 'setClipStart'); //clipform
+        self.events.connect(self.targetview.media, 'clipend', self, 'setClipEnd'); //clipform
+        
+        // setup the clip markers in the default position
+        self.microformat._resize();
     }
     
     this.microformat.create = function(obj) {
@@ -85,10 +133,27 @@ function DjangoSherd_ClipStrip() {
                 clipStartMarker : document.getElementById('clipStripStart'),
                 clipRange : document.getElementById('clipStripRange'),
                 clipEndMarker : document.getElementById('clipStripEnd'),
-                timestrip: create_obj.timestrip
+                timestrip: create_obj.timestrip,
+                starttime: 0,
+                endtime: 0,
+                duration: 0
             }
         } catch(e) {}
         return false;
+    }
+    
+    this.microformat._resize = function() {
+        left = self.microformat._timeToPixels(self.components.starttime, self.components.duration, self.components.timestrip.trackWidth);
+        right = self.microformat._timeToPixels(self.components.endtime, self.components.duration, self.components.timestrip.trackWidth);
+        
+        self.components.clipStartMarker.style.left = (left - CLIP_MARKER_WIDTH) + 'px';
+        self.components.clipEndMarker.style.left = right + 'px';
+        self.components.clipRange.style.left = left + "px";
+        self.components.clipRange.style.width = (right - left) + 'px';
+        
+        self.components.clipStartMarker.style.display = 'block';
+        self.components.clipRange.style.display = 'block';
+        self.components.clipEndMarker.style.display = 'block';
     }
     
     this.microformat._timeToPixels = function(seconds, duration, width) {

@@ -20,6 +20,7 @@ function DjangoSherd_Asset_Config() {
         ds.dom_assets = ds.assetMicroFormat.find();
         if (!ds.dom_assets.length)
             return;// no assets!
+        
         // GenericAssetView is a wrapper in ../assets.js.
         ds.assetview = new Sherd.GenericAssetView( {
             'clipform' : true,
@@ -49,8 +50,9 @@ function DjangoSherd_Asset_Config() {
             });
         }
 
-        var orig_annotation_data = $('original-annotation');// /***faux layer
+        var orig_annotation_data = $('original-annotation');// /***faux layer. Data stored in the DOM
         if (orig_annotation_data != null) {
+            // Viewing an Annotation with stored data
             var obj = false;
             try {
                 // /#initialize for editing
@@ -68,6 +70,7 @@ function DjangoSherd_Asset_Config() {
             } catch (e) {/* non-valid json? */
             }
         } else {
+            // Viewing the Original Asset, possibly with params from queryString
             var annotation_query = [];
             if (document.location.hash) {
                 // /TODO:?why should queryformat be on clipform? maybe local
@@ -78,13 +81,22 @@ function DjangoSherd_Asset_Config() {
             if (annotation_query.length) {
                 // /#initialize view from hash
                 ds.assetview.setState(annotation_query[0]);
+                
+                if (ds.assetview.clipform)
+                    ds.assetview.clipform.setState(annotation_query[0]);
+
+                if (ds.assetview.clipstrip)
+                    ds.assetview.clipstrip.setState(annotation_query[0]);
+
             } else {
-                // /#default initialization
+                // /#default initialization for an annotation
+                // don't need to set state on clipstrip/form as there is no state
                 ds.assetview.setState();
             }
         }
     });
 }
+
 function DjangoSherd_Project_Config(no_open_from_hash) {
     // /# load viewers
     // /# load assetfinders

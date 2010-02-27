@@ -1,0 +1,54 @@
+<!--
+    Run tests via:  
+    http://localhost:8000/site_media/js/sherdjs/tests/run-tests.html?testframe=testframe;testframe_no_clear
+ -->
+
+<html>
+<head>
+    <script type="text/javascript" src="../../../lib/MochiKit.js"></script>
+    <script type="text/javascript" src="../../../src/base.js"></script>
+    <script type="text/javascript" src="../../../src/assets.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/video.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/youtube.js"></script>
+
+    <script type="text/javascript">
+    function testDefinition(t) {
+        t.plan(2);
+        t.ok(Sherd.Video, "Verify video.js is defined");
+        t.ok(Sherd.Video.Helpers, "Verify helpers is defined");
+     }
+
+     function testSecondsToCode(t) {
+         t.eq(Sherd.Video.secondsToCode(0), '00:00:00', '0 seconds translates to 00:00:00');
+         t.eq(Sherd.Video.secondsToCode(1), '00:00:01', '1 second translates to 00:00:01');
+         t.eq(Sherd.Video.secondsToCode(11), '00:00:11', '11 seconds translates to 00:00:11');
+         t.eq(Sherd.Video.secondsToCode(61), '00:01:01', '61 seconds translates to 00:01:01');
+         t.eq(Sherd.Video.secondsToCode(109), '00:01:49', '109 seconds translates to 00:01:49');
+         t.eq(Sherd.Video.secondsToCode(601), '00:10:01', '601 seconds translates to 00:10:01');
+         t.eq(Sherd.Video.secondsToCode(3601), '01:00:01', '3601 seconds translates to 01:00:01');
+         t.eq(Sherd.Video.secondsToCode(3611), '01:00:11', '3611 seconds translates to 01:00:11');
+         t.eq(Sherd.Video.secondsToCode(3709), '01:01:49', '3709 seconds translates to 01:01:49');
+         t.eq(Sherd.Video.secondsToCode(36000), '10:00:00', '36000 seconds translates to 10:00:00');
+     }
+
+     function testCodeToSeconds(t) {
+         t.eq(Sherd.Video.codeToSeconds('00:00:00'), 0, '0 seconds translates to 00:00:00');
+         t.eq(Sherd.Video.codeToSeconds('00:00:01'), 1, '1 second translates to 00:00:01');
+         t.eq(Sherd.Video.codeToSeconds('00:00:11'), 11, '11 seconds translates to 00:00:11');
+         t.eq(Sherd.Video.codeToSeconds('00:01:01'), 61, '61 seconds translates to 00:01:01');
+         t.eq(Sherd.Video.codeToSeconds('00:01:49'), 109, '109 seconds translates to 00:01:49');
+         t.eq(Sherd.Video.codeToSeconds('00:10:01'), 601, '601 seconds translates to 00:10:01');
+         t.eq(Sherd.Video.codeToSeconds('01:00:01'), 3601, '3601 seconds translates to 01:00:01');
+         t.eq(Sherd.Video.codeToSeconds('01:00:11'), 3611, '3611 seconds translates to 01:00:11');
+         t.eq(Sherd.Video.codeToSeconds('01:01:49'), 3709, '3709 seconds translates to 01:01:49');
+         t.eq(Sherd.Video.codeToSeconds('10:00:00'), 36000, '36000 seconds translates to 10:00:00');
+     }
+
+</script>
+
+</head>
+
+<body>
+<div id='asset-display' class="asset-display"></div>
+</body>
+</html>

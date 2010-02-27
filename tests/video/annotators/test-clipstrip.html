@@ -1,0 +1,161 @@
+<!--
+    Run tests via:  
+    http://localhost:8000/site_media/js/sherdjs/tests/run-tests.html?testframe=testframe;testframe_no_clear
+ -->
+
+<html>
+<head>
+    <script type="text/javascript" src="../../../lib/MochiKit.js"></script>
+    <script type="text/javascript" src="../../../src/base.js"></script>
+    <script type="text/javascript" src="../../../src/assets.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/video.js"></script>
+    <script type="text/javascript" src="../../../src/video/views/youtube.js"></script>
+    <script type="text/javascript" src="../../../src/video/annotators/clipstrip.js"></script>
+    <script type="text/javascript" src="../../../src/configs/djangosherd.js"></script>
+    
+    <script type="text/javascript">
+
+     // Default 
+     // -- starttime:0, endtime:0, duration:0 
+     // -- left/right markers appear together at the 0px position, left-side of player
+     function testDefaultState(t) {
+         view = _initializeView(t);
+
+         state = view.clipstrip.getState();
+         t.eq(state.starttime, 0, 'Valid startime');
+         t.eq(state.endtime, 0, 'Valid endtime');
+         t.eq(state.duration, 0, 'Valid duration');
+
+         t.eq(document.getElementById('clipStripStart').style.display, 'block', 'Visible');
+         t.eq(document.getElementById('clipStripEnd').style.display, 'block', 'Visible');
+         t.eq(document.getElementById('clipStripRange').style.display, 'block', 'Visible');
+
+         t.eq(document.getElementById('clipStripStart').style.left, '-7px', 'At left-side of player');
+         t.eq(document.getElementById('clipStripEnd').style.left, '0px', 'At left-side of player');
+         t.eq(document.getElementById('clipStripRange').style.width, '0px', 'At left-side of player');
+     }
+
+     // Start & Duration 
+     // -- starttime:x, endtime:undefined, duration:y 
+     // -- endtime defaults to starttime -- left/right markers appear together at the start position  
+     // >>> This case is from a queryString start parameter
+     function testPartialState(t) {
+         view = _initializeView(t);
+
+         view.clipstrip.setState({ start: 11, duration: 376 });    
+
+         state = view.clipstrip.getState();
+         t.eq(state.starttime, 11, 'Valid startime');
+         t.eq(state.endtime, 11, 'endtime matches starttime');
+         t.eq(state.duration, 376, 'Valid duration');
+
+         // Can't test individual pixels for left/right, just testing width of range here
+         t.eq(document.getElementById('clipStripRange').style.width, '0px', 'At left-side of player');
+     }
+
+     function testFullState(t) {
+         view = _initializeView(t);
+
+         view.clipstrip.setState({ start: 11, end: 30, duration: 376 });
+
+         state = view.clipstrip.getState();
+         t.eq(state.starttime, 11, 'Valid startime');
+         t.eq(state.endtime, 30, 'Valid endtime');
+         t.eq(state.duration, 376, 'Valid duration');
+
+         _testRangeWidth(t, 19, 20);
+
+     }
+     
+    // Clipstrip's setDuration will be invoked when a player obtains a valid duration
+    // The clipstrip should resize itself and display properly when the information is received
+    // This test tests the player/clipstrip signal/connect setup as well as the setDuration logic.
+    function testDurationEventListener(t) {
+        view = _initializeView(t);
+        view.clipstrip.setState({ start: 11, end: 30 });
+        _testRangeWidth(t, 0, 0);
+        
+        // Tell the video to play. 
+        // Clipstrip's setDuration will be invoked when the player 
+        // gets its final duration from the stream metadata
+        t.delay_call(1,
+                     function() {
+                          // Check State & Play  
+                          t.ok(view.media.ready(), 'Player is ready (api)');
+                          view.media.play();
+                     },
+                     3,
+                     function() {
+                         t.ok(view.media.isPlaying(), 'Video is playing (api)');
+
+                         state = view.clipstrip.getState();
+                         t.eq(state.starttime, 11, 'Start at 0');
+                         t.eq(state.endtime, 30, 'End at 30');
+                         t.ok(state.duration > 375, 'Duration Received. Endtime around 375.375 or greater. It varies');
+
+                         _testRangeWidth(t, 19, 20);
+
+                         view.media.pause();
+                     });
+    }
+
+    // setClipStart and/or setClipEnd are invoked when the user changes these 
+    // values using the associated clipform in the main asset view
+    function testStartAndEndEventListeners(t) {
+        view = _initializeView(t);
+        view.clipstrip.setState({ start: 11, end: 30, duration: 376 });
+        _testRangeWidth(t, 19, 20);
+
+        // Mocking up events from the clipform
+        view.events.signal(view.media, 'clipstart', { start: 24 });
+        view.events.signal(view.media, 'clipend', { end: 75 });
+        
+        state = view.clipstrip.getState();
+        t.eq(state.starttime, 24, 'Start at 24');
+        t.eq(state.endtime, 75, 'Endtime at 75');
+
+        // Verify the markers have moved, just checking range as px can vary by browser
+        _testRangeWidth(t, 52, 53);
+    }
+
+    function _initializeView(t) {
+        view = new Sherd.Video.YouTube();
+        t.ok(view, "Verify view instantiated");
+
+        view.clipstrip = new DjangoSherd_ClipStrip();
+        t.ok(view.clipstrip, 'Verify clipstrip instantiated');
+        view.clipstrip.attachView(view);
+
+        // load view into html
+        asset = { type: 'youtube',
+                  presentation: 'large',
+                  youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
+        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');
+
+        view.html.push(obj_div, {asset: asset});
+
+        // load clipstrip into html
+        view.clipstrip.html.push('clipstrip-display', {asset : {}});
+
+        t.ok(document.getElementById('clipStripStart'), 'clipstrip push worked');
+
+        return view;
+    }
+
+    function _testRangeWidth(t, start, end) {
+        // Can't test individual pixels for left/right, just testing width of range here
+        var idx = document.getElementById('clipStripRange').style.width.search("px");
+        var num = document.getElementById('clipStripRange').style.width.substr(0, idx);
+        t.ok(num >= start && num <= end, 'Expected width is >= ' + start + ' && <= ' + '; Received width was: [' + num + ']');
+    }
+
+    </script>
+</head>
+<body>
+<div id='asset-display' class="asset-display"></div>
+<div id="clipstrip-display"></div>
+</body>
+</html>  
+        
+        
+    
