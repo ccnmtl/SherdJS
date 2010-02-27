@@ -1,6 +1,3 @@
-///interfaces:
-
-
 ///videonoteform
 ///1. update noteform field: DjangoSherd_UpdateHack()
 ///2. initialize videonoteform field vals
@@ -12,8 +9,6 @@
 // Signals:
 // clipstart - the clip start time has changed. signals self.targetview.media
 // clipend -- the clip end time has changed. signals self.targetview.media
-
-
 
 
 function DjangoSherd_ClipForm() {
@@ -141,28 +136,6 @@ function DjangoSherd_ClipForm() {
             self.storage.update(obj, false);
         });
 
-    }
-
-    this.queryformat = {
-        create : function(obj) {
-            return ''
-        },
-        find : function(str) {
-            var start_point = String(str).match(/start=([.\d]+)/);
-            if (start_point != null) {
-                var start = Number(start_point[1]);
-                if (!isNaN(start)) {
-                    return [ {
-                        start : start
-                    } ];
-                }
-            }
-            return [];
-        },
-        read : function(found_obj) {
-            found_obj.startCode = secondsToCode(found_obj.start);
-            return found_obj;
-        }
     }
 
     this.microformat = {

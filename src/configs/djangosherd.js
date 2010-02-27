@@ -14,6 +14,7 @@ function DjangoSherd_Asset_Config() {
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     ds.noteform = new DjangoSherd_NoteForm();// see below
+    ds.queryformat = new DjangoSherd_QueryFormat();
 
     addLoadEvent(function() {
         // /# Find assets.
@@ -73,10 +74,7 @@ function DjangoSherd_Asset_Config() {
             // Viewing the Original Asset, possibly with params from queryString
             var annotation_query = [];
             if (document.location.hash) {
-                // /TODO:?why should queryformat be on clipform? maybe local
-                // default?
-                annotation_query = ds.assetview.clipform.queryformat
-                        .find(document.location.hash);
+                annotation_query = ds.queryformat.find(document.location.hash);
             }
             if (annotation_query.length) {
                 // /#initialize view from hash
@@ -380,6 +378,29 @@ function DjangoSherd_NoteForm() {
     }
     // TODO: less barebones
     // 1. send signal for updates when replaced
+}
+
+function DjangoSherd_QueryFormat() {
+    // Find properties applicable to the asset under view.
+    this.find = function(str) {
+        var start_point = String(str).match(/start=([.\d]+)/);
+        if (start_point != null) {
+            var start = Number(start_point[1]);
+            if (!isNaN(start)) {
+                return [ {
+                    start : start
+                } ];
+            }
+        }
+        return [];
+    }
+    
+    // Return description in a serialized JSON format.
+    // NOTE: Not currently in use. Will be used for things like printing, or spitting out a description.
+    this.read = function(found_obj) {
+        var obj = {};
+        return obj;
+    }
 }
 
 /*******************************************************************************
