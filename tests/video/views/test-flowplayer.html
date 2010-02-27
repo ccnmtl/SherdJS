@@ -12,6 +12,7 @@
     <script type="text/javascript" src="../../../src/video/views/video.js"></script>
     <script type="text/javascript" src="../../../lib/flowplayer/flowplayer-3.1.4.min.js"></script>
     <script type="text/javascript" src="../../../src/video/views/flowplayer.js"></script>
+    <script type="text/javascript" src="../../../src/configs/djangosherd.js"></script>
 
 
     <script type="text/javascript">
@@ -164,7 +165,7 @@
             var duration = 0;
             var view = _initializeView(t);
 
-            view.events.connect(view.media, 'duration', function(obj) { duration = obj.duration; });
+            view.events.connect(djangosherd, 'duration', function(obj) { duration = obj.duration; });
 
             t.delay_call(3, 
                 function() {

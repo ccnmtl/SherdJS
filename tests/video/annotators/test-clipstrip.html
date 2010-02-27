@@ -80,8 +80,6 @@
         // gets its final duration from the stream metadata
         t.delay_call(1,
                      function() {
-                          // Check State & Play  
-                          t.ok(view.media.ready(), 'Player is ready (api)');
                           view.media.play();
                      },
                      3,
@@ -107,8 +105,8 @@
         _testRangeWidth(t, 19, 20);
 
         // Mocking up events from the clipform
-        view.events.signal(view.media, 'clipstart', { start: 24 });
-        view.events.signal(view.media, 'clipend', { end: 75 });
+        view.events.signal(djangosherd, 'clipstart', { start: 24 });
+        view.events.signal(djangosherd, 'clipend', { end: 75 });
         
         state = view.clipstrip.getState();
         t.eq(state.starttime, 24, 'Start at 24');
@@ -131,7 +129,7 @@
         HTMLDivElement.prototype.click = clickProto;
         
         view = _initializeView(t);
-        view.events.connect(view.media, 'seek', function() { seekCalled = true; });
+        view.events.connect(djangosherd, 'seek', function() { seekCalled = true; });
         
         var startMarker = document.getElementById("clipStripStart");
         startMarker.click();

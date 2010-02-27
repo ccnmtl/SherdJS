@@ -11,6 +11,7 @@
     <script type="text/javascript" src="../../../src/video/views/video.js"></script>
     <script type="text/javascript" src="../../../src/video/views/youtube.js"></script>
     <script type="text/javascript" src="../../../src/video/annotators/clipform.js"></script>
+    <script type="text/javascript" src="../../../src/configs/djangosherd.js"></script>
     
     <script type="text/javascript">
     function testDefault(t) {
@@ -29,8 +30,8 @@
         // Connect start/end events for testing
         var start = 0;
         var end = 0;
-        view.events.connect(view.media, 'clipstart', function(obj) { start = obj.start });
-        view.events.connect(view.media, 'clipend', function(obj) { end = obj.end });
+        view.events.connect(djangosherd, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(djangosherd, 'clipend', function(obj) { end = obj.end });
 
         // Partial state set
         view.clipform.setState({ start: 10 });
@@ -67,8 +68,8 @@
 
         var start = 0;
         var end = 0;
-        view.events.connect(view.media, 'clipstart', function(obj) { start = obj.start });
-        view.events.connect(view.media, 'clipend', function(obj) { end = obj.end });
+        view.events.connect(djangosherd, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(djangosherd, 'clipend', function(obj) { end = obj.end });
 
         view.clipform.setState({ start: 10 });
 
@@ -113,8 +114,8 @@
 
         var start = 0;
         var end = 0;
-        view.events.connect(view.media, 'clipstart', function(obj) { start = obj.start });
-        view.events.connect(view.media, 'clipend', function(obj) { end = obj.end });
+        view.events.connect(djangosherd, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(djangosherd, 'clipend', function(obj) { end = obj.end });
 
         view.clipform.setState({ start: 10, end: 25 });
 

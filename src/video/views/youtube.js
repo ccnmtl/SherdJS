@@ -155,7 +155,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         this.initialize = function(create_obj) {
             // register for notifications from clipstrip to seek to various times in the video
-            self.events.connect(self.media, 'seek', self.media, 'seek');
+            self.events.connect(djangosherd, 'seek', self.media, 'seek');
         }
         
         ////////////////////////////////////////////////////////////////////////
@@ -189,7 +189,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             if (newState == 1) {
                 var duration = self.media.duration();
                 if (duration > 1) {
-                    self.events.signal(self.media, 'duration', { duration: duration });
+                    self.events.signal(djangosherd, 'duration', { duration: duration });
                 }
             } else if (newState == 2 || newState == 0) { // stopped or ended
                 self.events.clearTimers();

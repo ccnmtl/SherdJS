@@ -224,7 +224,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                    if (newDuration != self.media._duration) {
                                                        self.media._duration = newDuration;
                                                        self.components.duration.innerHTML = self.secondsToCode(newDuration);
-                                                       self.events.signal(self.media, 'duration', { duration: newDuration });
+                                                       self.events.signal(djangosherd, 'duration', { duration: newDuration });
                                                    }
                                                    
                                                    // Update the tick count
@@ -235,7 +235,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                ]);
             
             // register for notifications from clipstrip to seek to various times in the video
-            self.events.connect(self.media, 'seek', self.media, 'seek');
+            self.events.connect(djangosherd, 'seek', self.media, 'seek');
         };
         
         this.deinitialize = function() {

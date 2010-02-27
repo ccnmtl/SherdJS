@@ -21,7 +21,8 @@
 // clipend: changes in the clipend from the clipform
 //
 // Signals:
-// seek: when a user clicks on the start/end time of the clipstrip, sends a seek event to the self.targetview.media
+// seek: when a user clicks on the start/end time of the clipstrip, sends a seek event out
+//
 
 var CLIP_MARKER_WIDTH = 7;
 
@@ -94,16 +95,16 @@ function DjangoSherd_ClipStrip() {
     this.initialize = function(create_obj) {
         // MochiKit!!!
         connect(self.components.clipStartMarker, 'onclick', function(evt) {
-                self.events.signal(self.targetview.media, 'seek', self.components.starttime);
+                self.events.signal(djangosherd, 'seek', self.components.starttime);
              });
         connect(self.components.clipEndMarker, 'onclick', function(evt) {
-                self.events.signal(self.targetview.media, 'seek', self.components.endtime);
+                self.events.signal(djangosherd, 'seek', self.components.endtime);
             });
         
         // listen for changes in duration from the movie and clipstart/end changes from clipform
-        self.events.connect(self.targetview.media, 'duration', self, 'setClipDuration'); //player
-        self.events.connect(self.targetview.media, 'clipstart', self, 'setClipStart'); //clipform
-        self.events.connect(self.targetview.media, 'clipend', self, 'setClipEnd'); //clipform
+        self.events.connect(djangosherd, 'duration', self, 'setClipDuration'); //player
+        self.events.connect(djangosherd, 'clipstart', self, 'setClipStart'); //clipform
+        self.events.connect(djangosherd, 'clipend', self, 'setClipEnd'); //clipform
         
         // setup the clip markers in the default position
         self.microformat._resize();

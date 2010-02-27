@@ -169,7 +169,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                      return self.media.state() > 2;
                  }, poll:500},
                  {call: function() {
-                     self.events.signal(self.media, 'duration', { duration: self.media.duration() });
+                     self.events.signal(djangosherd, 'duration', { duration: self.media.duration() });
                      self.setState({ start: self.components.starttime, end: self.components.endtime});
                  }
                  }]);
@@ -213,7 +213,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 self.microformat._queueReadyToSeekEvent();
                 
                 // register for notifications from clipstrip to seek to various times in the video
-                self.events.connect(self.media, 'seek', self.media, 'seek');
+                self.events.connect(djangosherd, 'seek', self.media, 'seek');
             }
         }
         
