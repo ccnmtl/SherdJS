@@ -300,7 +300,7 @@ function DjangoSherd_AssetMicroFormat() {
         } else if (rv.youtube) {
             rv.type = 'youtube';
             return rv;
-        } else if (rv.flv || rv.flv_pseudo || rv.mp4 || rv.mp4_pseudo) {
+        } else if (rv.flv || rv.flv_pseudo || rv.mp4 || rv.mp4_pseudo || rv.mp4_rtmp || rv.flv_rtmp) {
             rv.type = 'flowplayer';
             return rv;
         } else if (rv.image) {

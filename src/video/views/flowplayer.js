@@ -25,12 +25,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         this.microformat.create = function(obj,doc) {
             var wrapperID = Sherd.Base.newID('flowplayer-wrapper-');
             var playerID = Sherd.Base.newID('flowplayer-player-');
-            var url = '';
-            var pseudo = 0;
-            
-            url = self.microformat._getUrl(obj);
-            pseudo = self.microformat._isPseudostreaming(obj);
-            
+            var params = self.microformat._getPlayerParams(obj);
+
             if (!obj.options) {
                 obj.options = {
                     width: obj.presentation == 'small' ? 310 : 620, 
@@ -42,8 +38,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 object: obj,
                 htmlID: wrapperID,
                 playerID: playerID, // Used by .initialize post initialization
-                pseudo: pseudo, // Used by .initialize post initialization
-                mediaUrl: url,
+                playerParams: params,
                 text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper">' +
                       '   <div style="display:block; width:' + obj.options.width + 'px;' + 
                           'height:' + obj.options.height + 'px;" id="' + playerID + '">' +  
@@ -65,8 +60,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.endtime = 0;
                     rv.width = create_obj.object.options.width;
                     rv.playerID = create_obj.playerID;
-                    rv.mediaUrl = create_obj.mediaUrl;
-                    rv.pseudo = create_obj.pseudo;
+                    rv.mediaUrl = create_obj.playerParams.url;
                     rv.presentation = create_obj.object.presentation;
                     rv.autoplay = create_obj.object.autoplay ? true : false;
                 }
@@ -109,10 +103,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
             rc = false;
-            newUrl = self.microformat._getUrl(obj);
-            if (newUrl && document.getElementById(self.components.playerID) && self.media.state() > 0) {
+            newUrl = self.microformat._getPlayerParams(obj);
+            if (newUrl.url && document.getElementById(self.components.playerID) && self.media.state() > 0) {
                 playlist = self.components.player.getPlaylist();
-                if (playlist[0].url == newUrl) {
+                if (playlist[0].url == newUrl.url) {
                     // If the url is the same as the previous, just seek to the right spot.
                     // This works just fine.
                     rc = true;
@@ -140,27 +134,46 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             return rc;
         };
         
-        this.microformat._getUrl = function(obj) {
-            var url;
-        
-            if (obj.flv_pseudo) {
-                url = obj.flv_pseudo;
+        this.microformat._getPlayerParams = function(obj) {
+            var rc = {};
+            
+            if (obj.mp4_rtmp) {
+                a = self.microformat._parseRtmpUrl(obj.mp4_rtmp);
+                rc.url = a.url;
+                rc.netConnectionUrl = a.netConnectionUrl;
+                rc.provider = 'rtmp';
+            } else if (obj.flv_rtmp) {
+                a = self.microformat._parseRtmpUrl(obj.flv_rtmp);
+                rc.url = a.url;
+                rc.netConnectionUrl = a.netConnectionUrl;
+                rc.provider = 'rtmp';
+            } else if (obj.flv_pseudo) {
+                rc.url = obj.flv_pseudo;
+                rc.provider = 'pseudo';
             } else if (obj.mp4_pseudo) {
-                url = obj.mp4_pseudo;
+                rc.url = obj.mp4_pseudo;
+                rc.provider = 'pseudo';
             } else if (obj.mp4) {
-                url = obj.mp4;
+                rc.url = obj.mp4;
+                rc.provider = '';
             } else if (obj.flv) {
-                url = obj.flv;
+                rc.url = obj.flv;
+                rc.provider = '';
             }
-            return url;
+            return rc;
         }
         
-        this.microformat._isPseudostreaming = function(obj) {
-            if (obj.flv_pseudo || obj.mp4_pseudo)
-                return true;
-            else
-                return false;
+        // expected format: rtmp://uis-cndls-3.georgetown.edu:1935/simplevideostreaming//mp4:clayton.m4v
+        this.microformat._parseRtmpUrl = function(url) {
+            var rc = {};
+            
+            idx = url.lastIndexOf('//');
+            rc.netConnectionUrl = url.substring(0, idx);
+            rc.url = url.substring(idx + 2, url.length);
+            
+            return rc;
         }
+        
         
         this.microformat._queueReadyToSeekEvent = function() {
             self.events.queue('flowplayer ready to seek',[
@@ -182,34 +195,43 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         this.initialize = function(create_obj) {
             if (create_obj) {
                 options = {
-                        clip: {
-                            // these are the common clip properties & event handlers
-                            // they (theoretically) apply to all the clips
+                    clip: {
+                        // these are the common clip properties & event handlers
+                        // they (theoretically) apply to all the clips
+                    },
+                    plugins: {
+                        pseudo: { url: 'flowplayer.pseudostreaming-3.1.3.swf' },
+                        rtmp: { url: 'flowplayer.rtmp-3.1.3.swf' }
+                    },
+                    playlist: [ 
+                        { 
+                            url: create_obj.playerParams.url,
                             autoPlay: create_obj.object.autoplay ? true : false,
-                            autoBuffering: true,
-                        },
-                        playlist: [ create_obj.mediaUrl ], 
-                   };
-                
-                if (create_obj.pseudo) {
-                    options.plugins = { 
-                        pseudo: { 
-                            url: 'http://releases.flowplayer.org/swf/flowplayer.pseudostreaming-3.1.3.swf'
+                            provider: create_obj.playerParams.provider
                         } 
-                    } 
-                    
+                    ]
+                };
+                
+                if (create_obj.playerParams.provider == 'pseudo') {
+                    autoBuffering = true;
                     if (create_obj.object.querystring)
                         options.plugins.pseudo.queryString = create_obj.object.querystring;
-                    
-                    options.clip.provider = "pseudo";
+                }
+                
+                if (create_obj.playerParams.provider == 'rtmp') {
+                    autoBuffering = false; // flowplayer seems to choke with rtmp && autoBuffering 
+                    if (create_obj.playerParams.netConnectionUrl)
+                        options.playlist[0].netConnectionUrl = create_obj.playerParams.netConnectionUrl;
                 }
                 
                 flowplayer(create_obj.playerID, 
                            "http://releases.flowplayer.org/swf/flowplayer-3.1.5.swf",
                            options);
     
+                // Save reference to the player
                 self.components.player = $f(create_obj.playerID);
                 
+                // Setup timers to watch for readiness to seek/setState
                 self.microformat._queueReadyToSeekEvent();
                 
                 // register for notifications from clipstrip to seek to various times in the video
@@ -217,16 +239,15 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             }
         }
         
-
-        
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
 
         this.media.duration = function() {
             duration = 0;
             if (self.components.player && self.components.player.isLoaded()) {
-                if (self.components.player.getClip().fullDuration)
-                    duration = self.components.player.getClip().fullDuration;
+                fullDuration = self.components.player.getPlaylist()[0].fullDuration;
+                if (fullDuration)
+                    duration = fullDuration;
             }
             return duration;
         }

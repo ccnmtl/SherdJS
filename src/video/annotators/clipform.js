@@ -93,6 +93,7 @@ function DjangoSherd_ClipForm() {
         connect(self.components.startButton, 'onclick', function(evt) {
                 var movieTime = self.targetview.media.time();
                 var movieTimeCode = secondsToCode(movieTime);
+                
                 self.components.startField.value = movieTimeCode; // update start time with movie time
                 
                 if (movieTime > codeToSeconds(self.components.endField.value))

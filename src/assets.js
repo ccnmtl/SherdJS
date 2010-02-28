@@ -116,7 +116,7 @@ if (!Sherd.GenericAssetView) {
                         self.clipstrip = self.settings[current_type].clipstrip;
                     }
                 } else {
-                    throw "Your asset does not have a (supported) type marked";
+                    throw "Your asset does not have a (supported) type marked.";
                 }
             }
         }
