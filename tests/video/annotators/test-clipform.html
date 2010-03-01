@@ -56,15 +56,14 @@
         t.eq(state.start, 20, 'Start time set');
         t.eq(state.end, 80, 'End time set');
 
-        t.eq(start, 20, 'Start time signalled');
-        t.eq(end, 80, 'End time signalled');
+        t.eq(start, state.start, 'Start time signalled');
+        t.eq(end, state.end, 'End time signalled');
     }
 
     function testClickStart(t) {
-        view = _initializeView(t);
-
-        btnClipStart = document.getElementById('btnClipStart');
-        t.ok(btnClipStart);
+        var view = _initializeView(t);
+        var btnClipStart = document.getElementById('btnClipStart');
+        t.ok(btnClipStart, 'ClipStart instantiated');
 
         var start = 0;
         var end = 0;
@@ -77,17 +76,17 @@
                      function() {
                           view.media.play();
                      },
-                     5,
+                     8,
                      function() {
                          btnClipStart.click();
 
                          // Start time is current movie running time
                          // End time defaults to the original start time
                          state = view.clipform.getState();
-                         t.ok(state.start >=4 && state.start <= 6, 'Start time set to current running time');
+                         t.ok(state.start >=4, 'Start time set to current running time [' + state.start + ']');
                          t.eq(state.end, 10, 'End time defaults to original start time');
-                         t.ok(start >=4 && start <= 6, 'Clipstart called');
-                         t.eq(end, 10, 'Clipend called');
+                         t.eq(start, state.start, 'Clipstart called');
+                         t.eq(end, state.end, 'Clipend called');
                      },
                      10,
                      function() {
@@ -96,20 +95,18 @@
                          // Start time is current movie running time
                          // End time adjusts to the new start time as start > prev. end
                          state = view.clipform.getState();
-                         t.ok(state.start >=14 && state.start <= 15, 'Start time set to current running time');
-                         t.ok(state.end >=14 && state.start <= 15, 'End time defaults to original start time');
-                         t.ok(start >= 14 && start <= 15, 'Clipstart called');
-                         t.ok(end >= 14 && end <= 15, 'Clipend called');
+                         t.ok(state.start >=14, 'Start time set to current running time. [' + state.start + ']');
+                         t.ok(state.end >=14, 'End time defaults to original start time. [' + state.end + ']');
+                         t.eq(start, state.start, 'Clipstart called');
+                         t.eq(end, state.end, 'Clipend called');
 
                          view.media.pause();
-                     });
-        
+                     });   
     }
 
     function testClickEnd(t) {
-        view = _initializeView(t);
-
-        btnClipEnd = document.getElementById('btnClipEnd');
+        var view = _initializeView(t);
+        var btnClipEnd = document.getElementById('btnClipEnd');
         t.ok(btnClipEnd, 'Clip End Not Null');
 
         var start = 0;
@@ -123,17 +120,17 @@
                      function() {
                         view.media.play();
                      },
-                     5,
+                     8,
                      function() {
                          btnClipEnd.click();
 
                          // End time is current running movie time
                          // Start time defaults to end time as end time is < start time
                          state = view.clipform.getState();
-                         t.ok(state.start >=4 && state.start <= 5, 'Start time defaults to end time');
-                         t.ok(state.end >=4 && state.end <= 5, 'End time set to current running time');
-                         t.ok(start >=4 && start <= 5, 'Clipstart called');
-                         t.ok(end >=4 && end <= 5, 'Clipend called');
+                         t.ok(state.start >=4, 'Start time defaults to end time: [' + state.start + ']');
+                         t.ok(state.end >=4, 'End time set to current running time: [' + state.end + ']');
+                         t.eq(start, state.start, 'Clipstart called');
+                         t.eq(end, state.end, 'Clipend called');
                      },
                      10,
                      function() {
@@ -142,10 +139,10 @@
                          // End time is current running movie time
                          // Start time remains unchanged at its previous value
                          state = view.clipform.getState();
-                         t.ok(state.start >=4 && state.start <= 5, 'Start time is previous time');
-                         t.ok(state.end >= 14 && state.end <= 15, 'End time set to current running time');
-                         t.ok(start >=4 && start <= 5, 'Clipstart called');
-                         t.ok(end >= 14 && end <= 15, 'Clipend called');
+                         t.ok(state.start >=4, 'Start time is previous time: [' + state.start + ']');
+                         t.ok(state.end >= 14, 'End time set to current running time: [' + state.end + ']');
+                         t.eq(start, state.start, 'Clipstart called');
+                         t.eq(end, state.end, 'Clipend called');
 
                          view.media.pause();
                      });
@@ -153,9 +150,8 @@
     }
 
     function testOnChangeClipStart(t) {
-        view = _initializeView(t);
-
-        clipstart = document.getElementById('clipStart');
+        var view = _initializeView(t);
+        var clipstart = document.getElementById('clipStart');
         t.ok(clipstart, 'Clip Start Not Null');
 
         clipstart.value = "00:00:10";
@@ -174,9 +170,8 @@
     }
     
     function testOnChangeClipEnd(t) {
-        view = _initializeView(t);
-
-        clipend = document.getElementById('clipEnd');
+        var view = _initializeView(t);
+        var clipend = document.getElementById('clipEnd');
         t.ok(clipend, 'Clip End Not Null');
 
         clipend.value = "00:00:10";

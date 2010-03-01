@@ -41,7 +41,7 @@ function DjangoSherd_ClipForm() {
             'duration' : duration,
             'timeScale' : timeScale,
             'start' : codeToSeconds(self.components.startField.value),
-            'end' : codeToSeconds(self.components.endField.value),
+            'end' : codeToSeconds(self.components.endField.value)
         };
        
         return obj;

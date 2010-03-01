@@ -4,10 +4,19 @@
  * http://flowplayer.org/doc    umentation/api/index.html
  * 
  * Example Files:
+ * 
+ * Pseudostreaming Flv
  * file: http://vod01.netdna.com/vod/demo.flowplayer/Extremists.flv
  * 
+ * Pseudostreaming Mp4
  * file: http://content.bitsontherun.com/videos/LJSVMnCF-327.mp4
  * queryString: ?starttime=${start}
+ * 
+ * RTMP Flv
+ * rtmp://vod01.netdna.com/play//vod/demo.flowplayer/metacafe.flv
+ * 
+ * RTMP Mp4
+ * rtmp://uis-cndls-3.georgetown.edu:1935/simplevideostreaming//mp4:clayton.m4v
  */
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}

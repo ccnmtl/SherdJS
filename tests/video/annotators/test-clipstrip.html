@@ -15,6 +15,25 @@
     
     <script type="text/javascript">
 
+    // setClipStart and/or setClipEnd are invoked when the user changes these 
+    // values using the associated clipform in the main asset view
+    function testStartAndEndEventListeners(t) {
+        var view = _initializeView(t);
+        view.clipstrip.setState({ start: 11, end: 30, duration: 376 });
+        _testRangeWidth(t, 19, 20);
+
+        // Mocking up events from the clipform
+        view.events.signal(djangosherd, 'clipstart', { start: 24 });
+        view.events.signal(djangosherd, 'clipend', { end: 75 });
+        
+        state = view.clipstrip.getState();
+        t.eq(state.starttime, 24, 'Start at 24');
+        t.eq(state.endtime, 75, 'Endtime at 75');
+
+        // Verify the markers have moved, just checking range as px can vary by browser
+        _testRangeWidth(t, 52, 53);
+    }
+
      // Default 
      // -- starttime:0, endtime:0, duration:0 
      // -- left/right markers appear together at the 0px position, left-side of player
@@ -97,41 +116,25 @@
                      });
     }
 
-    // setClipStart and/or setClipEnd are invoked when the user changes these 
-    // values using the associated clipform in the main asset view
-    function testStartAndEndEventListeners(t) {
-        view = _initializeView(t);
-        view.clipstrip.setState({ start: 11, end: 30, duration: 376 });
-        _testRangeWidth(t, 19, 20);
-
-        // Mocking up events from the clipform
-        view.events.signal(djangosherd, 'clipstart', { start: 24 });
-        view.events.signal(djangosherd, 'clipend', { end: 75 });
-        
-        state = view.clipstrip.getState();
-        t.eq(state.starttime, 24, 'Start at 24');
-        t.eq(state.endtime, 75, 'Endtime at 75');
-
-        // Verify the markers have moved, just checking range as px can vary by browser
-        _testRangeWidth(t, 52, 53);
-    }
 
     function testSeekSignal(t) {
         var seekCalled = false;
-
-        // Some browsers don't support click for a Div element. Adding this to allow mocking up the receiver end of a signal
-        function clickProto(){
-            var evt = this.ownerDocument.createEvent('MouseEvents');
-            evt.initMouseEvent('click', true, true, this.ownerDocument.defaultView, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-            this.dispatchEvent(evt);
-        }
-
-        HTMLDivElement.prototype.click = clickProto;
-        
-        view = _initializeView(t);
+        var view = _initializeView(t);
         view.events.connect(djangosherd, 'seek', function() { seekCalled = true; });
         
         var startMarker = document.getElementById("clipStripStart");
+
+        if (!startMarker.click) {
+           // Some browsers don't support click for a Div element. Adding this to allow mocking up the receiver end of a signal
+           function clickProto(){
+              var evt = this.ownerDocument.createEvent('MouseEvents');
+              evt.initMouseEvent('click', true, true, this.ownerDocument.defaultView, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+              this.dispatchEvent(evt);
+           }
+
+           HTMLDivElement.prototype.click = clickProto;
+        }
+
         startMarker.click();
         t.ok(seekCalled, 'The clipstrip signalled seek properly');
     }
@@ -164,7 +167,7 @@
         // Can't test individual pixels for left/right, just testing width of range here
         var idx = document.getElementById('clipStripRange').style.width.search("px");
         var num = document.getElementById('clipStripRange').style.width.substr(0, idx);
-        t.ok(num >= start && num <= end, 'Expected width is >= ' + start + ' && <= ' + '; Received width was: [' + num + ']');
+        t.ok(num >= start && num <= end, 'Expected width is >= ' + start + ' && <= ' + end + '; Received width was: [' + num + ']');
     }
 
     </script>
