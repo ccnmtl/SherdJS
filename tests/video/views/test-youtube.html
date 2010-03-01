@@ -128,7 +128,7 @@
                          4,
                          function() {
                              // Check Seek 
-                             t.ok(view.media.time() > 25, 'Video cued up properly, now lets wait on the stop')
+                             t.ok(view.media.time() >= 25, 'Video cued up properly, now lets wait on the stop. [' + view.media.time() + ']');
                          },
                          7,
                          function() {
