@@ -99,7 +99,7 @@
                          function() {
                              // Check PauseAt
                              t.eq(view.media.state(), 2, 'Video is paused');
-                             t.ok(view.media.time() >= 5 && view.media.time() <= 6.5, 'Time is between 5/6 seconds. Actual time: [' + view.media.time() + ']');
+                             t.ok(view.media.time() >= 5, 'Time is between 5/6 seconds. Actual time: [' + view.media.time() + ']');
 
                              // Start Playing Again
                              view.media.play();
@@ -128,7 +128,7 @@
                          4,
                          function() {
                              // Check Seek 
-                             t.ok(view.media.time() >= 25, 'Video cued up properly, now lets wait on the stop. [' + view.media.time() + ']');
+                             t.ok(view.media.time() >= 24, 'Video cued up properly, now lets wait on the stop. [' + view.media.time() + ']');
                          },
                          7,
                          function() {

@@ -16,6 +16,7 @@ if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
     Sherd.Video.QuickTime = function() {
         var self = this;
+        var _played = false; // See this.media.seek
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
         
         ////////////////////////////////////////////////////////////////////////
@@ -236,6 +237,13 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             
             // register for notifications from clipstrip to seek to various times in the video
             self.events.connect(djangosherd, 'seek', self.media, 'seek');
+            
+            self.events.connect(djangosherd, 'playclip', function(obj) {
+                self.setState(obj);
+                
+                // give it a second
+                window.setTimeout(function() { self.media.play(); }, 200);
+            });
         };
         
         this.deinitialize = function() {
@@ -264,8 +272,12 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         this.media.play = function() {
             if (self.media.ready()) {
                 var mimetype = self.components.player.GetMIMEType();
-                if (/image/.test(mimetype)) {
+                if (!self._played && /image/.test(mimetype)) {
+                    // Setting the URL in this manner is only needed the first time through
+                    // In order to facilitate fast seeking and update, keep track of the first time
+                    // via the _played class variable, then default to a regular play event
                     self.components.player.SetURL(self.components.player.GetHREF());
+                    self._played = true;
                 } else {
                     self.components.player.Play();
                 }       

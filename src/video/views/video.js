@@ -112,10 +112,15 @@ if (!Sherd.Video.Base) {
             ,
             pauseAt : function(endtime) {  
                 if (endtime) {
-                    self.events.queue(self.microformat.type() + ' pause',[
-                                              {test: function() { return self.media.time() >= endtime}, poll:500},
+                    // kill any outstanding timers for this event
+                    name = self.microformat.type() + ' pause';
+                    self.events.killTimer(name);
+                    
+                    self.events.queue(name,[
+                                              {test: function() { return self.media.time() >= endtime; }, poll:500},
                                               {call: function() { self.media.pause(); }}
                                               ]);
+
                 }
             }
             ,
@@ -173,11 +178,22 @@ if (!Sherd.Video.Base) {
         this.events.registerTimer = function(name, timeoutID) {
             this._timers[name] = timeoutID;
         }
+        
+        this.events.killTimer = function(name) {
+            if (this._timers[name]) {
+                window.clearTimeout(this._timers[name]);
+                delete this._timers[name];
+                return true;
+            } else {
+                return false;
+            }
+        }
 
         this.events.clearTimers = function() {
             for (name in this._timers) {
                 window.clearTimeout(this._timers[name]);
             }
+            this._timers = {}
         }
         
         /*
@@ -201,7 +217,7 @@ if (!Sherd.Video.Base) {
                 var cur;
                 var pollID;
                 var timeoutID;
-
+                
                 //TODO: event, broadcast attrs
                 function advance() {
                     if (pollID)
@@ -257,12 +273,13 @@ if (!Sherd.Video.Base) {
                             if (cur.log)
                                 cur.log.apply(curself, [ e, data ]);
                         }
-                        self.events.registerTimer(name + 'poll', pollID);
+                        
+                        self.events.registerTimer(name, pollID);
                     } // endgo
                     
                     if (cur.check || cur.poll || cur.test) {
                         pollID = window.setTimeout(go, 0);
-                        self.events.registerTimer(name + 'poll', pollID);
+                        self.events.registerTimer(name, pollID);
                     } else {
                         advance();
                     }

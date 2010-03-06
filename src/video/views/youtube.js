@@ -156,6 +156,11 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         this.initialize = function(create_obj) {
             // register for notifications from clipstrip to seek to various times in the video
             self.events.connect(djangosherd, 'seek', self.media, 'seek');
+            
+            self.events.connect(djangosherd, 'playclip', function(obj) {
+                    self.setState(obj);
+                    self.media.play();
+                });
         }
         
         ////////////////////////////////////////////////////////////////////////
@@ -245,7 +250,11 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             
                 if (endtime != undefined) {
                     // Watch the video's running time & stop it when the endtime rolls around
-                    self.media.pauseAt(endtime);
+                    // Delay the pause a few seconds. In an update situation, there can be a slight
+                    // race condition between a prior seek with a greater end time. In that situation,
+                    // the seek to the new time hasn't yet occurred and the pauseAt test (self.media.time > endtime)
+                    // incorrectly returns true.
+                    setTimeout(function() { self.media.pauseAt(endtime); }, 100);
                 }
             } else {
                 // store the values away for when the player is ready

@@ -245,6 +245,17 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 
                 // register for notifications from clipstrip to seek to various times in the video
                 self.events.connect(djangosherd, 'seek', self.media, 'seek');
+                
+                self.events.connect(djangosherd, 'playclip', function(obj) {
+                    // Call seek directly
+                    self.components.player.seek(obj.start);
+                    
+                    // There's a slight race condition between seeking to the start and pausing.
+                    // If the new endtime is less than the old endtime, the pauseAt timer returns true immediately
+                    // Getting around this by delaying pause call for a few millis
+                    // Play likewise gets a little messed up if the previous clip is still around. So, delaying that too.
+                    setTimeout(function() { if (!self.media.isPlaying()) self.media.play(); if (obj.end) self.media.pauseAt(obj.end); }, 750);
+                });
             }
         }
         
@@ -314,6 +325,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 delete self.components.starttime;
                 delete self.components.endtime;
                 
+                // Delay the play for a few milliseconds
+                // In an update situation, we need a little time for the seek 
+                // to happen before play occurs. Otherwise, the movie just
+                // starts from the beginning of the clip and ignores the seek
                 if (self.components.autoplay && self.media.state() != 3) {
                     setTimeout(function() {
                         self.media.play();

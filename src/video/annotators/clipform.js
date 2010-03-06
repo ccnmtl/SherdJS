@@ -135,6 +135,10 @@ function DjangoSherd_ClipForm() {
             }
             self.storage.update(obj, false);
         });
+        connect(self.components.playClip, 'onclick', function(evt) {
+            var obj = self.getState();
+            self.events.signal(djangosherd, 'playclip', { start: obj.start, end: obj.end });
+        })
     }
     
     this.microformat.create = function(obj) {
@@ -147,15 +151,26 @@ function DjangoSherd_ClipForm() {
                     </div>\
                     <div id="clipcontrols">\
                        <div class="cliptimeboxtable" style="width: 320px;">\
-                          <table border="0" cellspacing="0" cellpadding="0">\
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">\
                               <tr>\
-                              <td style="padding: 2px;"><input type="button" class="regButton" style="width: 70px" value="start time:" id="btnClipStart"/></td>\
-                              <td style="padding: 2px 10px 2px 2px; border-right: 1px dotted #999;">\
-                                <input type="text" class="timecode" id="clipStart" value="00:00:00" /></td>\
-                                <td style="padding: 2px 2px 2px 7px;"><input type="button" class="regButton" style="width: 70px" value="end time:" id="btnClipEnd"/></td>\
-                                <td style="padding: 2px;">\
-                                  <input type="text" class="timecode" id="clipEnd" value="00:00:00" /></td>\
+                              <td style="padding: 10px 2px 10px 7px; padding-bottom: 10px;">\
+                                  <input type="button" class="regButton" style="width: 70px" value="start time:" id="btnClipStart"/>\
+                              </td>\
+                              <td style="padding: 10px 10px 10px 2px; border-right: 1px dotted #999;">\
+                                <input type="text" class="timecode" id="clipStart" value="00:00:00" />\
+                              </td>\
+                              <td style="padding: 10px 2px 10px 7px;">\
+                                 <input type="button" class="regButton" style="width: 70px" value="end time:" id="btnClipEnd"/>\
+                              </td>\
+                              <td style="padding: 10px 10px 10px 2px;">\
+                                  <input type="text" class="timecode" id="clipEnd" value="00:00:00" />\
+                              </td>\
                             </tr>\
+                            <tr>\
+                            <td colspan="4" style="text-align: center; border-top: 2px solid #999; padding: 10px 0px">\
+                            <input type="button" class="regButton" style="width: 70px" value="play clip" id="btnPlayClip"/>\
+                            </td>\
+                        </tr>\
                           </table>\
                       </div>\
                     </div></div>'
@@ -170,7 +185,8 @@ function DjangoSherd_ClipForm() {
             'startButton' : inputs[2],
             'endButton' : inputs[4],
             'startField' : inputs[3],
-            'endField' : inputs[5]
+            'endField' : inputs[5],
+            'playClip' : inputs[6]
         }
     }
 }
