@@ -163,6 +163,11 @@ function DjangoSherd_ClipForm() {
                                   <input type="text" class="timecode" id="clipEnd" value="00:00:00" />\
                               </td>\
                             </tr>\
+                            <tr>\
+                               <td colspan="4" style="text-align: center; border-top: 2px solid #999; padding: 10px 0px">\
+                                  <input type="button" class="regButton" style="width: 70px" value="play segment" id="btnPlayClip"/>\
+                               </td>\
+                            </tr>\
                           </table>\
                       </div>\
                     </div></div>'
