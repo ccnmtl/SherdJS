@@ -100,6 +100,11 @@ function DjangoSherd_ClipStrip() {
         connect(self.components.clipEndMarker, 'onclick', function(evt) {
                 self.events.signal(djangosherd, 'seek', self.components.endtime);
             });
+        connect(self.components.clipRange, 'onclick', function(evt) {
+            var obj = self.getState();
+            self.events.signal(djangosherd, 'playclip', { start: obj.starttime, end: obj.endtime });
+        });
+    
         
         // listen for changes in duration from the movie and clipstart/end changes from clipform
         self.events.connect(djangosherd, 'duration', self, 'setClipDuration'); //player

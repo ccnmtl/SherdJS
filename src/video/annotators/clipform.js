@@ -145,15 +145,12 @@ function DjangoSherd_ClipForm() {
         var htmlID = 'clipform';
         return {
             htmlID : htmlID,
-            text : '<div id="' + htmlID + '"><div class="clipform" style="display:none">\
-                       <input type="radio" name="clipType" value="Clip" checked="checked" />\
-                       <input type="radio" name="clipType" value="Marker"/>\
-                    </div>\
+            text : '<div id="' + htmlID + '">\
                     <div id="clipcontrols">\
                        <div class="cliptimeboxtable" style="width: 320px;">\
                           <table width="100%" border="0" cellspacing="0" cellpadding="0">\
                               <tr>\
-                              <td style="padding: 10px 2px 10px 7px; padding-bottom: 10px;">\
+                              <td style="padding: 10px 2px 10px 7px;">\
                                   <input type="button" class="regButton" style="width: 70px" value="start time:" id="btnClipStart"/>\
                               </td>\
                               <td style="padding: 10px 10px 10px 2px; border-right: 1px dotted #999;">\
@@ -166,11 +163,6 @@ function DjangoSherd_ClipForm() {
                                   <input type="text" class="timecode" id="clipEnd" value="00:00:00" />\
                               </td>\
                             </tr>\
-                            <tr>\
-                            <td colspan="4" style="text-align: center; border-top: 2px solid #999; padding: 10px 0px">\
-                            <input type="button" class="regButton" style="width: 70px" value="play clip" id="btnPlayClip"/>\
-                            </td>\
-                        </tr>\
                           </table>\
                       </div>\
                     </div></div>'
@@ -182,11 +174,11 @@ function DjangoSherd_ClipForm() {
         var inputs = html_dom.getElementsByTagName('input');
         return {
             'form' : html_dom,
-            'startButton' : inputs[2],
-            'endButton' : inputs[4],
-            'startField' : inputs[3],
-            'endField' : inputs[5],
-            'playClip' : inputs[6]
+            'startButton' : document.getElementById('btnClipStart'),
+            'endButton' : document.getElementById('btnClipEnd'),
+            'startField' : document.getElementById('clipStart'),
+            'endField' : document.getElementById('clipEnd'),
+            'playClip' : document.getElementById('btnPlayClip')
         }
     }
 }
