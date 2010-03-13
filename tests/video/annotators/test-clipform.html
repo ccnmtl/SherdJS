@@ -72,7 +72,7 @@
 
         view.clipform.setState({ start: 10 });
 
-        t.delay_call(1,
+        t.delay_call(3,
                      function() {
                           view.media.play();
                      },
@@ -189,6 +189,18 @@
         state = view.clipform.getState();
         t.eq(state.start, 12, 'Start time changed to match end time -- 12');
         t.eq(state.end, 12, 'End time is 12');
+    }
+
+    function testClickPlaySegment(t) {
+        var view = _initializeView(t);
+        var btnPlaySegment = document.getElementById('btnPlayClip');
+        t.ok(btnPlaySegment, 'Clip Segment Instantiated');
+
+        playclip = false;
+        view.events.connect(djangosherd, 'playclip', function(obj) { playclip = true });
+        
+        btnPlaySegment.click();
+        t.eq(playclip, true, 'Play Clip was signalled');
     }
 
     function _initializeView(t) {
