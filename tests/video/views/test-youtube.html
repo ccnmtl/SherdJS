@@ -159,7 +159,7 @@
                     function() {
                         // Check Play
                         t.ok(view.media.isPlaying(), 'Video is playing (api)');
-                        t.ok(view.media.time() > 11, 'Elapsed time is going');
+                        t.ok(view.media.time() > 10.5, 'Elapsed time is going. Actual time [' + view.media.time() + ']');
                     },
                     15,
                     function() {
