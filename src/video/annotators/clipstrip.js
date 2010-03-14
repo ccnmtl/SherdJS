@@ -77,7 +77,7 @@ function DjangoSherd_ClipStrip() {
     // Event Listener: clipstart - from clipform
     // Assumes self.components.duration has been initialized either through setState or setClipDuration
     this.setClipStart = function(obj) {
-        if (obj.start && self.components.duration) {
+        if (obj.start != undefined && self.components.duration) {
             self.components.starttime = obj.start;
             self.microformat._resize();
         }
@@ -86,7 +86,7 @@ function DjangoSherd_ClipStrip() {
     // Event Listener: clipend - from clipform
     // Assumes self.components.duration has been initialized
     this.setClipEnd = function(obj) {
-        if (obj.end && self.components.duration) {
+        if (obj.end != undefined && self.components.duration) {
             self.components.endtime = obj.end;
             self.microformat._resize();
         }

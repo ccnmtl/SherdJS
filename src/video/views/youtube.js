@@ -242,8 +242,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 if (starttime != undefined) {
                     if (self.components.autoplay) {
                         self.components.player.seekTo(starttime, true);
-                    }
-                    else {
+                    } else {
                         self.components.player.cueVideoByUrl(self.components.mediaUrl, starttime);
                     }
                 }

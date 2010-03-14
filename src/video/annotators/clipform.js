@@ -67,10 +67,10 @@ function DjangoSherd_ClipForm() {
                 end = start;
             }
             
-            if (start)
+            if (start != undefined)
                 self.events.signal(djangosherd, 'clipstart', { start: codeToSeconds(start) });    
             
-            if (end)
+            if (end != undefined)
                 self.events.signal(djangosherd, 'clipend', { end: codeToSeconds(end) });
         }
     }
