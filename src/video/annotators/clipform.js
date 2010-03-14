@@ -165,7 +165,7 @@ function DjangoSherd_ClipForm() {
                             </tr>\
                             <tr>\
                                <td colspan="4" style="text-align: center; border-top: 2px solid #999; padding: 10px 0px">\
-                                  <input type="button" class="regButton" style="width: 100px" value="play segment" id="btnPlayClip"/>\
+                                  <input type="button" class="regButton" style="width: 100px" value="play portion" id="btnPlayClip"/>\
                                </td>\
                             </tr>\
                           </table>\
