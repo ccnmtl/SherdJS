@@ -151,11 +151,13 @@ function DjangoSherd_ClipStrip() {
     this.microformat._resize = function() {
         left = self.microformat._timeToPixels(self.components.starttime, self.components.duration, self.components.timestrip.trackWidth);
         right = self.microformat._timeToPixels(self.components.endtime, self.components.duration, self.components.timestrip.trackWidth);
+        width = right - left;
+        if (width < 0) width = 0;
         
         self.components.clipStartMarker.style.left = (left - CLIP_MARKER_WIDTH) + 'px';
         self.components.clipEndMarker.style.left = right + 'px';
         self.components.clipRange.style.left = left + "px";
-        self.components.clipRange.style.width = (right - left) + 'px';
+        self.components.clipRange.style.width = width + 'px';
         
         self.components.clipStartMarker.style.display = 'block';
         self.components.clipRange.style.display = 'block';
