@@ -10,6 +10,10 @@
 	,errortext:'Error text.'
 	,type:'video/quicktime'
 	};
+	
+	@todo - Stop using the quicktime poster movie type and just create a clickable jpg that shows the real quicktime movie.
+	This should allow a transparent arrow to be overlayed onto the poster so cheesy control text "Click to Play" can be removed.
+	Some tips here: http://digitalmedia.oreilly.com/2006/09/29/two-slick-quicktime-tricks.html?page=2
  */
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
@@ -70,7 +74,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 currentTimeID:'currtime',
                 durationID:'totalcliplength',
                 object:obj,
-                text:'<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
+                text:'<div id="clicktoplay">Click video to play</div> \
+                <div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
                 <!--[if IE]>\
                     <object id="'+playerID+'" \
                     width="'+opt.width+'" height="'+opt.height+'" \
@@ -375,70 +380,3 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         };
     } //Sherd.AssetViews.QuickTime
 }
-
-
-/*
-			var args = ['images/poster.gif',
-			  '320', '256', '',
-			  'name','movie1',
-			  'href','$!{material.url}',
-			  'target','myself',
-			  'type','image/x-quicktime',
-			  'bgcolor','#ffffff',
-			  'enablejavascript','true',
-			  'controller','false',
-			  'autoplay','true',
-			  'autohref','true',
-			  'kioskmode','true',
-			  'pluginspage','http://www.apple.com/quicktime/download/',
-			  'classid','clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B',
-			  'codebase','http://www.apple.com/qtactivex/qtplugin.cab'];
-			///Safari 3: does not do autohref successfully. why does it suck?
-			if (/Macintosh.*3[.0-9]+ Safari/.test(navigator.userAgent)) {
-			   args[0] = args[7];
-			   args[11] = 'video/quicktime'; //type
-			   args[17] = 'true'; //controller = true
-			   args[21] = 'false'; //autohref=false
-			   args.splice(6,2); //remove href
-			}
-			QT_WriteOBJECT_XHTML.apply(this,args);
- */
-
-
-
-/**
- GENERATED HTML
-    <div class="asset-display">
-        <div id="quicktime-wrapper1" class="sherd-quicktime-wrapper">                
-        <div id="clicktoplay" onclick="theMovie.SetURL(theMovie.GetHREF());hideElement(event.target)">Click video to play</div>                
-        <!--[if IE]>
-           <object id="movie1" width="320" height="256"                 
-               style="behavior:url(#qt_event_source)"                  
-               codebase="http://www.apple.com/qtactivex/qtplugin.cab"
-               classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B">                 
-        <[endif]-->
-        
-        <!--[if !IE]>
-        <-->
-        <object id="movie1" 
-                type="image/x-quicktime" 
-                data="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large" 
-                height="256" 
-                width="320">                  
-        <!-- >
-        <![endif]-->                 
-            
-            <param name="src" value="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large">                 
-            <param name="controller" value="false">                 
-            <param name="type" value="image/x-quicktime">                 
-            <param name="enablejavascript" value="true">                 
-            <param name="autoplay" value="false">                 
-            <param name="href" value="http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy">
-            <param name="autohref" value="false">
-            <param name="width" value="320">
-            <param name="height" value="256">
-            <param name="target" value="myself">                                     
-            Error text.
-      </object>
-      </div>   
- **/
