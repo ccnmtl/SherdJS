@@ -79,7 +79,7 @@ if (!Sherd.Image.OpenLayers) {
 	    },
 	    'small':{
 		height:function(){return '300px'},
-		width:function(){return '300px'},
+		width:function(){return '320px'},
 		initialize:function(){/*noop*/}
 	    }
 	}
