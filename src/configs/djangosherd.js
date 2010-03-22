@@ -256,7 +256,8 @@ function DjangoSherd_AssetMicroFormat() {
                         // /ASSUMES: only one source for each label
                         // /use getAttribute rather than href, to avoid
                         // urlencodings
-                        rv[reg[1]] = elt.getAttribute('href');
+                        /// unescape necessary for IE7 (and sometimes 8)
+                        rv[reg[1]] = unescape(elt.getAttribute('href'));
                         // /TODO: maybe look for some data attributes here, too,
                         // when we put them there.
                         var metadata = elt.getAttribute('data-metadata');
