@@ -26,7 +26,7 @@ jQuery(function(){
 	    destination += ( a+'='+sources[a] +'&' );
 	}
 
-	jQuery('.byxor-control-slot div').prepend('<h2 class="sherd-analyze" style="display:block;float:right;margin:-2px 0 0 0;background-color:white;background-image:url(http://mondrian.ccnmtl.columbia.edu/site_media/img/analyze_button.jpg);height:26px;width:110px;overflow:hidden;"><a href="'+destination+'" class="sherd-analyze-link" style="color:transparent;overflow:hidden;line-height:100px;height:26px;">Analyze This</a></h2>');
+	jQuery('.byxor-control-slot div').prepend('<h2 class="sherd-analyze" style="display:block;float:right;margin:-2px 0 0 0;"><a href="'+destination+'" class="sherd-analyze-link" style="display:block;color:transparent;overflow:hidden;line-height:100px;background-color:white;background-image:url(http://mondrian.ccnmtl.columbia.edu/site_media/img/analyze_button.jpg);height:26px;width:110px;overflow:hidden;">Analyze This</a></h2>');
     }
 });
 
