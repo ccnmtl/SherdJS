@@ -144,6 +144,9 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
         forEach($$('a.materialCitation'), function(elt) {// MOCHI
                     var url = elt.getAttribute('href');
                     connect(elt, 'onclick', function(evt) {
+			if (document.location.hash == '#debug') {
+                            evt.preventDefault();// don't open href
+			}
                         openCitation(url);
                         evt.preventDefault();// don't open href
                         });
