@@ -168,7 +168,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         // Global function required for the player
         window.onYouTubePlayerReady = function(playerID) {
-            if (playerID == self.components.playerID) {
+            if (playerID == self.components.playerID || unescape(playerID) == self.components.playerID) {
                 self.media._ready = true;
                 
                 // reset the state
