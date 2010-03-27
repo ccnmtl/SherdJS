@@ -67,6 +67,12 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     opt.controller = 'false';
                 }
             }
+            
+            var clicktoplay = "";
+            if (opt.autoplay != 'true') {
+                clicktoplay = '<div id="clicktoplay">Click video to play</div>;'
+            }
+            
             //we need to retest where the href usecase is needed
             //since safari breaks
             return {htmlID:wrapperID,
@@ -74,8 +80,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 currentTimeID:'currtime',
                 durationID:'totalcliplength',
                 object:obj,
-                text:'<div id="clicktoplay">Click video to play</div> \
-                <div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
+                text: clicktoplay + '<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
                 <!--[if IE]>\
                     <object id="'+playerID+'" \
                     width="'+opt.width+'" height="'+opt.height+'" \
@@ -112,9 +117,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     //the first works for everyone except safari
                     //the latter probably works everywhere except IE
                     rv.player = document[create_obj.playerID] || document.getElementById(create_obj.playerID);
-                    rv.duration = document.getElementById(create_obj.durationID);
-                    rv.elapsed = document.getElementById(create_obj.currentTimeID);
-                    rv.timedisplay = document.getElementById('time-display');
+                    rv.duration = document[create_obj.durationID] || document.getElementById(create_obj.durationID);
+                    rv.elapsed = document[create_obj.currentTimeID] || document.getElementById(create_obj.currentTimeID);
+                    rv.timedisplay = document['time-display'] || document.getElementById('time-display');
                     rv.autoplay = create_obj.object.autoplay == 'true';
                 } 
                 return rv;
@@ -311,7 +316,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             return status == 'Playable' || status == 'Complete';
         };
 
-        this.media.seek = function(starttime, endtime) {
+        this.media.seek = function(starttime, endtime) {    
             if (self.media.ready()) {
                 
                 if (starttime != undefined) {
@@ -335,7 +340,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 self.components.starttime = starttime;
                 self.components.endtime = endtime;
             }
-        };
+        }
         
         this.media.time = function() {
             var time = 0;
