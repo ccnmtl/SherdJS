@@ -21,7 +21,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
     Sherd.Video.QuickTime = function() {
         var self = this;
         self._played = false; // See this.media.seek
-        self._count = -1;
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
         
         ////////////////////////////////////////////////////////////////////////
@@ -32,7 +31,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             var wrapperID = Sherd.Base.newID('quicktime-wrapper-');
             var playerID = Sherd.Base.newID('quicktime-player-');
             self._played = false;
-            self._count = self._count + 1;
             
             var opt = {
                     url:'',
@@ -205,17 +203,15 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                         // Susan says: I experienced something similar to the double-load, but this workaround didn't fix it. 
                         // I did see the QT player freeze and just play the audio track when the player was created, then 
                         // recreated. (Play QT, Play YouTube, Play QT). Resetting the URL seems to take care of the state problem.
-                        if (/Trident/.test(navigator.userAgent) && self.components.autoplay && self._count > 0) {
+                        if (/Trident/.test(navigator.userAgent) && self.components.autoplay) {
                             window.setTimeout(function() {
                                 self.components.player.SetURL(self.components.mediaUrl); //reset the url
                                 
-                                // @todo -- seek may be happening too soon here. Consider kicking off the read to seek thread
                                 self.media.seek(self.components.starttime, self.components.endtime); // redo the seek also.
                             }, 400);
                         }
                     }
                     self.microformat._startUpdateDisplayTimer();
-                    self._count = self._count + 1;
                     return true;
                 } catch(e) { }
             }
@@ -280,6 +276,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 // give it a second
                 window.setTimeout(function() { self.media.play(); }, 200);
             });
+
         };
         
         // Overriding video.js
