@@ -208,8 +208,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                         if (/Trident/.test(navigator.userAgent) && self.components.autoplay && self._count > 0) {
                             window.setTimeout(function() {
                                 self.components.player.SetURL(self.components.mediaUrl); //reset the url
+                                
+                                // @todo -- seek may be happening too soon here. Consider kicking off the read to seek thread
                                 self.media.seek(self.components.starttime, self.components.endtime); // redo the seek also.
-                            }, 100);
+                            }, 400);
                         }
                     }
                     self.microformat._startUpdateDisplayTimer();
@@ -257,7 +259,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                       var adjustedDuration = self.media.duration();
                                                       ready = self.media.ready() && 
                                                               movDuration < 2147483647 && 
-                                                              adjustedDuration >= 1;
+                                                              adjustedDuration >= 1 &&
+                                                              (self.components.player.GetMaxTimeLoaded()/self.media.timescale()) > self.components.starttime;
                                                       
                                                       return ready; 
                                                   }, poll:500},
@@ -350,7 +353,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             if (self.media.ready()) {
                 
                 if (starttime != undefined) {
-                    
                     playRate = self.components.player.GetRate();
                     if (playRate > 0)
                         self.components.player.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
