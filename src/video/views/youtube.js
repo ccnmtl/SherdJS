@@ -216,13 +216,19 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
         
         this.media.pause = function() {
-            if (self.components.player)
-                self.components.player.pauseVideo();
+            if (self.components.player) { 
+                try {
+                    self.components.player.pauseVideo();
+                } catch (e) {}
+            }
         }
         
         this.media.play = function() {
-            if (self.components.player)
-                self.components.player.playVideo();
+            if (self.components.player) {
+                try {
+                    self.components.player.playVideo();
+                } catch (e) {}
+            }
         }
         
         this.media.ready = function() {

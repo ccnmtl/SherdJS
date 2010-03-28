@@ -101,6 +101,9 @@ if (!Sherd.Video.Base) {
         this.initialize = function() {}
         
         this.deinitialize = function() {
+            if (self.media.isPlaying()) {
+                self.media.pause();
+            }
             self.events.clearTimers();
         }
 

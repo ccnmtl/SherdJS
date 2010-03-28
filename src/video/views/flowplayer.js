@@ -302,7 +302,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         }
         
         this.media.ready = function() {
-            return self.media.state() > 2;
+            ready = false;
+            try {
+                ready = self.media.state() > 2;
+            } catch (e) {
+            }
+            return ready;
         }
         
         this.media.seek = function(starttime, endtime) {
@@ -351,13 +356,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             if (self.components.presentation == 'small') {
                 return {w: self.components.width,
                     trackX: 30,
-                    trackWidth: 85,
+                    trackWidth: 95,
                     visible:true
                 }
             } else {
                 return {w: self.components.width,
                         trackX: 30,
-                        trackWidth: 395,
+                        trackWidth: 410,
                         visible:true
                 }
             }

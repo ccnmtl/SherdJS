@@ -47,17 +47,17 @@
         }
 
         function testPushAndUpdate(t) {
-            view = _initializeView(t);
+            var view = _initializeView(t);
 
             // Verify components were created
             t.ok(view.components.player, 'Player is initialized');
             t.eq(view.components.autoplay, false, 'Autoplay is false');
           
             // Verify Push
-            t.delay_call(3, /* seconds. up this value if tests start to fail */
+            t.delay_call(5, /* seconds. up this value if tests start to fail */
                          function() {
                               // Check State  
-                              t.ok(view.media.ready(), 'Player is ready');
+                              t.ok(view.media.ready(), 'Player is ready: 5 seconds');
                               t.ok(view.media.url() == 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/sdef:THUMBNAIL/large' ||
                                       view.media.url() == 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:09591c7b709861e011e879ba73b11cb10b0f7ce8/StreamingProxy', 'Correct Url is loaded');
 
@@ -74,14 +74,13 @@
                               // Check Update
                               var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
                               view.html.push(obj_div, {asset: new_asset});
-                         },
-                         3,
-                         function() {
-                             t.ok(view.media.ready(), 'Player is ready');
-                             t.ok(view.media.url() == 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:0ab69e668489c086bfbb26714a51c292a1089838/sdef:THUMBNAIL/large' ||
-                                     view.media.url() == 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:0ab69e668489c086bfbb26714a51c292a1089838/StreamingProxy', 'Correct Url is loaded');
-                         });                  
-        }
+
+                              t.ok(view.media.url() == 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:0ab69e668489c086bfbb26714a51c292a1089838/sdef:THUMBNAIL/large' ||
+                                      view.media.url() == 'http://openvaultresearch.wgbh.org:8080/fedora/get/wgbh:0ab69e668489c086bfbb26714a51c292a1089838/StreamingProxy', 'Correct Url is loaded: ' + view.media.url());
+
+                              t.ok(view.media.ready(), 'Player is ready again: 5 seconds');
+                         });
+            }
 
         function testMediaInterface(t) {
             view = _initializeView(t);

@@ -20,15 +20,20 @@ if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
     Sherd.Video.QuickTime = function() {
         var self = this;
-        var _played = false; // See this.media.seek
+        self._played = false; // See this.media.seek
+        self._count = -1;
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
         
         ////////////////////////////////////////////////////////////////////////
         // Microformat
         
         this.microformat.create = function(obj,doc) {
+            
             var wrapperID = Sherd.Base.newID('quicktime-wrapper-');
             var playerID = Sherd.Base.newID('quicktime-player-');
+            self._played = false;
+            self._count = self._count + 1;
+            
             var opt = {
                     url:'',
                     width:320,
@@ -56,7 +61,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     <param name="target" value="myself" /> \
                     ';
                     opt.url = opt.poster;
-                    opt.controller = 'false';
+                    opt.controller = 'true';
                 } else if (opt.poster) {
                     opt.mimetype = 'image/x-quicktime';
                     opt.extra += '<param name="href" value="'+opt.url+'" /> \
@@ -70,7 +75,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             
             var clicktoplay = "";
             if (opt.autoplay != 'true') {
-                clicktoplay = '<div id="clicktoplay">Click video to play</div>;'
+                clicktoplay = '<div id="clicktoplay">Click video to play</div>';
             }
             
             //we need to retest where the href usecase is needed
@@ -121,6 +126,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     rv.elapsed = document[create_obj.currentTimeID] || document.getElementById(create_obj.currentTimeID);
                     rv.timedisplay = document['time-display'] || document.getElementById('time-display');
                     rv.autoplay = create_obj.object.autoplay == 'true';
+                    rv.playerID = create_obj.playerID;
+                    rv.htmlID = create_obj.htmlID;
+                    rv.mediaUrl = create_obj.object.quicktime;
                 } 
                 return rv;
             } catch(e) {}
@@ -178,35 +186,50 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             if (Number(found_obj.html.height)) obj.height=Number(found_obj.html.height);
             return obj;
         };
-        
+
         this.microformat.type = function() { return 'quicktime'; };
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            if (!obj.quicktime) {return false;}
-            var compo = self.components || self.microformat.components(html_dom);
-            if (compo && compo.media && compo.media != null) {
+            if (obj.quicktime && self.components.player && self.media.ready()) {
                 try {
-                    compo.media.SetURL(obj.quicktime);
+                    if (obj.quicktime != self.components.mediaUrl) {
+                        self.components.player.SetURL(obj.quicktime);
+                        self.components.mediaUrl = obj.quicktime;
+                    }
+                    self.microformat._startUpdateDisplayTimer();
                     return true;
                 } catch(e) { }
             }
             return false;
-        };
+        }
+        
+        this.microformat._startUpdateDisplayTimer = function() {
+            self.events.queue('quicktime duration watcher & tick count',[
+                                                                         {test: function() {
+                                                                             // Update the duration
+                                                                             newDuration = self.media.duration();
+                                                                             if (newDuration != self.media._duration) {
+                                                                                 self.media._duration = newDuration;
+                                                                                 self.components.duration.innerHTML = self.secondsToCode(newDuration);
+                                                                                 self.events.signal(djangosherd, 'duration', { duration: newDuration });
+                                                                             }
+                                                                             
+                                                                             if (self.media.ready() && self.components.timedisplay.style.display == 'none')
+                                                                                 self.components.timedisplay.style.display = 'inline';
+                                                                             
+                                                                             // Update the tick count
+                                                                             self.media._updateTickCount();
+                                                                             
+                                                                             return false;
+                                                                         }, poll:400},
+                                                                         ]);
+        }
         
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
         
         this.initialize = function(create_obj) {
-            ///used to need this.  crazy, 'cause I sweated big time to make this doable here :-(
-            if (/Trident/.test(navigator.userAgent) && create_obj.object.autoplay=='true') {
-                ///again!  just for IE.  nice IE, gentle IE
-                var top = document.getElementById(create_obj.htmlID);
-                setTimeout(function() {
-                    self.microformat.update(create_obj.object, top);
-                },100);
-            }
-            
             self.media._duration = self.media.duration();
             
             // kickoff some timers
@@ -223,27 +246,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                   }, poll:500},
                                                   {call: function() {
                                                             self.setState({ start: self.components.starttime, end: self.components.endtime});
-                                                            self.components.timedisplay.style.display = 'inline';
-                                                          
-                                                            // @todo broadcast a "valid metadata" event
                                                          }
                                                   }]);
-            self.events.queue('quicktime duration watcher & tick count',[
-                                               {test: function() {
-                                                   // Update the duration
-                                                   newDuration = self.media.duration();
-                                                   if (newDuration != self.media._duration) {
-                                                       self.media._duration = newDuration;
-                                                       self.components.duration.innerHTML = self.secondsToCode(newDuration);
-                                                       self.events.signal(djangosherd, 'duration', { duration: newDuration });
-                                                   }
-                                                   
-                                                   // Update the tick count
-                                                   self.media._updateTickCount();
-                                                   
-                                                   return false;
-                                               }, poll:400},
-                                               ]);
+            
+            self.microformat._startUpdateDisplayTimer();
             
             // register for notifications from clipstrip to seek to various times in the video
             self.events.connect(djangosherd, 'seek', self.media, 'seek');
@@ -256,12 +262,38 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             });
         };
         
+        // Overriding video.js
         this.deinitialize = function() {
+            if (self.media.isPlaying()) {
+                self.media.pause();
+            }
             if (self.components.timedisplay) {
                 self.components.timedisplay.style.display = 'none';
             }
             self.events.clearTimers();
         };
+        
+        // Overriding video.js
+        this.setState = function(obj) {
+            if (typeof obj == 'object') {
+                // Sky says: Used to need this as IE was 'double-loading' the video.  
+                // The behavior was that the video would come in, and then it would start playing in a smaller 
+                // frame (or something else weird), and often you'd hear two audio tracks playing (out of sync).
+                //
+                // Susan says: I didn't experience the double-loading, but I did see the QT player freeze and just play the audio when
+                // the player was created, then recreated. (e.g. Play QT, Play YouTube, Play QT). Resetting the URL seems to 
+                // take care of the state problem. 
+                if (/Trident/.test(navigator.userAgent) && self.components.autoplay && self._count > 0) {
+                    ///again!  just for IE.  nice IE, gentle IE
+                    window.setTimeout(function() {
+                        self.components.player.SetURL(self.components.mediaUrl); //reset the url
+                        self.media.seek(obj.start, obj.end); // redo the seek also. 
+                    }, 100);
+                } else {
+                    self.media.seek(obj.start, obj.end);
+                }
+            }
+        }
         
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
@@ -299,6 +331,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             }
         };
         
+        // Used by tests
         this.media.isPlaying = function() {
             var playing = false;
             try {
@@ -335,11 +368,11 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     self.media.pauseAt(endtime);
                 }
-            } else {
-                // store the values away for when the player is ready
-                self.components.starttime = starttime;
-                self.components.endtime = endtime;
             }
+
+            // store the values away for when the player is ready
+            self.components.starttime = starttime;
+            self.components.endtime = endtime;
         }
         
         this.media.time = function() {
@@ -348,7 +381,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 time = self.components.player.GetTime()/self.media.timescale();
             } catch(e) {}
             return time;
-        };
+        }
         
         this.media.timescale = function() {
             var timescale = 1;
@@ -356,15 +389,15 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 timescale = self.components.player.GetTimeScale();
             } catch(e) {}
             return timescale;
-        };
+        }
         
         this.media.timestrip = function() {
             return {w: self.components.player.width,
                 trackX: 40,
                 trackWidth: 228,
                 visible:true
-            };
-        };
+            }
+        }
         
         //returns true, if we're sure it is. Not currently used
         this.media.isStreaming = function() {
@@ -376,12 +409,12 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         // Used by tests.
         this.media.url = function() {
             return self.components.player.GetURL();
-        };
+        }
         
         this.media._updateTickCount = function() {
             if (self.components.player.GetRate() > 0) { 
                 self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
             } 
-        };
+        }
     } //Sherd.AssetViews.QuickTime
 }

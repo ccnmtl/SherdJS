@@ -23,7 +23,7 @@
         function testCreate(t)
         {
            // t.plan(5)
-           view = new Sherd.Video.YouTube();
+           var view = new Sherd.Video.YouTube();
            t.ok(view, "Verify view instantiated");
      
            create_obj = view.microformat.create({autoplay: 0, 
@@ -40,7 +40,7 @@
         }
 
         function testPushAndUpdate(t) {
-            view = _initializeView(t);
+            var view = _initializeView(t);
 
             // Verify components were created
             t.eq(view.components.autoplay, 0, 'Autoplay is false');
@@ -56,7 +56,7 @@
 
                               // Check Update
                               var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
-                              new_asset = { type: 'youtube',
+                              var new_asset = { type: 'youtube',
                                       presentation: 'large',
                                       youtube: 'http://www.youtube.com/v/QVC0_CRW9tA?enablejsapi=1&amp;fs=1'};
                               view.html.push(obj_div, {asset: new_asset});
@@ -69,7 +69,7 @@
         }
 
         function testMediaInterface(t) {
-            view = _initializeView(t);
+            var view = _initializeView(t);
 
             t.eq(view.media.timescale(), 1, 'Should always be 1 for YouTube');
             
@@ -134,12 +134,12 @@
                          function() {
                              // Check PauseAt via Seek
                              t.eq(view.media.state(), 2, 'Video is paused');
-                             t.ok(view.media.time() > 30, 'Video stopped at the requested time');
+                             t.ok(view.media.time() > 30, 'Video stopped at the requested time. ' + view.media.time());
                          });
         }
 
         function testSetState(t) {
-            view = _initializeView(t);
+            var view = _initializeView(t);
                      
             // Set state on the player and verify video is cued to seek point and end time is set (if available)
             view.setState({ start: 11, end: 25 });
@@ -172,24 +172,26 @@
             var duration = 0;
             var view = _initializeView(t);
 
-            view.events.connect(djangosherd, 'duration', function(obj) { duration = obj.duration; });
-
-            t.delay_call(3, 
+            
+            t.delay_call(5, 
                 function() {
                      t.eq(duration, 0, 'no duration yet');
+                     t.ok(view.media.ready(), 'player is ready');
+
+                     view.events.connect(djangosherd, 'duration', function(obj) { log('duration: ' + obj.duration); duration = obj.duration; });
                      
                      view.media.play();
                 },
-                5,
+                15,
                 function() {
-                    t.ok(duration > 375 && duration <= 376, 'Duration is now accurate');
+                    t.ok(duration > 375 && duration <= 376, 'Duration is now accurate: 10 second wait' + duration);
                     
                     view.media.pause();
                 });
         }
 
         function _initializeView(t) {
-            view = new Sherd.Video.YouTube();
+            var view = new Sherd.Video.YouTube();
             asset = { type: 'youtube',
                       presentation: 'large',
                       youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
