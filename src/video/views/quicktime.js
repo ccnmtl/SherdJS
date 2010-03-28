@@ -191,13 +191,29 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            if (obj.quicktime && self.components.player && self.media.ready()) {
+            if (obj.quicktime && document.getElementById(self.components.playerID) && self.media.ready()) {
                 try {
+                    
                     if (obj.quicktime != self.components.mediaUrl) {
                         self.components.player.SetURL(obj.quicktime);
                         self.components.mediaUrl = obj.quicktime;
+                        
+                        // Sky says: Used to need this as IE was 'double-loading' the video.  
+                        // The behavior was that the video would come in, and then it would start playing in a smaller 
+                        // frame (or something else weird), and often you'd hear two audio tracks playing (out of sync).
+                        //
+                        // Susan says: I experienced something similar to the double-load, but this workaround didn't fix it. 
+                        // I did see the QT player freeze and just play the audio track when the player was created, then 
+                        // recreated. (Play QT, Play YouTube, Play QT). Resetting the URL seems to take care of the state problem.
+                        if (/Trident/.test(navigator.userAgent) && self.components.autoplay && self._count > 0) {
+                            window.setTimeout(function() {
+                                self.components.player.SetURL(self.components.mediaUrl); //reset the url
+                                self.media.seek(self.components.starttime, self.components.endtime); // redo the seek also. 
+                            }, 100);
+                        }
                     }
                     self.microformat._startUpdateDisplayTimer();
+                    self._count = self._count + 1;
                     return true;
                 } catch(e) { }
             }
@@ -264,36 +280,16 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         
         // Overriding video.js
         this.deinitialize = function() {
+            self.events.clearTimers();
+            
             if (self.media.isPlaying()) {
                 self.media.pause();
             }
             if (self.components.timedisplay) {
                 self.components.timedisplay.style.display = 'none';
             }
-            self.events.clearTimers();
+            
         };
-        
-        // Overriding video.js
-        this.setState = function(obj) {
-            if (typeof obj == 'object') {
-                // Sky says: Used to need this as IE was 'double-loading' the video.  
-                // The behavior was that the video would come in, and then it would start playing in a smaller 
-                // frame (or something else weird), and often you'd hear two audio tracks playing (out of sync).
-                //
-                // Susan says: I didn't experience the double-loading, but I did see the QT player freeze and just play the audio when
-                // the player was created, then recreated. (e.g. Play QT, Play YouTube, Play QT). Resetting the URL seems to 
-                // take care of the state problem. 
-                if (/Trident/.test(navigator.userAgent) && self.components.autoplay && self._count > 0) {
-                    ///again!  just for IE.  nice IE, gentle IE
-                    window.setTimeout(function() {
-                        self.components.player.SetURL(self.components.mediaUrl); //reset the url
-                        self.media.seek(obj.start, obj.end); // redo the seek also. 
-                    }, 100);
-                } else {
-                    self.media.seek(obj.start, obj.end);
-                }
-            }
-        }
         
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
@@ -325,8 +321,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 }       
             } else {
                 self.events.queue('qt play',[
-                                          {test: self.media.ready, poll:500},
-                                          {call: self.media.play }
+                                          {test: self.media.ready, poll:100},
+                                          {call: function() { self.media.play } }
                                           ]);
             }
         };
@@ -349,10 +345,11 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             return status == 'Playable' || status == 'Complete';
         };
 
-        this.media.seek = function(starttime, endtime) {    
+        this.media.seek = function(starttime, endtime) {
             if (self.media.ready()) {
                 
                 if (starttime != undefined) {
+                    
                     playRate = self.components.player.GetRate();
                     if (playRate > 0)
                         self.components.player.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
