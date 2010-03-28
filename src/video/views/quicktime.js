@@ -208,7 +208,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                         if (/Trident/.test(navigator.userAgent) && self.components.autoplay && self._count > 0) {
                             window.setTimeout(function() {
                                 self.components.player.SetURL(self.components.mediaUrl); //reset the url
-                                self.media.seek(self.components.starttime, self.components.endtime); // redo the seek also. 
+                                self.media.seek(self.components.starttime, self.components.endtime); // redo the seek also.
                             }, 100);
                         }
                     }
@@ -221,10 +221,11 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         
         this.microformat._startUpdateDisplayTimer = function() {
+            self.media._duration = 0;
             self.events.queue('quicktime duration watcher & tick count',[
                                                                          {test: function() {
                                                                              // Update the duration
-                                                                             newDuration = self.media.duration();
+                                                                             var newDuration = self.media.duration();
                                                                              if (newDuration != self.media._duration) {
                                                                                  self.media._duration = newDuration;
                                                                                  self.components.duration.innerHTML = self.secondsToCode(newDuration);
