@@ -37,6 +37,7 @@ MondrianBookmarklet = {
                 var obj = {
                     "html":video,
                     "hash":"start="+video.getCurrentTime(),
+                    "disabled":video.getVideoEmbedCode() == '',
                     "sources":{
                         "title":getTitle(VIDEO_ID),
                         "thumb":getThumb(VIDEO_ID),
@@ -121,6 +122,52 @@ MondrianBookmarklet = {
 	            "xyztile-metadata":"w"+max_image.width+"h"+max_image.height
 	    };
             callback( [ {html:img, sources:sources} ] );
+        },
+        decorate:function(objs) {
+        }
+    },
+    "flickr.com": {
+        find:function(callback) {
+            MondrianBookmarklet.onJQuery = function(jQuery) { 
+                var apikey = "6001e902060933695febbb407723f1bb";
+                var bits = document.location.pathname.split('/'); // expected: /photos/userid/imageid/                                                                                     
+                var imageId = bits[3];
+
+                if (imageId.length < 1 || imageId.search(/\d{1,12}/) < 0)
+                    return callback([]);
+
+                /* http://docs.jquery.com/Release:jQuery_1.2/Ajax#Cross-Domain_getJSON_.28using_JSONP.29 */
+                var baseUrl = "http://api.flickr.com/services/rest/?jsoncallback=?&format=json&api_key="+apikey+"&photo_id="+imageId;
+
+                jQuery.getJSON(baseUrl + "&method=flickr.photos.getInfo",
+                    function(getInfoData) {
+                        jQuery.getJSON(baseUrl + "&method=flickr.photos.getSizes",
+                            function(getSizesData) {
+                                var w, h;
+                                jQuery.each(getSizesData.sizes.size, function(i,item) {
+                                    if (item.label == "Medium") {
+                                        w = item.width;
+                                        h = item.height;
+                                    }
+                                });
+
+                                /* URL format http://farm{farm-id}.static.flickr.com/{server-id}/{id}_{secret}_[mtsb].jpg */
+                                var baseImgUrl = "http://farm"+getInfoData.photo.farm+".static.flickr.com/"+getInfoData.photo.server+"/"+getInfoData.photo.id+"_"+getInfoData.photo.secret;
+                                var img = jQuery("img[src="+baseImgUrl+".jpg]").get(0);
+                                var img = jQuery("img[src="+baseImgUrl+".jpg]").get(0);
+
+                                var sources = {
+                                        "title": getInfoData.photo.title._content,
+                                        "thumb": baseImgUrl + "_t.jpg",
+                                        "image": baseImgUrl + ".jpg",
+                                        "archive": "http://www.flickr.com/photos/" + getInfoData.photo.owner.nsid, // owner's photostream                                                  
+                                        "image-metadata":"w"+w+"h"+h
+                                    };
+
+                                return callback( [{html:img, sources:sources}] );
+                           });
+                    });
+             }
         },
         decorate:function(objs) {
         }
@@ -290,6 +337,9 @@ MondrianBookmarklet = {
             case 0: 
                 return alert("This page does not contain an asset. Try going to an asset page.");
             case 1:
+                if (assets[0].disabled)
+                    return alert("This asset cannot be embedded on external sites. Please select another asset.");
+
                 if (jump_now) {
                     document.location = MondrianBookmarklet.obj2url(mondrian_url, assets[0]);
                 }
