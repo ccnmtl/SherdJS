@@ -9,15 +9,16 @@ MondrianBookmarklet = {
             var video = document.getElementById("movie_player");
             if (video && video != null) {
                 function getTitle(VIDEO_ID) {
+                    var raw_title = '';
                     if (/www.youtube.com\/watch/.test(document.location)) {
-                        return document.getElementsByTagName("h1")[0].innerHTML;
+                        raw_title = document.getElementsByTagName("h1")[0].textContent;
                     } else {
                         var for_channels = document.getElementById("playnav-curvideo-title");
                         if (for_channels != null) {
-                            return document.getElementById("playnav-curvideo-title")
-                            .textContent.replace(/^\s*/,"").replace(/\s*$/,"");
+                            raw_title = document.getElementById("playnav-curvideo-title").textContent
                         }
                     }
+                    return raw_title.replace(/^\s*/,"").replace(/\s*$/,"");
                 }
                 function getThumb(VIDEO_ID) {
                     var tries = [/*last-first*/
@@ -29,6 +30,10 @@ MondrianBookmarklet = {
                         if (tries[i].length && tries[i][0] != null) {
                             return tries[i][0].getElementsByTagName("img")[0].src;
                         }
+                    }
+                    var try_embed = video.getAttribute('flashvars').match(/thumbnailUrl=([^&?]*)/);
+                    if (try_embed) {
+                        return unescape(try_embed[1]);
                     }
                     return undefined;
                 }
@@ -166,9 +171,7 @@ MondrianBookmarklet = {
                                         "image": baseImgUrl + ".jpg",
                                         "archive": "http://www.flickr.com/photos/" + getInfoData.photo.owner.nsid, /* owner's photostream */
                                         "image-metadata":"w"+w+"h"+h,
-                                        "metadata-description":getInfoData.photo.description._content || undefined,
                                         "metadata-owner":getInfoData.photo.owner.realname ||undefined
-                                    /*dates in flickr are in epoch-time, so we could convert if we thought they were useful*/
                                     };
 
                                 return callback( [{html:img, sources:sources}] );
@@ -347,7 +350,7 @@ MondrianBookmarklet = {
                 if (assets[0].disabled)
                     return alert("This asset cannot be embedded on external sites. Please select another asset.");
 
-                if (jump_now && document.location.hash != "#debugmondrian") {
+                if (jump_now && !MondrianBookmarklet.debug) {
                     document.location = MondrianBookmarklet.obj2url(mondrian_url, assets[0]);
                 }
             }
@@ -458,6 +461,7 @@ if (typeof mondrian_url == "string" && typeof mondrian_action == "string") {
 } else if (typeof SherdBookmarkletOptions == "object") {
     var o = SherdBookmarkletOptions;
     MondrianBookmarklet.options = o;
+    MondrianBookmarklet.debug = (window.mondrian_debug || document.location.hash == "#debugmondrian");
     MondrianBookmarklet.runners[o.action](o.mondrian_url,true);
 } else {
     var scripts = document.getElementsByTagName("script");
