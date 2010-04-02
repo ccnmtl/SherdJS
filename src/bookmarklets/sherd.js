@@ -37,7 +37,7 @@ MondrianBookmarklet = {
                 var obj = {
                     "html":video,
                     "hash":"start="+video.getCurrentTime(),
-                    "disabled":video.getVideoEmbedCode() == '',
+                    "disabled":video.getVideoEmbedCode() == "",
                     "sources":{
                         "title":getTitle(VIDEO_ID),
                         "thumb":getThumb(VIDEO_ID),
@@ -111,7 +111,7 @@ MondrianBookmarklet = {
             var max_image = images[images.length-1];
 	    var img_base = max_image.src.match(/images\/([^.]+)\./)[1];
 	    var site_base = String(document.location).match(/(.*?)image/)[1];
-	    var extension = max_image.src.substr(max_image.src.lastIndexOf('.'));/*.JPG or .jpg--CRAZY!!!*/
+	    var extension = max_image.src.substr(max_image.src.lastIndexOf("."));/*.JPG or .jpg--CRAZY!!!*/
 	    var sources = {
 	            "title":jQuery("#node-main h2.title").get(0).innerHTML,
 	            "thumb":site_base+"files/tibet/images/"+img_base+".thumbnail"+extension,
@@ -129,8 +129,11 @@ MondrianBookmarklet = {
     "flickr.com": {
         find:function(callback) {
             MondrianBookmarklet.onJQuery = function(jQuery) { 
-                var apikey = "6001e902060933695febbb407723f1bb";
-                var bits = document.location.pathname.split('/'); // expected: /photos/userid/imageid/                                                                                     
+                var apikey = MondrianBookmarklet.options.flickr_apikey;
+                if (!apikey) 
+                    return callback([]);
+
+                var bits = document.location.pathname.split("/");//expected:/photos/userid/imageid/
                 var imageId = bits[3];
 
                 if (imageId.length < 1 || imageId.search(/\d{1,12}/) < 0)
@@ -141,11 +144,12 @@ MondrianBookmarklet = {
 
                 jQuery.getJSON(baseUrl + "&method=flickr.photos.getInfo",
                     function(getInfoData) {
+                        if (window.console) console.log(getInfoData);
                         jQuery.getJSON(baseUrl + "&method=flickr.photos.getSizes",
                             function(getSizesData) {
                                 var w, h;
                                 jQuery.each(getSizesData.sizes.size, function(i,item) {
-                                    if (item.label == "Medium") {
+                                    if (item.label == "Original") {
                                         w = item.width;
                                         h = item.height;
                                     }
@@ -160,8 +164,11 @@ MondrianBookmarklet = {
                                         "title": getInfoData.photo.title._content,
                                         "thumb": baseImgUrl + "_t.jpg",
                                         "image": baseImgUrl + ".jpg",
-                                        "archive": "http://www.flickr.com/photos/" + getInfoData.photo.owner.nsid, // owner's photostream                                                  
-                                        "image-metadata":"w"+w+"h"+h
+                                        "archive": "http://www.flickr.com/photos/" + getInfoData.photo.owner.nsid, /* owner's photostream */
+                                        "image-metadata":"w"+w+"h"+h,
+                                        "metadata-description":getInfoData.photo.description._content || undefined,
+                                        "metadata-owner":getInfoData.photo.owner.realname ||undefined
+                                    /*dates in flickr are in epoch-time, so we could convert if we thought they were useful*/
                                     };
 
                                 return callback( [{html:img, sources:sources}] );
@@ -340,9 +347,12 @@ MondrianBookmarklet = {
                 if (assets[0].disabled)
                     return alert("This asset cannot be embedded on external sites. Please select another asset.");
 
-                if (jump_now) {
+                if (jump_now && document.location.hash != "#debugmondrian") {
                     document.location = MondrianBookmarklet.obj2url(mondrian_url, assets[0]);
                 }
+            }
+            if (window.console) {/*if we get here, we're debugging*/
+                window.console.log(assets);
             }
         };
         handler.find.call(handler, jump_with_first_asset);
@@ -447,6 +457,7 @@ if (typeof mondrian_url == "string" && typeof mondrian_action == "string") {
     MondrianBookmarklet.runners[mondrian_action](mondrian_url,true);
 } else if (typeof SherdBookmarkletOptions == "object") {
     var o = SherdBookmarkletOptions;
+    MondrianBookmarklet.options = o;
     MondrianBookmarklet.runners[o.action](o.mondrian_url,true);
 } else {
     var scripts = document.getElementsByTagName("script");
