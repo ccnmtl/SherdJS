@@ -44,13 +44,6 @@ function DjangoSherd_Asset_Config() {
             }); // write videoform
         }
 
-        // load clipstrip into html
-        if (ds.assetview.clipstrip) {
-            ds.assetview.clipstrip.html.push('clipstrip-display', {
-                asset : {}
-            });
-        }
-
         var orig_annotation_data = $('original-annotation');// /***faux layer. Data stored in the DOM
         if (orig_annotation_data != null) {
             // Viewing an Annotation with stored data
@@ -64,9 +57,6 @@ function DjangoSherd_Asset_Config() {
 
                 if (ds.assetview.clipform)
                     ds.assetview.clipform.setState(obj);
-
-                if (ds.assetview.clipstrip)
-                    ds.assetview.clipstrip.setState(obj);
 
             } catch (e) {/* non-valid json? */
             }
@@ -82,9 +72,6 @@ function DjangoSherd_Asset_Config() {
                 
                 if (ds.assetview.clipform)
                     ds.assetview.clipform.setState(annotation_query[0]);
-
-                if (ds.assetview.clipstrip)
-                    ds.assetview.clipstrip.setState(annotation_query[0]);
 
             } else {
                 // /#default initialization for an annotation
@@ -442,19 +429,8 @@ function openCitation(url, no_autoplay) {
                 asset : ann_obj.asset
             });
         
-            // load clipstrip into html
-            if (djangosherd.assetview.clipstrip) {
-                djangosherd.assetview.clipstrip.html.push('clipstrip-display', {
-                    asset : {}
-                });
-            }
-
             var ann_data = ann_obj.annotations[0];// ***
-            djangosherd.assetview.setState(ann_data);
-        
-            if (djangosherd.assetview.clipstrip) {
-                djangosherd.assetview.clipstrip.setState(ann_data);
-            }
+            djangosherd.assetview.setState(ann_data);        
         } else {
             djangosherd.assetview.html.remove();
         }

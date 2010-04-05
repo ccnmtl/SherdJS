@@ -18,6 +18,10 @@ if (!Sherd.GenericAssetView) {
     // CONSTRUCTOR
     Sherd.GenericAssetView = function(options) {
         var self = this;
+        //consts
+        var Clipstripper = Sherd.Video.Annotators.ClipStrip;
+        var Clipformer = DjangoSherd_ClipForm;
+
         // //INIT
         this.settings = {};
         if (Sherd.Video && Sherd.Video.QuickTime) {
@@ -25,14 +29,14 @@ if (!Sherd.GenericAssetView) {
                 'view' : new Sherd.Video.QuickTime()
             };
             if (options.clipform) {
-                quicktime.clipform = new DjangoSherd_ClipForm();// see clipform.js
+                quicktime.clipform = new Clipformer();// see clipform.js
                 quicktime.clipform.attachView(quicktime.view);
                 if (options.storage) {
                     quicktime.clipform.addStorage(options.storage);
                 }
             }
             if (options.clipstrip) {
-                quicktime.clipstrip = new DjangoSherd_ClipStrip();
+                quicktime.clipstrip = new Clipstripper();
                 quicktime.clipstrip.attachView(quicktime.view);
             }
             this.settings.quicktime = quicktime;
@@ -42,14 +46,14 @@ if (!Sherd.GenericAssetView) {
                 'view' : new Sherd.Video.YouTube()
             };
             if (options.clipform) {
-                youtube.clipform = new DjangoSherd_ClipForm();// see clipform.js
+                youtube.clipform = new Clipformer();// see clipform.js
                 youtube.clipform.attachView(youtube.view);
                 if (options.storage) {
                     youtube.clipform.addStorage(options.storage);
                 }
             }
             if (options.clipstrip) {
-                youtube.clipstrip = new DjangoSherd_ClipStrip();
+                youtube.clipstrip = new Clipstripper();
                 youtube.clipstrip.attachView(youtube.view);
             }
             this.settings.youtube = youtube;
@@ -59,14 +63,14 @@ if (!Sherd.GenericAssetView) {
                 'view' : new Sherd.Video.Flowplayer()
             };
             if (options.clipform) {
-                flowplayer.clipform = new DjangoSherd_ClipForm(); // see clipform.js
+                flowplayer.clipform = new Clipformer(); // see clipform.js
                 flowplayer.clipform.attachView(flowplayer.view);
                 if (options.storage) {
                     flowplayer.clipform.addStorage(options.storage);
                 }
             }
             if (options.clipstrip) {
-                flowplayer.clipstrip = new DjangoSherd_ClipStrip();
+                flowplayer.clipstrip = new Clipstripper();
                 flowplayer.clipstrip.attachView(flowplayer.view);
             }
             this.settings.flowplayer = flowplayer;
@@ -90,6 +94,9 @@ if (!Sherd.GenericAssetView) {
             remove : function() {
                 if (current_type) {
                     self.settings[current_type].view.html.remove();
+                    if (self.clipstrip) {
+                        self.clipstrip.html.remove();
+                    }
                     current_type = false;
                 }
             },
@@ -99,21 +106,24 @@ if (!Sherd.GenericAssetView) {
                     
                     if (current_type) {
                         if (current_type != options.asset.type) {
-                            self.settings[current_type].view.html.remove();
+                            self.html.remove();
                         }
                     }
                     
                     current_type = options.asset.type;
                     
                     // /the main pass
-                    self.settings[current_type].view.html.push(html_dom,
-                            options);
+                    var cur = self.settings[current_type];
+                    cur.view.html.push(html_dom,options);
 
-                    if (self.settings[current_type].clipform) {
-                        self.clipform = self.settings[current_type].clipform;
+                    if (cur.clipform) {
+                        self.clipform = cur.clipform;
                     }
-                    if (self.settings[current_type].clipstrip) {
-                        self.clipstrip = self.settings[current_type].clipstrip;
+                    if (cur.clipstrip) {
+                        cur.clipstrip.html.push('clipstrip-display', {
+                            asset : {}
+                        });
+                        self.clipstrip = cur.clipstrip;
                     }
                 } else {
                     throw "Your asset does not have a (supported) type marked.";
@@ -122,9 +132,12 @@ if (!Sherd.GenericAssetView) {
         }
         this.setState = function() {
             if (current_type) {
-                self.settings[current_type].view.setState.apply(
-                        self.settings[current_type].view, arguments //special JS magic -- this == view
-                        );
+                var cur = self.settings[current_type];
+                //special JS magic -- set this == view
+                cur.view.setState.apply(cur.view, arguments);
+                if (self.clipstrip) {
+                    self.clipstrip.setState.apply(self.clipstrip,arguments);
+                }
             }
         }
         this.getState = function() {

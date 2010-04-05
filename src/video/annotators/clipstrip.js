@@ -24,10 +24,15 @@
 // seek: when a user clicks on the start/end time of the clipstrip, sends a seek event out
 //
 
-var CLIP_MARKER_WIDTH = 7;
 
-function DjangoSherd_ClipStrip() {
+if (!Sherd) {Sherd = {};}
+if (!Sherd.Video) {Sherd.Video = {};}
+if (!Sherd.Video.Annotators) {Sherd.Video.Annotators= {};}
+if (!Sherd.Video.Annotators.ClipStrip) {
+ Sherd.Video.Annotators.ClipStrip = function() {
     var self = this;
+    var CLIP_MARKER_WIDTH = 7;
+
     Sherd.Base.AssetView.apply(this, arguments); // inherit
 
     this.attachView = function(view) {
@@ -172,4 +177,6 @@ function DjangoSherd_ClipStrip() {
            return 0;
        }
     }
+ };
+
 }
