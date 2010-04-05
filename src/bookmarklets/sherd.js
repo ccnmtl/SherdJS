@@ -149,7 +149,6 @@ MondrianBookmarklet = {
 
                 jQuery.getJSON(baseUrl + "&method=flickr.photos.getInfo",
                     function(getInfoData) {
-                        if (window.console) console.log(getInfoData);
                         jQuery.getJSON(baseUrl + "&method=flickr.photos.getSizes",
                             function(getSizesData) {
                                 var w, h;
@@ -266,11 +265,12 @@ MondrianBookmarklet = {
               var imgs = document.getElementsByTagName("img");
               var result = [];
               for (var i=0;i<imgs.length;i++) {
-                  if (imgs[i].width > 400 || imgs[i].height > 400) {
+                  /*use offsetWidth, so display:none's are excluded */
+                  if (imgs[i].offsetWidth > 400 || imgs[i].offsetHeight > 400) {
                       result.push({
                           "html":imgs[i],
                           "sources": {
-                              "title":imgs[i].title || imgs[i].src,
+                              "title":imgs[i].title || "",
                               "image":imgs[i].src,
                               "image-metadata":"w"+imgs[i].width+"h"+imgs[i].height
                           }
@@ -334,12 +334,38 @@ MondrianBookmarklet = {
     }
     return destination;
   },/*obj2url*/
+  "obj2form": function(mondrian_url,obj) {
+      if (!obj.sources["url"]) obj.sources["url"] = document.location;
+      var destination =  mondrian_url;
+      var form = document.createElement("form");
+      form.appendChild(document.createElement("span"));
+      form.action = destination;
+      for (a in obj.sources) {
+          if (typeof obj.sources[a] =="undefined") continue;
+          var span = document.createElement("span");
+          var item = document.createElement("input");
+          if (a=="title") {
+              item.type = "text";
+              item.setAttribute("style", "display:block;width:90%");
+          } else {
+              item.type = "hidden";
+          }
+          item.name = a;
+          item.value = obj.sources[a];
+          form.appendChild(span);
+          form.appendChild(item);
+      }
+      form.appendChild(document.createElement("span"));
+      return form;
+  },/*obj2url*/
   "runners": {
     jump: function(mondrian_url,jump_now) {
         var final_url = mondrian_url;
-        var handler = MondrianBookmarklet.gethosthandler();
+        var M = MondrianBookmarklet;
+        var handler = M.gethosthandler();
         if (!handler) {
-            alert("Sorry, this website is not supported.");
+            M.g = new M.Grabber(mondrian_url);
+            M.g.onclick();
             return;
         }
         var jump_with_first_asset = function(assets) {
@@ -350,8 +376,8 @@ MondrianBookmarklet = {
                 if (assets[0].disabled)
                     return alert("This asset cannot be embedded on external sites. Please select another asset.");
 
-                if (jump_now && !MondrianBookmarklet.debug) {
-                    document.location = MondrianBookmarklet.obj2url(mondrian_url, assets[0]);
+                if (jump_now && !M.debug) {
+                    document.location = M.obj2url(mondrian_url, assets[0]);
                 }
             }
             if (window.console) {/*if we get here, we're debugging*/
@@ -365,7 +391,16 @@ MondrianBookmarklet = {
         function go() {
             M.g = new M.Grabber(mondrian_url);
         }
-        M.l = M.connect(window,"load",go);
+        /*ffox 3.6+ and all other browsers:*/
+        if (document.readyState != "complete") {
+            /*future, auto-embed use-case.
+              When we do this, we need to support ffox 3.5-
+             */
+            M.l = M.connect(window,"load",go);
+        } else {/*using as bookmarklet*/
+            go();
+            M.g.onclick();
+        }
     }
   },/*runners*/
   "connect":function (dom,event,func) {
@@ -408,7 +443,7 @@ MondrianBookmarklet = {
           comp.tab.style.display = "block";
           self.windowStatus = false;
       });
-      this.handler_count = 1;
+      this.handler_count = 0;
       this.assets_found = [];
       this.findAssets = function() {
           comp.ul.innerHTML = "";
@@ -419,17 +454,24 @@ MondrianBookmarklet = {
               handler = MondrianBookmarklet.assethandler;
               for (h in MondrianBookmarklet.assethandler) {
                   ++self.handler_count;
-                  handler[h].find.call(handler,self.collectAssets);
               }
-              --self.handler_count;/*go to zero*/
+              for (h in MondrianBookmarklet.assethandler) {
+                  try {
+                      handler[h].find.call(handler,self.collectAssets);
+                  } catch(e) {
+                      --self.handler_count;
+                      alert("Bookmarklet Error: "+e.message);
+                  }
+              }
           }
       };
       this.collectAssets = function(assets) {
           self.assets_found.push.apply(self.assets_found,assets);
-          --self.handler_count;
           for (var i=0;i<assets.length;i++) {
               self.displayAsset(assets[i]);
           }
+
+          --self.handler_count;
           if (self.handler_count==0) {
               self.finishedCollecting();
           }
@@ -437,12 +479,15 @@ MondrianBookmarklet = {
       this.displayAsset = function(asset) {
           var li = document.createElement("li");
           var jump_url = M.obj2url(mondrian_url, asset);
-          var inner = asset.sources.title;
+          var form = M.obj2form(mondrian_url, asset);
+          if (form.elements["title"].previousSibling) /*IE7 breaks here */
+              form.elements["title"].previousSibling.innerHTML = "<div>Guessed title:</div>";
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              inner = "<img src=\""+img+"\" height=\"60px\" style=\"max-width:100px\" /> "+inner;
+              form.firstChild.innerHTML = "<img src=\""+img+"\" style=\"max-width:120px;max-height:120px;\" /> ";
           }
-          li.innerHTML = "<a href=\""+jump_url+"\">"+inner+"</a>";
+          form.lastChild.innerHTML = "<input type=\"submit\"  value=\"analyze\" />";
+          li.appendChild(form);
           comp.ul.appendChild(li);
       };
       this.finishedCollecting = function() {
@@ -458,15 +503,21 @@ MondrianBookmarklet = {
 
 if (typeof mondrian_url == "string" && typeof mondrian_action == "string") {
     MondrianBookmarklet.runners[mondrian_action](mondrian_url,true);
-} else if (typeof SherdBookmarkletOptions == "object") {
+} else if (typeof SherdBookmarkletOptions == "object" && !window.mondrian_decorate) {
     var o = SherdBookmarkletOptions;
     MondrianBookmarklet.options = o;
     MondrianBookmarklet.debug = (window.mondrian_debug || document.location.hash == "#debugmondrian");
     MondrianBookmarklet.runners[o.action](o.mondrian_url,true);
 } else {
     var scripts = document.getElementsByTagName("script");
-    var me_embedded = scripts[scripts.length-1];
-    mondrian_url = String(me_embedded.src).split("/",3).join("/")+"/save/?";
-    mondrian_action = "decorate";
-    MondrianBookmarklet.runners[mondrian_action](mondrian_url,true);
+    var i = scripts.length;
+    while (--i >= 0) {
+        var me_embedded = scripts[i];
+        if (/bookmarklets\/analyze.js/.test(me_embedded.src)) {
+            mondrian_url = String(me_embedded.src).split("/",3).join("/")+"/save/?";
+            mondrian_action = "decorate";
+            MondrianBookmarklet.runners[mondrian_action](mondrian_url,true);
+            break;
+        }
+    }
 }
