@@ -151,23 +151,32 @@ MondrianBookmarklet = {
                     function(getInfoData) {
                         jQuery.getJSON(baseUrl + "&method=flickr.photos.getSizes",
                             function(getSizesData) {
-                                var w, h;
+                                var w=0, 
+                                    h=0,
+                                    img_url='',
+                                    thumb_url='';
                                 jQuery.each(getSizesData.sizes.size, function(i,item) {
-                                    if (item.label == "Original") {
+                                    if (item.width > w) {
                                         w = item.width;
                                         h = item.height;
+                                        img_url = item.source;
+                                    }
+                                    if (item.label == "Thumbnail") {
+                                        thumb_url = item.source;
                                     }
                                 });
-
+                                var img;
+                                jQuery('img').each(function() {
+                                    if (RegExp("http://farm.*"+imageId).test(this.src)) {
+                                        img = this;
+                                    }
+                                });
                                 /* URL format http://farm{farm-id}.static.flickr.com/{server-id}/{id}_{secret}_[mtsb].jpg */
-                                var baseImgUrl = "http://farm"+getInfoData.photo.farm+".static.flickr.com/"+getInfoData.photo.server+"/"+getInfoData.photo.id+"_"+getInfoData.photo.secret;
-                                var img = jQuery("img[src="+baseImgUrl+".jpg]").get(0);
-                                var img = jQuery("img[src="+baseImgUrl+".jpg]").get(0);
-
                                 var sources = {
+                                        "url": getInfoData.photo.urls.url[0]._content,
                                         "title": getInfoData.photo.title._content,
-                                        "thumb": baseImgUrl + "_t.jpg",
-                                        "image": baseImgUrl + ".jpg",
+                                        "thumb": thumb_url,
+                                        "image": img_url,
                                         "archive": "http://www.flickr.com/photos/" + getInfoData.photo.owner.nsid, /* owner's photostream */
                                         "image-metadata":"w"+w+"h"+h,
                                         "metadata-owner":getInfoData.photo.owner.realname ||undefined

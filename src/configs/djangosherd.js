@@ -236,6 +236,15 @@ function DjangoSherd_AssetMicroFormat() {
             }
         }, assets);
     };
+    this.create = function(obj,doc) {
+        var wrapperID = Sherd.Base.newID('djangoasset');
+        ///TODO: make the creamy content filling
+        return {
+            object:obj,
+            htmlID:wrapperID,
+            text:'<div id="'+wrapperID+'" class="asset-links"></div>'
+        };
+    };
     this.read = function(found_obj) {
         var rv = {};
         forEach(
@@ -313,6 +322,22 @@ function DjangoSherd_AnnotationMicroFormat() {
             }
         }, annotations);
     }
+    this.create = function(obj,doc) {
+        ///NOTE: currently only makes header, rather than a full serialization of the object
+        var wrapperID = Sherd.Base.newID('djangoannotation');
+        var return_text = '';
+        if (obj.title) {
+            return_text += '<div class="annotation-title"><h2>'+obj.title+'</h2></div>';
+        }
+        if (obj.asset && obj.asset.title) {
+            return_text += '<div class="asset-title"><span class="asset-title-prefix">from </span><a href="'+obj.asset.local_url+'">'+obj.asset.title+'</a></div>';
+        }
+        return {
+            object:obj,
+            htmlID:wrapperID,
+            text:'<div id="'+wrapperID+'" class="annotation">'+return_text+'</div>'
+        };
+    };
     this.read = function(found_obj) {
         var rv = {
             metadata : {},
@@ -330,7 +355,7 @@ function DjangoSherd_AnnotationMicroFormat() {
         var ann_title = getFirstElementByTagAndClassName('div',
                 'annotation-title', found_obj.html);
         if (ann_title)
-            rv.metadata['title'] = ann_title.innerHTML;
+            rv.metadata['title'] = ann_title.textContent;
         var ann_data = evalJSON(data_elt.getAttribute('data-annotation'));
         
         // /TODO: remove these--maybe we can with no problem
