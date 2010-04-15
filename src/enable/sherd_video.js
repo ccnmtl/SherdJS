@@ -13,6 +13,10 @@
 jQuery(window).bind('load',function(){
     var LINK_TEXT = "Analyze This";
     var SHERD_SERVER_SAVE_LINK = "http://projectvietnam.ccnmtl.columbia.edu/save";
+    /*DISABLING FOR ALL*/
+    /*#63738: pls remove analyze this button*/
+    return;
+
     if (document.getElementById("sherdvideobookmarkletrun"))
 	return;
     var sh=document.createElement("div");
