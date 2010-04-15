@@ -21,7 +21,7 @@ if (!Sherd.GenericAssetView) {
         //consts
         var Clipstripper = Sherd.Video.Annotators.ClipStrip;
         var Clipformer = DjangoSherd_ClipForm;
-
+	this.options = options;
         // //INIT
         this.settings = {};
         if (Sherd.Video && Sherd.Video.QuickTime) {
@@ -120,7 +120,14 @@ if (!Sherd.GenericAssetView) {
                         self.clipform = cur.clipform;
                     }
                     if (cur.clipstrip) {
-                        cur.clipstrip.html.push('clipstrip-display', {
+			var target = 'clipstrip-display';//default
+			if (options.targets && options.targets.clipstrip) {
+			    target = options.targets.clipstrip;
+			} else if (self.options.targets 
+				   && self.options.targets.clipstrip) {
+			    target = self.options.targets.clipstrip;
+			}
+                        cur.clipstrip.html.push(target, {
                             asset : {}
                         });
                         self.clipstrip = cur.clipstrip;

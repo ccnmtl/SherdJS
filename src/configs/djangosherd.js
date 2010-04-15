@@ -26,7 +26,8 @@ function DjangoSherd_Asset_Config() {
         ds.assetview = new Sherd.GenericAssetView( {
             'clipform' : true,
             'clipstrip' : true,
-            'storage' : ds.noteform
+            'storage' : ds.noteform,
+	    'targets':{clipstrip:'clipstrip-display'}
         });
 
         var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
@@ -92,14 +93,14 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     ds.storage = new DjangoSherd_Storage();
     // GenericAssetView is a wrapper in ../assets.js
-    ds.assetview = new Sherd.GenericAssetView( { clipform: false, clipstrip: true });
+    ds.assetview = new Sherd.GenericAssetView({ clipform:false, clipstrip: true});
 
     if (!no_open_from_hash) {
         var annotation_to_open = String(document.location.hash).match(
                 /annotation=annotation(\d+)/);
         if (annotation_to_open != null) {
             addLoadEvent(function() {
-                openCitation(annotation_to_open[1] + '/', true);
+                openCitation(annotation_to_open[1] + '/', {autoplay:false});
             });
         }
     }
@@ -164,14 +165,14 @@ function DjangoSherd_Storage() {
             }
             _current_citation = getFirstElementByTagAndClassName('div',
                                                                 'annotation' + id);
-            if (_current_citation != null) {
+            if (id in _annotations) {
+                ann_obj = _annotations[id];
+            } else if (_current_citation != null) {
                 addElementClass(_current_citation, 'active-annotation');
 
                 ann_obj = djangosherd.annotationMicroformat.read( {
                     html : _current_citation
                 });// /***faux layer
-            } else if (id in _annotations) {
-                ann_obj = _annotations[id];
             } else {
                 var def = MochiKit.Async.loadJSONDoc('/annotations/json/'+id+'/');
                 def.addCallback(function(json) {
@@ -430,7 +431,7 @@ function currentUID() {
     // just returning true, will show the markers at 0, but hey, so what
 }
 
-function openCitation(url, no_autoplay) {
+function openCitation(url, no_autoplay_or_options) {
     // /# where is my destination?
     // /# is there an annotation/asset already there?
     // /# if same: leave alone
@@ -442,16 +443,23 @@ function openCitation(url, no_autoplay) {
     // /# load annotation (with options (e.g. autoplay)
     // /# update local views
     // /# e.g. location.hash
+
+    ///legacy support: no_autoplay used to be a boolean, but now its options dict
+    var options = ((typeof no_autoplay_or_options == 'boolean')
+		   ? {autoplay:!no_autoplay_or_options}
+		   : no_autoplay_or_options || {autoplay:true}
+		  );
     var id = url.match(/(\d+)\/$/).pop();
 
     djangosherd.storage.get({id:id}, function(ann_obj) {
         var obj_div = getFirstElementByTagAndClassName('div', 'asset-display' /* TODO:parent! */);
         if (ann_obj.asset) {
-            ann_obj.asset.autoplay = (no_autoplay) ? 'false' : 'true'; // ***
+            ann_obj.asset.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
             ann_obj.asset.presentation = 'small';
             
             djangosherd.assetview.html.push(obj_div, {
-                asset : ann_obj.asset
+                asset : ann_obj.asset,
+		targets: {clipstrip:'clipstrip-display'}
             });
         
             var ann_data = ann_obj.annotations[0];// ***

@@ -2,7 +2,7 @@
   1. NO single quote characters
   2. NO // comments
 */
-MondrianBookmarklet = {
+SherdBookmarklet = {
   "hosthandler": {
     "youtube.com": {
         find:function(callback) {
@@ -133,8 +133,8 @@ MondrianBookmarklet = {
     },
     "flickr.com": {
         find:function(callback) {
-            MondrianBookmarklet.onJQuery = function(jQuery) { 
-                var apikey = MondrianBookmarklet.options.flickr_apikey;
+            SherdBookmarklet.onJQuery = function(jQuery) { 
+                var apikey = SherdBookmarklet.options.flickr_apikey;
                 if (!apikey) 
                     return callback([]);
 
@@ -295,7 +295,7 @@ MondrianBookmarklet = {
               if (String(document.body.innerHTML).indexOf("asset-links") < 0 ) {
                   return callback(result);/*quick fail*/
               }
-              var M = MondrianBookmarklet;
+              var M = SherdBookmarklet;
               var divs = document.getElementsByTagName("div");
               for (var i=0;i<divs.length;i++) {
                   if (M.hasClass(divs[i]," asset-links ")) {
@@ -324,7 +324,7 @@ MondrianBookmarklet = {
       }
   },/*assethandler*/
   "gethosthandler":function() {
-      var hosthandler = MondrianBookmarklet.hosthandler;
+      var hosthandler = SherdBookmarklet.hosthandler;
       if (document.location.hostname in hosthandler) {
           return hosthandler[document.location.hostname];
       } else if (document.location.hostname.slice(4) in hosthandler) {
@@ -370,7 +370,7 @@ MondrianBookmarklet = {
   "runners": {
     jump: function(mondrian_url,jump_now) {
         var final_url = mondrian_url;
-        var M = MondrianBookmarklet;
+        var M = SherdBookmarklet;
         var handler = M.gethosthandler();
         if (!handler) {
             M.g = new M.Grabber(mondrian_url);
@@ -396,7 +396,7 @@ MondrianBookmarklet = {
         handler.find.call(handler, jump_with_first_asset);
     },
     decorate: function(mondrian_url) {
-        var M = MondrianBookmarklet;
+        var M = SherdBookmarklet;
         function go() {
             M.g = new M.Grabber(mondrian_url);
         }
@@ -427,7 +427,7 @@ MondrianBookmarklet = {
           fixed:true
       }; if (options) for (a in options) {this.options[a]=options[a]};
       var o = this.options;
-      var M = MondrianBookmarklet;
+      var M = SherdBookmarklet;
       var self = this;
       var comp = this.components = {};
       comp.top = document.createElement("div");
@@ -456,15 +456,15 @@ MondrianBookmarklet = {
       this.assets_found = [];
       this.findAssets = function() {
           comp.ul.innerHTML = "";
-          var handler = MondrianBookmarklet.gethosthandler();
+          var handler = SherdBookmarklet.gethosthandler();
           if (handler) {
               handler.find.call(handler, self.collectAssets);
           } else {
-              handler = MondrianBookmarklet.assethandler;
-              for (h in MondrianBookmarklet.assethandler) {
+              handler = SherdBookmarklet.assethandler;
+              for (h in SherdBookmarklet.assethandler) {
                   ++self.handler_count;
               }
-              for (h in MondrianBookmarklet.assethandler) {
+              for (h in SherdBookmarklet.assethandler) {
                   try {
                       handler[h].find.call(handler,self.collectAssets);
                   } catch(e) {
@@ -507,16 +507,18 @@ MondrianBookmarklet = {
       };
 
   }/*Grabber*/
-};/*MondrianBookmarklet (root)*/
+};/*SherdBookmarklet (root)*/
 
+/*legacy for old namespace */
+MondrianBookmarklet = SherdBookmarklet;
 
 if (typeof mondrian_url == "string" && typeof mondrian_action == "string") {
-    MondrianBookmarklet.runners[mondrian_action](mondrian_url,true);
+    SherdBookmarklet.runners[mondrian_action](mondrian_url,true);
 } else if (typeof SherdBookmarkletOptions == "object" && !window.mondrian_decorate) {
     var o = SherdBookmarkletOptions;
-    MondrianBookmarklet.options = o;
-    MondrianBookmarklet.debug = (window.mondrian_debug || document.location.hash == "#debugmondrian");
-    MondrianBookmarklet.runners[o.action](o.mondrian_url,true);
+    SherdBookmarklet.options = o;
+    SherdBookmarklet.debug = (window.mondrian_debug || document.location.hash == "#debugmondrian");
+    SherdBookmarklet.runners[o.action](o.mondrian_url,true);
 } else {
     var scripts = document.getElementsByTagName("script");
     var i = scripts.length;
@@ -525,7 +527,7 @@ if (typeof mondrian_url == "string" && typeof mondrian_action == "string") {
         if (/bookmarklets\/analyze.js/.test(me_embedded.src)) {
             mondrian_url = String(me_embedded.src).split("/",3).join("/")+"/save/?";
             mondrian_action = "decorate";
-            MondrianBookmarklet.runners[mondrian_action](mondrian_url,true);
+            SherdBookmarklet.runners[mondrian_action](mondrian_url,true);
             break;
         }
     }
