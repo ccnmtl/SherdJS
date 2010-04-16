@@ -25,13 +25,14 @@ FILE_TMP = '%s/%s-%d.png'
 FILE_FINAL = '%s/y%d/x%d.png'
 
 pil_image = Image.open(imglocation)
-nil,nil,w,h = pil_image.getbbox()
+w,h = pil_image.size
 wzoom = math.ceil(math.log(w,2) -8 )
 hzoom = math.ceil(math.log(h,2) -8 )
 maxzoom = max(wzoom,hzoom)
 
 tiles_across = math.ceil(w/256.0) 
 tiles_down = math.ceil(h/256.0)
+print 'width: %d, height: %d' % (w,h)
 print wzoom, hzoom, maxzoom
 tile = 256.0
 
@@ -85,7 +86,7 @@ for zoom in range(int(maxzoom),-1,-1):#count down
 
         fname = FILE_TMP % (z_dir,"ba",i)
         new_name = FILE_FINAL % (z_dir,y,x)
-        print "mv %s %s" %(fname,new_name)
+        #print "mv %s %s" %(fname,new_name)
         if not simulate:
             if os.path.isfile(fname): 
                 os.rename(fname, new_name)
