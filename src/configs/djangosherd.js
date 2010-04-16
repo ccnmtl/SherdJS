@@ -461,6 +461,7 @@ function openCitation(url, no_autoplay_or_options) {
         showElement(asset_target);
         var $$$$= getFirstElementByTagAndClassName;
         var targets = {
+            "top":asset_target,
             "clipstrip":$$$$('div','clipstrip-display',asset_target),
             "asset":$$$$('div', 'asset-display',asset_target),
             "asset_title":$$$$('div', 'asset-title',asset_target),
@@ -498,6 +499,9 @@ function openCitation(url, no_autoplay_or_options) {
         if (!/WebKit/.test(navigator.userAgent)) {
             //WebKit doesn't replace history correctly
             document.location.replace('#annotation=annotation' + id);
+        }
+        if (djangosherd.onOpenCitation) {
+            djangosherd.onOpenCitation(id,ann_obj,options,targets);
         }
     });
 }
