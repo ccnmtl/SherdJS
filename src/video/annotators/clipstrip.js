@@ -51,20 +51,17 @@ if (!Sherd.Video.Annotators.ClipStrip) {
 
     this.setState = function(obj) {
         if (typeof obj == 'object') {
+            var c = self.components;
+            if (obj == null) {
+                c.starttime = c.endtime = c.duration = 0;
+            } else {
+                c.starttime = obj.start || 0;
+                c.endtime = obj.end || c.starttime;
             
-            if (obj.start)
-                self.components.starttime = obj.start
-            else
-                self.components.starttime = 0;
-            
-            if (obj.end)
-                self.components.endtime = obj.end;
-            else 
-                self.components.endtime = self.components.starttime;
-            
-            if (obj.duration > 1) {
-                self.components.duration = obj.duration
-                self.microformat._resize();
+                if (obj.duration > 1) {
+                    c.duration = obj.duration
+                    self.microformat._resize();
+                }
             }
             return true;
         }

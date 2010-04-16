@@ -132,12 +132,16 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
         forEach($$('a.materialCitation'), function(elt) {// MOCHI
                     var url = elt.getAttribute('href');
                     connect(elt, 'onclick', function(evt) {
-			if (document.location.hash == '#debug') {
-                            evt.preventDefault();// don't open href
-			}
-                        openCitation(url);
+                        try {
+                            openCitation(url);
+                        }catch(e) {
+                            if (window.debug) {
+                                logDebug('ERROR opening citation:'+e.message);
+                                console.log(e);
+                            } else return;
+                        }
                         evt.preventDefault();// don't open href
-                        });
+                    });
                 });
     });
 }
@@ -182,7 +186,6 @@ function DjangoSherd_Storage() {
                 });
                 delay = true;
             }
-            showElement('videoclipbox');
         }
         if (!delay && callback) {
             callback(ann_obj);
@@ -455,15 +458,35 @@ function openCitation(url, no_autoplay_or_options) {
 	var asset_target = ((options.targets && options.targets.asset) 
 			    ? options.targets.asset
 			    : 'videoclipbox');
-	var clip_target = getFirstElementByTagAndClassName('div','clipstrip-display',asset_target);
-        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display',asset_target);
+        showElement(asset_target);
+        var $$$$= getFirstElementByTagAndClassName;
+        var targets = {
+            "clipstrip":$$$$('div','clipstrip-display',asset_target),
+            "asset":$$$$('div', 'asset-display',asset_target),
+            "asset_title":$$$$('div', 'asset-title',asset_target),
+            "annotation_title":$$$$('div', 'annotation-title',asset_target)
+        };
+        if (targets.annotation_title) {
+            targets.annotation_title.innerHTML = ((ann_obj.metadata
+                                                   && ann_obj.metadata.title
+                                                  ) ? '<h2>'+ann_obj.metadata.title+'</h2>'
+                                                  : '');
+        }
+
         if (ann_obj.asset) {
             ann_obj.asset.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
             ann_obj.asset.presentation = 'small';
-            
-            djangosherd.assetview.html.push(obj_div, {
+
+            if (targets.asset_title) {
+                targets.asset_title.innerHTML = ((ann_obj.asset.title 
+                                                  && ann_obj.asset.local_url
+                   ) ? 'from <a href="'+ann_obj.asset.local_url+'">'+ann_obj.asset.title+'</a>'
+                     : '');
+                
+            }
+            djangosherd.assetview.html.push(targets.asset, {
                 asset : ann_obj.asset,
-		targets: {clipstrip:clip_target}
+		targets: {clipstrip:targets.clipstrip}
             });
         
             var ann_data = ann_obj.annotations[0];// ***

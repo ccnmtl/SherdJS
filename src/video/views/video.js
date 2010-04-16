@@ -169,7 +169,11 @@ if (!Sherd.Video.Base) {
         // if not loaded -- then do this as soon as you load (if ready)
         this.setState = function(obj) {
             if (typeof obj == 'object') {
-                this.media.seek(obj.start, obj.end);
+                if (obj==null) 
+                    //endtime is different so it doesn't start playing
+                    this.media.seek(0, 0.1);
+                else
+                    this.media.seek(obj.start, obj.end);
             }
         }
 
