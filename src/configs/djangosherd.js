@@ -452,14 +452,18 @@ function openCitation(url, no_autoplay_or_options) {
     var id = url.match(/(\d+)\/$/).pop();
 
     djangosherd.storage.get({id:id}, function(ann_obj) {
-        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display' /* TODO:parent! */);
+	var asset_target = ((options.targets && options.targets.asset) 
+			    ? options.targets.asset
+			    : 'videoclipbox');
+	var clip_target = getFirstElementByTagAndClassName('div','clipstrip-display',asset_target);
+        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display',asset_target);
         if (ann_obj.asset) {
             ann_obj.asset.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
             ann_obj.asset.presentation = 'small';
             
             djangosherd.assetview.html.push(obj_div, {
                 asset : ann_obj.asset,
-		targets: {clipstrip:'clipstrip-display'}
+		targets: {clipstrip:clip_target}
             });
         
             var ann_data = ann_obj.annotations[0];// ***
