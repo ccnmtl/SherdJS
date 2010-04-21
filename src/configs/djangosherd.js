@@ -214,6 +214,7 @@ function DjangoSherd_Storage() {
                     };
                 }
             }
+            DjangoSherd_adaptAsset(a); //in-place
         }
         for (var i=0;i<json.annotations.length;i++) {
             var ann = json.annotations[i];
@@ -281,42 +282,35 @@ function DjangoSherd_AssetMicroFormat() {
                     }
                 });
 
-        // TODO: "Do You Support this type"
-
-        if (rv.quicktime) {
-            // TODO refactor this into a quicktime specific file
-            var poster = getFirstElementByTagAndClassName('img',
-                    'assetimage-poster', found_obj.html);
-            // TODO: dereference poster url
-            // test on poster.width is to make sure it is loaded/loadable
-            // / e.g. if poster.src gives a 500 error, then Quicktime will
-            // super-barf
-            // / and the video becomes comletely inaccessible
-            rv.poster = ((poster && poster.width) ? poster.src
-                    : '/site_media/js/sherdjs/media/images/click_to_play.jpg');
-            return update(
-                    rv,
-                    {
-                        type : 'quicktime',
-                        url : rv.quicktime,
-                        height : 256,
-                        width : 320,
-                        autoplay : 'false',
-                        loadingposter : '/site_media/js/sherdjs/media/images/poster.gif'
-                    });
-        } else if (rv.youtube) {
-            rv.type = 'youtube';
-            return rv;
-        } else if (rv.flv || rv.flv_pseudo || rv.mp4 || rv.mp4_pseudo || rv.mp4_rtmp || rv.flv_rtmp) {
-            rv.type = 'flowplayer';
-            return rv;
-        } else if (rv.image) {
-            rv.type = 'image';
-            return rv;
-        }
+        return DjangoSherd_adaptAsset(rv);//in-place
     }
 }
 
+function DjangoSherd_adaptAsset(asset) {
+    if (asset.quicktime) {
+        asset.type = 'quicktime';
+        if (asset.poster) {
+            // TODO: dereference poster url
+            // test on poster.width is to make sure it is loaded/loadable
+            // / e.g. if poster.src gives a 500 error, then Quicktime will
+            // / and the video becomes comletely inaccessible
+            var poster = document.createElement('img');
+            poster.src = asset.poster;
+            if (!poster.width) {
+                asset.poster = '/site_media/js/sherdjs/media/images/click_to_play.jpg';
+            }
+        }
+        asset.url = asset.quicktime;  //TODO remove this and make sure quicktime.js uses .quicktime
+        asset.loadingposter = '/site_media/js/sherdjs/media/images/poster.gif';
+    } else if (asset.youtube) {
+        asset.type = 'youtube';
+    } else if (asset.flv || asset.flv_pseudo || asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp || asset.flv_rtmp) {
+        asset.type = 'flowplayer';
+    } else if (asset.image) {
+        asset.type = 'image';
+    }
+    return asset;
+}
 function DjangoSherd_AnnotationMicroFormat() {
     var asset_mf = new DjangoSherd_AssetMicroFormat();
     var video = new Sherd.Video.Helpers();
@@ -476,7 +470,6 @@ function openCitation(url, no_autoplay_or_options) {
                                                   ) ? '<h2>'+ann_obj.metadata.title+'</h2>'
                                                   : '');
         }
-
         if (ann_obj.asset) {
             ann_obj.asset.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
             ann_obj.asset.presentation = 'small';

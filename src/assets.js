@@ -133,7 +133,10 @@ if (!Sherd.GenericAssetView) {
                         self.clipstrip = cur.clipstrip;
                     }
                 } else {
-                    throw "Your asset does not have a (supported) type marked.";
+                    if (window.console) {
+                        console.log(options);
+                    }
+                    throw Error("Your asset does not have a (supported) type marked.");
                 }
             }
         }

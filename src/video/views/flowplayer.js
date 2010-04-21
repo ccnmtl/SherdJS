@@ -205,6 +205,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             if (create_obj) {
                 options = {
                     clip: {
+                        scaling:"fit"
                         // these are the common clip properties & event handlers
                         // they (theoretically) apply to all the clips
                     },
@@ -234,7 +235,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 }
                 
                 flowplayer(create_obj.playerID, 
-                           "http://releases.flowplayer.org/swf/flowplayer-3.1.5.swf",
+                           flowplayer.swf_location || "http://releases.flowplayer.org/swf/flowplayer-3.1.5.swf",
                            options);
     
                 // Save reference to the player
