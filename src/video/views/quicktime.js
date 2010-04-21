@@ -101,9 +101,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 <param name="type" value="'+opt.mimetype+'" /> \
                 <param name="enablejavascript" value="true" /> \
                 <param name="autoplay" value="'+opt.autoplay+'" /> \
-                <param name="width" value="320"> \
-                <param name="height" value="256"> \
+                <param name="width" value="'+opt.width+'"> \
+                <param name="height" value="'+opt.height+'"> \
                 <param name="postdomevents" value="true" /> \
+                <param name="scale" value="aspect" /> \
                 '+opt.extra+'\
                 '+opt.errortext+'</object></div>\
                 <div id="time-display" style="display: none;"><div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div></div>'
