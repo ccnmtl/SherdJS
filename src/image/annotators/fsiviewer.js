@@ -30,15 +30,18 @@ if (!Sherd.Image.Annotators.FSIViewer) {
                 self.components.instructions.style.display = 'none';
 		mode = 'browse';
 	    }
-            var img_src = '';
             if (obj.imageUrl) {
                 var dim = {w:50,h:50};
                 if (obj.wh_ratio) {
                     dim.w = dim.h * obj.wh_ratio;
                 }
-                img_src = obj.imageUrl.replace('[width]',dim.w).replace('[height]',dim.h);
-            } 
-            self.components.image.src = img_src;
+                var img_src = obj.imageUrl.replace('[width]',dim.w).replace('[height]',dim.h);
+                self.components.image.src = img_src;
+                showElement(self.components.image);
+            } else {
+                hideElement(self.components.image);
+
+            }
 	};
 
 	this.initialize = function(create_obj) {
@@ -75,7 +78,7 @@ if (!Sherd.Image.Annotators.FSIViewer) {
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
 		    htmlID:id,
-		    text:'<div id="'+id+'" style="height:3em;margin-bottom:3em;"><img style="sherd-image-preview" src="" style="float:right;max-height:50px;max-width:50px;" /><button style="display:none;" class="sherd-image-center">View Annotation</button> <button class="sherd-image-redo">Capture View</button><p class="sherd-image-instructions">Zoom and Pan to the frame you want to save, and then click "Capture View"</p></div>'
+		    text:'<div id="'+id+'" style="height:3em;margin-bottom:3em;"><img class="sherd-image-preview" src="" style="float:right;max-height:50px;max-width:50px;display:none;" /><button style="display:none;" class="sherd-image-center">View Annotation</button> <button class="sherd-image-redo">Capture View</button><p class="sherd-image-instructions">Zoom and Pan to the frame you want to save, and then click "Capture View"</p></div>'
 		};
 	    },
 	    'components':function(html_dom,create_obj) {

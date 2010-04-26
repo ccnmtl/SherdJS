@@ -18,7 +18,7 @@ SherdBookmarklet = {
                 } else {
                     var obj = {"sources":{},"html":floating_pane.get(0),"metadata":[]};
                     var objectId = obj.html.id.substr(3);/*after 'mdw'*/
-                    var done = false;
+                    var done = 2; //# of queries
                     function obj_final() {
                         return callback([obj]);
                     }
@@ -30,8 +30,12 @@ SherdBookmarklet = {
                                obj.sources["fsiviewer"] = "http://viewer2.artstor.org/erez3/fsi4/fsi.swf";
                                obj.sources["image_fpx"] = f.imageServer+f.imageUrl;
                                obj.sources["image_fpx-metadata"] = "w"+f.width+"h"+f.height;
-                               if (done) obj_final(); else done=true;
-                           }});
+                               if (--done==0) obj_final();
+                           },
+                           error:function(){
+                               if (--done==0) obj_final();
+                           }
+                          });
                     jQuery
                     .ajax({url:"http://library.artstor.org/library/secure/metadata/"+objectId,
                            dataType:'json',
@@ -44,8 +48,12 @@ SherdBookmarklet = {
                                    ///so multiple values are still OK
                                    obj.metadata.push([ m[i].fieldName , m[i].fieldValue ]);
                                }
-                               if (done) obj_final(); else done=true;
-                           }});
+                               if (--done==0) obj_final(); 
+                           },
+                           error:function(){
+                               if (--done==0) obj_final(); 
+                           }
+                          });
                 }
             }
             if (window.jQuery) _find(window.jQuery, callback);
