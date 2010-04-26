@@ -53,7 +53,6 @@ function DjangoSherd_Asset_Config() {
                 // /#initialize for editing
                 obj = evalJSON(orig_annotation_data
                         .getAttribute('data-annotation'));
-
                 ds.assetview.setState(obj);
 
                 if (ds.assetview.clipform)
@@ -113,14 +112,22 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
             forEach(ds.annotationMicroformat.find(materials), function(
                     found_obj) {
                 var ann_obj = ds.annotationMicroformat.read(found_obj);
-                if (ann_obj.asset.type == 'image') {// CAN THUMB?
-                        var view = new Sherd.Image.OpenLayers();
-                        ds.thumbs.push(view);
-                        var obj_div = DIV( {
-                            'class' : 'thumb'
-                        });
-                        found_obj.html.parentNode.appendChild(obj_div);
-                        // should probably be in .view
+                if (ann_obj.asset.thumbable) {// CAN THUMB?
+                    var view;
+                    switch(ann_obj.asset.type) {
+                    case 'image':
+                        view = new Sherd.Image.OpenLayers();
+                        break;
+                    case 'fsiviewer':
+                        view = new Sherd.Image.FSIViewer();
+                        break;
+                    }
+                    ds.thumbs.push(view);
+                    var obj_div = DIV( {
+                        'class' : 'thumb'
+                    });
+                    found_obj.html.parentNode.appendChild(obj_div);
+                    // should probably be in .view
                     ann_obj.asset.presentation = 'thumb';
                     // .asset is the only thing used right now
                     view.html.push(obj_div, ann_obj);
@@ -308,6 +315,10 @@ function DjangoSherd_adaptAsset(asset) {
         asset.type = 'flowplayer';
     } else if (asset.image) {
         asset.type = 'image';
+        asset.thumbable = true;
+    } else if (asset.image_fpx && asset.fsiviewer) {
+        asset.type = 'fsiviewer';        
+        asset.thumbable = true;
     }
     return asset;
 }

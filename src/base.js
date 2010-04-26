@@ -238,44 +238,44 @@ Sherd.Base = {
     'Storage' : function() {
         Sherd.Base.Observer.call(this);// inherit
 
-    var _local_objects = {};
-    var localid_counter = 0;
-    this._localid = function(obj_or_id) {
-        var localid;
-        if (typeof obj_or_id == 'string') {
-            localid = obj_ord_id;
-        } else if (hasAttr(obj_or_id, 'local_id')) {
-            localid = obj_or_id['local_id'];
-        } else {
-            localid = String(++localid_counter)
+        var _local_objects = {};
+        var localid_counter = 0;
+        this._localid = function(obj_or_id) {
+            var localid;
+            if (typeof obj_or_id == 'string') {
+                localid = obj_ord_id;
+            } else if (hasAttr(obj_or_id, 'local_id')) {
+                localid = obj_or_id['local_id'];
+            } else {
+                localid = String(++localid_counter)
+            }
+            return localid;
         }
-        return localid;
-    }
-    this._local = function(id, obj) {
-        if (arguments.length > 1) {
-            _local_objects[id] = obj;
+        this._local = function(id, obj) {
+            if (arguments.length > 1) {
+                _local_objects[id] = obj;
+            }
+            return (hasAttr(_local_objects, id)) ? _local_objects[id] : false;
         }
-        return (hasAttr(_local_objects, id)) ? _local_objects[id] : false;
-    }
-    this.load = function(obj_or_id) {
-
-    };
-    this.get = function(obj_or_id) {
-        var localid = this._localid(obj_or_id);
-        return this._local(localid);
-    };
-    this.save = function(obj) {
-        var localid = this._localid(obj);
-        this._local(localid, obj);
-    };
-    this.remove = function(obj_or_id) {
-
-    };
-
-    this._update = function() {
-        this.callListeners('update', [ this ]);
-    }
-}//Storage
+        this.load = function(obj_or_id) {
+            
+        };
+        this.get = function(obj_or_id) {
+            var localid = this._localid(obj_or_id);
+            return this._local(localid);
+        };
+        this.save = function(obj) {
+            var localid = this._localid(obj);
+            this._local(localid, obj);
+        };
+        this.remove = function(obj_or_id) {
+            
+        };
+        
+        this._update = function() {
+            this.callListeners('update', [ this ]);
+        }
+    }//Storage
 }
 //Base
 

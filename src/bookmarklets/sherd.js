@@ -3,103 +3,57 @@
   2. NO // comments
 */
 SherdBookmarklet = {
+  "user_status": {/* updated by /accounts/logged_in.js */
+      ready:false
+  },
   "hosthandler": {
-    "youtube.com": {
+    /*Try to keep them ALPHABETICAL by 'brand' */
+    "library.artstor.org": {
         find:function(callback) {
-            var video = document.getElementById("movie_player");
-            if (video && video != null) {
-                function getTitle(VIDEO_ID) {
-                    var raw_title = '';
-                    if (/www.youtube.com\/watch/.test(document.location)) {
-                        raw_title = document.getElementsByTagName("h1")[0].textContent;
-                    } else {
-                        var for_channels = document.getElementById("playnav-curvideo-title");
-                        if (for_channels != null) {
-                            raw_title = document.getElementById("playnav-curvideo-title").textContent
-                        }
+            /*must have floating pane open to find image*/
+            function _find(jQuery, callback) {
+                var floating_pane = jQuery(".MetaDataWidgetRoot");
+                if (!floating_pane.length) {
+                    return callback([],"Try opening the image information pane by clicking its title under the thumbnail.");
+                } else {
+                    var obj = {"sources":{},"html":floating_pane.get(0),"metadata":[]};
+                    var objectId = obj.html.id.substr(3);/*after 'mdw'*/
+                    var done = false;
+                    function obj_final() {
+                        return callback([obj]);
                     }
-                    return raw_title.replace(/^\s*/,"").replace(/\s*$/,"");
-                }
-                function getThumb(VIDEO_ID) {
-                    var tries = [/*last-first*/
-                        [document.getElementById("playnav-video-play-uploads-0-"+VIDEO_ID)],
-                        goog.dom.getElementsByTagNameAndClass("div","playnav-item-selected"),
-                        goog.dom.getElementsByTagNameAndClass("div","watch-playlist-row-playing")
-                    ]; var i=tries.length;
-                    while (--i >= 0) {
-                        if (tries[i].length && tries[i][0] != null) {
-                            return tries[i][0].getElementsByTagName("img")[0].src;
-                        }
-                    }
-                    var try_embed = video.getAttribute('flashvars').match(/thumbnailUrl=([^&?]*)/);
-                    if (try_embed) {
-                        return unescape(try_embed[1]);
-                    }
-                    return undefined;
-                }
-                var VIDEO_ID = video.getVideoUrl().match(/[?&]v=([^&]*)/)[1];
-                video.pauseVideo();
-                var obj = {
-                    "html":video,
-                    "hash":"start="+video.getCurrentTime(),
-                    "disabled":video.getVideoEmbedCode() == "",
-                    "sources":{
-                        "title":getTitle(VIDEO_ID),
-                        "thumb":getThumb(VIDEO_ID),
-                        "url":"http://www.youtube.com/watch?v="+VIDEO_ID,
-                        "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
-                        "gdata":"http://gdata.youtube.com/feeds/api/videos/"+VIDEO_ID
-                    }
-                };
-                if (video.getCurrentTime() == video.getDuration()) 
-                    delete obj.hash;
-                return callback([obj]);
-
-            } else callback([]);
-        },
-        decorate:function(objs) {
-        }
-    },
-    "vietnamwararchive.ccnmtl.columbia.edu": {
-        single:function() {
-            return (document.location.pathname.search("/record/display") == 0);
-        },
-        find:function(callback) {
-            var rv = [];
-            if (this.single()) 
-                rv = [ this.update() ];
-            callback(rv);
-        },
-        decorate:function(objs) {
-        },
-        update:function(obj) {
-            var hash = false;
-            var embs = document.getElementsByTagName("embed");
-            if (embs.length) {
-                var e = embs[0];
-                if (e && e.Stop) {
-                    try{
-                        e.Stop();
-                        hash = "start="+Math.floor(e.GetTime()/e.GetTimeScale());
-                    } finally{}
+                    jQuery
+                    .ajax({url:"http://library.artstor.org/library/secure/imagefpx/"+objectId+"/103/5",
+                           dataType:'json',
+                           success:function(fpxdata,textStatus) {
+                               var f = fpxdata[0];
+                               obj.sources["fsiviewer"] = "http://viewer2.artstor.org/erez3/fsi4/fsi.swf";
+                               obj.sources["image_fpx"] = f.imageServer+f.imageUrl;
+                               obj.sources["image_fpx-metadata"] = "w"+f.width+"h"+f.height;
+                               if (done) obj_final(); else done=true;
+                           }});
+                    jQuery
+                    .ajax({url:"http://library.artstor.org/library/secure/metadata/"+objectId,
+                           dataType:'json',
+                           success:function(metadata,textStatus) {
+                               var img_link = metadata.imageUrl.match(/size\d\/(.*)\.\w+$/);
+                               obj.sources["title"] = metadata.title;
+                               obj.sources["thumb"] = "http://library.artstor.org"+metadata.imageUrl;
+                               var m = metadata.metaData;
+                               for (var i=0;i<m.length;i++) {
+                                   ///so multiple values are still OK
+                                   obj.metadata.push([ m[i].fieldName , m[i].fieldValue ]);
+                               }
+                               if (done) obj_final(); else done=true;
+                           }});
                 }
             }
-            var thumb;
-            if (SHARETHIS 
-                && typeof SHARETHIS.shareables == "object"
-                && SHARETHIS.shareables.length
-               ) {
-                thumb = SHARETHIS.shareables[0].properties.icon;
+            if (window.jQuery) _find(window.jQuery, callback);
+            else {
+                SherdBookmarklet.onJQuery = function(jQuery) { 
+                    _find(jQuery, callback);
+                }
             }
-            return {"html":$(".media").get(0),
-                    "hash": hash||undefined,
-                    "sources":{
-                        "title":document.title,
-                        "quicktime":$(".media").media("api").options.src,
-                        "poster":$(".media img").get(0).src,
-                        "thumb": thumb
-                    }
-                   };
         }
     },
     "digitaltibet.ccnmtl.columbia.edu": {
@@ -232,8 +186,106 @@ SherdBookmarklet = {
         },
         decorate:function(objs) {
         }
+    },
+    "vietnamwararchive.ccnmtl.columbia.edu": {
+        single:function() {
+            return (document.location.pathname.search("/record/display") == 0);
+        },
+        find:function(callback) {
+            var rv = [];
+            if (this.single()) 
+                rv = [ this.update() ];
+            callback(rv);
+        },
+        decorate:function(objs) {
+        },
+        update:function(obj) {
+            var hash = false;
+            var embs = document.getElementsByTagName("embed");
+            if (embs.length) {
+                var e = embs[0];
+                if (e && e.Stop) {
+                    try{
+                        e.Stop();
+                        hash = "start="+Math.floor(e.GetTime()/e.GetTimeScale());
+                    } finally{}
+                }
+            }
+            var thumb;
+            if (SHARETHIS 
+                && typeof SHARETHIS.shareables == "object"
+                && SHARETHIS.shareables.length
+               ) {
+                thumb = SHARETHIS.shareables[0].properties.icon;
+            }
+            return {"html":$(".media").get(0),
+                    "hash": hash||undefined,
+                    "sources":{
+                        "title":document.title,
+                        "quicktime":$(".media").media("api").options.src,
+                        "poster":$(".media img").get(0).src,
+                        "thumb": thumb
+                    }
+                   };
+        }
+    },
+    "youtube.com": {
+        find:function(callback) {
+            var video = document.getElementById("movie_player");
+            if (video && video != null) {
+                function getTitle(VIDEO_ID) {
+                    var raw_title = '';
+                    if (/www.youtube.com\/watch/.test(document.location)) {
+                        raw_title = document.getElementsByTagName("h1")[0].textContent;
+                    } else {
+                        var for_channels = document.getElementById("playnav-curvideo-title");
+                        if (for_channels != null) {
+                            raw_title = document.getElementById("playnav-curvideo-title").textContent
+                        }
+                    }
+                    return raw_title.replace(/^\s*/,"").replace(/\s*$/,"");
+                }
+                function getThumb(VIDEO_ID) {
+                    var tries = [/*last-first*/
+                        [document.getElementById("playnav-video-play-uploads-0-"+VIDEO_ID)],
+                        goog.dom.getElementsByTagNameAndClass("div","playnav-item-selected"),
+                        goog.dom.getElementsByTagNameAndClass("div","watch-playlist-row-playing")
+                    ]; var i=tries.length;
+                    while (--i >= 0) {
+                        if (tries[i].length && tries[i][0] != null) {
+                            return tries[i][0].getElementsByTagName("img")[0].src;
+                        }
+                    }
+                    var try_embed = video.getAttribute('flashvars').match(/thumbnailUrl=([^&?]*)/);
+                    if (try_embed) {
+                        return unescape(try_embed[1]);
+                    }
+                    return undefined;
+                }
+                var VIDEO_ID = video.getVideoUrl().match(/[?&]v=([^&]*)/)[1];
+                video.pauseVideo();
+                var obj = {
+                    "html":video,
+                    "hash":"start="+video.getCurrentTime(),
+                    "disabled":video.getVideoEmbedCode() == "",
+                    "sources":{
+                        "title":getTitle(VIDEO_ID),
+                        "thumb":getThumb(VIDEO_ID),
+                        "url":"http://www.youtube.com/watch?v="+VIDEO_ID,
+                        "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
+                        "gdata":"http://gdata.youtube.com/feeds/api/videos/"+VIDEO_ID
+                    }
+                };
+                if (video.getCurrentTime() == video.getDuration()) 
+                    delete obj.hash;
+                return callback([obj]);
+
+            } else callback([]);
+        },
+        decorate:function(objs) {
+        }
     }
-  },/*hosthandler*/
+  },/*end hosthandler*/
   "assethandler":{
       "embeds": {
           players:{
@@ -322,16 +374,18 @@ SherdBookmarklet = {
               return callback(result);
           }
       }
-  },/*assethandler*/
+  },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
       if (document.location.hostname in hosthandler) {
           return hosthandler[document.location.hostname];
       } else if (document.location.hostname.slice(4) in hosthandler) {
+          /*for www. domains */
           return hosthandler[document.location.hostname.slice(4)];
       }
   },/*gethosthandler*/
   "obj2url": function(mondrian_url,obj) {
+    /*excluding metadata because too short for GET string*/
     if (!obj.sources["url"]) obj.sources["url"] = document.location;
     var destination =  mondrian_url;
     for (a in obj.sources) {
@@ -349,6 +403,11 @@ SherdBookmarklet = {
       var form = document.createElement("form");
       form.appendChild(document.createElement("span"));
       form.action = destination;
+      var ready = SherdBookmarklet.user_status.ready;
+      form.method = (ready) ? 'POST' : 'GET'; 
+      /* just auto-save immediately
+       * this also allows us to send larger amounts of metadata
+       */
       for (a in obj.sources) {
           if (typeof obj.sources[a] =="undefined") continue;
           var span = document.createElement("span");
@@ -364,6 +423,15 @@ SherdBookmarklet = {
           form.appendChild(span);
           form.appendChild(item);
       }
+      if (ready && obj.metadata) {
+          for (var i=0;i<obj.metadata.length;i++) {
+              var item = document.createElement("input");
+              item.type = "hidden"
+              item.name = "metadata-"+obj.metadata[i][0];
+              item.value = obj.metadata[i][1];
+              form.appendChild(item);
+          }
+      }
       form.appendChild(document.createElement("span"));
       return form;
   },/*obj2url*/
@@ -377,10 +445,11 @@ SherdBookmarklet = {
             M.g.onclick();
             return;
         }
-        var jump_with_first_asset = function(assets) {
+        var jump_with_first_asset = function(assets,error) {
             switch (assets.length) {
             case 0: 
-                return alert("This page does not contain an asset. Try going to an asset page.");
+                var message = error||"This page does not contain an asset. Try going to an asset page.";
+                return alert(message);
             case 1:
                 if (assets[0].disabled)
                     return alert("This asset cannot be embedded on external sites. Please select another asset.");
@@ -474,7 +543,7 @@ SherdBookmarklet = {
               }
           }
       };
-      this.collectAssets = function(assets) {
+      this.collectAssets = function(assets,errors) {
           self.assets_found.push.apply(self.assets_found,assets);
           for (var i=0;i<assets.length;i++) {
               self.displayAsset(assets[i]);
@@ -510,7 +579,7 @@ SherdBookmarklet = {
 };/*SherdBookmarklet (root)*/
 
 /*legacy for old namespace */
-MondrianBookmarklet = SherdBookmarklet;
+window.MondrianBookmarklet = SherdBookmarklet;
 
 if (typeof mondrian_url == "string" && typeof mondrian_action == "string") {
     SherdBookmarklet.runners[mondrian_action](mondrian_url,true);

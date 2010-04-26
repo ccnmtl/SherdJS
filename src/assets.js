@@ -88,6 +88,19 @@ if (!Sherd.GenericAssetView) {
             }
             this.settings.image = image;
         }
+        if (Sherd.Image && Sherd.Image.FSIViewer) {
+            var fsi = {
+                'view' : new Sherd.Image.FSIViewer()
+            };
+            if (options.clipform) {
+                fsi.clipform = new Sherd.Image.Annotators.FSIViewer();
+                fsi.clipform.attachView(fsi.view);
+                if (options.storage) {
+                    fsi.clipform.addStorage(options.storage);
+                }
+            }
+            this.settings.fsiviewer = fsi;
+        }
         // //API
         var current_type = false;
         this.html = {
