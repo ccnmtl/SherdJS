@@ -33,7 +33,6 @@ if (!Sherd.Image.Annotators.FSIViewer) {
             var img_src = '';
             if (obj.imageUrl) {
                 var dim = {w:50,h:50};
-                console.log(obj);
                 if (obj.wh_ratio) {
                     dim.w = dim.h * obj.wh_ratio;
                 }
