@@ -24,6 +24,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
     Sherd.Video.Flowplayer = function() {
         var self = this;
         
+        this.state = {
+            starttime:0,
+            endtime:0
+        };
+
         Sherd.Video.Base.apply(this,arguments); // inherit -- video.js -- base.js
         
         ////////////////////////////////////////////////////////////////////////
@@ -65,8 +70,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.wrapper = html_dom;
                 }
                 if (create_obj) {
-                    rv.starttime = 0;
-                    rv.endtime = 0;
                     rv.width = create_obj.object.options.width;
                     rv.playerID = create_obj.playerID;
                     rv.mediaUrl = create_obj.playerParams.url;
@@ -192,7 +195,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                  }, poll:500},
                  {call: function() {
                      self.events.signal(djangosherd, 'duration', { duration: self.media.duration() });
-                     self.setState({ start: self.components.starttime, end: self.components.endtime});
+                     self.setState({ start: self.state.starttime, end: self.state.endtime});
                  }
                  }]);
         }
@@ -205,9 +208,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             if (create_obj) {
                 options = {
                     clip: {
-                        scaling:"fit"
+                        scaling:"fit",
                         // these are the common clip properties & event handlers
                         // they (theoretically) apply to all the clips
+                        onPause:function(clip) {
+                            self.state.last_pause_time = self.components.player.getTime();
+                        }
                     },
                     plugins: {
                         pseudo: { url: 'flowplayer.pseudostreaming-3.1.3.swf' },
@@ -297,7 +303,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         this.media.isPlaying = function() {
             var playing = false;
             try {
-                playing = self.media.state() == 3;
+                playing = (self.media.state() == 3);
             } catch(e) {}
             return playing;
         }
@@ -312,12 +318,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         }
         
         this.media.seek = function(starttime, endtime) {
-            
             // this might need to be a timer to determine "when" the media player is ready
             // it's working differently from initial load to the update method
             if (!self.media.ready()) {
-                self.components.starttime = starttime;
-                self.components.endtime = endtime;   
+                self.state.starttime = starttime;
+                self.state.endtime = endtime;   
             } else {
                 if (starttime != undefined) {
                     self.components.player.seek(starttime);
@@ -328,8 +333,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 }
                 
                 // clear any saved values if they exist
-                delete self.components.starttime;
-                delete self.components.endtime;
+                delete self.state.starttime;
+                delete self.state.endtime;
                 
                 // Delay the play for a few milliseconds
                 // In an update situation, we need a little time for the seek 
@@ -344,12 +349,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         }
         
         this.media.time = function() {
-            time = 0;
-            if (self.components.player && self.components.player.getState() == 3) {
-                time = self.components.player.getTime();
-                if (time < 1)
-                    time = 0;
-            }
+            var time = ((self.media.isPlaying()) 
+                        ? self.components.player.getTime()
+                        : self.state.last_pause_time || 0
+                       );
+            if (time < 1)
+                time = 0;
             return time;
         }
         
