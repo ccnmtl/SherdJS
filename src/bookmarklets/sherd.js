@@ -1,17 +1,24 @@
 /*RULES
   1. NO single quote characters
-  2. NO // comments
 */
 SherdBookmarklet = {
   "user_status": {/* updated by /accounts/logged_in.js */
       ready:false
+  },
+  run_with_jquery:function(func) {
+      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+      if (jQ) {
+          func(jQ);
+      } else {
+          SherdBookmarklet.onJQuery = func;
+      }
   },
   "hosthandler": {
     /*Try to keep them ALPHABETICAL by 'brand' */
     "library.artstor.org": {
         find:function(callback) {
             /*must have floating pane open to find image*/
-            function _find(jQuery, callback) {
+            SherdBookmarklet.run_with_jquery(function _find(jQuery) {
                 var floating_pane = jQuery(".MetaDataWidgetRoot");
                 if (!floating_pane.length) {
                     return callback([],"Try opening the image information pane by clicking its title under the thumbnail.");
@@ -55,13 +62,7 @@ SherdBookmarklet = {
                            }
                           });
                 }
-            }
-            if (window.jQuery) _find(window.jQuery, callback);
-            else {
-                SherdBookmarklet.onJQuery = function(jQuery) { 
-                    _find(jQuery, callback);
-                }
-            }
+            });
         }
     },
     "digitaltibet.ccnmtl.columbia.edu": {
@@ -95,7 +96,7 @@ SherdBookmarklet = {
     },
     "flickr.com": {
         find:function(callback) {
-            SherdBookmarklet.onJQuery = function(jQuery) { 
+            SherdBookmarklet.run_with_jquery(function(jQuery) { 
                 var apikey = SherdBookmarklet.options.flickr_apikey;
                 if (!apikey) 
                     return callback([]);
@@ -147,7 +148,7 @@ SherdBookmarklet = {
                                 return callback( [{html:img, sources:sources}] );
                            });
                     });
-             }
+            });
         },
         decorate:function(objs) {
         }
@@ -295,19 +296,19 @@ SherdBookmarklet = {
     }
   },/*end hosthandler*/
   "assethandler":{
+      /* assumes jQuery is available */
       "embeds": {
           players:{
               "youtube":{
                   match:function(emb) {
                       return String(emb.src).match(/^http:\/\/www.youtube.com\/v\/([\w-]*)/);
                   },
-                  object:function(emb,match) {
+                  asset:function(emb,match) {
                       /*use http://gdata.youtube.com/feeds/api/videos/?q=KP-nVpOLW88&v=2&alt=json-in-script&callback=myFunction
                         so we need to pass in the callback stuff here.
                         http://code.google.com/apis/youtube/2.0/reference.html#Searching_for_videos
                        */
-                      return {
-                      };
+                      return {};
                   }
               }
           },
@@ -320,7 +321,97 @@ SherdBookmarklet = {
                       var m = this.players[p].match(emb);
                       if (m != null) {
                           result.push({html:emb,
-                                       sources:this.players[p].object(emb,m)
+                                       sources:this.players[p].asset(emb,m)
+                                      });
+                          break;
+                      }
+                  }
+              }
+              callback(result);
+          }
+      },
+      "objects": {
+          players:{
+              "flowplayer3":{
+                  match:function(obj) {
+                      return String(obj.data).match(/flowplayer-3[.\d]+\.swf/);
+                  },
+                  asset:function(obj,match) {
+                      /* TODO: 1. support audio
+                               2. 
+                       */
+                      var sources = {};
+                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                      var $f = (window.$f && window.$f(obj.parentNode));
+                      
+                      var cfg = (($f)? $f.getConfig() 
+                                 :jQ.parseJSON(jQ('param[name=flashvars]').get(0)
+                                               .value.substr(7)));//config=
+                      //getClip() works if someone's already clicked Play
+                      var clip = ($f && $f.getClip() ) || cfg.clip || cfg.playlist[0];
+                      var type = 'video';
+                      if (cfg.playlist && (! clip.url || cfg.playlist.length > 1)) {
+                          for (var i=0;i<cfg.playlist.length;i++) {
+                              var p = cfg.playlist[i];
+                              var url = (typeof p=='string') ? p : p.url;
+                              if (/\.(jpg|jpeg|png|gif)/.test(url)) {
+                                  //wasteful, but useful
+                                  sources.image = url;
+                                  sources.thumb = url;
+                                  sources.poster = url;
+                                  if (p.width) {
+                                      sources['image-metadata'] = "w"+p.width+"h"+p.height;
+                                  }
+                                  continue;
+                              } 
+                              else if (!clip.type || clip.type == 'image') {
+                                  if (/\.flv$/.test(url)) {
+                                      clip = p;
+                                      type = 'flv';
+                                      break;
+                                  } else if (/\.mp4$/.test(url)) {
+                                      clip = p;
+                                      type = 'mp4';
+                                      break;
+                                  }
+                              }
+                          }
+                      }
+                      function get_provider(c) {
+                          if (c.provider && cfg.plugins[c.provider]) {
+                              var plugin = cfg.plugins[c.provider].url;
+                              if (/pseudostreaming/.test(plugin)) {
+                                  return '_pseudo';
+                              } else if (/rtmp/.test(plugin)) {
+                                  return '_rtmp';
+                              }
+                          } 
+                          return '';
+                      }
+                      var primary_type = type+get_provider(clip);
+                      sources[primary_type] = clip.originalUrl || clip.url || clip;
+                      //guess is just the filename
+                      sources['title'] = sources[primary_type].split('/').pop();
+                      if (clip.width) {
+                          sources[primary_type+"-metadata"] = "w"+clip.width+"h"+clip.height;
+                      }
+                      return sources;
+                  }
+              }/*end flowplayer3*/
+          },
+          find:function(callback) {
+              var result = [];
+              var objects = document.getElementsByTagName("object");
+              for (var i=0;i<objects.length;i++) {
+                  var emb = objects[i];
+                  if (emb.getElementsByTagName("embed").length > 0) {
+                      continue; //use embed
+                  }
+                  for (p in this.players) {
+                      var m = this.players[p].match(emb);
+                      if (m != null) {
+                          result.push({html:emb,
+                                       sources:this.players[p].asset(emb,m)
                                       });
                           break;
                       }
@@ -449,8 +540,10 @@ SherdBookmarklet = {
         var M = SherdBookmarklet;
         var handler = M.gethosthandler();
         if (!handler) {
-            M.g = new M.Grabber(mondrian_url);
-            M.g.onclick();
+            M.run_with_jquery(function(jQuery) {
+                M.g = new M.Grabber(mondrian_url);
+                M.g.onclick();
+            });
             return;
         }
         var jump_with_first_asset = function(assets,error) {
@@ -474,8 +567,11 @@ SherdBookmarklet = {
     },
     decorate: function(mondrian_url) {
         var M = SherdBookmarklet;
-        function go() {
-            M.g = new M.Grabber(mondrian_url);
+        function go(run_func) {
+            M.run_with_jquery(function() {
+                M.g = new M.Grabber(mondrian_url);
+                if (run_func=='onclick') M.g.onclick();
+            });
         }
         /*ffox 3.6+ and all other browsers:*/
         if (document.readyState != "complete") {
@@ -484,8 +580,7 @@ SherdBookmarklet = {
              */
             M.l = M.connect(window,"load",go);
         } else {/*using as bookmarklet*/
-            go();
-            M.g.onclick();
+            go('onclick');
         }
     }
   },/*runners*/
@@ -503,6 +598,8 @@ SherdBookmarklet = {
           side:"left",
           fixed:true
       }; if (options) for (a in options) {this.options[a]=options[a]};
+      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+
       var o = this.options;
       var M = SherdBookmarklet;
       var self = this;
@@ -542,10 +639,11 @@ SherdBookmarklet = {
                   ++self.handler_count;
               }
               for (h in SherdBookmarklet.assethandler) {
+                      handler[h].find.call(handler[h],self.collectAssets);
                   try {
-                      handler[h].find.call(handler,self.collectAssets);
                   } catch(e) {
                       --self.handler_count;
+                      SherdBookmarklet.error = e;
                       alert("Bookmarklet Error: "+e.message);
                   }
               }
@@ -566,8 +664,9 @@ SherdBookmarklet = {
           var li = document.createElement("li");
           var jump_url = M.obj2url(mondrian_url, asset);
           var form = M.obj2form(mondrian_url, asset);
-          if (form.elements["title"].previousSibling) /*IE7 breaks here */
-              form.elements["title"].previousSibling.innerHTML = "<div>Guessed title:</div>";
+          var t = form.elements["title"];
+          if (t && t.previousSibling) /*IE7 breaks here */
+              t.previousSibling.innerHTML = "<div>Guessed title:</div>";
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
               form.firstChild.innerHTML = "<img src=\""+img+"\" style=\"max-width:120px;max-height:120px;\" /> ";
