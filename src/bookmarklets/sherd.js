@@ -10,7 +10,7 @@ SherdBookmarklet = {
       if (jQ) {
           func(jQ);
       } else {
-          SherdBookmarklet.onJQuery = func;
+          SherdBookmarkletOptions.onJQuery = func;
       }
   },
   "hosthandler": {
@@ -303,31 +303,75 @@ SherdBookmarklet = {
                   match:function(emb) {
                       return String(emb.src).match(/^http:\/\/www.youtube.com\/v\/([\w-]*)/);
                   },
-                  asset:function(emb,match) {
+                  asset:function(emb,match,index,optional_callback) {
+                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                      var VIDEO_ID = match[1]; //e.g. "LPHEvaNjdhw"
+                      var rv = {
+                          html:emb,
+                          wait:true,
+                          sources: {
+                              "title":'Youtube video',//guessed
+                              "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
+                              "gdata":'http://gdata.youtube.com/feeds/api/videos/'+VIDEO_ID
+                          }};
+                      var yt_callback = 'sherd_youtube_callback_'+index;
+                      window[yt_callback] = function(yt_data) {
+                          var e = yt_data['entry'];
+                          rv.sources['title'] = e.title['$t'];
+                          var th = e['media$group']['media$thumbnail'][0];
+                          rv.sources['thumb'] = th.url;
+                          rv.sources['thumb-metadata'] = "w"+th.width+"h"+th.height;
+                          
+                          rv.metadata = {
+                              'description':e.content['$t'],
+                              'author':e.author[0].name,
+                              'author_uri':e.author[0].uri,
+                              'youtube_link':'http://www.youtube.com/watch?v='+VIDEO_ID
+                          };
+                          if (e['media$group']['media$category'].length) {
+                              rv.metadata['category']=e['media$group']['media$category'][0].label;
+                          }
+                          optional_callback(index, rv);
+                      }
+                      jQ.ajax({
+                          url: rv.sources.gdata+'?v=2&alt=json-in-script&callback='+yt_callback,
+                          dataType: 'script',
+                          error:function(){optional_callback(index);}
+                      });
                       /*use http://gdata.youtube.com/feeds/api/videos/?q=KP-nVpOLW88&v=2&alt=json-in-script&callback=myFunction
                         so we need to pass in the callback stuff here.
                         http://code.google.com/apis/youtube/2.0/reference.html#Searching_for_videos
                        */
-                      return {};
+                      return rv;
                   }
-              }
+              }/*end youtube embeds*/
           },
           find:function(callback) {
               var result = [];
               var embeds = document.getElementsByTagName("embed");
               for (var i=0;i<embeds.length;i++) {
                   var emb = embeds[i];
+                  var waiting = 0;
+                  function finished(index, asset_result) {
+                      result[index] = asset_result || result[index];
+                      if (--waiting <= 0) {
+                          callback(result);
+                      }
+                  }
                   for (p in this.players) {
                       var m = this.players[p].match(emb);
                       if (m != null) {
-                          result.push({html:emb,
-                                       sources:this.players[p].asset(emb,m)
-                                      });
+                          var res = this.players[p].asset(emb, m, result.length, finished);
+                          result.push(res);
+                          if (res.wait) {
+                              ++waiting;
+                          }
                           break;
                       }
                   }
               }
-              callback(result);
+              if (waiting==0)
+                  callback(result);
           }
       },
       "objects": {
@@ -439,40 +483,33 @@ SherdBookmarklet = {
               }
               callback(result);
           }
-      },
-      "mondrian": {
+      }
+      /*,"mondrian": {
+          ///the better we get on more generic things, the more redundant this will be
+          ///BUT it might have more metadata
           find:function(callback) {
               var result = [];
-              if (String(document.body.innerHTML).indexOf("asset-links") < 0 ) {
-                  return callback(result);/*quick fail*/
-              }
-              var M = SherdBookmarklet;
-              var divs = document.getElementsByTagName("div");
-              for (var i=0;i<divs.length;i++) {
-                  if (M.hasClass(divs[i]," asset-links ")) {
-                      var sources = {};
-                      var src_elems = divs[i].getElementsByTagName("a");
-                      for (var j=0;j<src_elems.length;j++) {
-                          if (M.hasClass(src_elems[j]," assetsource ")) {
-                              var src = src_elems[j];
-                              var reg = String(src.getAttribute("class")).match(/assetlabel-(\w+)/);
-                              if (reg != null) {
-                                  /*use getAttribute rather than href, to avoid urlencodings*/
-                                  sources[reg[1]] = src.getAttribute("href");
-                                  if (src.title) 
-                                      sources.title = src.title;
-                              }
-                          }
+              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+              jQ('div.asset-links').each(function(){
+                  var sources = {};
+                  var top = this;
+                  jQ('a.assetsource',top).each(function() {
+                      var reg = String(this.getAttribute("class")).match(/assetlabel-(\w+)/);
+                      if (reg != null) {
+                          ///use getAttribute rather than href, to avoid urlencodings
+                          sources[reg[1]] = this.getAttribute("href");
+                          if (this.title) 
+                              sources.title = this.title;
                       }
-                      result.push({
-                          html:divs[i],
-                          sources:sources
-                      });
-                  }
-              }
+                  });
+                  result.push({
+                      html:top,
+                      sources:sources
+                  });
+              });
               return callback(result);
           }
-      }
+      }/* end mondrian */
   },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
@@ -607,11 +644,12 @@ SherdBookmarklet = {
       comp.top = document.createElement("div");
       comp.top.setAttribute("class","sherd-analyzer");
       this.options.target.appendChild(comp.top);
-      comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+o.top+";color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
+      comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+o.top+";color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
       comp.tab = comp.top.firstChild;
       comp.window = comp.top.lastChild;
       comp.ul = comp.top.getElementsByTagName("ul")[0];
       comp.close = comp.top.getElementsByTagName("button")[0];
+      comp.move = comp.top.getElementsByTagName("button")[1];
       comp.message = comp.top.getElementsByTagName("p")[0];
       this.onclick = function(evt) {
           if (self.windowStatus) return;
@@ -621,6 +659,12 @@ SherdBookmarklet = {
           self.findAssets();
       };
       M.connect(comp.tab, "click", this.onclick);
+      M.connect(comp.move, "click", function(evt) {
+          var s = comp.window.style;
+          s.left = s.right = s.top = s.bottom = null;
+          s.right = '0px';
+          s.top = '0px';
+      });
       M.connect(comp.close, "click", function(evt) {
           comp.window.style.display = "none";
           comp.tab.style.display = "block";
@@ -639,8 +683,8 @@ SherdBookmarklet = {
                   ++self.handler_count;
               }
               for (h in SherdBookmarklet.assethandler) {
-                      handler[h].find.call(handler[h],self.collectAssets);
                   try {
+                      handler[h].find.call(handler[h],self.collectAssets);
                   } catch(e) {
                       --self.handler_count;
                       SherdBookmarklet.error = e;

@@ -24,7 +24,8 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         // create == asset->{html+information to make it}
         this.microformat.create = function(obj) {
             var wrapperID = Sherd.Base.newID('youtube-wrapper-');
-            var playerID = Sherd.Base.newID('youtube-player-');
+            ///playerID MUST only have [\w] chars or IE7 will fail
+            var playerID = Sherd.Base.newID('youtube_player_');
             var autoplay = obj.autoplay ? 1 : 0;
             self.media._ready = false;
             
@@ -103,22 +104,6 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return false;
         };
 
-        // Find the objects based on the individual player properties in the DOM
-        // NOTE: Not currently in use. 
-        this.microformat.find = function(html_dom) {
-            var found = [];
-            //SNOBBY:not embeds, since they're in objects--and not xhtml 'n' stuff
-            var objects = ((html_dom.tagName.toLowerCase()=='object')
-                    ? [html_dom] : html_dom.getElementsByTagName('object')
-                      //function is case-insensitive in IE and FFox,at least
-            );
-            for(var i=0; i<objects.length; i++) {
-                if (objects[i].getAttribute('id').search('youtube-player'))
-                    found.push({'html':objects[i]});
-            }
-            return found;
-        };
-        
         // Return asset object description (parameters) in a serialized JSON format.
         // NOTE: Not currently in use. Will be used for things like printing, or spitting out a description.
         this.microformat.read = function(found_obj) {
