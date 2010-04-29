@@ -1,7 +1,7 @@
 /***owned by Tibetan Civilization project, at the moment
 ****/
 jQuery(function(){
-    var destination = 'http://mondrian.ccnmtl.columbia.edu/save/?';
+    var destination = 'http://mediathread.ccnmtl.columbia.edu/save/?';
     //so we don't have to keep them on kodos while testing
     var real_site = 'http://digitaltibet.ccnmtl.columbia.edu/';
 
@@ -27,7 +27,7 @@ jQuery(function(){
 	    destination += ( a+'='+escape(sources[a]) +'&' );
 	}
 
-	jQuery('.byxor-control-slot div').prepend('<h2 class="sherd-analyze" style="display:block;float:right;margin:-2px 0 0 0;"><a href="'+destination+'" class="sherd-analyze-link" style="display:block;color:transparent;overflow:hidden;line-height:100px;background-color:white;background-image:url(http://mondrian.ccnmtl.columbia.edu/site_media/img/analyze_button.jpg);height:26px;width:110px;overflow:hidden;">Analyze This</a></h2>');
+	jQuery('.byxor-control-slot div').prepend('<h2 class="sherd-analyze" style="display:block;float:right;margin:-2px 0 0 0;"><a href="'+destination+'" class="sherd-analyze-link" style="display:block;color:transparent;overflow:hidden;line-height:100px;background-color:white;background-image:url(http://mediathread.ccnmtl.columbia.edu/site_media/img/analyze_button.jpg);height:26px;width:110px;overflow:hidden;">Analyze This</a></h2>');
     }
 });
 

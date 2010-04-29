@@ -213,6 +213,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         // they (theoretically) apply to all the clips
                         onPause:function(clip) {
                             self.state.last_pause_time = self.components.player.getTime();
+                        },
+                        onSeek:function(clip,target_time) {
+                            self.state.last_pause_time = target_time;
                         }
                     },
                     plugins: {

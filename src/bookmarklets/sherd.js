@@ -349,9 +349,9 @@ SherdBookmarklet = {
           find:function(callback) {
               var result = [];
               var embeds = document.getElementsByTagName("embed");
+              var waiting = 0;
               for (var i=0;i<embeds.length;i++) {
                   var emb = embeds[i];
-                  var waiting = 0;
                   function finished(index, asset_result) {
                       result[index] = asset_result || result[index];
                       if (--waiting <= 0) {
@@ -378,7 +378,12 @@ SherdBookmarklet = {
           players:{
               "flowplayer3":{
                   match:function(obj) {
-                      return String(obj.data).match(/flowplayer-3[.\d]+\.swf/);
+                      if (obj.data) {
+                          return String(obj.data).match(/flowplayer-3[.\d]+\.swf/);
+                      } else {//IE7 ?+
+                          var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                          return String(jQ('param[name=movie]',obj).get(0).value).match(/flowplayer-3[.\d]+\.swf/);
+                      }
                   },
                   asset:function(obj,match) {
                       /* TODO: 1. support audio
@@ -484,7 +489,7 @@ SherdBookmarklet = {
               callback(result);
           }
       }
-      /*,"mondrian": {
+      /*,"mediathread": {
           ///the better we get on more generic things, the more redundant this will be
           ///BUT it might have more metadata
           find:function(callback) {
@@ -509,7 +514,7 @@ SherdBookmarklet = {
               });
               return callback(result);
           }
-      }/* end mondrian */
+      }/* end mediathread */
   },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
@@ -520,10 +525,10 @@ SherdBookmarklet = {
           return hosthandler[document.location.hostname.slice(4)];
       }
   },/*gethosthandler*/
-  "obj2url": function(mondrian_url,obj) {
+  "obj2url": function(host_url,obj) {
     /*excluding metadata because too short for GET string*/
     if (!obj.sources["url"]) obj.sources["url"] = document.location;
-    var destination =  mondrian_url;
+    var destination =  host_url;
     for (a in obj.sources) {
         if (typeof obj.sources[a] =="undefined") continue;
 	destination += ( a+"="+escape(obj.sources[a]) +"&" );
@@ -533,9 +538,9 @@ SherdBookmarklet = {
     }
     return destination;
   },/*obj2url*/
-  "obj2form": function(mondrian_url,obj) {
+  "obj2form": function(host_url,obj) {
       if (!obj.sources["url"]) obj.sources["url"] = document.location;
-      var destination =  mondrian_url;
+      var destination =  host_url;
       var form = document.createElement("form");
       form.appendChild(document.createElement("span"));
       form.action = destination;
@@ -572,13 +577,13 @@ SherdBookmarklet = {
       return form;
   },/*obj2url*/
   "runners": {
-    jump: function(mondrian_url,jump_now) {
-        var final_url = mondrian_url;
+    jump: function(host_url,jump_now) {
+        var final_url = host_url;
         var M = SherdBookmarklet;
         var handler = M.gethosthandler();
         if (!handler) {
             M.run_with_jquery(function(jQuery) {
-                M.g = new M.Grabber(mondrian_url);
+                M.g = new M.Grabber(host_url);
                 M.g.onclick();
             });
             return;
@@ -593,7 +598,7 @@ SherdBookmarklet = {
                     return alert("This asset cannot be embedded on external sites. Please select another asset.");
 
                 if (jump_now && !M.debug) {
-                    document.location = M.obj2url(mondrian_url, assets[0]);
+                    document.location = M.obj2url(host_url, assets[0]);
                 }
             }
             if (window.console) {/*if we get here, we're debugging*/
@@ -602,11 +607,11 @@ SherdBookmarklet = {
         };
         handler.find.call(handler, jump_with_first_asset);
     },
-    decorate: function(mondrian_url) {
+    decorate: function(host_url) {
         var M = SherdBookmarklet;
         function go(run_func) {
             M.run_with_jquery(function() {
-                M.g = new M.Grabber(mondrian_url);
+                M.g = new M.Grabber(host_url);
                 if (run_func=='onclick') M.g.onclick();
             });
         }
@@ -627,9 +632,9 @@ SherdBookmarklet = {
   "hasClass":function (elem,cls) {
       return (" " + (elem.className || elem.getAttribute("class")) + " ").indexOf(cls) > -1;
   },
-  "Grabber" : function (mondrian_url, page_handler, options) {
+  "Grabber" : function (host_url, page_handler, options) {
       this.options = {
-          tab_label:"Analyze in Mondrian",
+          tab_label:"Analyze in Mediathread",
           target:document.body,
           top:"100px",
           side:"left",
@@ -698,7 +703,6 @@ SherdBookmarklet = {
           for (var i=0;i<assets.length;i++) {
               self.displayAsset(assets[i]);
           }
-
           --self.handler_count;
           if (self.handler_count==0) {
               self.finishedCollecting();
@@ -706,14 +710,14 @@ SherdBookmarklet = {
       };
       this.displayAsset = function(asset) {
           var li = document.createElement("li");
-          var jump_url = M.obj2url(mondrian_url, asset);
-          var form = M.obj2form(mondrian_url, asset);
+          var jump_url = M.obj2url(host_url, asset);
+          var form = M.obj2form(host_url, asset);
           var t = form.elements["title"];
           if (t && t.previousSibling) /*IE7 breaks here */
               t.previousSibling.innerHTML = "<div>Guessed title:</div>";
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              form.firstChild.innerHTML = "<img src=\""+img+"\" style=\"max-width:120px;max-height:120px;\" /> ";
+              form.firstChild.innerHTML = "<img src=\""+img+"\" style=\"width:20%;max-width:120px;max-height:120px;\" /> ";
           }
           form.lastChild.innerHTML = "<input type=\"submit\"  value=\"analyze\" />";
           li.appendChild(form);
@@ -729,25 +733,28 @@ SherdBookmarklet = {
   }/*Grabber*/
 };/*SherdBookmarklet (root)*/
 
-/*legacy for old namespace */
-window.MondrianBookmarklet = SherdBookmarklet;
+window.MondrianBookmarklet = SherdBookmarklet; //legacy name
+if (!window.SherdBookmarkletOptions) {
+    window.SherdBookmarkletOptions = {};
+}
 
-if (typeof mondrian_url == "string" && typeof mondrian_action == "string") {
-    SherdBookmarklet.runners[mondrian_action](mondrian_url,true);
-} else if (typeof SherdBookmarkletOptions == "object" && !window.mondrian_decorate) {
+if (!SherdBookmarkletOptions.decorate) {
     var o = SherdBookmarkletOptions;
+    var host_url = o.host_url || o.mondrian_url;//legacy name
     SherdBookmarklet.options = o;
-    SherdBookmarklet.debug = (window.mondrian_debug || document.location.hash == "#debugmondrian");
-    SherdBookmarklet.runners[o.action](o.mondrian_url,true);
+    SherdBookmarklet.debug = o.debug;
+    SherdBookmarklet.runners[o.action](host_url,true);
 } else {
     var scripts = document.getElementsByTagName("script");
     var i = scripts.length;
     while (--i >= 0) {
         var me_embedded = scripts[i];
         if (/bookmarklets\/analyze.js/.test(me_embedded.src)) {
-            mondrian_url = String(me_embedded.src).split("/",3).join("/")+"/save/?";
-            mondrian_action = "decorate";
-            SherdBookmarklet.runners[mondrian_action](mondrian_url,true);
+            var sbo = window.SherdBookmarkletOptions;
+            sbo.host_url=String(me_embedded.src).split("/",3).join("/")+"/save/?";
+            sbo.action = "decorate";
+            
+            SherdBookmarklet.runners[sbo.action](sbo.host_url,true);
             break;
         }
     }
