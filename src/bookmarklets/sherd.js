@@ -385,13 +385,13 @@ SherdBookmarklet = {
                           return String(jQ('param[name=movie]',obj).get(0).value).match(/flowplayer-3[.\d]+\.swf/);
                       }
                   },
-                  asset:function(obj,match) {
+                  asset:function(obj,match,context) {
                       /* TODO: 1. support audio
                                2. 
                        */
                       var sources = {};
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
-                      var $f = (window.$f && window.$f(obj.parentNode));
+                      var $f = (context.window.$f && context.window.$f(obj.parentNode));
                       
                       var cfg = (($f)? $f.getConfig() 
                                  :jQ.parseJSON(jQ('param[name=flashvars]').get(0)
@@ -448,9 +448,9 @@ SherdBookmarklet = {
                   }
               }/*end flowplayer3*/
           },
-          find:function(callback) {
+          find:function(callback,context) {
               var result = [];
-              var objects = document.getElementsByTagName("object");
+              var objects = context.document.getElementsByTagName("object");
               for (var i=0;i<objects.length;i++) {
                   var emb = objects[i];
                   if (emb.getElementsByTagName("embed").length > 0) {
@@ -460,7 +460,7 @@ SherdBookmarklet = {
                       var m = this.players[p].match(emb);
                       if (m != null) {
                           result.push({html:emb,
-                                       sources:this.players[p].asset(emb,m)
+                                       sources:this.players[p].asset(emb,m,context)
                                       });
                           break;
                       }
@@ -470,8 +470,8 @@ SherdBookmarklet = {
           }
       },
       "image": {
-          find:function(callback) {
-              var imgs = document.getElementsByTagName("img");
+          find:function(callback,context) {
+              var imgs = context.document.getElementsByTagName("img");
               var result = [];
               for (var i=0;i<imgs.length;i++) {
                   /*use offsetWidth, so display:none's are excluded */
@@ -544,6 +544,7 @@ SherdBookmarklet = {
       var form = document.createElement("form");
       form.appendChild(document.createElement("span"));
       form.action = destination;
+      form.target = '_top';
       var ready = SherdBookmarklet.user_status.ready;
       form.method = (ready) ? 'POST' : 'GET'; 
       /* just auto-save immediately
@@ -584,7 +585,7 @@ SherdBookmarklet = {
         if (!handler) {
             M.run_with_jquery(function(jQuery) {
                 M.g = new M.Grabber(host_url);
-                M.g.onclick();
+                M.g.findAssets();
             });
             return;
         }
@@ -612,7 +613,7 @@ SherdBookmarklet = {
         function go(run_func) {
             M.run_with_jquery(function() {
                 M.g = new M.Grabber(host_url);
-                if (run_func=='onclick') M.g.onclick();
+                if (run_func=='onclick') M.g.findAssets();
             });
         }
         /*ffox 3.6+ and all other browsers:*/
@@ -627,15 +628,20 @@ SherdBookmarklet = {
     }
   },/*runners*/
   "connect":function (dom,event,func) {
-      return ((dom.addEventListener)? dom.addEventListener(event,func,false) : dom.attachEvent("on"+event,func));
+      try {
+          return ((dom.addEventListener)? dom.addEventListener(event,func,false) : dom.attachEvent("on"+event,func));
+      } catch(e) {/*dom is null in firefox?*/}
   },/*connect*/
   "hasClass":function (elem,cls) {
       return (" " + (elem.className || elem.getAttribute("class")) + " ").indexOf(cls) > -1;
   },
   "Grabber" : function (host_url, page_handler, options) {
+      this.hasBody = function(doc) {
+          return ('body'==doc.body.tagName.toLowerCase());
+      }
       this.options = {
           tab_label:"Analyze in Mediathread",
-          target:document.body,
+          target:((this.hasBody(document))? document.body : null),
           top:"100px",
           side:"left",
           fixed:true
@@ -646,56 +652,77 @@ SherdBookmarklet = {
       var M = SherdBookmarklet;
       var self = this;
       var comp = this.components = {};
-      comp.top = document.createElement("div");
-      comp.top.setAttribute("class","sherd-analyzer");
-      this.options.target.appendChild(comp.top);
-      comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+o.top+";color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
-      comp.tab = comp.top.firstChild;
-      comp.window = comp.top.lastChild;
-      comp.ul = comp.top.getElementsByTagName("ul")[0];
-      comp.close = comp.top.getElementsByTagName("button")[0];
-      comp.move = comp.top.getElementsByTagName("button")[1];
-      comp.message = comp.top.getElementsByTagName("p")[0];
+
       this.onclick = function(evt) {
           if (self.windowStatus) return;
-          self.windowStatus = true;
-          comp.window.style.display = "block";
-          comp.tab.style.display = "none";
+          self.showWindow();
           self.findAssets();
       };
-      M.connect(comp.tab, "click", this.onclick);
-      M.connect(comp.move, "click", function(evt) {
-          var s = comp.window.style;
-          s.left = s.right = s.top = s.bottom = null;
-          s.right = '0px';
-          s.top = '0px';
-      });
-      M.connect(comp.close, "click", function(evt) {
-          comp.window.style.display = "none";
-          comp.tab.style.display = "block";
-          self.windowStatus = false;
-      });
+
+      this.showWindow = function() {
+          self.windowStatus = true;
+          if (comp.window) {
+              comp.window.style.display = "block";
+              comp.tab.style.display = "none";
+              comp.ul.innerHTML = "";
+          }
+      };
+      this.setupContent = function(target) {
+          comp.top = target.ownerDocument.createElement("div");
+          comp.top.setAttribute("class","sherd-analyzer");
+          target.appendChild(comp.top);
+          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+o.top+";color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
+          comp.tab = comp.top.firstChild;
+          comp.window = comp.top.lastChild;
+          comp.ul = comp.top.getElementsByTagName("ul")[0];
+          comp.close = comp.top.getElementsByTagName("button")[0];
+          comp.move = comp.top.getElementsByTagName("button")[1];
+          comp.message = comp.top.getElementsByTagName("p")[0];
+          M.connect(comp.tab, "click", this.onclick);
+          M.connect(comp.move, "click", function(evt) {
+              var s = comp.window.style;
+              s.left = s.right = s.top = s.bottom = null;
+              s.right = '0px';
+              s.top = '0px';
+          });
+          M.connect(comp.close, "click", function(evt) {
+              comp.window.style.display = "none";
+              comp.tab.style.display = "block";
+              self.windowStatus = false;
+          });
+      };
+      if (o.target) {
+          this.setupContent(o.target);
+      }
+
       this.handler_count = 0;
       this.assets_found = [];
       this.findAssets = function() {
-          comp.ul.innerHTML = "";
           var handler = SherdBookmarklet.gethosthandler();
           if (handler) {
               handler.find.call(handler, self.collectAssets);
           } else {
               handler = SherdBookmarklet.assethandler;
-              for (h in SherdBookmarklet.assethandler) {
-                  ++self.handler_count;
+              var frames = self.walkFrames();
+              if (!comp.window && frames.best) {
+                  var target = o.target || frames.best.document.body;
+                  self.setupContent(target);
+                  self.showWindow();
               }
-              for (h in SherdBookmarklet.assethandler) {
-                  try {
-                      handler[h].find.call(handler[h],self.collectAssets);
-                  } catch(e) {
-                      --self.handler_count;
-                      SherdBookmarklet.error = e;
-                      alert("Bookmarklet Error: "+e.message);
+              jQ(frames.all).each(function(i,context) {
+                  for (h in SherdBookmarklet.assethandler) {
+                      ++self.handler_count;
                   }
-              }
+                  for (h in SherdBookmarklet.assethandler) {
+                      try {
+                          handler[h].find.call(handler[h],self.collectAssets,context);
+                      } catch(e) {
+                          --self.handler_count;
+                          SherdBookmarklet.error = e;
+                          alert("Bookmarklet Error: "+e.message);
+                      }
+                  }
+              });
           }
       };
       this.collectAssets = function(assets,errors) {
@@ -721,14 +748,45 @@ SherdBookmarklet = {
           }
           form.lastChild.innerHTML = "<input type=\"submit\"  value=\"analyze\" />";
           li.appendChild(form);
-          comp.ul.appendChild(li);
+          if (comp.ul) 
+              comp.ul.appendChild(li);
       };
       this.finishedCollecting = function() {
-          comp.message.innerHTML = "";/*erase searching message*/
-          if (self.assets_found.length ==0) {
-              comp.ul.innerHTML = "<li>Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.</li>";
+          if (comp.message) {
+              comp.message.innerHTML = "";/*erase searching message*/
+              if (self.assets_found.length ==0) {
+                  comp.ul.innerHTML = "<li>Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.</li>";
+              }
           }
       };
+      this.walkFrames = function() {
+          var rv = {all:[]}
+          rv.all.unshift({frame:window, 
+                          document:document,
+                          window:window,
+                          hasBody:self.hasBody(document)});
+          var max =(rv.all[0].hasBody *document.body.offsetWidth *document.body.offsetHeight) || 0;
+          rv.best = ((max)? rv.all[0] : null);
+          function _walk(index,domElement) {
+              try {
+                  var doc = this.contentDocument||this.contentWindow.document;
+                  doc.getElementsByTagName('frame');//if this fails, security issue
+                  var context = {
+                      frame:this,document:doc,
+                      window:this.contentWindow,
+                      hasBody:self.hasBody(doc)
+                  };
+                  rv.all.push(context);
+                  var area = self.hasBody(doc) * this.offsetWidth * this.offsetHeight;
+                  if (area > max) {
+                      rv.best = context;
+                  }
+                  jQ('frame',doc).each(_walk);
+              } catch(e) {/*probably security error*/}
+          }
+          jQ('frame').each(_walk);
+          return rv;
+      }
 
   }/*Grabber*/
 };/*SherdBookmarklet (root)*/
