@@ -127,15 +127,8 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		}
 	    }
 	}
-	this.queryformat = {
-	    find:function(str) {
-		return [];
-	    },
-	    read:function(found_obj) {
 
-	    }
-	}
-	this.microformat = {
+ 	this.microformat = {
 	    'create':function(){
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {

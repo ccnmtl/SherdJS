@@ -170,5 +170,15 @@ if (!Sherd.GenericAssetView) {
                         );
             }
         }
+        this.queryformat = {
+            find:function(str) {
+                if (self.settings[current_type].view.queryformat
+                    && self.settings[current_type].view.queryformat.find) {
+                    return self.settings[current_type].view.queryformat.find(str);
+                } else {
+                    return [];
+                }
+            }
+        }
     }//GenericAssetView
 }

@@ -72,6 +72,21 @@ if (!Sherd.Video.Base) {
         Sherd.Video.Helpers.apply(this,arguments);
         Sherd.Base.AssetView.apply(this,arguments);
 
+        this.queryformat = {
+            find:function(str) {
+                var start_point = String(str).match(/start=([.\d]+)/);
+                if (start_point != null) {
+                    var start = Number(start_point[1]);
+                    if (!isNaN(start)) {
+                        return [ {
+                            start : start
+                        } ];
+                    }
+                }
+                return []
+            }
+        };
+        
         this.microformat = {
             create : function(obj) { // Return the .html embed block for the embedded player 
                 return ''

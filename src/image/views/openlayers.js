@@ -332,6 +332,16 @@ if (!Sherd.Image.OpenLayers) {
 	this.microformat.components = function(html_dom,create_obj) {
 	    return {'top':html_dom};
 	}
+
+	this.queryformat = {
+	    find:function(str) {
+		return [];
+	    },
+	    read:function(found_obj) {
+	    }
+	}
+
+
     }//END Sherd.Image.OpenLayers
 
 }//END if (!Sherd.Image.OpenLayers)
