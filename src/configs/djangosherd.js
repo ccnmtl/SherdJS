@@ -178,11 +178,12 @@ function DjangoSherd_Storage() {
             }
             _current_citation = getFirstElementByTagAndClassName('div',
                                                                 'annotation' + id);
+            if (_current_citation != null)
+                addElementClass(_current_citation, 'active-annotation');
+            
             if (id in _annotations) {
                 ann_obj = _annotations[id];
             } else if (_current_citation != null) {
-                addElementClass(_current_citation, 'active-annotation');
-
                 ann_obj = djangosherd.annotationMicroformat.read( {
                     html : _current_citation
                 });// /***faux layer
@@ -340,9 +341,11 @@ function DjangoSherd_AnnotationMicroFormat() {
         if (obj.title) {
             return_text += '<div class="annotation-title"><h2>'+obj.title+'</h2></div>';
         }
+        return_text += '<div class="asset-title">';
         if (obj.asset && obj.asset.title) {
-            return_text += '<div class="asset-title"><span class="asset-title-prefix">from </span><a href="'+obj.asset.local_url+'">'+obj.asset.title+'</a></div>';
+            return_text += '<span class="asset-title-prefix">from </span><a href="'+obj.asset.local_url+'">'+obj.asset.title+'</a>';
         }
+        return_text += '</div>';
         return {
             object:obj,
             htmlID:wrapperID,
@@ -466,6 +469,9 @@ function openCitation(url, no_autoplay_or_options) {
                                                   && ann_obj.asset.local_url
                    ) ? 'from <a href="'+ann_obj.asset.local_url+'">'+ann_obj.asset.title+'</a>'
                      : '');
+                if (ann_obj.asset.xmeml && window.is_staff ) {
+                    targets.asset_title.innerHTML += ' (<a href="/annotations/xmeml/'+id+'/">download FinalCut xml</a>)';
+                }
                 
             }
             djangosherd.assetview.html.push(targets.asset, {
