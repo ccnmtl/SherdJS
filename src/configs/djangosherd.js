@@ -143,12 +143,12 @@ function DjangoSherd_decorate_citations(elts) {
     forEach(elts, function(elt) {// MOCHI
         var url = elt.getAttribute('href');
         connect(elt, 'onclick', function(evt) {
-            try {
+             try {
                 openCitation(url);
             }catch(e) {
                 if (window.debug) {
                     logDebug('ERROR opening citation:'+e.message);
-                    console.log(e);
+                    //console.log(e);
                 } else return;
             }
             evt.preventDefault();// don't open href
@@ -296,8 +296,8 @@ function DjangoSherd_AssetMicroFormat() {
 function DjangoSherd_adaptAsset(asset) {
     if (asset.quicktime) {
         asset.type = 'quicktime';
+        ///Quicktime really needs a poster or loadingposter, or things fail
         if (asset.poster) {
-            // TODO: dereference poster url
             // test on poster.width is to make sure it is loaded/loadable
             // / e.g. if poster.src gives a 500 error, then Quicktime will
             // / and the video becomes comletely inaccessible
@@ -306,6 +306,8 @@ function DjangoSherd_adaptAsset(asset) {
             if (!poster.width) {
                 asset.poster = '/site_media/js/sherdjs/media/images/click_to_play.jpg';
             }
+        } else {
+            asset.poster = '/site_media/js/sherdjs/media/images/click_to_play.jpg';
         }
         asset.url = asset.quicktime;  //TODO remove this and make sure quicktime.js uses .quicktime
         asset.loadingposter = '/site_media/js/sherdjs/media/images/poster.gif';

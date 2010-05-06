@@ -1,5 +1,6 @@
 /*
  http://developer.apple.com/mac/library/documentation/QuickTime/Conceptual/QTScripting_JavaScript/aQTScripting_Javascro_AIntro/Introduction%20to%20JavaScript%20QT.html
+http://developer.apple.com/safari/library/documentation/QuickTime/Conceptual/QTScripting_JavaScript/bQTScripting_JavaScri_Document/QuickTimeandJavaScri.html
  
   SERIALIZATION of asset
        {url:''
@@ -33,33 +34,44 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             self._played = false;
             
             var opt = {
-                    url:'',
-                    width:320,
-                    height:260,
-                    autoplay:'false',
-                    controller:'true',
-                    errortext:'Error text.',
-                    mimetype:'video/quicktime',
-                    poster:false,
-                    loadingposter:false,
-                    extra:''
+                url:'',
+                width:320,
+                height:240,
+                controller_height:20,
+                autoplay:'false',
+                controller:'true',
+                errortext:'Error text.',
+                mimetype:'video/quicktime',
+                poster:false,
+                loadingposter:false,
+                extra:''
             };
             for (a in opt) {
                 if (obj[a]) opt[a] = obj[a];
             }
+            if (!obj.presentation_width) {
+                obj.presentation_width = Number(opt.width);
+                obj.presentation_height = Number(opt.height);
+            }
+            if (obj.presentation == 'small') {
+                var ratio = opt.height/opt.width;
+                obj.presentation_width = 320;
+                obj.presentation_height = parseInt(320 * ratio,10);
+            }
+            var full_height = obj.presentation_height + Number(opt.controller_height);
             opt.href= '';//for poster support
             opt.autohref= '';//for poster support
             if (!(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
                     || /Linux/.test(navigator.userAgent)
             )) {
-                if (opt.autoplay == 'true' && opt.loadingposter) {
+                if (opt.loadingposter && opt.autoplay == 'true') {
                     opt.mimetype = 'image/x-quicktime';
                     opt.extra += '<param name="href" value="'+opt.url+'" /> \
-                    <param name="autohref" value="true" /> \
+                    <param name="autohref" value="'+opt.autoplay+'" /> \
                     <param name="target" value="myself" /> \
                     ';
-                    opt.url = opt.poster;
-                    opt.controller = 'true';
+                    opt.url = opt.loadingposter;
+                    opt.controller = 'false';
                 } else if (opt.poster) {
                     opt.mimetype = 'image/x-quicktime';
                     opt.extra += '<param name="href" value="'+opt.url+'" /> \
@@ -86,7 +98,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 text: clicktoplay + '<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
                 <!--[if IE]>\
                     <object id="'+playerID+'" \
-                    width="'+opt.width+'" height="'+opt.height+'" \
+                    width="'+obj.presentation_width+'" height="'+full_height+'" \
                     style="behavior:url(#qt_event_source)"  \
                     codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
                     classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
@@ -94,15 +106,15 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 <!--[if !IE]><--> \
                     <object id="'+playerID+'" type="'+opt.mimetype+'" \
                     data="'+opt.url+'" \
-                    width="'+opt.width+'" height="'+opt.height+'">  \
+                    width="'+obj.presentation_width+'" height="'+full_height+'">  \
                 <!-- ><![endif]--> \
                 <param name="src" value="'+opt.url+'" /> \
                 <param name="controller" value="'+opt.controller+'" /> \
                 <param name="type" value="'+opt.mimetype+'" /> \
                 <param name="enablejavascript" value="true" /> \
                 <param name="autoplay" value="'+opt.autoplay+'" /> \
-                <param name="width" value="'+opt.width+'"> \
-                <param name="height" value="'+opt.height+'"> \
+                <param name="width" value="'+obj.presentation_width+'"> \
+                <param name="height" value="'+full_height+'"> \
                 <param name="postdomevents" value="true" /> \
                 <param name="scale" value="aspect" /> \
                 '+opt.extra+'\
@@ -164,7 +176,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     url:'',//defaults
                     quicktime:'',
                     width:320,
-                    height:260,
+                    height:240,
+                    controller_height:20,
                     autoplay:'false',
                     controller:'true',
                     errortext:'Error text.',
@@ -219,27 +232,34 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             return false;
         }
         
-        this.microformat._startUpdateDisplayTimer = function() {
+        this.microformat._startUpdateDisplayTimer = function(create_obj) {
             self.media._duration = 0;
-            self.events.queue('quicktime duration watcher & tick count',[
-                                                                         {test: function() {
-                                                                             // Update the duration
-                                                                             var newDuration = self.media.duration();
-                                                                             if (newDuration != self.media._duration) {
-                                                                                 self.media._duration = newDuration;
-                                                                                 self.components.duration.innerHTML = self.secondsToCode(newDuration);
-                                                                                 self.events.signal(djangosherd, 'duration', { duration: newDuration });
-                                                                             }
-                                                                             
-                                                                             if (self.media.ready() && self.components.timedisplay.style.display == 'none')
-                                                                                 self.components.timedisplay.style.display = 'inline';
-                                                                             
-                                                                             // Update the tick count
-                                                                             self.media._updateTickCount();
-                                                                             
-                                                                             return false;
-                                                                         }, poll:400},
-                                                                         ]);
+            //console.log(create_obj);
+            self.events.queue('quicktime duration watcher & tick count',
+                              [{test: function() {
+                                  // Update the duration
+                                  var newDuration = self.media.duration();
+                                  if (newDuration != self.media._duration) {
+                                      self.media._duration = newDuration;
+                                      self.components.duration.innerHTML = self.secondsToCode(newDuration);
+                                      self.events.signal(djangosherd, 'duration', { duration: newDuration });
+                                  }
+                                  if (self.media.ready() ) {
+                                      if (self.components.timedisplay.style.display == 'none') {
+                                          self.components.timedisplay.style.display = 'inline';
+                                      }
+                                      // set dimensions correctly
+                                      self.media.resize(create_obj.object.presentation_width, 
+                                                        create_obj.object.presentation_height, create_obj);
+
+                                  }
+                                  // Update the tick count
+                                  self.media._updateTickCount();
+
+                                  return false;
+                              }, 
+                                poll:400},
+                              ]);
         }
         
         ////////////////////////////////////////////////////////////////////////
@@ -249,24 +269,25 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             self.media._duration = self.media.duration();
             
             // kickoff some timers
-            self.events.queue('quicktime ready to seek',[
-                                                  {test: function() {
-                                                      // Is the duration valid yet?
-                                                      var movDuration = self.components.player.GetDuration();
-                                                      var adjustedDuration = self.media.duration();
-                                                      ready = self.media.ready() && 
-                                                              movDuration < 2147483647 && 
-                                                              adjustedDuration >= 1 &&
-                                                              (self.components.player.GetMaxTimeLoaded()/self.media.timescale()) > self.components.starttime;
-                                                      
-                                                      return ready; 
-                                                  }, poll:500},
-                                                  {call: function() {
-                                                            self.setState({ start: self.components.starttime, end: self.components.endtime});
-                                                         }
-                                                  }]);
+            self.events.queue('quicktime ready to seek',
+                              [{test: function() {
+                                  // Is the duration valid yet?
+                                  var adjustedDuration = self.media.duration();
+                                  ready = (self.media.ready() 
+                                           && adjustedDuration > 0
+                                           && (self.components.player.GetMaxTimeLoaded()/self.media.timescale()) > self.components.starttime);
+                                  
+                                  return ready; 
+                                }, 
+                                poll:500
+                               },
+                               {call: function() {
+                                   self.setState({"start":self.components.starttime, 
+                                                  "end":self.components.endtime});
+                                }
+                               }]);
             
-            self.microformat._startUpdateDisplayTimer();
+            self.microformat._startUpdateDisplayTimer(create_obj);
             
             // register for notifications from clipstrip to seek to various times in the video
             self.events.connect(djangosherd, 'seek', self.media, 'seek');
@@ -299,7 +320,13 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         this.media.duration = function() {
             var duration = 0;
             try {
-                duration = self.components.player.GetDuration()/self.media.timescale();
+                if (self.components.player 
+                    && self.components.player.GetDuration) {
+                    var frame_duration = self.components.player.GetDuration();
+                    if (frame_duration < 2147483647) {
+                        duration = frame_duration/self.media.timescale();
+                    }
+                }
             } catch(e) {}
             return duration;
         };
@@ -333,7 +360,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         this.media.isPlaying = function() {
             var playing = false;
             try {
-                playing = self.components.player.GetRate() > 0;
+                playing = (self.components.player
+                           && self.components.player.GetRate
+                           && self.components.player.GetRate() > 0);
             } catch(e) {}
             return playing;
         };
@@ -341,10 +370,15 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         this.media.ready = function() {
             var status;
             try {
-                status = self.components.player.GetPluginStatus();
+                var p = self.components.player;
+                ///IE SUX: will return 'unknown' for (typeof p.GetPluginStatus)
+                ///        and dies silently on (p.GetPluginStatus)
+                if (p && typeof p.GetPluginStatus != 'undefined') {
+                    status = p.GetPluginStatus();
+                }
             } catch(e) {} // player is not yet ready
 
-            return status == 'Playable' || status == 'Complete';
+            return (status == 'Playable' || status == 'Complete');
         };
 
         this.media.seek = function(starttime, endtime) {
@@ -410,9 +444,55 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         
         this.media._updateTickCount = function() {
-            if (self.components.player.GetRate() > 0) { 
+            if (typeof self.components.player.GetRate != 'undefined'
+                && self.components.player.GetRate() > 0) { 
                 self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
             } 
         }
+        this.media.resize = function(w,h, obj) {
+            var p =  self.components.player;
+            if (typeof p.SetRectangle != 'undefined') {
+                //console.log(p.GetRectangle());
+                p.SetRectangle("0,0,"+w+","+h);
+                //p.SetMatrix("");
+            }
+
+        }
     } //Sherd.AssetViews.QuickTime
+
+
+    ////ARCHIVED FROM VITAL CODE
+    /*this was trying to solve a harder problem 
+      when we don't know the proportions, but what if we know them?
+     */
+    function conformProportions(mymovie, w, h) {
+    /*
+      This function still doesn't work when QT loads the movie
+      in the mini-window that comes up before it auto-sizes.
+      When this function is run then, it doubles the proportions
+      and then QT re-doubles them and so we only see a quarter
+      of the screen.  Somehow we need to 'know' when this is happening.
+      Maybe doing something special if GetMatrix returns 2,2,0 on the diagonal?
+      Ideally we would stop it from loading in that stupid little window
+      to begin with.
+    */
+    return;
+    //ASSUME width is always greater than height
+    //    alert(theMovie.GetPluginStatus()+mymovie.GetRectangle()+mymovie.GetMatrix());
+
+    var cur_wh = mymovie.GetRectangle().split(',');
+    
+    oldW = parseInt(cur_wh[2],10) - parseInt(cur_wh[0],10);
+    oldH = parseInt(cur_wh[3],10) - parseInt(cur_wh[1],10);
+    var newH = w*oldH/oldW;
+    mymovie.SetRectangle("0,0,"+w+","+newH);
+
+    matrix = mymovie.GetMatrix().split(',');
+    //    alert(mymovie.GetMatrix());
+    matrix[5] = Math.round(h-newH);
+    mymovie.SetMatrix(matrix.join(','));
+    //    alert('w'+w+' newH:'+newH+' '+theMovie.GetPluginStatus()+"-- "+matrix.join(','));
+    }
+
 }
+
