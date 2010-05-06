@@ -414,9 +414,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         }
         
         this.media.timestrip = function() {
-            return {w: self.components.player.width,
+            var w = self.components.player.width;
+            return {w: w,
                 trackX: 40,
-                trackWidth: 228,
+                trackWidth: w-92,
                 visible:true
             }
         }
