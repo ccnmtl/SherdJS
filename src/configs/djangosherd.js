@@ -442,7 +442,7 @@ function openCitation(url, no_autoplay_or_options) {
 		   : no_autoplay_or_options || {autoplay:true}
 		  );
     var id = url.match(/(\d+)\/$/).pop();
-
+    var return_value = {};
     djangosherd.storage.get({id:id}, function(ann_obj) {
 	var asset_target = ((options.targets && options.targets.asset) 
 			    ? options.targets.asset
@@ -487,6 +487,11 @@ function openCitation(url, no_autoplay_or_options) {
             djangosherd.assetview.html.remove();
         }
 
+        return_value['onUnload'] = djangosherd.assetview.html.remove;
+        return_value['view'] = djangosherd.assetview;
+        return_value['object'] = ann_obj;
+        return_value['id'] = id;
+
         if (!/WebKit/.test(navigator.userAgent)) {
             //WebKit doesn't replace history correctly
             document.location.replace('#annotation=annotation' + id);
@@ -495,6 +500,7 @@ function openCitation(url, no_autoplay_or_options) {
             djangosherd.onOpenCitation(id,ann_obj,options,targets);
         }
     });
+    return return_value;
 }
 
 /**

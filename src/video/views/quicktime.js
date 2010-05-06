@@ -203,21 +203,12 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            if (obj.quicktime && document.getElementById(self.components.playerID) && self.media.ready()) {
+            if (obj.quicktime && self.components.player && self.media.ready()) {
                 try {
-                    
                     if (obj.quicktime != self.components.mediaUrl) {
                         self.components.player.SetURL(obj.quicktime);
                         self.components.mediaUrl = obj.quicktime;
-                        
-                        // Sky says: Used to need this as IE was 'double-loading' the video.  
-                        // The behavior was that the video would come in, and then it would start playing in a smaller 
-                        // frame (or something else weird), and often you'd hear two audio tracks playing (out of sync).
-                        //
-                        // Susan says: I experienced something similar to the double-load, but this workaround didn't fix it. 
-                        // I did see the QT player freeze and just play the audio track when the player was created, then 
-                        // recreated. (Play QT, Play YouTube, Play QT). Resetting the URL seems to take care of the state problem.
-                        if (/Trident/.test(navigator.userAgent) && self.components.autoplay) {
+                        if (/MSIE/.test(navigator.userAgent) && self.components.autoplay) {
                             window.setTimeout(function() {
                                 self.components.player.SetURL(self.components.mediaUrl); //reset the url
                                 
@@ -311,7 +302,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             if (self.components.timedisplay) {
                 self.components.timedisplay.style.display = 'none';
             }
-            
         };
         
         ////////////////////////////////////////////////////////////////////////
@@ -321,7 +311,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             var duration = 0;
             try {
                 if (self.components.player 
-                    && self.components.player.GetDuration) {
+                    && typeof self.components.player.GetDuration != 'undefined') {
                     var frame_duration = self.components.player.GetDuration();
                     if (frame_duration < 2147483647) {
                         duration = frame_duration/self.media.timescale();
@@ -456,7 +446,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 p.SetRectangle("0,0,"+w+","+h);
                 //p.SetMatrix("");
             }
-
         }
     } //Sherd.AssetViews.QuickTime
 

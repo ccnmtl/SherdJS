@@ -33,7 +33,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
     var self = this;
     var CLIP_MARKER_WIDTH = 7;
 
-    Sherd.Base.AssetView.apply(this, arguments); // inherit
+    Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
 
     this.attachView = function(view) {
         this.targetview = view;
@@ -57,10 +57,22 @@ if (!Sherd.Video.Annotators.ClipStrip) {
             } else {
                 c.starttime = obj.start || 0;
                 c.endtime = obj.end || c.starttime;
-            
+
                 if (obj.duration > 1) {
                     c.duration = obj.duration
                     self.microformat._resize();
+                } else {
+                    self.events.queue('quicktime has duration',
+                                      [{test: function() {
+                                          return self.targetview.media.duration();
+                                        },
+                                        poll:500
+                                       },
+                                       {call:function() {
+                                           c.duration = self.targetview.media.duration();
+                                           self.microformat._resize();
+                                        }
+                                       }]);
                 }
             }
             return true;
@@ -116,7 +128,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
         // setup the clip markers in the default position
         self.microformat._resize();
     }
-    
+
     this.microformat.create = function(obj) {
         var htmlID = 'clipStrip';
         timestrip = self.targetview.media.timestrip();
