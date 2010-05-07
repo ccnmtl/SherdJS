@@ -341,7 +341,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             } else {
                 self.events.queue('qt play',[
                                           {test: self.media.ready, poll:100},
-                                          {call: function() { self.media.play } }
+                                          {call: self.media.play}
                                           ]);
             }
         };
