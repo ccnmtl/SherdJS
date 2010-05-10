@@ -89,6 +89,7 @@ SherdBookmarklet = {
 	            "image-metadata":"w"+max_image.width+"h"+max_image.height,
 	            "xyztile-metadata":"w"+max_image.width+"h"+max_image.height
 	    };
+
             callback( [ {html:img, sources:sources} ] );
         },
         decorate:function(objs) {
@@ -155,47 +156,52 @@ SherdBookmarklet = {
     },
     "thlib.org": {
         /*e.g. those on http://www.thlib.org/places/monasteries/meru-nyingpa/murals/ */
+        also_find_general:true,
         find:function(callback) {
-            var myloc = window.frames["gallery"].location.href; 
-            var matches =  myloc.match(/(.*)\/([^\/]+)\/([^\/]+)\/([^\/]+)$/);/*split last 3 "/" */
-            if(typeof(myloc) == "string" && matches[4] != "gallery.html") { 
-                var img_key = matches[3];
-                var img_root = matches[1];
-                var tile_root = img_root+"/source/"+img_key+"/"+img_key;
-                var thumb = img_root+"/preview/"+img_key.toLowerCase()+".jpg";
-                var img = document.createElement("img");
-                img.src = tile_root+"/TileGroup0/0-0-0.jpg";
-                var sources = {
-                    "title":img_key,
-                    "archive":String(document.location),
-                    /*must be unique, but no good return link :-(*/
-                    "url":tile_root+".htm", 
-                    "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
-                    "image-metadata":"w"+img.width+"h"+img.height,
-                    "thumb":thumb,
-                    "image":img.src /*nothing bigger available*/
-                };
-                /*do a query to see what the full dimensions are of the tiles
-                  but instead of this hack what about using 
-                  img_root+"/source/"+img_key+"/"+img_key+"/ImageProperties.xml"
-                 */
-                jQuery.get(tile_root+"/ImageProperties.xml",null,function(dir) {
-                    /*was for url = tile_root+"/TileGroup0/" parsing:
-                    var zooms = dir.split("\">").reverse()[3].match(/\d+/);
-                    var exp = Math.pow(2,zooms);
-                    sources["xyztile-metadata"] = "w"+(img.width*exp)+"h"+(img.height*exp);
-                    */
-                    var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
-                    sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
-                    callback( [{"html": window.frames["gallery"].document["Zoomify Dynamic Flash"], 
-                                "sources": sources
-                               } ]);
-                },"text");
-            } else callback([]);
+            if (window.frames["gallery"]) {
+                var myloc = window.frames["gallery"].location.href; 
+                var matches =  myloc.match(/(.*)\/([^\/]+)\/([^\/]+)\/([^\/]+)$/);/*split last 3 "/" */
+                if(typeof(myloc) == "string" && matches[4] != "gallery.html") { 
+                    var img_key = matches[3];
+                    var img_root = matches[1];
+                    var tile_root = img_root+"/source/"+img_key+"/"+img_key;
+                    var thumb = img_root+"/preview/"+img_key.toLowerCase()+".jpg";
+                    var img = document.createElement("img");
+                    img.src = tile_root+"/TileGroup0/0-0-0.jpg";
+                    var sources = {
+                        "title":img_key,
+                        "archive":String(document.location),
+                        /*must be unique, but no good return link :-(*/
+                        "url":tile_root+".htm", 
+                        "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
+                        "image-metadata":"w"+img.width+"h"+img.height,
+                        "thumb":thumb,
+                        "image":img.src /*nothing bigger available*/
+                    };
+                    /*do a query to see what the full dimensions are of the tiles
+                      but instead of this hack what about using 
+                      img_root+"/source/"+img_key+"/"+img_key+"/ImageProperties.xml"
+                     */
+                    jQuery.get(tile_root+"/ImageProperties.xml",null,function(dir) {
+                        /*was for url = tile_root+"/TileGroup0/" parsing:
+                          var zooms = dir.split("\">").reverse()[3].match(/\d+/);
+                          var exp = Math.pow(2,zooms);
+                          sources["xyztile-metadata"] = "w"+(img.width*exp)+"h"+(img.height*exp);
+                         */
+                        var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
+                        sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
+                        callback( [{"html": window.frames["gallery"].document["Zoomify Dynamic Flash"], 
+                                    "sources": sources
+                                   } ]);
+                    },"text");
+                    return; //found something
+                }
+            } 
+            return callback([]);
         },
         decorate:function(objs) {
         }
-    },
+    }, /*end thlib.org */
     "vietnamwararchive.ccnmtl.columbia.edu": {
         single:function() {
             return (document.location.pathname.search("/record/display") == 0);
@@ -582,16 +588,21 @@ SherdBookmarklet = {
         var final_url = host_url;
         var M = SherdBookmarklet;
         var handler = M.gethosthandler();
+        var grabber_func = function(jQuery) {
+            M.g = new M.Grabber(host_url);
+            M.g.findAssets();
+        };
         if (!handler) {
-            M.run_with_jquery(function(jQuery) {
-                M.g = new M.Grabber(host_url);
-                M.g.findAssets();
-            });
+            M.run_with_jquery(grabber_func);
             return;
         }
         var jump_with_first_asset = function(assets,error) {
             switch (assets.length) {
             case 0: 
+                if (handler.also_find_general) {
+                    M.run_with_jquery(grabber_func);
+                    return;
+                }
                 var message = error||"This page does not contain an asset. Try going to an asset page.";
                 return alert(message);
             case 1:
@@ -599,7 +610,9 @@ SherdBookmarklet = {
                     return alert("This asset cannot be embedded on external sites. Please select another asset.");
 
                 if (jump_now && !M.debug) {
-                    document.location = M.obj2url(host_url, assets[0]);
+                    //document.location = M.obj2url(host_url, assets[0]);
+                    var form = M.obj2form(host_url, assets[0]);
+                    form.submit();
                 }
             }
             if (window.console) {/*if we get here, we're debugging*/
@@ -642,7 +655,7 @@ SherdBookmarklet = {
       this.options = {
           tab_label:"Analyze in Mediathread",
           target:((this.hasBody(document))? document.body : null),
-          top:"100px",
+          top:100,
           side:"left",
           fixed:true
       }; if (options) for (a in options) {this.options[a]=options[a]};
@@ -659,9 +672,13 @@ SherdBookmarklet = {
           self.findAssets();
       };
 
+      this.visibleY = function(target) {
+          return target.ownerDocument.body.scrollTop;
+      }
       this.showWindow = function() {
           self.windowStatus = true;
           if (comp.window) {
+              comp.window.style.top = self.visibleY(comp.window)+'px';
               comp.window.style.display = "block";
               comp.tab.style.display = "none";
               comp.ul.innerHTML = "";
@@ -671,7 +688,9 @@ SherdBookmarklet = {
           comp.top = target.ownerDocument.createElement("div");
           comp.top.setAttribute("class","sherd-analyzer");
           target.appendChild(comp.top);
-          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+o.top+";color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
+          var pageYOffset = self.visibleY(target)+o.top;
+
+          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
           comp.tab = comp.top.firstChild;
           comp.window = comp.top.lastChild;
           comp.ul = comp.top.getElementsByTagName("ul")[0];
@@ -681,9 +700,10 @@ SherdBookmarklet = {
           M.connect(comp.tab, "click", this.onclick);
           M.connect(comp.move, "click", function(evt) {
               var s = comp.window.style;
-              s.left = s.right = s.top = s.bottom = null;
+              s.left = s.right = null;
+              //s.top = s.bottom = null;
               s.right = '0px';
-              s.top = '0px';
+              //s.top = '0px';
           });
           M.connect(comp.close, "click", function(evt) {
               comp.window.style.display = "none";
@@ -701,37 +721,43 @@ SherdBookmarklet = {
           var handler = SherdBookmarklet.gethosthandler();
           if (handler) {
               handler.find.call(handler, self.collectAssets);
-          } else {
-              handler = SherdBookmarklet.assethandler;
-              var frames = self.walkFrames();
-              if (!comp.window && frames.best) {
-                  var target = o.target || frames.best.document.body;
-                  self.setupContent(target);
-                  self.showWindow();
+              if (handler.also_find_general) {
+                  self.findGeneralAssets();
               }
-              jQ(frames.all).each(function(i,context) {
-                  for (h in SherdBookmarklet.assethandler) {
-                      ++self.handler_count;
-                  }
-                  for (h in SherdBookmarklet.assethandler) {
-                      try {
-                          handler[h].find.call(handler[h],self.collectAssets,context);
-                      } catch(e) {
-                          --self.handler_count;
-                          SherdBookmarklet.error = e;
-                          alert("Bookmarklet Error: "+e.message);
-                      }
-                  }
-              });
+          } else {
+              self.findGeneralAssets();
           }
       };
+      this.findGeneralAssets = function() {
+          var handlers = SherdBookmarklet.assethandler;
+          var frames = self.walkFrames();
+          if (!comp.window && frames.best) {
+              var target = o.target || frames.best.document.body;
+              self.setupContent(target);
+              self.showWindow();
+          }
+          jQ(frames.all).each(function(i,context) {
+              for (h in SherdBookmarklet.assethandler) {
+                  ++self.handler_count;
+              }
+              for (h in SherdBookmarklet.assethandler) {
+                  try {
+                      handlers[h].find.call(handlers[h],self.collectAssets,context);
+                  } catch(e) {
+                      --self.handler_count;
+                      SherdBookmarklet.error = e;
+                      alert("Bookmarklet Error: "+e.message);
+                  }
+              }
+          });
+      }
       this.collectAssets = function(assets,errors) {
           self.assets_found.push.apply(self.assets_found,assets);
           for (var i=0;i<assets.length;i++) {
               self.displayAsset(assets[i]);
           }
           --self.handler_count;
-          if (self.handler_count==0) {
+          if (self.handler_count<=0) {
               self.finishedCollecting();
           }
       };
