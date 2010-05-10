@@ -664,7 +664,8 @@ SherdBookmarklet = {
           target:((this.hasBody(document))? document.body : null),
           top:100,
           side:"left",
-          fixed:true
+          fixed:true,
+          no_assets_message:'Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.'
       }; if (options) for (a in options) {this.options[a]=options[a]};
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
 
@@ -758,9 +759,11 @@ SherdBookmarklet = {
               }
           });
       }
+      this.no_assets_yet = true;
       this.collectAssets = function(assets,errors) {
           self.assets_found.push.apply(self.assets_found,assets);
           for (var i=0;i<assets.length;i++) {
+              self.no_assets_yet = false;
               self.displayAsset(assets[i]);
           }
           --self.handler_count;
@@ -781,14 +784,19 @@ SherdBookmarklet = {
           }
           form.lastChild.innerHTML = "<input type=\"submit\"  value=\"analyze\" />";
           li.appendChild(form);
-          if (comp.ul) 
+          if (comp.ul) {
+              if (comp.ul.firstChild != null 
+                  && comp.ul.firstChild.innerHTML == o.no_assets_message) {
+                  jQ(comp.ul.firstChild).remove();
+              }
               comp.ul.appendChild(li);
+          }
       };
       this.finishedCollecting = function() {
           if (comp.message) {
               comp.message.innerHTML = "";/*erase searching message*/
-              if (self.assets_found.length ==0) {
-                  comp.ul.innerHTML = "<li>Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.</li>";
+              if (self.no_assets_yet) {
+                  comp.ul.innerHTML = "<li>"+o.no_assets_message+"</li>";
               }
           }
       };
