@@ -250,15 +250,20 @@ SherdBookmarklet = {
             if (video && video != null) {
                 function getTitle(VIDEO_ID) {
                     var raw_title = '';
+                    function cleanTitle(str) {
+                        return str.replace(/<SPAN[^>]*>/,'').replace('</SPAN>','').replace(/^\s*/,"").replace(/\s*$/,"");
+                    }
                     if (/www.youtube.com\/watch/.test(document.location)) {
-                        raw_title = document.getElementsByTagName("h1")[0].textContent;
+                        raw_title = (document.getElementsByTagName("h1")[0].textContent
+                                     || document.getElementsByTagName("h1")[0].innerHTML);
                     } else {
                         var for_channels = document.getElementById("playnav-curvideo-title");
                         if (for_channels != null) {
-                            raw_title = document.getElementById("playnav-curvideo-title").textContent
+                            raw_title = (document.getElementById("playnav-curvideo-title").textContent
+                                         || document.getElementById("playnav-curvideo-title").innerHTML);
                         }
                     }
-                    return raw_title.replace(/^\s*/,"").replace(/\s*$/,"");
+                    return cleanTitle(raw_title);
                 }
                 function getThumb(VIDEO_ID) {
                     var tries = [/*last-first*/
@@ -293,6 +298,7 @@ SherdBookmarklet = {
                 };
                 if (video.getCurrentTime() == video.getDuration()) 
                     delete obj.hash;
+                
                 return callback([obj]);
 
             } else callback([]);
@@ -612,6 +618,7 @@ SherdBookmarklet = {
                 if (jump_now && !M.debug) {
                     //document.location = M.obj2url(host_url, assets[0]);
                     var form = M.obj2form(host_url, assets[0]);
+                    document.body.appendChild(form); //for IE7 sux
                     form.submit();
                 }
             }
