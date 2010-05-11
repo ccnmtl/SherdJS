@@ -85,7 +85,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             
             var clicktoplay = "";
             if (opt.autoplay != 'true') {
-                clicktoplay = '<div id="clicktoplay">Click video to play</div>';
+                clicktoplay += '<div id="clicktoplay">Click video to play</div>';
             }
             
             //we need to retest where the href usecase is needed
@@ -441,11 +441,20 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             } 
         }
         this.media.resize = function(w,h, obj) {
+            if (!self.debug) return;//RETURN
+
+            /* Below is code that helps QT versions below 7.6.6
+             * (uncertain of the exact version below)
+             * However, it BREAKS QT 7.6.6 (and presumably above)
+             * TODO: We could do version testing or just say
+             *       we only support QT 7.6.6+
+             */
             var p =  self.components.player;
             if (typeof p.SetRectangle != 'undefined') {
                 //console.log(p.GetRectangle());
+                //console.log(p.GetMatrix());
                 p.SetRectangle("0,0,"+w+","+h);
-                //p.SetMatrix("");
+                
             }
         }
     } //Sherd.AssetViews.QuickTime

@@ -43,8 +43,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
 
             if (!obj.options) {
                 obj.options = {
-                    width: obj.presentation == 'small' ? 310 : 620, 
-                    height: obj.presentation == 'small' ? 220 : 440 
+                    width: (obj.presentation == 'small' ? 310 : (obj.width||480)), 
+                    height: (obj.presentation == 'small' ? 220 : (obj.height||360)) 
                 };
             }
             

@@ -402,6 +402,7 @@ SherdBookmarklet = {
                                2. 
                        */
                       var sources = {};
+
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var $f = (context.window.$f && context.window.$f(obj.parentNode));
                       
@@ -453,8 +454,10 @@ SherdBookmarklet = {
                       sources[primary_type] = clip.originalUrl || clip.url || clip;
                       //guess is just the filename
                       sources['title'] = sources[primary_type].split('/').pop();
-                      if (clip.width) {
+                      if (clip.width && clip.width >= obj.offsetWidth) {
                           sources[primary_type+"-metadata"] = "w"+clip.width+"h"+clip.height;
+                      } else {
+                          sources[primary_type+"-metadata"] = "w"+obj.offsetWidth+"h"+(obj.offsetHeight-25);
                       }
                       return sources;
                   }
@@ -550,11 +553,12 @@ SherdBookmarklet = {
     }
     return destination;
   },/*obj2url*/
-  "obj2form": function(host_url,obj) {
-      if (!obj.sources["url"]) obj.sources["url"] = document.location;
+  "obj2form": function(host_url,obj,doc) {
+      doc = doc||document;
+      if (!obj.sources["url"]) obj.sources["url"] = doc.location;
       var destination =  host_url;
-      var form = document.createElement("form");
-      form.appendChild(document.createElement("span"));
+      var form = doc.createElement("form");
+      form.appendChild(doc.createElement("span"));
       form.action = destination;
       form.target = '_top';
       var ready = SherdBookmarklet.user_status.ready;
@@ -564,8 +568,8 @@ SherdBookmarklet = {
        */
       for (a in obj.sources) {
           if (typeof obj.sources[a] =="undefined") continue;
-          var span = document.createElement("span");
-          var item = document.createElement("input");
+          var span = doc.createElement("span");
+          var item = doc.createElement("input");
           if (a=="title") {
               item.type = "text";
               item.setAttribute("style", "display:block;width:90%");
@@ -579,14 +583,14 @@ SherdBookmarklet = {
       }
       if (ready && obj.metadata) {
           for (var i=0;i<obj.metadata.length;i++) {
-              var item = document.createElement("input");
+              var item = doc.createElement("input");
               item.type = "hidden"
               item.name = "metadata-"+obj.metadata[i][0];
               item.value = obj.metadata[i][1];
               form.appendChild(item);
           }
       }
-      form.appendChild(document.createElement("span"));
+      form.appendChild(doc.createElement("span"));
       return form;
   },/*obj2url*/
   "runners": {
@@ -724,6 +728,7 @@ SherdBookmarklet = {
       }
 
       this.handler_count = 0;
+      this.final_count = 0;
       this.assets_found = [];
       this.findAssets = function() {
           var handler = SherdBookmarklet.gethosthandler();
@@ -744,17 +749,20 @@ SherdBookmarklet = {
               self.setupContent(target);
               self.showWindow();
           }
+          self.final_count += frames.all.length;
+
           jQ(frames.all).each(function(i,context) {
+              ++self.handler_count; //for each frame
               for (h in SherdBookmarklet.assethandler) {
-                  ++self.handler_count;
+                  ++self.final_count;
               }
               for (h in SherdBookmarklet.assethandler) {
                   try {
                       handlers[h].find.call(handlers[h],self.collectAssets,context);
                   } catch(e) {
-                      --self.handler_count;
+                      ++self.handler_count;
                       SherdBookmarklet.error = e;
-                      alert("Bookmarklet Error: "+e.message);
+                      alert("Bookmarklet Error in "+h+": "+e.message);
                   }
               }
           });
@@ -766,15 +774,16 @@ SherdBookmarklet = {
               self.no_assets_yet = false;
               self.displayAsset(assets[i]);
           }
-          --self.handler_count;
-          if (self.handler_count<=0) {
+          ++self.handler_count;
+          if (self.handler_count >= self.final_count) {
               self.finishedCollecting();
           }
       };
       this.displayAsset = function(asset) {
-          var li = document.createElement("li");
+          var doc = comp.ul.ownerDocument;
+          var li = doc.createElement("li");
           var jump_url = M.obj2url(host_url, asset);
-          var form = M.obj2form(host_url, asset);
+          var form = M.obj2form(host_url, asset, doc);
           var t = form.elements["title"];
           if (t && t.previousSibling) /*IE7 breaks here */
               t.previousSibling.innerHTML = "<div>Guessed title:</div>";
