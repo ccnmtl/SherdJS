@@ -362,19 +362,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         }
         
         this.media.timestrip = function() {
-            if (self.components.presentation == 'small') {
-                return {w: self.components.width,
+            var w = self.components.width;
+            return {w: w,
                     trackX: 30,
-                    trackWidth: 95,
+                    trackWidth: w-225,
                     visible:true
-                }
-            } else {
-                return {w: self.components.width,
-                        trackX: 30,
-                        trackWidth: 410,
-                        visible:true
-                }
-            }
+                   };
         }
         
         /**

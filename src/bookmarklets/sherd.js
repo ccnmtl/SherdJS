@@ -391,7 +391,7 @@ SherdBookmarklet = {
               "flowplayer3":{
                   match:function(obj) {
                       if (obj.data) {
-                          return String(obj.data).match(/flowplayer-3[.\d]+\.swf/);
+                          return String(obj.data).match(/flowplayer[.-\w]+3[.\d]+\.swf/);
                       } else {//IE7 ?+
                           var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                           return String(jQ('param[name=movie]',obj).get(0).value).match(/flowplayer-3[.\d]+\.swf/);
