@@ -24,57 +24,37 @@ if (!Sherd.GenericAssetView) {
 	this.options = options;
         // //INIT
         this.settings = {};
-        if (Sherd.Video && Sherd.Video.QuickTime) {
-            var quicktime = {
-                'view' : new Sherd.Video.QuickTime()
-            };
-            if (options.clipform) {
-                quicktime.clipform = new Clipformer();// see clipform.js
-                quicktime.clipform.attachView(quicktime.view);
-                if (options.storage) {
-                    quicktime.clipform.addStorage(options.storage);
+        if (Sherd.Video) {
+            function decorateVideo(options, viewgroup) {
+                if (options.clipform) {
+                    viewgroup.clipform = new Clipformer();// see clipform.js
+                    viewgroup.clipform.attachView(viewgroup.view);
+                    if (options.storage) {
+                        viewgroup.clipform.addStorage(options.storage);
+                    }
+                }
+                if (options.clipstrip) {
+                    viewgroup.clipstrip = new Clipstripper();
+                    viewgroup.clipstrip.attachView(viewgroup.view);
                 }
             }
-            if (options.clipstrip) {
-                quicktime.clipstrip = new Clipstripper();
-                quicktime.clipstrip.attachView(quicktime.view);
+            if (Sherd.Video.QuickTime) {
+                var quicktime = this.settings.quicktime = {'view':new Sherd.Video.QuickTime() };
+                decorateVideo(options, quicktime);
             }
-            this.settings.quicktime = quicktime;
-        }
-        if (Sherd.Video && Sherd.Video.YouTube) {
-            var youtube = {
-                'view' : new Sherd.Video.YouTube()
-            };
-            if (options.clipform) {
-                youtube.clipform = new Clipformer();// see clipform.js
-                youtube.clipform.attachView(youtube.view);
-                if (options.storage) {
-                    youtube.clipform.addStorage(options.storage);
-                }
+            if (Sherd.Video.YouTube) {
+                var youtube = this.settings.youtube = {'view':new Sherd.Video.YouTube() };
+                decorateVideo(options, youtube);
             }
-            if (options.clipstrip) {
-                youtube.clipstrip = new Clipstripper();
-                youtube.clipstrip.attachView(youtube.view);
+            if (Sherd.Video.Flowplayer) {
+                var flowplayer = this.settings.flowplayer = {'view':new Sherd.Video.Flowplayer() };
+                decorateVideo(options,flowplayer);
             }
-            this.settings.youtube = youtube;
-        }
-        if (Sherd.Video && Sherd.Video.Flowplayer) {
-            var flowplayer = {
-                'view' : new Sherd.Video.Flowplayer()
-            };
-            if (options.clipform) {
-                flowplayer.clipform = new Clipformer(); // see clipform.js
-                flowplayer.clipform.attachView(flowplayer.view);
-                if (options.storage) {
-                    flowplayer.clipform.addStorage(options.storage);
-                }
+            if (Sherd.Video.RealPlayer) {
+                var realplayer = this.settings.realplayer = {'view':new Sherd.Video.RealPlayer() };
+                decorateVideo(options,realplayer);
             }
-            if (options.clipstrip) {
-                flowplayer.clipstrip = new Clipstripper();
-                flowplayer.clipstrip.attachView(flowplayer.view);
-            }
-            this.settings.flowplayer = flowplayer;
-        }
+        } /*end Video*/
         if (Sherd.Image && Sherd.Image.OpenLayers) {
             var image = {
                 'view' : new Sherd.Image.OpenLayers()

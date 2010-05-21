@@ -309,18 +309,68 @@ SherdBookmarklet = {
   },/*end hosthandler*/
   "assethandler":{
       /* assumes jQuery is available */
-      "embeds": {
+      "objects_and_embeds": {
           players:{
+              "realplayer":{
+                  /*NOTE: realplayer plugin works in non-IE only WITH <embed>
+                          whereas in IE it only works with <object>
+                          efforts to GetPosition() need to take this into consideration
+                   */
+                  match:function(eo) {
+                      return (('object'==eo.tagName.toLowerCase())
+                              ?(eo.classid=="clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA"&&'obj')||null
+                              :(String(eo.type) == 'audio/x-pn-realaudio-plugin' && 'emb') || null );
+                  },
+                  asset:function(emb,match,context,index,optional_callback) {
+                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                      var abs = SherdBookmarklet.absolute_url;
+                      var rv = {
+                          html:emb,
+                          primary_type:"realplayer",
+                          sources: {}
+                      };
+                      if (match=='emb') {
+                          rv.sources["realplayer"] = abs(emb.src, context.document);
+                      } else if (match=='obj') {
+                          var src = jQ('param[name=src],param[name=SRC]',emb);
+                          if (src.length) {
+                              rv.sources["realplayer"] = abs(src.get(0).value, context.document);
+                          } else {
+                              return rv;//FAIL
+                          }
+                      }
+
+                      if (typeof emb.DoPlay != 'undefined') {
+                          rv.sources["realplayer-metadata"] = "w"+(
+                              emb.GetClipWidth() || emb.offsetWidth
+                          )+"h"+(emb.GetClipHeight() || emb.offsetHeight);
+
+                          rv.sources["title"] = emb.GetTitle() || undefined;
+                          if (rv.sources.title) {//let's try for the rest
+                              rv.metadata = {
+                                  "author":emb.GetAuthor() || undefined,
+                                  "copyright":emb.GetCopyright() || undefined
+                              }
+                          }
+                      } else {
+                          rv.sources["realplayer-metadata"] = "w"+emb.width+"h"+emb.height;
+                      }
+                      
+                      return rv;
+                  }
+              },/*end realplayer embeds*/
               "youtube":{
                   match:function(emb) {
-                      return String(emb.src).match(/^http:\/\/www.youtube.com\/v\/([\w-]*)/);
+                      ///ONLY <EMBED>
+                      return String(emb.src).match(/^http:\/\/www.youtube.com\/v\/([\w\-]*)/);
                   },
-                  asset:function(emb,match,index,optional_callback) {
+                  asset:function(emb,match,context,index,optional_callback) {
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var VIDEO_ID = match[1]; //e.g. "LPHEvaNjdhw"
                       var rv = {
                           html:emb,
                           wait:true,
+                          primary_type:"youtube",
                           sources: {
                               "title":'Youtube video',//guessed
                               "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
@@ -356,45 +406,17 @@ SherdBookmarklet = {
                        */
                       return rv;
                   }
-              }/*end youtube embeds*/
-          },
-          find:function(callback) {
-              var result = [];
-              var embeds = document.getElementsByTagName("embed");
-              var waiting = 0;
-              for (var i=0;i<embeds.length;i++) {
-                  var emb = embeds[i];
-                  function finished(index, asset_result) {
-                      result[index] = asset_result || result[index];
-                      if (--waiting <= 0) {
-                          callback(result);
-                      }
-                  }
-                  for (p in this.players) {
-                      var m = this.players[p].match(emb);
-                      if (m != null) {
-                          var res = this.players[p].asset(emb, m, result.length, finished);
-                          result.push(res);
-                          if (res.wait) {
-                              ++waiting;
-                          }
-                          break;
-                      }
-                  }
-              }
-              if (waiting==0)
-                  callback(result);
-          }
-      },
-      "objects": {
-          players:{
+              },/*end youtube embeds*/
               "flowplayer3":{
                   match:function(obj) {
                       if (obj.data) {
-                          return String(obj.data).match(/flowplayer[.-\w]+3[.\d]+\.swf/);
+                          return String(obj.data).match(/flowplayer[\.\-\w]+3[.\d]+\.swf/);
                       } else {//IE7 ?+
                           var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
-                          return String(jQ('param[name=movie]',obj).get(0).value).match(/flowplayer-3[.\d]+\.swf/);
+                          var movie = jQ('param[name=movie]',obj);
+                          return ((movie.length) 
+                                  ?String(movie.get(0).value).match(/flowplayer-3[\.\d]+\.swf/)
+                                  :null);
                       }
                   },
                   asset:function(obj,match,context) {
@@ -459,31 +481,42 @@ SherdBookmarklet = {
                       } else {
                           sources[primary_type+"-metadata"] = "w"+obj.offsetWidth+"h"+(obj.offsetHeight-25);
                       }
-                      return sources;
+                      return {"html":obj,"sources":sources,"primary_type":primary_type};
                   }
               }/*end flowplayer3*/
           },
           find:function(callback,context) {
+              var self = this;
               var result = [];
-              var objects = context.document.getElementsByTagName("object");
-              for (var i=0;i<objects.length;i++) {
-                  var emb = objects[i];
-                  if (emb.getElementsByTagName("embed").length > 0) {
-                      continue; //use embed
-                  }
-                  for (p in this.players) {
-                      var m = this.players[p].match(emb);
+              var waiting = 0;
+              var finished = function(index, asset_result) {
+                  result[index] = asset_result || result[index];
+                  if (--waiting <= 0) { callback(result); }
+              }
+              function matchNsniff(oe) {
+                  for (p in self.players) {
+                      var m = self.players[p].match(oe);
                       if (m != null) {
-                          result.push({html:emb,
-                                       sources:this.players[p].asset(emb,m,context)
-                                      });
+                          var res = self.players[p].asset(oe, m, context, result.length, finished);
+                          result.push(res);
+                          if (res.wait) {
+                              ++waiting;
+                          }
                           break;
                       }
                   }
               }
-              callback(result);
+              var embs = context.document.getElementsByTagName("embed");
+              var objs = context.document.getElementsByTagName("object");
+              for (var i=0;i<embs.length;i++) 
+                  matchNsniff(embs[i]);
+              for (var i=0;i<objs.length;i++) 
+                  matchNsniff(objs[i]);
+
+              if (waiting==0)
+                  callback(result);
           }
-      },
+      },/* end objects assethandler */
       "image": {
           find:function(callback,context) {
               var imgs = context.document.getElementsByTagName("img");
@@ -493,6 +526,7 @@ SherdBookmarklet = {
                   if (imgs[i].offsetWidth > 400 || imgs[i].offsetHeight > 400) {
                       result.push({
                           "html":imgs[i],
+                          "primary_type":"image",
                           "sources": {
                               "title":imgs[i].title || "",
                               "image":imgs[i].src,
@@ -503,8 +537,8 @@ SherdBookmarklet = {
               }
               callback(result);
           }
-      }
-      /*,"mediathread": {
+      },/* end image assethandler */
+      "mediathread": {
           ///the better we get on more generic things, the more redundant this will be
           ///BUT it might have more metadata
           find:function(callback) {
@@ -529,7 +563,7 @@ SherdBookmarklet = {
               });
               return callback(result);
           }
-      }/* end mediathread */
+      }/* end mediathread assethandler */
   },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
@@ -566,20 +600,27 @@ SherdBookmarklet = {
       /* just auto-save immediately
        * this also allows us to send larger amounts of metadata
        */
-      for (a in obj.sources) {
-          if (typeof obj.sources[a] =="undefined") continue;
+      function addField(name,value) {
           var span = doc.createElement("span");
           var item = doc.createElement("input");
-          if (a=="title") {
+          item.name = name;
+          item.value = value;
+          if (name=="title") {
               item.type = "text";
               item.setAttribute("style", "display:block;width:90%");
           } else {
               item.type = "hidden";
           }
-          item.name = a;
-          item.value = obj.sources[a];
           form.appendChild(span);
           form.appendChild(item);
+          return item;
+      }
+      for (a in obj.sources) {
+          if (typeof obj.sources[a] =="undefined") continue;
+          var item = addField(a, obj.sources[a]);
+      }
+      if (!obj.sources.title) {
+          addField('title','Unknown');
       }
       if (ready && obj.metadata) {
           for (var i=0;i<obj.metadata.length;i++) {
@@ -659,6 +700,20 @@ SherdBookmarklet = {
   "hasClass":function (elem,cls) {
       return (" " + (elem.className || elem.getAttribute("class")) + " ").indexOf(cls) > -1;
   },
+  "absolute_url":function (maybe_local_url, doc) {
+      ///TODO: deal with ../ or I guess they should still work, even if unconverted
+      if (/:\/\//.test(maybe_local_url)) {
+          return maybe_local_url;
+      } else {
+          var cur_loc = doc.location.toString().split('?')[0].split('/');
+          if (maybe_local_url.indexOf('/') == 0) {
+              return cur_loc.splice(0,3).join('/') + maybe_local_url;
+          } else {
+              cur_loc.pop();
+              return cur_loc.join('/') + '/' + maybe_local_url;
+          }
+      }
+  },
   "Grabber" : function (host_url, page_handler, options) {
       this.hasBody = function(doc) {
           return ('body'==doc.body.tagName.toLowerCase());
@@ -680,7 +735,6 @@ SherdBookmarklet = {
 
       this.onclick = function(evt) {
           if (self.windowStatus) return;
-          self.showWindow();
           self.findAssets();
       };
 
@@ -731,6 +785,7 @@ SherdBookmarklet = {
       this.final_count = 0;
       this.assets_found = [];
       this.findAssets = function() {
+          self.showWindow();
           var handler = SherdBookmarklet.gethosthandler();
           if (handler) {
               handler.find.call(handler, self.collectAssets);
@@ -742,6 +797,9 @@ SherdBookmarklet = {
           }
       };
       this.findGeneralAssets = function() {
+          self.no_assets_yet = true;
+          self.asset_keys = {};
+
           var handlers = SherdBookmarklet.assethandler;
           var frames = self.walkFrames();
           if (!comp.window && frames.best) {
@@ -757,8 +815,8 @@ SherdBookmarklet = {
                   ++self.final_count;
               }
               for (h in SherdBookmarklet.assethandler) {
-                  try {
                       handlers[h].find.call(handlers[h],self.collectAssets,context);
+                  try {///DEBUG
                   } catch(e) {
                       ++self.handler_count;
                       SherdBookmarklet.error = e;
@@ -767,12 +825,39 @@ SherdBookmarklet = {
               }
           });
       }
-      this.no_assets_yet = true;
+      this.redundantInGroup = function(asset, primary_type) {
+          var list = self.asset_keys[primary_type] || [];
+          for (var i=0;i<list.length;i++) {
+              if (asset.sources[primary_type] == list[i]) 
+                  return true;
+          }
+          list.push(asset.sources[primary_type]);
+          self.asset_keys[primary_type] = list;
+          return false;
+      }
+      this.isRedundant = function(asset) {
+          ///assumes assets without primary types could be redundant on anything
+          if (asset.primary_type) {
+              return this.redundantInGroup(asset, asset.primary_type);
+          } else {
+              for (s in this.asset.sources) {
+                  if (s=='url' || s.indexOf('-metadata') > -1) 
+                      continue;
+                  if (this.redundantInGroup(asset, s))
+                      return true;
+              }
+              return false;
+          }
+      };
       this.collectAssets = function(assets,errors) {
           self.assets_found.push.apply(self.assets_found,assets);
           for (var i=0;i<assets.length;i++) {
               self.no_assets_yet = false;
-              self.displayAsset(assets[i]);
+              ///TODO: if redundant, then should we 'merge' instead of drop
+              ///      for metadata, etc.
+              if (! self.isRedundant(assets[i]) ) {
+                  self.displayAsset(assets[i]);
+              }
           }
           ++self.handler_count;
           if (self.handler_count >= self.final_count) {

@@ -294,7 +294,11 @@ function DjangoSherd_AssetMicroFormat() {
 }
 
 function DjangoSherd_adaptAsset(asset) {
-    if (asset.quicktime) {
+    if (asset.flv || asset.flv_pseudo || asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp || asset.flv_rtmp) {
+        asset.type = 'flowplayer';
+    } else if (asset.youtube) {
+        asset.type = 'youtube';
+    } else if (asset.quicktime) {
         asset.type = 'quicktime';
         ///Quicktime really needs a poster or loadingposter, or things fail
         if (asset.poster) {
@@ -311,10 +315,8 @@ function DjangoSherd_adaptAsset(asset) {
         }
         asset.url = asset.quicktime;  //TODO remove this and make sure quicktime.js uses .quicktime
         asset.loadingposter = '/site_media/js/sherdjs/media/images/poster.gif';
-    } else if (asset.youtube) {
-        asset.type = 'youtube';
-    } else if (asset.flv || asset.flv_pseudo || asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp || asset.flv_rtmp) {
-        asset.type = 'flowplayer';
+    } else if (asset.realplayer) {
+        asset.type = 'realplayer';
     } else if (asset.image) {
         asset.type = 'image';
         asset.thumbable = true;

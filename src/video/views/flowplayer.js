@@ -48,7 +48,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 };
             }
             
-            create_obj = {
+            var create_obj = {
                 object: obj,
                 htmlID: wrapperID,
                 playerID: playerID, // Used by .initialize post initialization

@@ -66,7 +66,6 @@ function DjangoSherd_ClipForm() {
                 self.components.endField.value = start;
                 end = start;
             }
-            
             if (start != undefined)
                 self.events.signal(djangosherd, 'clipstart', { start: codeToSeconds(start) });    
             
