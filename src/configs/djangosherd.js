@@ -157,6 +157,8 @@ function DjangoSherd_decorate_citations(elts) {
 }
 
 function DjangoSherd_Storage() {
+    /* read-only storage repo for annotation objects from MediaThread
+     */
     var self = this;
     var _current_citation = false;
     var _annotations = {};
