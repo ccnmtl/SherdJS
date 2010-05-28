@@ -54,6 +54,10 @@ if (!Sherd.GenericAssetView) {
                 var realplayer = this.settings.realplayer = {'view':new Sherd.Video.RealPlayer() };
                 decorateVideo(options,realplayer);
             }
+            if (Sherd.Video.Videotag) {
+                var videotag = this.settings.videotag = {'view':new Sherd.Video.Videotag() };
+                decorateVideo(options,videotag);
+            }
         } /*end Video*/
         if (Sherd.Image && Sherd.Image.OpenLayers) {
             var image = {

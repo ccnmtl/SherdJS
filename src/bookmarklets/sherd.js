@@ -520,6 +520,26 @@ SherdBookmarklet = {
                   callback(result);
           }
       },/* end objects assethandler */
+      "video_tag": {
+          find:function(callback,context) {
+              var videos = context.document.getElementsByTagName("video");
+              var result = [];
+              for (var i=0;i<videos.length;i++) {
+		  var src = videos[i].src;
+                  result.push({
+                      "html":videos[i],
+                      "primary_type":"ogg",
+		      "label": "video",
+                      "sources": {
+                          "title":src.split('/').pop(),
+                          "ogg":src,
+                          "ogg-metadata":"w"+videos[i].width+"h"+videos[i].height
+                      }
+                  });
+              }
+              callback(result);
+          }
+      },/* end image assethandler */
       "image": {
           find:function(callback,context) {
               var imgs = context.document.getElementsByTagName("img");
