@@ -434,12 +434,12 @@ SherdBookmarklet = {
                       //getClip() works if someone's already clicked Play
                       var clip = ($f && $f.getClip() ) || cfg.clip || cfg.playlist[0];
                       var type = 'video';
-                      if (cfg.playlist && (! clip.url || cfg.playlist.length > 1)) {
+                      if (cfg.playlist && ( !clip.url || cfg.playlist.length > 1)) {
                           for (var i=0;i<cfg.playlist.length;i++) {
                               var p = cfg.playlist[i];
                               var url = (typeof p=='string') ? p : p.url;
                               if (/\.(jpg|jpeg|png|gif)/.test(url)) {
-                                  //wasteful, but useful
+                                  //redundant urls wasteful, but useful
                                   sources.image = url;
                                   sources.thumb = url;
                                   sources.poster = url;
@@ -481,7 +481,10 @@ SherdBookmarklet = {
                       } else {
                           sources[primary_type+"-metadata"] = "w"+obj.offsetWidth+"h"+(obj.offsetHeight-25);
                       }
-                      return {"html":obj,"sources":sources,"primary_type":primary_type};
+                      return {"html":obj,
+                              "sources":sources,
+                              "label":"video",
+                              "primary_type":primary_type};
                   }
               }/*end flowplayer3*/
           },
@@ -592,7 +595,9 @@ SherdBookmarklet = {
       if (!obj.sources["url"]) obj.sources["url"] = doc.location;
       var destination =  host_url;
       var form = doc.createElement("form");
-      form.appendChild(doc.createElement("span"));
+      form.innerHTML = '<span></span><span class="">Type: '
+          +(obj.label||obj.primary_type||'Unknown')
+          +'</span>';
       form.action = destination;
       form.target = '_top';
       var ready = SherdBookmarklet.user_status.ready;
@@ -756,7 +761,7 @@ SherdBookmarklet = {
           target.appendChild(comp.top);
           var pageYOffset = self.visibleY(target)+o.top;
 
-          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
+          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
           comp.tab = comp.top.firstChild;
           comp.window = comp.top.lastChild;
           comp.ul = comp.top.getElementsByTagName("ul")[0];

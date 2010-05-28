@@ -171,6 +171,15 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             } else if (obj.flv) {
                 rc.url = obj.flv;
                 rc.provider = '';
+            } else if (obj.video_pseudo) {
+                rc.url = obj.video_pseudo;
+                rc.provider = 'pseudo';
+            } else if (obj.video_rtmp) {
+                rc.url = obj.video_rtmp;
+                rc.provider = 'rtmp';
+            } else if (obj.video) {
+                rc.url = obj.video;
+                rc.provider = '';
             }
             return rc;
         }
