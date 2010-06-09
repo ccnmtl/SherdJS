@@ -319,6 +319,8 @@ function DjangoSherd_adaptAsset(asset) {
         asset.loadingposter = '/site_media/js/sherdjs/media/images/poster.gif';
     } else if (asset.realplayer) {
         asset.type = 'realplayer';
+    } else if (asset.ogg) {
+        asset.type = 'videotag';
     } else if (asset.image) {
         asset.type = 'image';
         asset.thumbable = true;
