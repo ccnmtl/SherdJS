@@ -135,9 +135,13 @@ if (!Sherd.Video.Base) {
                     self.events.killTimer(name);
                     
                     self.events.queue(name,[
-                                              {test: function() { return self.media.time() >= endtime; }, poll:500},
-                                              {call: function() { self.media.pause(); }}
-                                              ]);
+                        {test: function() { 
+                            return self.media.time() >= endtime; 
+                         }, 
+                         poll:500
+                        },
+                        {call: function() { self.media.pause(); }}
+                    ]);
 
                 }
             }
@@ -182,13 +186,13 @@ if (!Sherd.Video.Base) {
         // did you give me an end point -- pause at that end point or jump to
         // the end point if you're past that point
         // if not loaded -- then do this as soon as you load (if ready)
-        this.setState = function(obj) {
+        this.setState = function(obj, options) {
             if (typeof obj == 'object') {
                 if (obj==null) 
                     //endtime is different so it doesn't start playing
                     this.media.seek(0, 0.1);
                 else
-                    this.media.seek(obj.start, obj.end);
+                    this.media.seek(obj.start, obj.end, (options&&options.autoplay || false));
             }
         }
 

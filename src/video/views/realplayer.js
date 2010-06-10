@@ -44,6 +44,8 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                 object: obj,
                 htmlID: wrapperID,
                 playerID: playerID, // Used by .initialize post initialization
+                currentTimeID:'currtime'+playerID,
+                durationID:'totalcliplength'+playerID,
                 text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper" '
                     + '     style="width:'+obj.options.width+'px">' 
                     + '<object id="'+playerID+'" classid="clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA"'
@@ -70,6 +72,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                     + '    height="36">'
                     + '</embed>'
                     + '</object>'
+                    + '<div class="time-display"><span id="currtime'+playerID+'">00:00:00</span>/<span id="totalcliplength'+playerID+'">00:00:00</span></div>'
                     + '</div>'
             }
             return create_obj;
@@ -94,6 +97,10 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
 
                     rv.width = (create_obj.options && create_obj.options.width) || rv.player.offsetWidth;
                     rv.mediaUrl = create_obj.realplayer;
+
+                    rv.duration = document.getElementById(create_obj.durationID);
+                    rv.elapsed = document.getElementById(create_obj.currentTimeID);
+
                 } 
                 return rv;
             } catch(e) {}
@@ -140,9 +147,18 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         this.initialize = function(create_obj) {
             self.events.connect(djangosherd, 'seek', self.media, 'seek');
             self.events.connect(djangosherd, 'playclip', function(obj) {
-                    self.setState(obj);
-                    self.media.play();
-                });
+                self.setState(obj, {autoplay:true});
+                self.media.play();
+            });
+            self.events.queue('realplayer tick-tock' ,[
+                {poll:1000,
+                 test:function() {
+                     self.components.duration.innerHTML = self.secondsToCode(self.media.duration());
+                     self.components.elapsed.innerHTML = self.secondsToCode(self.media.time());
+                 }}
+            ]);
+            ///TODO: figure out some hacky way to auto-buffer content
+            ///      so load-time on each seek isn't so bad.  Realplayer sux.
 
         };
         
@@ -187,6 +203,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
             var playing = false;
             try {
                 ///API:0=stopped,1=contacting,2=buffering,3=playing,4=paused,5=seeking
+                ///Seek can occur when >= 2
                 playing = (self.components.player
                            && self.components.player.GetPlayState
                            && self.components.player.GetPlayState() == 3);
@@ -203,17 +220,37 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                 return false;
             } 
         };
+        this.media.seekable = function() {
+            var s = self.components.player.GetPlayState();
+            return (self.media.ready() && s>1 && s<5);
+        }
 
-        this.media.seek = function(starttime, endtime) {
-            if (self.media.ready()) {
+        var seek_last = 0;
+        this.media.seek = function(starttime, endtime, play) {
+            var my_seek = ++seek_last;
+            var p = self.components.player;
+            if (self.media.seekable()) {
                 if (starttime != undefined) {
                     ///API in milliseconds
-                    self.components.player.SetPosition(starttime*1000);
+                    p.SetPosition(starttime*1000);
+                    if (play) self.media.play();
                 }
                 if (endtime != undefined) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     self.media.pauseAt(endtime);
                 }
+            } else {
+                self.events.queue('realplayer ready to seek',
+                                  [  { poll:500,
+                                       test: self.media.seekable
+                                   },{
+                                       test: function() {
+                                           return (seek_last == my_seek);}
+                                   },{
+                                       call: function() {
+                                           self.media.seek(starttime,endtime,play);
+                                       }
+                                   }]);
             }
 
             // store the values away for when the player is ready
@@ -249,15 +286,9 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
 
         // Used by tests.
         this.media.url = function() {
-            return self.components.player.GetURL();
+            throw Error("unimplemented function media.url");
         }
         
-        this.media._updateTickCount = function() {
-            if (typeof self.components.player.GetRate != 'undefined'
-                && self.components.player.GetRate() > 0) { 
-                self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
-            } 
-        }
     } //Sherd.Video.RealPlayer
 
 }

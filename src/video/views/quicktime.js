@@ -64,22 +64,16 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             if (!(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
                     || /Linux/.test(navigator.userAgent)
             )) {
+                opt.mimetype = 'image/x-quicktime';
+                opt.extra += '<param name="href" value="'+opt.url+'" />'
+                    + '<param name="autohref" value="'+opt.autoplay+'" />'
+                    + '<param name="target" value="myself" />';
+
+                opt.controller = 'false';
                 if (opt.loadingposter && opt.autoplay == 'true') {
-                    opt.mimetype = 'image/x-quicktime';
-                    opt.extra += '<param name="href" value="'+opt.url+'" /> \
-                    <param name="autohref" value="'+opt.autoplay+'" /> \
-                    <param name="target" value="myself" /> \
-                    ';
                     opt.url = opt.loadingposter;
-                    opt.controller = 'false';
                 } else if (opt.poster) {
-                    opt.mimetype = 'image/x-quicktime';
-                    opt.extra += '<param name="href" value="'+opt.url+'" /> \
-                    <param name="autohref" value="'+opt.autoplay+'" /> \
-                    <param name="target" value="myself" /> \
-                    ';
                     opt.url = opt.poster;
-                    opt.controller = 'false';
                 }
             }
             
@@ -92,8 +86,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             //since safari breaks
             return {htmlID:wrapperID,
                 playerID:playerID,
-                currentTimeID:'currtime',
-                durationID:'totalcliplength',
+                timedisplayID:'timedisplay'+playerID,
+                currentTimeID:'currtime'+playerID,
+                durationID:'totalcliplength'+playerID,
                 object:obj,
                 text: clicktoplay + '<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
                 <!--[if IE]>\
@@ -119,7 +114,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 <param name="scale" value="aspect" /> \
                 '+opt.extra+'\
                 '+opt.errortext+'</object></div>\
-                <div id="time-display" style="display: none;"><div id="currtime">00:00:00</div>/<div id="totalcliplength">00:00:00</div></div>'
+                <div id="timedisplay'+playerID+'" style="display: none;"><span id="currtime'+playerID+'">00:00:00</span>/<span id="totalcliplength'+playerID+'">00:00:00</span></div>'
             };
         };
         
@@ -135,7 +130,6 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     rv.player = document[create_obj.playerID] || document.getElementById(create_obj.playerID);
                     rv.duration = document[create_obj.durationID] || document.getElementById(create_obj.durationID);
                     rv.elapsed = document[create_obj.currentTimeID] || document.getElementById(create_obj.currentTimeID);
-                    rv.timedisplay = document['time-display'] || document.getElementById('time-display');
                     rv.autoplay = create_obj.object.autoplay == 'true';
                     rv.playerID = create_obj.playerID;
                     rv.htmlID = create_obj.htmlID;
@@ -328,12 +322,17 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         
         this.media.play = function() {
             if (self.media.ready()) {
-                var mimetype = self.components.player.GetMIMEType();
-                if (!self._played && /image/.test(mimetype)) {
+                var p = self.components.player;
+                ///WARNING: mimetype doesn't change after HREF advancement
+                ///         so we need to test if we're already advanced
+                var mimetype = p.GetMIMEType();
+                var href = p.GetHREF();
+                if (href && !self._played && /image/.test(mimetype)) {
                     // Setting the URL in this manner is only needed the first time through
                     // In order to facilitate fast seeking and update, keep track of the first time
                     // via the _played class variable, then default to a regular play event
-                    self.components.player.SetURL(self.components.player.GetHREF());
+                    p.SetURL(href);
+                    p.SetHREF('');
                     self._played = true;
                 } else {
                     self.components.player.Play();
@@ -373,19 +372,18 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
 
         this.media.seek = function(starttime, endtime) {
             if (self.media.ready()) {
-                
+                var p = self.components.player;
                 if (starttime != undefined) {
-                    playRate = self.components.player.GetRate();
+                    playRate = p.GetRate();
                     if (playRate > 0)
-                        self.components.player.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
+                        p.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
                     try {
-                        self.components.player.SetTime(starttime * self.media.timescale());
+                        p.SetTime(starttime * self.media.timescale());
                     } catch(e) {}
                     if (self.components.autoplay || playRate != 0) {
-                        self.components.player.Play();
+                        p.Play();
                     }
                 }
-            
                 if (endtime != undefined) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     self.media.pauseAt(endtime);

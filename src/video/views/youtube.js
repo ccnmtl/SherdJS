@@ -268,16 +268,17 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         }
         
         this.media.timestrip = function() {
+            var w = self.components.player.width;
             if (self.components.presentation == 'small') {
-                return {w: self.components.player.width,
-                    trackX: 40,
+                return {w: w,
+                    trackX: 133,
                     trackWidth: 166,
                     visible:true
                 }
             } else {
-                return {w: self.components.player.width,
-                    trackX: 42,
-                    trackWidth: 384,
+                return {w: w,
+                    trackX: 135,
+                    trackWidth: w-180,
                     visible:true
                 }
             }

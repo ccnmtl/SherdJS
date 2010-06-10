@@ -138,9 +138,10 @@ Sherd.Base = {
                 self.deinitialize();
 
             for (part in self.components) {
-                if (self.components[part].parentNode) {
+                if (typeof self.components[part] == 'object'
+                    && self.components[part].parentNode) {
                     self.components[part].parentNode
-                        .removeChild(self.components[part]);
+                    .removeChild(self.components[part]);
                 }
             }
         },

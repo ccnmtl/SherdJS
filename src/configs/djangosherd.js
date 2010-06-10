@@ -488,7 +488,7 @@ function openCitation(url, no_autoplay_or_options) {
             });
         
             var ann_data = ann_obj.annotations[0];// ***
-            djangosherd.assetview.setState(ann_data);        
+            djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});        
         } else {
             djangosherd.assetview.html.remove();
         }
