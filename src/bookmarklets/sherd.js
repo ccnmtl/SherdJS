@@ -585,7 +585,97 @@ SherdBookmarklet = {
               callback(result);
           }
       },/* end image assethandler */
-      "oEmbed.json": {
+      "mediathread": {
+          ///the better we get on more generic things, the more redundant this will be
+          ///BUT it might have more metadata
+          find:function(callback) {
+              var result = [];
+              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+              jQ('div.asset-links').each(function(){
+                  var top = this;
+                  var res0 = {html:top, sources:{}};
+                  jQ('a.assetsource',top).each(function() {
+                      var reg = String(this.getAttribute("class")).match(/assetlabel-(\w+)/);
+                      if (reg != null) {
+                          ///use getAttribute rather than href, to avoid urlencodings
+                          res0.sources[reg[1]] = this.getAttribute("href");
+                          if (/asset-primary/.test(this.className))
+                              res0.primary_type = reg[1];
+                          if (this.title) 
+                              res0.sources.title = this.title;
+                      }
+                  });
+                  result.push(res0);
+              });
+              return callback(result);
+          }
+      },/* end mediathread assethandler */
+      "unAPI": {/// http://unapi.info/specs/
+          page_resource:true,
+          find:function(callback,context) {
+              var self = this;
+              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+              var unapi = jQ('abbr.unapi-id');
+              ///must find one, or it's not a page resource, and we won't know what asset to connect to
+              if (unapi.length == 1) {
+                  var server = false;
+                  jQ("link").each(function(){if (this.rel=='unapi-server') server = this.href;});
+                  if (server) {
+                      ///start out only supporting pbcore
+                      var format = '?format=pbcore';
+                      var request_url = server+format+'&id='+unapi.attr('title');
+                      jQ.ajax({
+                          "url":request_url,
+                          "dataType":"text",
+                          success:function(pbcore_xml,textStatus,xhr) {
+                              var rv = {
+                                  "page_resource":true,
+                                  "html":unapi.get(0),
+                                  "primary_type":"pbcore",
+                                  "sources":{
+                                      'pbcore':request_url
+                                  },
+                                  "metadata":{'subject':[]}
+                              };
+                              var pb = SherdBookmarklet.xml2dom(pbcore_xml);
+                              if (! jQ('PBCoreDescriptionDocument',pb).length) {
+                                  return callback([]);
+                              }
+                              jQ('description',pb).each(function() {
+                                  //alert(jQ(this).text());this
+                                  rv.metadata['description'] = [this.firstChild.data];
+                              });
+                              jQ('contributor',pb).each(function() {
+                                  var role = jQ('contributorRole',this.parentNode).text();
+                                  rv.metadata['Contributor:'+role] = [this.firstChild.data];
+                              });
+                              jQ('coverage',pb).each(function() {
+                                  var type = jQ('coverageType',this.parentNode).text();
+                                  rv.metadata['Coverage:'+type] = [this.firstChild.data];
+                              });
+                              jQ('rightsSummary',pb).each(function() {
+                                  rv.metadata['Copyrights'] = [this.firstChild.data];
+                              });
+                              jQ('subject',pb).each(function() {
+                                  ///TODO: should we care about the subjectAuthorityUsed?
+                                  rv.metadata['subject'].push(this.firstChild.data);
+                              });
+                              jQ('publisher',pb).each(function() {
+                                  rv.metadata['publisher'] = [this.firstChild.data];
+                              });
+                              ///TODO: should we get video metadata (betacam, aspect ratio)?
+                              callback([rv]);
+                          },
+                          error:function(){callback([]);}
+                      });
+                      return;
+                  }//end if (server)
+              }//end if (unapi.length)
+              return callback([]);
+          }
+      },/* end unAPI assethandler */
+      "oEmbed.json": {/// http://www.oembed.com/
+          page_resource:true,
           find:function(callback,context) {
               var self = this;
               var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
@@ -657,32 +747,7 @@ SherdBookmarklet = {
                   callback([]);
               }
           }
-      },/* end image assethandler */
-      "mediathread": {
-          ///the better we get on more generic things, the more redundant this will be
-          ///BUT it might have more metadata
-          find:function(callback) {
-              var result = [];
-              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
-              jQ('div.asset-links').each(function(){
-                  var top = this;
-                  var res0 = {html:top, sources:{}};
-                  jQ('a.assetsource',top).each(function() {
-                      var reg = String(this.getAttribute("class")).match(/assetlabel-(\w+)/);
-                      if (reg != null) {
-                          ///use getAttribute rather than href, to avoid urlencodings
-                          res0.sources[reg[1]] = this.getAttribute("href");
-                          if (/asset-primary/.test(this.className))
-                              res0.primary_type = reg[1];
-                          if (this.title) 
-                              res0.sources.title = this.title;
-                      }
-                  });
-                  result.push(res0);
-              });
-              return callback(result);
-          }
-      }/* end mediathread assethandler */
+      }/* end oEmbed.json assethandler */
   },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
@@ -824,6 +889,17 @@ SherdBookmarklet = {
   "hasClass":function (elem,cls) {
       return (" " + (elem.className || elem.getAttribute("class")) + " ").indexOf(cls) > -1;
   },
+  "xml2dom":function (str) {
+      if (window.ActiveXObject) {
+          var xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+          xmlDoc.loadXML(str);
+          return xmlDoc;
+      } else {
+          var div = document.createElement('div');
+          div.innerHTML = str;
+          return div;
+      }
+  },
   "absolute_url":function (maybe_local_url, doc) {
       ///TODO: deal with ../ or I guess they should still work, even if unconverted
       if (/:\/\//.test(maybe_local_url)) {
@@ -896,6 +972,7 @@ SherdBookmarklet = {
               //s.top = '0px';
           });
           M.connect(comp.close, "click", function(evt) {
+              comp.ul.innerHTML = "";
               comp.window.style.display = "none";
               comp.tab.style.display = "block";
               self.windowStatus = false;
@@ -908,6 +985,7 @@ SherdBookmarklet = {
       this.handler_count = 0;
       this.final_count = 0;
       this.assets_found = [];
+      this.page_resource_count = 0;
       this.findAssets = function() {
           self.showWindow();
           var handler = SherdBookmarklet.gethosthandler();
@@ -958,31 +1036,33 @@ SherdBookmarklet = {
           self.asset_keys['ref_id'] = self.asset_keys['ref_id'] || {};
           var list = self.asset_keys[primary_type] = (self.asset_keys[primary_type] || {});
           var merge_with = false;
-          if (asset.ref_id && asset.ref_id in self.asset_keys['ref_id']) {
+          if (asset.page_resource
+              && asset != self.assets_found[0]
+              && self.assets_found.length-self.page_resource_count < 2
+             ) {
+              //if there's only one asset on the page and rest are page_resources
+              merge_with = self.assets_found[self.assets_found.length-2];
+          } else if (asset.ref_id && asset.ref_id in self.asset_keys['ref_id']) {
               //a hack to let the page match two assets explicitly
               merge_with = self.asset_keys['ref_id'][asset.ref_id];
           } else if (asset.sources[primary_type] in list) {
               //if primary source urls are identical
               merge_with = list[ asset.sources[primary_type] ];
-          } else if (asset.page_resource
-                     && self.assets_found.length > 1
-                     && self.assets_found[1].page_resource
-                    ) {
-              //if there's only one asset on the page, and the second describes the page (header/oembed)
-              //this is why page_resources should be run last.
-              merge_with = self.assets_found[0];
-          }
+          } 
           if (merge_with) {
               if (merge_with.html_id) {
                   jQ('#'+merge_with.html_id).remove();
                   delete merge_with.html_id;//so it doesn't over-write asset
-              }
+              } else if (window.console) window.console.log('ERROR: No html_id on merge-item');
+
               //jQuery 1.0compat (for drupal)
               jQ.extend(merge_with.sources, asset.sources);
               ///not trying to merge individual arrays
               if (merge_with.metadata && asset.metadata)
                   jQ.extend(merge_with.metadata, asset.metadata);
               jQ.extend(asset, merge_with);
+              ///keep our pointers singular
+              list[ asset.sources[merge_with.primary_type] ] = asset;
           }
           list[asset.sources[primary_type]] = asset;
           if (asset.ref_id)
@@ -1006,9 +1086,10 @@ SherdBookmarklet = {
           }
       };
       this.collectAssets = function(assets,errors) {
-          self.assets_found.push.apply(self.assets_found,assets);
+          Array.prototype.push.apply(self.assets_found,assets);
           for (var i=0;i<assets.length;i++) {
               self.no_assets_yet = false;
+              if (assets[i].page_resource) ++self.page_resource_count;
               self.displayAsset(self.mergeRedundant(assets[i]));
           }
           ++self.handler_count;
@@ -1020,11 +1101,6 @@ SherdBookmarklet = {
           if (!asset) return;
           asset.html_id = self.assetHtmlID(asset);
           var doc = comp.ul.ownerDocument;
-          var done_already = doc.getElementById(asset.html_id);
-          if (done_already != null) {
-              jQ(done_already.parentNode).remove();
-          }
-
           var li = doc.createElement("li");
           var jump_url = M.obj2url(host_url, asset);
           var form = M.obj2form(host_url, asset, doc);
