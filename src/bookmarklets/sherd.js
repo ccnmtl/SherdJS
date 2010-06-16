@@ -23,7 +23,12 @@ SherdBookmarklet = {
                 if (!floating_pane.length) {
                     return callback([],"Try opening the image information pane by clicking its title under the thumbnail.");
                 } else {
-                    var obj = {"sources":{},"html":floating_pane.get(0),"metadata":[]};
+                    var obj = {
+                        "sources":{},
+                        "html":floating_pane.get(0),
+                        "metadata":{},
+                        "primary_type":'image_fpx'
+                    };
                     var objectId = obj.html.id.substr(3);/*after 'mdw'*/
                     var done = 2; //# of queries
                     function obj_final() {
@@ -53,7 +58,11 @@ SherdBookmarklet = {
                                var m = metadata.metaData;
                                for (var i=0;i<m.length;i++) {
                                    ///so multiple values are still OK
-                                   obj.metadata.push([ m[i].fieldName , m[i].fieldValue ]);
+                                   if (m[i].fieldName in obj.metadata) {
+                                       obj.metadata[m[i].fieldName].push(m[i].fieldValue);
+                                   } else {
+                                       obj.metadata[m[i].fieldName] = [m[i].fieldValue];
+                                   }
                                }
                                if (--done==0) obj_final(); 
                            },
@@ -90,7 +99,7 @@ SherdBookmarklet = {
 	            "xyztile-metadata":"w"+max_image.width+"h"+max_image.height
 	    };
 
-            callback( [ {html:img, sources:sources} ] );
+            callback( [ {html:img, primary_type:"image", sources:sources} ] );
         },
         decorate:function(objs) {
         }
@@ -146,7 +155,7 @@ SherdBookmarklet = {
                                         "metadata-owner":getInfoData.photo.owner.realname ||undefined
                                     };
 
-                                return callback( [{html:img, sources:sources}] );
+                                return callback( [{html:img, primary_type:"image", sources:sources}] );
                            });
                     });
             });
@@ -191,7 +200,8 @@ SherdBookmarklet = {
                         var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
                         sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
                         callback( [{"html": window.frames["gallery"].document["Zoomify Dynamic Flash"], 
-                                    "sources": sources
+                                    "sources": sources,
+                                    "primary_type": 'image'
                                    } ]);
                     },"text");
                     return; //found something
@@ -235,6 +245,7 @@ SherdBookmarklet = {
             }
             return {"html":$(".media").get(0),
                     "hash": hash||undefined,
+                    "primary_type": 'quicktime',
                     "sources":{
                         "title":document.title,
                         "quicktime":$(".media").media("api").options.src,
@@ -288,6 +299,7 @@ SherdBookmarklet = {
                     "html":video,
                     "hash":"start="+video.getCurrentTime(),
                     "disabled":video.getVideoEmbedCode() == "",
+                    "primary_type":'youtube',
                     "sources":{
                         "title":getTitle(VIDEO_ID),
                         "thumb":getThumb(VIDEO_ID),
@@ -348,9 +360,9 @@ SherdBookmarklet = {
                           rv.sources["title"] = emb.GetTitle() || undefined;
                           if (rv.sources.title) {//let's try for the rest
                               rv.metadata = {
-                                  "author":emb.GetAuthor() || undefined,
-                                  "copyright":emb.GetCopyright() || undefined
-                              }
+                                  "author":[ emb.GetAuthor() || undefined],
+                                  "copyright":[ emb.GetCopyright() || undefined]
+                              };
                           }
                       } else {
                           rv.sources["realplayer-metadata"] = "w"+emb.width+"h"+emb.height;
@@ -371,8 +383,8 @@ SherdBookmarklet = {
                           html:emb,
                           wait:true,
                           primary_type:"youtube",
+                          label:"youtube video",
                           sources: {
-                              "title":'Youtube video',//guessed
                               "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
                               "gdata":'http://gdata.youtube.com/feeds/api/videos/'+VIDEO_ID
                           }};
@@ -385,13 +397,13 @@ SherdBookmarklet = {
                           rv.sources['thumb-metadata'] = "w"+th.width+"h"+th.height;
                           
                           rv.metadata = {
-                              'description':e.content['$t'],
-                              'author':e.author[0].name,
-                              'author_uri':e.author[0].uri,
-                              'youtube_link':'http://www.youtube.com/watch?v='+VIDEO_ID
+                              'description':[e.content['$t']],
+                              'author':[e.author[0].name],
+                              'author_uri':[e.author[0].uri],
+                              'youtube_link':['http://www.youtube.com/watch?v='+VIDEO_ID]
                           };
                           if (e['media$group']['media$category'].length) {
-                              rv.metadata['category']=e['media$group']['media$category'][0].label;
+                              rv.metadata['category'] = [e['media$group']['media$category'][0].label];
                           }
                           optional_callback(index, rv);
                       }
@@ -433,6 +445,7 @@ SherdBookmarklet = {
                                                .value.substr(7)));//config=
                       //getClip() works if someone's already clicked Play
                       var clip = ($f && $f.getClip() ) || cfg.clip || cfg.playlist[0];
+                      var time = ($f && $f.getTime() ) || 0;
                       var type = 'video';
                       if (cfg.playlist && ( !clip.url || cfg.playlist.length > 1)) {
                           for (var i=0;i<cfg.playlist.length;i++) {
@@ -474,17 +487,24 @@ SherdBookmarklet = {
                       }
                       var primary_type = type+get_provider(clip);
                       sources[primary_type] = clip.originalUrl || clip.url || clip;
-                      //guess is just the filename
-                      sources['title'] = sources[primary_type].split('/').pop();
+                      if (/_pseudo/.test(primary_type)
+                          && cfg.plugins[clip.provider].queryString
+                         ) {
+                          sources[primary_type] += unescape(cfg.plugins[clip.provider].queryString);
+                      }
                       if (clip.width && clip.width >= obj.offsetWidth) {
                           sources[primary_type+"-metadata"] = "w"+clip.width+"h"+clip.height;
                       } else {
                           sources[primary_type+"-metadata"] = "w"+obj.offsetWidth+"h"+(obj.offsetHeight-25);
                       }
-                      return {"html":obj,
-                              "sources":sources,
-                              "label":"video",
-                              "primary_type":primary_type};
+                      return {
+                          "html":obj,
+                          "sources":sources,
+                          "label":"video",
+                          "primary_type":primary_type,
+                          "hash":"start="+Math.floor(time),
+                          "ref_id":($f && $f.id() || undefined) //used for merging
+                      };
                   }
               }/*end flowplayer3*/
           },
@@ -531,7 +551,6 @@ SherdBookmarklet = {
                       "primary_type":"ogg",
 		      "label": "video",
                       "sources": {
-                          "title":src.split('/').pop(),
                           "ogg":src,
                           "ogg-metadata":"w"+videos[i].width+"h"+videos[i].height
                       }
@@ -545,13 +564,18 @@ SherdBookmarklet = {
               var imgs = context.document.getElementsByTagName("img");
               var result = [];
               for (var i=0;i<imgs.length;i++) {
+                  //IGNORE headers/footers/logos
+                  if (/(footer|header)/.test(imgs[i].className)
+                      ||/site_title/.test(imgs[i].parentNode.parentNode.className)//WGBH header
+                      ||/logo/.test(imgs[i].id) //drupal logo
+                     ) continue;
                   /*use offsetWidth, so display:none's are excluded */
                   if (imgs[i].offsetWidth > 400 || imgs[i].offsetHeight > 400) {
                       result.push({
                           "html":imgs[i],
                           "primary_type":"image",
                           "sources": {
-                              "title":imgs[i].title || "",
+                              "title":imgs[i].title || undefined,
                               "image":imgs[i].src,
                               "image-metadata":"w"+imgs[i].width+"h"+imgs[i].height
                           }
@@ -561,6 +585,79 @@ SherdBookmarklet = {
               callback(result);
           }
       },/* end image assethandler */
+      "oEmbed.json": {
+          find:function(callback,context) {
+              var self = this;
+              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+              var oembed_link = false;
+              jQ("link").each(function(){
+                  //jQuery 1.0 compatible
+                  if (this.type == 'application/json+oembed') oembed_link = this;
+              });
+              if (oembed_link) {
+                  var result = {
+                      "html":oembed_link,
+                      "sources":{},
+                      "metadata":{},
+                      "page_resource":true
+                  };
+                  jQ.ajax({
+                      "url":result.html.href,
+                      "dataType":'json',
+                      success:function(json,textStatus) {
+                          if (json.ref_id) {
+                              result.ref_id = json.ref_id;
+                          }
+                          if (json.url) {
+                              switch(json.type) {
+                                case "photo":
+                                case "image":
+                                  result.primary_type = "image";
+                                  result.sources["image"] = json.url;
+                                  ///extension: openlayers tiling protocol
+                                  if (json.xyztile) 
+                                      var xyz = json.xyztile;
+                                      result.sources["xyztile"] = xyz.url;
+                                      result.sources["xyztile-metadata"] = "w"+xyz.width+"h"+xyz.height;
+                                  break;
+                                case "video":
+                                  result.primary_type = "video";
+                                  if (/\.pseudostreaming-/.test(json.html))
+                                      result.primary_type = "video_pseudo";
+                                  else if (/\rtmp/.test(json.html))
+                                      result.primary_type = "video_rtmp";
+                                  result.sources[result.primary_type] = json.url;
+                                  break;
+                                default:
+                                  return callback([])
+                              }
+                              result.sources[result.primary_type+'-metadata'] = 
+                                  "w"+json.width+"h"+json.height;
+                          }
+                          if (json.thumbnail_url) {
+                              result.sources["thumb"] = json.thumbnail_url;
+                              result.sources["thumb-metadata"]="w"+json.thumbnail_width+"h"+json.thumbnail_height;
+                          }
+                          if (json.title) {
+                              result.sources["title"] = json.title;
+                          }
+                          if (json.description) {
+                              result.metadata["description"] = [json.description];
+                          }
+                          if (json.metadata) {//extension
+                              result.metadata = json.metadata;
+                          }
+                          callback([result]);
+                      },
+                      error:function(e) {
+                          callback([]);
+                      }
+                  });
+              } else {
+                  callback([]);
+              }
+          }
+      },/* end image assethandler */
       "mediathread": {
           ///the better we get on more generic things, the more redundant this will be
           ///BUT it might have more metadata
@@ -568,21 +665,20 @@ SherdBookmarklet = {
               var result = [];
               var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
               jQ('div.asset-links').each(function(){
-                  var sources = {};
                   var top = this;
+                  var res0 = {html:top, sources:{}};
                   jQ('a.assetsource',top).each(function() {
                       var reg = String(this.getAttribute("class")).match(/assetlabel-(\w+)/);
                       if (reg != null) {
                           ///use getAttribute rather than href, to avoid urlencodings
-                          sources[reg[1]] = this.getAttribute("href");
+                          res0.sources[reg[1]] = this.getAttribute("href");
+                          if (/asset-primary/.test(this.className))
+                              res0.primary_type = reg[1];
                           if (this.title) 
-                              sources.title = this.title;
+                              res0.sources.title = this.title;
                       }
                   });
-                  result.push({
-                      html:top,
-                      sources:sources
-                  });
+                  result.push(res0);
               });
               return callback(result);
           }
@@ -614,6 +710,9 @@ SherdBookmarklet = {
       doc = doc||document;
       if (!obj.sources["url"]) obj.sources["url"] = doc.location;
       var destination =  host_url;
+      if (obj.hash) {
+          destination += "#"+obj.hash;
+      }
       var form = doc.createElement("form");
       form.innerHTML = '<span></span><span class="">Type: '
           +(obj.label||obj.primary_type||'Unknown')
@@ -628,14 +727,15 @@ SherdBookmarklet = {
       function addField(name,value) {
           var span = doc.createElement("span");
           var item = doc.createElement("input");
-          item.name = name;
-          item.value = value;
           if (name=="title") {
               item.type = "text";
               item.setAttribute("style", "display:block;width:90%");
           } else {
               item.type = "hidden";
           }
+          item.name = name;
+          ///Ffox bug: this must go after item.type=hidden or not set correctly
+          item.value = value;
           form.appendChild(span);
           form.appendChild(item);
           return item;
@@ -645,15 +745,14 @@ SherdBookmarklet = {
           var item = addField(a, obj.sources[a]);
       }
       if (!obj.sources.title) {
-          addField('title','Unknown');
+          //guess title as file-name
+          addField('title', obj.sources[obj.primary_type].split('/').pop().split('?').shift() );
       }
       if (ready && obj.metadata) {
-          for (var i=0;i<obj.metadata.length;i++) {
-              var item = doc.createElement("input");
-              item.type = "hidden"
-              item.name = "metadata-"+obj.metadata[i][0];
-              item.value = obj.metadata[i][1];
-              form.appendChild(item);
+          for (a in obj.metadata) {
+              for (var i=0;i<obj.metadata[a].length;i++) {
+                  addField("metadata-"+a, obj.metadata[a][i]);
+              }
           }
       }
       form.appendChild(doc.createElement("span"));
@@ -850,39 +949,67 @@ SherdBookmarklet = {
               }
           });
       }
-      this.redundantInGroup = function(asset, primary_type) {
-          var list = self.asset_keys[primary_type] || [];
-          for (var i=0;i<list.length;i++) {
-              if (asset.sources[primary_type] == list[i]) 
-                  return true;
-          }
-          list.push(asset.sources[primary_type]);
-          self.asset_keys[primary_type] = list;
-          return false;
+      this.assetHtmlID = function(asset) {
+          return ('sherdbookmarklet-asset-' + (asset.ref_id || Math.floor(Math.random()*10000)));
       }
-      this.isRedundant = function(asset) {
+      this.redundantInGroup = function(asset, primary_type) {
+          //return merged asset, so new asset has benefits of both
+
+          self.asset_keys['ref_id'] = self.asset_keys['ref_id'] || {};
+          var list = self.asset_keys[primary_type] = (self.asset_keys[primary_type] || {});
+          var merge_with = false;
+          if (asset.ref_id && asset.ref_id in self.asset_keys['ref_id']) {
+              //a hack to let the page match two assets explicitly
+              merge_with = self.asset_keys['ref_id'][asset.ref_id];
+          } else if (asset.sources[primary_type] in list) {
+              //if primary source urls are identical
+              merge_with = list[ asset.sources[primary_type] ];
+          } else if (asset.page_resource
+                     && self.assets_found.length > 1
+                     && self.assets_found[1].page_resource
+                    ) {
+              //if there's only one asset on the page, and the second describes the page (header/oembed)
+              //this is why page_resources should be run last.
+              merge_with = self.assets_found[0];
+          }
+          if (merge_with) {
+              if (merge_with.html_id) {
+                  jQ('#'+merge_with.html_id).remove();
+                  delete merge_with.html_id;//so it doesn't over-write asset
+              }
+              //jQuery 1.0compat (for drupal)
+              jQ.extend(merge_with.sources, asset.sources);
+              ///not trying to merge individual arrays
+              if (merge_with.metadata && asset.metadata)
+                  jQ.extend(merge_with.metadata, asset.metadata);
+              jQ.extend(asset, merge_with);
+          }
+          list[asset.sources[primary_type]] = asset;
+          if (asset.ref_id)
+              self.asset_keys['ref_id'][asset.ref_id] = asset;
+          return asset;
+      }
+      this.mergeRedundant = function(asset) {
           ///assumes assets without primary types could be redundant on anything
+          ///actually, all assets must have a primary_type for assetHtmlID()
           if (asset.primary_type) {
               return this.redundantInGroup(asset, asset.primary_type);
           } else {
+              throw Error("asset does not have a primary type.");
               for (s in this.asset.sources) {
                   if (s=='url' || s.indexOf('-metadata') > -1) 
                       continue;
-                  if (this.redundantInGroup(asset, s))
-                      return true;
+                  var rig = this.redundantInGroup(asset, s);
+                  if (rig) return rig;
               }
-              return false;
+              return asset;
           }
       };
       this.collectAssets = function(assets,errors) {
           self.assets_found.push.apply(self.assets_found,assets);
           for (var i=0;i<assets.length;i++) {
               self.no_assets_yet = false;
-              ///TODO: if redundant, then should we 'merge' instead of drop
-              ///      for metadata, etc.
-              if (! self.isRedundant(assets[i]) ) {
-                  self.displayAsset(assets[i]);
-              }
+              self.displayAsset(self.mergeRedundant(assets[i]));
           }
           ++self.handler_count;
           if (self.handler_count >= self.final_count) {
@@ -890,7 +1017,14 @@ SherdBookmarklet = {
           }
       };
       this.displayAsset = function(asset) {
+          if (!asset) return;
+          asset.html_id = self.assetHtmlID(asset);
           var doc = comp.ul.ownerDocument;
+          var done_already = doc.getElementById(asset.html_id);
+          if (done_already != null) {
+              jQ(done_already.parentNode).remove();
+          }
+
           var li = doc.createElement("li");
           var jump_url = M.obj2url(host_url, asset);
           var form = M.obj2form(host_url, asset, doc);
@@ -901,7 +1035,9 @@ SherdBookmarklet = {
           if (img) {
               form.firstChild.innerHTML = "<img src=\""+img+"\" style=\"width:20%;max-width:120px;max-height:120px;\" /> ";
           }
-          form.lastChild.innerHTML = "<input type=\"submit\"  value=\"analyze\" />";
+          form.lastChild.innerHTML = "<input type=\"submit\"  style=\"padding:4px;margin:4px;\" value=\"analyze\" />";
+
+          li.id = asset.html_id;
           li.appendChild(form);
           if (comp.ul) {
               if (comp.ul.firstChild != null 

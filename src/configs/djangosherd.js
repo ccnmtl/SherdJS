@@ -230,7 +230,6 @@ function DjangoSherd_Storage() {
             ann.asset = json.assets[ann.asset_key];
             ann.annotations = [ann.annotation];
             _annotations[ann.id] = ann;
-            //console.log(ann);
         }
         return true;//success?
     }

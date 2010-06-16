@@ -181,6 +181,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 rc.url = obj.video;
                 rc.provider = '';
             }
+            if (rc.provider == 'pseudo' && /\{start\}/.test(rc.url)) {
+                var pieces = rc.url.split('?');
+                rc.queryString = escape('?'+pieces.pop());
+                rc.url = pieces.join('?');
+            }
             return rc;
         }
         
@@ -234,16 +239,21 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     playlist: [ 
                         { 
                             url: create_obj.playerParams.url,
-                            autoPlay: create_obj.object.autoplay ? true : false,
-                            provider: create_obj.playerParams.provider
+                            autoPlay: create_obj.object.autoplay ? true : false
+                            //provider: added below conditionally
                         } 
                     ]
                 };
-                
+                if (create_obj.playerParams.provider) {
+                    options.playlist[0].provider = create_obj.playerParams.provider;
+                }
+            
                 if (create_obj.playerParams.provider == 'pseudo') {
                     autoBuffering = true;
-                    if (create_obj.object.querystring)
-                        options.plugins.pseudo.queryString = create_obj.object.querystring;
+                    ///TODO: when we can do update() we'll need to make each clip
+                    ///      with its own plugin and load them with player.loadPluginWithConfig()
+                    if (create_obj.playerParams.queryString)
+                        options.plugins.pseudo.queryString = create_obj.playerParams.queryString;
                 }
                 
                 if (create_obj.playerParams.provider == 'rtmp') {
