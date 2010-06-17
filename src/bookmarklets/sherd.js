@@ -485,7 +485,30 @@ SherdBookmarklet = {
                           "ref_id":($f && $f.id() || undefined) //used for merging
                       };
                   }
-              }/*end flowplayer3*/
+              },/*end flowplayer3*/
+              "flvplayer_progressive":{///used at web.mit.edu/shakespeare/asia/
+                  match:function(emb) {
+                      ///ONLY <EMBED>
+                      return String(emb.src).match(/FLVPlayer_Progressive\.swf/);
+                  },
+                  asset:function(emb,match,context) {
+                      var abs = SherdBookmarklet.absolute_url;
+                      var flashvars = emb.getAttribute('flashvars');
+                      if (flashvars) {
+                          var stream = flashvars.match(/streamName=([^&]+)/);
+                          if (stream != null) {
+                              return {
+                                  "html":emb,
+                                  "primary_type":'flv',
+                                  "sources":{
+                                      'flv':abs(stream[1],context.document)+'.flv'
+                                  }
+                              };
+                          }
+                      }
+                      return {};
+                  }
+              }/*end flvplayer_progressive*/
           },
           find:function(callback,context) {
               var self = this;
@@ -500,7 +523,8 @@ SherdBookmarklet = {
                       var m = self.players[p].match(oe);
                       if (m != null) {
                           var res = self.players[p].asset(oe, m, context, result.length, finished);
-                          result.push(res);
+                          if (res.sources)
+                              result.push(res);
                           if (res.wait) {
                               ++waiting;
                           }
@@ -882,7 +906,6 @@ SherdBookmarklet = {
       }
   },
   "absolute_url":function (maybe_local_url, doc) {
-      ///TODO: deal with ../ or I guess they should still work, even if unconverted
       if (/:\/\//.test(maybe_local_url)) {
           return maybe_local_url;
       } else {
@@ -890,7 +913,12 @@ SherdBookmarklet = {
           if (maybe_local_url.indexOf('/') == 0) {
               return cur_loc.splice(0,3).join('/') + maybe_local_url;
           } else {
-              cur_loc.pop();
+              cur_loc.pop();///filename
+              
+              while (maybe_local_url.indexOf('../') == 0) {
+                  cur_loc.pop();
+                  maybe_local_url = maybe_local_url.substr(3);
+              }
               return cur_loc.join('/') + '/' + maybe_local_url;
           }
       }
@@ -1134,10 +1162,10 @@ SherdBookmarklet = {
                   if (area > max) {
                       rv.best = context;
                   }
-                  jQ('frame',doc).each(_walk);
+                  jQ('frame,iframe',doc).each(_walk);
               } catch(e) {/*probably security error*/}
           }
-          jQ('frame').each(_walk);
+          jQ('frame,iframe').each(_walk);
           return rv;
       }
 
