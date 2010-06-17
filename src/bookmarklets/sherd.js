@@ -13,6 +13,13 @@ SherdBookmarklet = {
           SherdBookmarkletOptions.onJQuery = func;
       }
   },
+  update_user_status:function(user_status) {
+      SherdBookmarklet.user_status = user_status;
+      //find assets again, so obj2form can include metadata
+      if (user_status.ready && SherdBookmarklet.g) {
+          SherdBookmarklet.g.findAssets();
+      }
+  },
   "hosthandler": {
     /*Try to keep them ALPHABETICAL by 'brand' */
     "library.artstor.org": {
@@ -356,6 +363,7 @@ SherdBookmarklet = {
                           label:"youtube video",
                           sources: {
                               "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
+                              ///DOCS: http://code.google.com/apis/youtube/2.0/reference.html#Searching_for_videos
                               "gdata":'http://gdata.youtube.com/feeds/api/videos/'+VIDEO_ID
                           }};
                       var yt_callback = 'sherd_youtube_callback_'+index;
@@ -382,10 +390,6 @@ SherdBookmarklet = {
                           dataType: 'script',
                           error:function(){optional_callback(index);}
                       });
-                      /*use http://gdata.youtube.com/feeds/api/videos/?q=KP-nVpOLW88&v=2&alt=json-in-script&callback=myFunction
-                        so we need to pass in the callback stuff here.
-                        http://code.google.com/apis/youtube/2.0/reference.html#Searching_for_videos
-                       */
                       return rv;
                   }
               },/*end youtube embeds*/
@@ -764,7 +768,10 @@ SherdBookmarklet = {
           var item = doc.createElement("input");
           if (name=="title") {
               item.type = "text";
-              item.setAttribute("style", "display:block;width:90%");
+              //IE7 doesn't allow setAttribute here, mysteriously
+              item.style.display = "block";
+              item.style.width = "90%";
+              item.className = "sherd-form-title";
           } else {
               item.type = "hidden";
           }
@@ -1074,17 +1081,17 @@ SherdBookmarklet = {
           var li = doc.createElement("li");
           var jump_url = M.obj2url(host_url, asset);
           var form = M.obj2form(host_url, asset, doc);
-          var t = form.elements["title"];
-          if (t && t.previousSibling) /*IE7 breaks here */
-              t.previousSibling.innerHTML = "<div>Guessed title:</div>";
+          li.id = asset.html_id;
+          li.appendChild(form);
+
+          jQ('input.sherd-form-title',form).prev().html("<div><label for='title'>Guessed title:</label></div>");
+
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
               form.firstChild.innerHTML = "<img src=\""+img+"\" style=\"width:20%;max-width:120px;max-height:120px;\" /> ";
           }
-          form.lastChild.innerHTML = "<input type=\"submit\"  style=\"padding:4px;margin:4px;\" value=\"analyze\" />";
+          form.lastChild.innerHTML = "<input type=\"submit\"  style=\"display:block;padding:4px;margin:4px;\" value=\"analyze\" />";
 
-          li.id = asset.html_id;
-          li.appendChild(form);
           if (comp.ul) {
               if (comp.ul.firstChild != null 
                   && comp.ul.firstChild.innerHTML == o.no_assets_message) {
