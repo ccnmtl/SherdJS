@@ -370,7 +370,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             return (status == 'Playable' || status == 'Complete');
         };
 
-        this.media.seek = function(starttime, endtime) {
+        this.media.seek = function(starttime, endtime, autoplay) {
             if (self.media.ready()) {
                 var p = self.components.player;
                 if (starttime != undefined) {
@@ -380,7 +380,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     try {
                         p.SetTime(starttime * self.media.timescale());
                     } catch(e) {}
-                    if (self.components.autoplay || playRate != 0) {
+                    if (autoplay || self.components.autoplay || playRate != 0) {
                         p.Play();
                     }
                 }

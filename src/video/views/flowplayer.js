@@ -339,7 +339,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             return ready;
         }
         
-        this.media.seek = function(starttime, endtime) {
+        this.media.seek = function(starttime, endtime, autoplay) {
             // this might need to be a timer to determine "when" the media player is ready
             // it's working differently from initial load to the update method
             if (!self.media.ready()) {
@@ -362,7 +362,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 // In an update situation, we need a little time for the seek 
                 // to happen before play occurs. Otherwise, the movie just
                 // starts from the beginning of the clip and ignores the seek
-                if (self.components.autoplay && self.media.state() != 3) {
+                if ((autoplay || self.components.autoplay) && self.media.state() != 3) {
                     setTimeout(function() {
                         self.media.play();
                     },100);
