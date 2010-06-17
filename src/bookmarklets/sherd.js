@@ -508,7 +508,29 @@ SherdBookmarklet = {
                       }
                       return {};
                   }
-              }/*end flvplayer_progressive*/
+              },/*end flvplayer_progressive*/
+              "quicktime":{
+                  match:function(obj) {
+                      return (obj.classid=="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" 
+                              || String(obj.type).match(/quicktime/));
+                  },
+                  asset:function(obj,match,context) {
+                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                      var abs = SherdBookmarklet.absolute_url;
+                      var src = jQ('param[name=src],param[name=SRC]',obj);
+                      if (src.length) {
+                          return {
+                              "html":obj,
+                              "primary_type":'quicktime',
+                              "sources":{
+                                  "quicktime":abs(src.get(0).value, context.document)
+                              }
+                          }
+                      } else {
+                          return {};
+                      }
+                  }                  
+              }
           },
           find:function(callback,context) {
               var self = this;
@@ -568,19 +590,21 @@ SherdBookmarklet = {
               var result = [];
               for (var i=0;i<imgs.length;i++) {
                   //IGNORE headers/footers/logos
-                  if (/(footer|header)/.test(imgs[i].className)
-                      ||/site_title/.test(imgs[i].parentNode.parentNode.className)//WGBH header
-                      ||/logo/.test(imgs[i].id) //drupal logo
+                  var image = imgs[i];
+                  if (/(footer|header)/.test(image.className)
+                      ||/site_title/.test(image.parentNode.parentNode.className)//WGBH header
+                      ||/logo/.test(image.id) //drupal logo
+                      ||/logo\W/.test(image.src) //web.mit.edu/shakespeare/asia/
                      ) continue;
                   /*use offsetWidth, so display:none's are excluded */
-                  if (imgs[i].offsetWidth > 400 || imgs[i].offsetHeight > 400) {
+                  if (image.offsetWidth > 400 || image.offsetHeight > 400) {
                       result.push({
-                          "html":imgs[i],
+                          "html":image,
                           "primary_type":"image",
                           "sources": {
-                              "title":imgs[i].title || undefined,
-                              "image":imgs[i].src,
-                              "image-metadata":"w"+imgs[i].width+"h"+imgs[i].height
+                              "title":image.title || undefined,
+                              "image":image.src,
+                              "image-metadata":"w"+image.width+"h"+image.height
                           }
                       });
                   }
