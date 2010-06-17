@@ -74,36 +74,6 @@ SherdBookmarklet = {
             });
         }
     },
-    "digitaltibet.ccnmtl.columbia.edu": {
-        single:function() {
-            return (document.location.pathname.search("/image/") == 0);
-        },
-        find:function(callback) {
-            var real_site = "http://digitaltibet.ccnmtl.columbia.edu/";
-            var img = jQuery(".node img").get(0);
-            if (!img || !this.single()) 
-                return callback([]);            
-
-            var images = ImageAnnotator.images[0].imager.images; /*annotationfield*/
-            var max_image = images[images.length-1];
-	    var img_base = max_image.src.match(/images\/([^.]+)\./)[1];
-	    var site_base = String(document.location).match(/(.*?)image/)[1];
-	    var extension = max_image.src.substr(max_image.src.lastIndexOf("."));/*.JPG or .jpg--CRAZY!!!*/
-	    var sources = {
-	            "title":jQuery("#node-main h2.title").get(0).innerHTML,
-	            "thumb":site_base+"files/tibet/images/"+img_base+".thumbnail"+extension,
-	            "xyztile":real_site+"files/tibet/images/tiles/"+img_base+"/z${z}/y${y}/x${x}.png",
-	            "image":max_image.src,
-	            "archive":site_base,
-	            "image-metadata":"w"+max_image.width+"h"+max_image.height,
-	            "xyztile-metadata":"w"+max_image.width+"h"+max_image.height
-	    };
-
-            callback( [ {html:img, primary_type:"image", sources:sources} ] );
-        },
-        decorate:function(objs) {
-        }
-    },
     "flickr.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function(jQuery) { 
