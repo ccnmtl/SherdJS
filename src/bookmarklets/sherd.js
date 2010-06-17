@@ -13,12 +13,17 @@ SherdBookmarklet = {
           SherdBookmarkletOptions.onJQuery = func;
       }
   },
+  user_ready:function() {
+      return SherdBookmarklet.user_status.ready;
+  },
   update_user_status:function(user_status) {
-      SherdBookmarklet.user_status = user_status;
-      //find assets again, so obj2form can include metadata
-      if (user_status.ready && SherdBookmarklet.g) {
-          SherdBookmarklet.g.findAssets();
+      for (a in user_status) {
+          window.SherdBookmarklet.user_status[a] = user_status[a];
       }
+      //find assets again, so obj2form can include metadata
+      //if (!uninit && user_status.ready && SherdBookmarklet.g) {
+      //SherdBookmarklet.g.findAssets();
+      //}
   },
   "hosthandler": {
     /*Try to keep them ALPHABETICAL by 'brand' */
@@ -616,7 +621,6 @@ SherdBookmarklet = {
                                   return callback([]);
                               }
                               jQ('description',pb).each(function() {
-                                  //alert(jQ(this).text());this
                                   rv.metadata['description'] = [this.firstChild.data];
                               });
                               jQ('contributor',pb).each(function() {
@@ -758,7 +762,7 @@ SherdBookmarklet = {
           +'</span>';
       form.action = destination;
       form.target = '_top';
-      var ready = SherdBookmarklet.user_status.ready;
+      var ready = window.SherdBookmarklet.user_ready();
       form.method = (ready) ? 'POST' : 'GET'; 
       /* just auto-save immediately
        * this also allows us to send larger amounts of metadata
@@ -1150,6 +1154,9 @@ if (!SherdBookmarkletOptions.decorate) {
     var host_url = o.host_url || o.mondrian_url;//legacy name
     SherdBookmarklet.options = o;
     SherdBookmarklet.debug = o.debug;
+    if (o.user_status) {
+        SherdBookmarklet.update_user_status(o.user_status);
+    }
     SherdBookmarklet.runners[o.action](host_url,true);
 } else {
     var scripts = document.getElementsByTagName("script");
