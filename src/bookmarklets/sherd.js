@@ -805,9 +805,9 @@ SherdBookmarklet = {
           destination += "#"+obj.hash;
       }
       var form = doc.createElement("form");
-      form.innerHTML = '<span></span><span class="">Type: '
+      form.innerHTML = '<span></span><div class="">Type: '
           +(obj.label||obj.primary_type||'Unknown')
-          +'</span>';
+          +'</div>';
       form.action = destination;
       form.target = '_top';
       var ready = window.SherdBookmarklet.user_ready();
@@ -989,7 +989,7 @@ SherdBookmarklet = {
           target.appendChild(comp.top);
           var pageYOffset = self.visibleY(target)+o.top;
 
-          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Assets on this Page</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
+          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an asset to import for analysis</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
           comp.tab = comp.top.firstChild;
           comp.window = comp.top.lastChild;
           comp.ul = comp.top.getElementsByTagName("ul")[0];
@@ -1139,8 +1139,11 @@ SherdBookmarklet = {
           var form = M.obj2form(host_url, asset, doc);
           li.id = asset.html_id;
           li.appendChild(form);
-
-          jQ('input.sherd-form-title',form).prev().html("<div><label for='title'>Guessed title:</label></div>");
+          li.style.listStyleType = 'none';
+          li.style.padding = '4px';
+          li.style.margin = '4px';
+          li.style.border = '1px solid black';
+          jQ('input.sherd-form-title',form).prev().html("<div><label for='title'>Title:</label></div>");
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
