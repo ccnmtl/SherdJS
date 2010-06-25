@@ -60,7 +60,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                       '</div>'
             }
             return create_obj;
-        }
+        };
         
         // self.components -- Access to the internal player and any options needed at runtime
         this.microformat.components = function(html_dom,create_obj) {
@@ -187,7 +187,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 rc.url = pieces.join('?');
             }
             return rc;
-        }
+        };
         
         // expected format: rtmp://uis-cndls-3.georgetown.edu:1935/simplevideostreaming//mp4:clayton.m4v
         this.microformat._parseRtmpUrl = function(url) {
@@ -198,7 +198,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             rc.url = url.substring(idx + 2, url.length);
             
             return rc;
-        }
+        };
         
         
         this.microformat._queueReadyToSeekEvent = function() {
@@ -212,7 +212,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                      self.setState({ start: self.state.starttime, end: self.state.endtime});
                  }
                  }]);
-        }
+        };
         
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
@@ -233,8 +233,22 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         }
                     },
                     plugins: {
-                        pseudo: { url: 'flowplayer.pseudostreaming-3.1.3.swf' },
-                        rtmp: { url: 'flowplayer.rtmp-3.1.3.swf' }
+                        pseudo: { url: 'flowplayer.pseudostreaming-3.2.2.swf' },
+                        rtmp: { url: 'flowplayer.rtmp-3.2.1.swf' },
+                        /*
+                        captions:{ url: 'flowplayer.captions-3.2.1.swf',
+                                   captionTarget:'content'
+                                 },
+                        content:{ url: 'flowplayer.content-3.2.0.swf',
+                                  bottom:45,height:45,backgroundColor:"transparent",backgroundGradient:"none",border:0,textDecoration:"outline",style:{body:{fontSize:14,fontFamily:"Helvetica,Arial",textAlign:"center",color:"#ffffff"}}
+                                },
+                        */
+                        controls:{
+                            autoHide:false,
+                            volume:false,
+                            fullscreen:false
+                        }
+
                     },
                     playlist: [ 
                         { 
@@ -263,7 +277,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 }
                 
                 flowplayer(create_obj.playerID, 
-                           flowplayer.swf_location || "http://releases.flowplayer.org/swf/flowplayer-3.1.5.swf",
+                           flowplayer.swf_location || "http://releases.flowplayer.org/swf/flowplayer-3.2.2.swf",
                            options);
     
                 // Save reference to the player
@@ -286,7 +300,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     setTimeout(function() { if (!self.media.isPlaying()) self.media.play(); if (obj.end) self.media.pauseAt(obj.end); }, 750);
                 });
             }
-        }
+        };
         
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
@@ -299,12 +313,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     duration = fullDuration;
             }
             return duration;
-        }
+        };
         
         this.media.pause = function() {
             if (self.components.player)
                 self.components.player.pause();
-        }
+        };
         
         // this.media.pauseAt notes -- 
         // using the standard timer mechanism
@@ -320,7 +334,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             if (self.components.player) {
                 self.components.player.play();
             }
-        }
+        };
 
         this.media.isPlaying = function() {
             var playing = false;
@@ -328,7 +342,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 playing = (self.media.state() == 3);
             } catch(e) {}
             return playing;
-        }
+        };
         
         this.media.ready = function() {
             ready = false;
@@ -337,7 +351,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             } catch (e) {
             }
             return ready;
-        }
+        };
         
         this.media.seek = function(starttime, endtime, autoplay) {
             // this might need to be a timer to determine "when" the media player is ready
@@ -368,7 +382,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     },100);
                 }
             }
-        }
+        };
         
         this.media.time = function() {
             var time = ((self.media.isPlaying()) 
@@ -378,16 +392,17 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             if (time < 1)
                 time = 0;
             return time;
-        }
+        };
         
         this.media.timestrip = function() {
+            ///TODO: ugh, flowplayer changes scrubber length based on duration timecode
             var w = self.components.width;
             return {w: w,
-                    trackX: 30,
-                    trackWidth: w-225,
+                    trackX: 40,
+                    trackWidth: w-222,
                     visible:true
                    };
-        }
+        };
         
         /**
         Returns the state of the player. Possible values are:
@@ -401,7 +416,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         **/
         this.media.state = function() {
             return self.components.player.getState(); 
-        }
+        };
 
     }
 }

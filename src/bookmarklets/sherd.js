@@ -510,20 +510,23 @@ SherdBookmarklet = {
                   }
               },/*end flvplayer_progressive*/
               "quicktime":{
-                  match:function(obj) {
-                      return (obj.classid=="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" 
-                              || String(obj.type).match(/quicktime/));
+                  match:function(objemb) {
+                      return (objemb.classid=="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" 
+                              || String(objemb.type).match(/quicktime/) != null
+                              || String(objemb.src).match(/\.mov$/) != null
+                             ) || null;
                   },
-                  asset:function(obj,match,context) {
+                  asset:function(objemb,match,context) {
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var abs = SherdBookmarklet.absolute_url;
-                      var src = jQ('param[name=src],param[name=SRC]',obj);
+                      var src = objemb.src || jQ('param[name=src],param[name=SRC]',objemb);
                       if (src.length) {
+                          src = (src.get) ? src.get(0).value : src;
                           return {
-                              "html":obj,
+                              "html":objemb,
                               "primary_type":'quicktime',
                               "sources":{
-                                  "quicktime":abs(src.get(0).value, context.document)
+                                  "quicktime":abs(src, context.document)
                               }
                           }
                       } else {

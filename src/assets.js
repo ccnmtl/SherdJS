@@ -85,6 +85,21 @@ if (!Sherd.GenericAssetView) {
             }
             this.settings.fsiviewer = fsi;
         }
+        this.settings.NONE = {
+            view: {
+                html:{
+                    remove:function(){},
+                    push:function(){}
+                },
+                setState:function(){},
+                getState:function(){},
+                queryformat:{
+                    find:function(){}            
+                }
+            }
+        }
+        this.settings.NONE.clipform = this.settings.NONE.view;
+        this.settings.NONE.clipstrip = this.settings.NONE.view;
         // //API
         var current_type = false;
         this.html = {

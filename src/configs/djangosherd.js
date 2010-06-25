@@ -326,6 +326,8 @@ function DjangoSherd_adaptAsset(asset) {
     } else if (asset.image_fpx && asset.fsiviewer) {
         asset.type = 'fsiviewer';        
         asset.thumbable = true;
+    } else if (asset.archive) {
+        asset.type = "NONE";
     }
     return asset;
 }
