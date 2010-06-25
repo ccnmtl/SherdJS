@@ -664,10 +664,18 @@ SherdBookmarklet = {
                                   },
                                   "metadata":{'subject':[]}
                               };
-                              var pb = SherdBookmarklet.xml2dom(pbcore_xml);
+                              var pb = SherdBookmarklet.xml2dom(pbcore_xml,xhr);
                               if (! jQ('PBCoreDescriptionDocument',pb).length) {
                                   return callback([]);
                               }
+                              jQ('title',pb).each(function() {
+                                  var titleType = jQ('titleType',this.parentNode).text();
+                                  if (titleType == 'Element') {
+                                      rv.sources.title = this.firstChild.data;
+                                  } else {
+                                      rv.metadata[titleType+':Title'] = [this.firstChild.data];
+                                  }
+                              });
                               jQ('description',pb).each(function() {
                                   rv.metadata['description'] = [this.firstChild.data];
                               });
@@ -765,9 +773,7 @@ SherdBookmarklet = {
                           }
                           callback([result]);
                       },
-                      error:function(e) {
-                          callback([]);
-                      }
+                      error:function(e) {callback([]);}
                   });
               } else {
                   callback([]);
@@ -918,8 +924,11 @@ SherdBookmarklet = {
   "hasClass":function (elem,cls) {
       return (" " + (elem.className || elem.getAttribute("class")) + " ").indexOf(cls) > -1;
   },
-  "xml2dom":function (str) {
-      if (window.ActiveXObject) {
+    "xml2dom":function (str,xhr) {
+      if (window.DOMParser) {
+          var p = new DOMParser();
+          return p.parseFromString(str,'text/xml');
+      } else if (window.ActiveXObject) {
           var xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
           xmlDoc.loadXML(str);
           return xmlDoc;
@@ -1050,8 +1059,8 @@ SherdBookmarklet = {
                   ++self.final_count;
               }
               for (h in SherdBookmarklet.assethandler) {
-                      handlers[h].find.call(handlers[h],self.collectAssets,context);
                   try {///DEBUG
+                      handlers[h].find.call(handlers[h],self.collectAssets,context);
                   } catch(e) {
                       ++self.handler_count;
                       SherdBookmarklet.error = e;
