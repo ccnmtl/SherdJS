@@ -136,23 +136,20 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
         }
         // /In published view: decorate annotation links
         
-        DjangoSherd_decorate_citations($$('a.materialCitation'));
+        DjangoSherd_decorate_citations(document);
     });
 }
-function DjangoSherd_decorate_citations(elts) {
-    forEach(elts, function(elt) {// MOCHI
-        var url = elt.getAttribute('href');
-        connect(elt, 'onclick', function(evt) {
-             try {
-                openCitation(url);
-            }catch(e) {
-                if (window.debug) {
-                    logDebug('ERROR opening citation:'+e.message);
-                    //console.log(e);
-                } else return;
-            }
-            evt.preventDefault();// don't open href
-        });
+function DjangoSherd_decorate_citations(parent) {
+    ///decorate LINKS to OPEN annotations
+    jQuery('a.materialCitation',parent).click(function(evt) {
+        try {
+            openCitation(this.href);
+        } catch(e) {
+            if (window.debug && window.console) {
+                console.log('ERROR opening citation:'+e.message);
+            } else return;
+        }
+        evt.preventDefault();
     });
 }
 
