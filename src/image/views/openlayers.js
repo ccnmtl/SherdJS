@@ -316,7 +316,6 @@ if (!Sherd.Image.OpenLayers) {
 		};
 		self.openlayers.vectors.styleMap = new OpenLayers.StyleMap(styles);
 
-		//DEBUG
 		self.openlayers.map.addControl(new OpenLayers.Control.MousePosition());
 
 		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);

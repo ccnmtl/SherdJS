@@ -102,41 +102,13 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
             });
         }
     }
-    addLoadEvent(function() {
-        // /TODO: unHACK HACK HACK
-        // /need to make this more abstracted--where should we test for 'can
-        // thumb'?
-        var materials = $('materials'); // asset table list
-        if (materials) {
-            forEach(ds.annotationMicroformat.find(materials), function(
-                    found_obj) {
-                var ann_obj = ds.annotationMicroformat.read(found_obj);
-                if (ann_obj.asset.thumbable) {// CAN THUMB?
-                    var view;
-                    switch(ann_obj.asset.type) {
-                    case 'image':
-                        view = new Sherd.Image.OpenLayers();
-                        break;
-                    case 'fsiviewer':
-                        view = new Sherd.Image.FSIViewer();
-                        break;
-                    }
-                    ds.thumbs.push(view);
-                    var obj_div = DIV( {
-                        'class' : 'thumb'
-                    });
-                    found_obj.html.parentNode.appendChild(obj_div);
-                    // should probably be in .view
-                    ann_obj.asset.presentation = 'thumb';
-                    // .asset is the only thing used right now
-                    view.html.push(obj_div, ann_obj);
-                    view.setState(ann_obj.annotations[0]);
-                }
-            });
-        }
+    jQuery(function() {
         // /In published view: decorate annotation links
-        
         DjangoSherd_decorate_citations(document);
+
+        ///now done in project.js when the asset_column loads from an ajax call
+        //DjangoSherd_createThumbs(jQuery('#materials').get(0));
+
     });
 }
 function DjangoSherd_decorate_citations(parent) {
@@ -150,6 +122,38 @@ function DjangoSherd_decorate_citations(parent) {
             } else return;
         }
         evt.preventDefault();
+    });
+}
+
+function DjangoSherd_createThumbs(materials) {
+    // /TODO: unHACK HACK HACK
+    // /need to make this more abstracted--where should we test for 'can thumb'?
+    var ds = djangosherd;
+    jQuery(ds.annotationMicroformat.find(materials))
+    .each(function(index) {
+        var found_obj = this;
+        var ann_obj = ds.annotationMicroformat.read(found_obj);
+        if (ann_obj.asset.thumbable) {// CAN THUMB?
+            var view;
+            switch(ann_obj.asset.type) {
+            case 'image':
+                view = new Sherd.Image.OpenLayers();
+                break;
+            case 'fsiviewer':
+                view = new Sherd.Image.FSIViewer();
+                break;
+            }
+            ds.thumbs.push(view);
+            var obj_div = DIV( {
+                'class' : 'thumb'
+            });
+            found_obj.html.parentNode.appendChild(obj_div);
+            // should probably be in .view
+            ann_obj.asset.presentation = 'thumb';
+            // .asset is the only thing used right now
+            view.html.push(obj_div, ann_obj);
+            view.setState(ann_obj.annotations[0]);
+        }
     });
 }
 
