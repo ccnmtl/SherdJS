@@ -33,7 +33,7 @@ if (!Sherd.Video.Helpers) {
         }
 
         return tc.hr + ":" + tc.min + ":" + tc.sec;
-    }
+    };
 
     Sherd.Video.codeToSeconds = function(code) {
         var mvscale = 1;
@@ -52,12 +52,12 @@ if (!Sherd.Video.Helpers) {
             x = parseInt(t.pop(), 10);
         }
         return seconds;
-    }
+    };
     Sherd.Video.Helpers = function() {
         // helper functions
         this.secondsToCode = Sherd.Video.secondsToCode;
         this.codeToSeconds = Sherd.Video.codeToSeconds;
-    }
+    };
 }
 
 if (!Sherd.Video.Base) {
@@ -83,13 +83,13 @@ if (!Sherd.Video.Base) {
                         } ];
                     }
                 }
-                return []
+                return [];
             }
         };
         
         this.microformat = {
             create : function(obj) { // Return the .html embed block for the embedded player 
-                return ''
+                return '';
             }
             ,
             components: unimplemented // Save the player and other necessary state for the control to be updated
@@ -97,7 +97,7 @@ if (!Sherd.Video.Base) {
             find : function(html_dom) { // Find embedded players. Note: Not currently in use.
                 return [ {
                     html : html_dom
-                } ]
+                } ];
             }
             ,
             read : function(found_obj) { // Return serialized description of embedded player. Note: Not currently in use.
@@ -113,14 +113,14 @@ if (!Sherd.Video.Base) {
         };
         
         // AssetView overrides to initialize and deinitialize timers/ui/etc.
-        this.initialize = function() {}
+        this.initialize = function() {};
         
         this.deinitialize = function() {
             if (self.media.isPlaying()) {
                 self.media.pause();
             }
             self.events.clearTimers();
-        }
+        };
 
         // Player specific controls
         this.media = {
@@ -166,11 +166,11 @@ if (!Sherd.Video.Base) {
             }
             ,
             timeStrip : unimplemented
-        }
+        };
 
         this.play = function() {
             this.media.play();
-        }
+        };
 
         // tell me where you are
         this.getState = function() {
@@ -180,7 +180,7 @@ if (!Sherd.Video.Base) {
             state['duration'] = self.media.duration();
             state['timeScale'] = self.media.timescale();
             return state;
-        }
+        };
 
         // did you give me a start point - cue?
         // did you give me an end point -- pause at that end point or jump to
@@ -194,7 +194,7 @@ if (!Sherd.Video.Base) {
                 else
                     this.media.seek(obj.start, obj.end, (options&&options.autoplay || false));
             }
-        }
+        };
 
         if (!this.events) {
             this.events = {};
@@ -203,7 +203,7 @@ if (!Sherd.Video.Base) {
         this.events._timers = {};
         this.events.registerTimer = function(name, timeoutID) {
             this._timers[name] = timeoutID;
-        }
+        };
         
         this.events.killTimer = function(name) {
             if (this._timers[name]) {
@@ -213,14 +213,14 @@ if (!Sherd.Video.Base) {
             } else {
                 return false;
             }
-        }
+        };
 
         this.events.clearTimers = function() {
             for (name in this._timers) {
                 window.clearTimeout(this._timers[name]);
             }
-            this._timers = {}
-        }
+            this._timers = {};
+        };
         
         /*
          * queue() takes a plan of tasks and will perform one after another with
@@ -316,9 +316,9 @@ if (!Sherd.Video.Base) {
                         }, cur.timeout);
                         self.events.registerTimer(name + 'timeout', timeoutID);
                     }
-                }//next()
+                };//next()
                 advance();
             }
-        }//event.queue()
+        };//event.queue()
     };//Sherd.Video.Base
 }

@@ -28,12 +28,11 @@ Sherd.Base = {
             var args = [];
             var m = arguments.length;
             while (--m >= 0) {
-                args.unshift(arguments[m])
+                args.unshift(arguments[m]);
             }
             document.body.appendChild(Sherd.Base
                     .html2dom('<div class="log">' + String(args) + '</div>'));
         }
-        ;
     },
     'html2dom' : function(html_text, doc) {
         // @html_text MUST have no leading/trailing whitespace, and only be one
@@ -91,26 +90,26 @@ Sherd.Base = {
     this.components = {}; // all html refs should go in here
     this.get = function() {
         throw Error("get() not implemented");
-    }
+    };
     this.microformat = function() {
         throw Error("microformat() not implemented");
-    }
+    };
     this.idPrefix = function() {
         return 'domObj';
-    }
+    };
     this.id = function() {
         var _dom = this.get();
         if (!_dom.id) {
             _dom.id = Sherd.Base.newID(this.idPrefix());
         }
         return _dom.id;
-    }
+    };
 
     // var _microformat;
     // this.microformat = function() {return _microformat;}
     this.attachMicroformat = function(microformat) {
         this.microformat = microformat;
-    }
+    };
     this.html = {
         get : function(part) {
             part = (part) ? part : 'media';
@@ -155,7 +154,7 @@ Sherd.Base = {
             } else if (typeof towrite == 'object' && towrite.text) {
                 doc.write(towrite.text);
                 if (towrite.htmlID)
-                    self.html.put(doc.getElementById(towrite.htmlID))
+                    self.html.put(doc.getElementById(towrite.htmlID));
             }
         },
         replaceContents : function(htmlstring, dom) {
@@ -164,21 +163,21 @@ Sherd.Base = {
 
             }
         }
-    }
+    };//this.html
 
 }// DomObject
 ,
 'AssetView' : function() { 
-        var self = this;
-        Sherd.Base.DomObject.apply(this);
-
-        this.options = {};
+    var self = this;
+    Sherd.Base.DomObject.apply(this);
+    
+    this.options = {};
         
-        // get/set functions to communicate current state to other players
-        this.getState = function() {}
-        this.setState = function(obj) {}
+    // get/set functions to communicate current state to other players
+    this.getState = function() {};
+    this.setState = function(obj) {};
         
-        if (this.html && !this.html.pull) {
+    if (this.html && !this.html.pull) {
             // NOTE: html.pull is not currently used. 
             this.html.pull = function(dom_or_id, optional_microformat) {
                 // /argument resolution
@@ -194,7 +193,7 @@ Sherd.Base = {
                 self.events.signal(self, 'asset.update');
 
                 return asset;
-            }
+            };
             this.html.push = function(dom_or_id, options) {
                 options = options || {};
                 options.microformat = options.microformat || self.microformat;
@@ -221,7 +220,7 @@ Sherd.Base = {
                         }
                     }
                 }
-            }
+            };
         }
     }// AssetView
     ,
@@ -248,16 +247,16 @@ Sherd.Base = {
             } else if (hasAttr(obj_or_id, 'local_id')) {
                 localid = obj_or_id['local_id'];
             } else {
-                localid = String(++localid_counter)
+                localid = String(++localid_counter);
             }
             return localid;
-        }
+        };
         this._local = function(id, obj) {
             if (arguments.length > 1) {
                 _local_objects[id] = obj;
             }
             return (hasAttr(_local_objects, id)) ? _local_objects[id] : false;
-        }
+        };
         this.load = function(obj_or_id) {
             
         };
@@ -275,9 +274,9 @@ Sherd.Base = {
         
         this._update = function() {
             this.callListeners('update', [ this ]);
-        }
+        };
     }//Storage
-}
+};
 //Base
 
 /* connected functions
@@ -295,12 +294,12 @@ if (typeof MochiKit != 'undefined') {
                 disconnect : function() {
                     MochiKit.Signal.disconnect(disc);
                 }
-            }
+            };
         },
         'signal' : function(subject, event, param) {
             MochiKit.Signal.signal(subject, event, param);
         }
-    }
+    };
 } //mochikit
 else if (typeof jQuery != 'undefined') {
     Sherd.Base.Events = {
@@ -312,16 +311,13 @@ else if (typeof jQuery != 'undefined') {
                 disconnect : function() {
                     disc.unbind(event);
                 }
-            }
+            };
         },
         'signal' : function(subject, event) {
             jQuery(subject).trigger(event);
         }
-    }
+    };
 } //jquery
-else if (typeof YUI != 'undefined') {
-
-}//YUI
 else {
     throw Error("Use a framework, Dude! MochiKit, jQuery, YUI, whatever!");
 }

@@ -167,12 +167,19 @@ function DjangoSherd_Storage() {
     this.initialize = function() {
         ///'json' is used to avoid cache-poisoning the html version of the page
         ///in GoogleChrome when we do Accept:application/json (so back button works)
-        var def = MochiKit.Async.loadJSONDoc('json');
-        def.addCallback(this.json_update)
-    }
+        jQuery.ajax({url:'json',
+                     dataType:'json',
+                     success:this.json_update
+                    });
+    };
     
     this.get = function(subject, callback) {
         var id = subject.id;
+        var obj_type = subject.type || 'annotations';
+        var expected_id = id;
+        if (subject.type == 'asset') {
+            expected_id = 'asset-'+id;
+        }
         var ann_obj = null;
         var delay = false;
         if (id) {
@@ -191,13 +198,15 @@ function DjangoSherd_Storage() {
                     html : _current_citation
                 });// /***faux layer
             } else {
-                var def = MochiKit.Async.loadJSONDoc('/annotations/json/'+id+'/');
-                def.addCallback(function(json) {
-                    if (self.json_update(json)) {
-                        callback(_annotations[id]);
-                    }
-                });
-                delay = true;
+                jQuery.ajax({url:'/'+obj_type+'/json/'+id+'/',
+                             dataType:'json',
+                             success:function(json) {
+                                 if (self.json_update(json)) {
+                                     callback(_annotations[expected_id]);
+                                 }
+                             }
+                            });
+                            delay = true;
             }
         }
         if (!delay && callback) {
@@ -210,7 +219,7 @@ function DjangoSherd_Storage() {
         }
         for (asset_key in json.assets) {
             var a = json.assets[asset_key];
-            for (j in a.sources) {
+            for (var j in a.sources) {
                 a[j] = a.sources[j].url;
                 
                 if (a.sources[j].width) {
@@ -233,7 +242,7 @@ function DjangoSherd_Storage() {
             _annotations[ann.id] = ann;
         }
         return true;//success?
-    }
+    };
     this.initialize();
 }
 
@@ -248,9 +257,7 @@ function DjangoSherd_AssetMicroFormat() {
         dom = dom || document;
         var assets = getElementsByTagAndClassName('div', 'asset-links', dom);
         return map(function(e) {
-            return {
-                html : e
-            }
+            return {"html": e };
         }, assets);
     };
     this.create = function(obj,doc) {
@@ -292,7 +299,7 @@ function DjangoSherd_AssetMicroFormat() {
                 });
 
         return DjangoSherd_adaptAsset(rv);//in-place
-    }
+    };
 }
 
 function DjangoSherd_adaptAsset(asset) {
@@ -339,11 +346,9 @@ function DjangoSherd_AnnotationMicroFormat() {
         dom = dom || document;
         var annotations = getElementsByTagAndClassName('div', 'annotation', dom);
         return map(function(e) {
-            return {
-                html : e
-            }
+            return {"html" : e };
         }, annotations);
-    }
+    };
     this.create = function(obj,doc) {
         ///NOTE: currently only makes header, rather than a full serialization of the object
         var wrapperID = Sherd.Base.newID('djangoannotation');
@@ -389,7 +394,7 @@ function DjangoSherd_AnnotationMicroFormat() {
         ann_data.endCode = video.secondsToCode(ann_data.end);// CHOP
         rv.annotations.push(ann_data);
         return rv;
-    }
+    };
 
 }
 function DjangoSherd_NoteList() {
@@ -415,7 +420,7 @@ function DjangoSherd_NoteForm() {
             self.components.top['annotation-annotation_data'].value = serializeJSON(obj);// TODO
                                                                                             // obj!
         }
-    }
+    };
     // TODO: less barebones
     // 1. send signal for updates when replaced
 }
@@ -449,9 +454,10 @@ function openCitation(url, no_autoplay_or_options) {
 		   ? {autoplay:!no_autoplay_or_options}
 		   : no_autoplay_or_options || {autoplay:true}
 		  );
-    var id = url.match(/(\d+)\/$/).pop();
+    var ann_url = url.match(/(asset|annotations)\/(\d+)\/$/);
+    var id = ann_url.pop();
     var return_value = {};
-    djangosherd.storage.get({id:id}, function(ann_obj) {
+    djangosherd.storage.get({id:id,type:ann_url[1]}, function(ann_obj) {
 	var asset_target = ((options.targets && options.targets.asset) 
 			    ? options.targets.asset
 			    : 'videoclipbox');

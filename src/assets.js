@@ -97,7 +97,7 @@ if (!Sherd.GenericAssetView) {
                     find:function(){}            
                 }
             }
-        }
+        };
         this.settings.NONE.clipform = this.settings.NONE.view;
         this.settings.NONE.clipstrip = this.settings.NONE.view;
         // //API
@@ -151,7 +151,7 @@ if (!Sherd.GenericAssetView) {
                     throw Error("Your asset does not have a (supported) type marked.");
                 }
             }
-        }
+        };
         this.setState = function() {
             if (current_type) {
                 var cur = self.settings[current_type];
@@ -161,14 +161,14 @@ if (!Sherd.GenericAssetView) {
                     self.clipstrip.setState.apply(self.clipstrip,arguments);
                 }
             }
-        }
+        };
         this.getState = function() {
             if (current_type) {
                 return self.settings[current_type].view.getState.apply(
                         self.settings[current_type].view, arguments//special JS magic -- this == view
                         );
             }
-        }
+        };
         this.queryformat = {
             find:function(str) {
                 if (self.settings[current_type].view.queryformat
@@ -178,6 +178,6 @@ if (!Sherd.GenericAssetView) {
                     return [];
                 }
             }
-        }
-    }//GenericAssetView
+        };
+    };//GenericAssetView
 }

@@ -2,7 +2,7 @@ if (!Math.log2) {
     var div = Math.log(2);
     Math.log2 = function(x) {
 	return Math.log(x)/div;
-    }
+    };
 }
 if (!window.console) {
     window.console = {log:function(){}};
@@ -57,8 +57,8 @@ if (!Sherd.Image.OpenLayers) {
 
 	this.presentations = {
 	    'thumb':{
-		height:function(){return '100px'},
-		width:function(){return '100px'},
+		height:function(){return '100px';},
+		width:function(){return '100px';},
 		initialize:function(obj,presenter){
 		    ///remove controls
 		    var m = presenter.openlayers.map;
@@ -68,8 +68,8 @@ if (!Sherd.Image.OpenLayers) {
 		}
 	    },
 	    'default':{
-		height:function(obj,presenter){return (Mochi.getViewportDimensions().h-250 )+'px'},
-		width:function(obj,presenter){return '100%'},
+		height:function(obj,presenter){return (Mochi.getViewportDimensions().h-250 )+'px';},
+		width:function(obj,presenter){return '100%';},
 		initialize:function(obj,presenter){
 		    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
 		    connect(window,'onresize',function() {
@@ -78,11 +78,11 @@ if (!Sherd.Image.OpenLayers) {
 		}
 	    },
 	    'small':{
-		height:function(){return '240px'},
-		width:function(){return '320px'},
+		height:function(){return '240px';},
+		width:function(){return '320px';},
 		initialize:function(){/*noop*/}
 	    }
-	}
+	};
 
 	this.currentfeature = false;
 
@@ -103,7 +103,7 @@ if (!Sherd.Image.OpenLayers) {
 		geojson['extent'] = m.getMaxExtent().toArray();
 	    }
 	    return geojson;
-	}
+	};
 	this.setState = function(obj) {
 	    var state = {
 		/*
@@ -156,7 +156,7 @@ if (!Sherd.Image.OpenLayers) {
 		    self.openlayers.map.zoomToMaxExtent();
 		}
 	    }
-	}
+	};
 	this.microformat = {};
 	this.microformat.create = function(obj,doc) {
 	    var wrapperID = Sherd.Base.newID('openlayers-wrapper');
@@ -174,15 +174,15 @@ if (!Sherd.Image.OpenLayers) {
 		object:obj,
 		htmlID:wrapperID,
 		text:'<div id="'+wrapperID+'" class="sherd-openlayers-map"></div>'
-	    }
-	}
+	    };
+	};
 	this.microformat.update = function(obj,html_dom) {
 	    ///1. test if something exists in components now (else return false)
 	    ///2. assert( obj ~= from_obj) (else return false)
 
 	    ///TODO (replace map (as a new layer--hide/show?)
 	    
-	}
+	};
 	this.initialize = function(create_obj) {
 	    if (create_obj) {
 	    var top = document.getElementById(create_obj.htmlID);
@@ -279,7 +279,7 @@ if (!Sherd.Image.OpenLayers) {
                             ///END different from XYZ.js                            
                             var path = OpenLayers.String.format(url,{'x': x, 'y': y, 'z': z});
                             return path;
-                        }
+                        };
                     }
 		} else {
 		    var o2b = self.openlayers.object2bounds;
@@ -327,10 +327,10 @@ if (!Sherd.Image.OpenLayers) {
 
 		presentation.initialize(create_obj.object,self);
 	    }
-	}
+	};
 	this.microformat.components = function(html_dom,create_obj) {
 	    return {'top':html_dom};
-	}
+	};
 
 	this.queryformat = {
 	    find:function(str) {
@@ -338,10 +338,10 @@ if (!Sherd.Image.OpenLayers) {
 	    },
 	    read:function(found_obj) {
 	    }
-	}
+	};
 
 
-    }//END Sherd.Image.OpenLayers
+    };//END Sherd.Image.OpenLayers
 
 }//END if (!Sherd.Image.OpenLayers)
 

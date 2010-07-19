@@ -53,12 +53,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 htmlID: wrapperID,
                 playerID: playerID, // Used by .initialize post initialization
                 playerParams: params,
-                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper">' +
-                      '   <div style="display:block; width:' + obj.options.width + 'px;' + 
-                          'height:' + obj.options.height + 'px;" id="' + playerID + '">' +  
-                      '   </div>' + 
-                      '</div>'
-            }
+                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper">'
+                    +  '<div class="sherd-flowplayer"'
+                    +       'style="display:block; width:' + obj.options.width + 'px;'
+                    +       'height:' + obj.options.height + 'px;" id="' + playerID + '">'
+                    +  '</div>' 
+                    + '</div>'
+            };
             return create_obj;
         };
         
@@ -122,9 +123,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     // If the url is the same as the previous, just seek to the right spot.
                     // This works just fine.
                     rc = true;
-                }
-                else {
-                    /**
+                } /**
+                    else {
+                    
                      * If a new url is requested --
                      * The clip switches properly. But, it will not seek properly
                      * Ditching this until I have some more time to screw around with it
@@ -140,8 +141,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         self.components.player.setClip(clip);
                         
                         self.microformat._queueReadyToSeekEvent();
-                    **/
                 }
+                    **/
             }
             return rc;
         };
@@ -398,8 +399,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             ///TODO: ugh, flowplayer changes scrubber length based on duration timecode
             var w = self.components.width;
             return {w: w,
-                    trackX: 40,
-                    trackWidth: w-222,
+                    trackX: 43,
+                    trackWidth: w-202,
                     visible:true
                    };
         };
@@ -418,5 +419,5 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             return self.components.player.getState(); 
         };
 
-    }
+    };
 }

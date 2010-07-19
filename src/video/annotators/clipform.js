@@ -20,12 +20,12 @@ function DjangoSherd_ClipForm() {
     
     this.attachView = function(view) {
         this.targetview = view;
-    }
+    };
     
     this.targetstorage = [];
     this.addStorage = function(stor) {
         this.targetstorage.push(stor);
-    }
+    };
 
     // @todo -- this getState is what is used for storing
     // all the data about the video. would be better if
@@ -45,7 +45,7 @@ function DjangoSherd_ClipForm() {
         };
        
         return obj;
-    }
+    };
 
     this.setState = function(obj) {
         if (typeof obj == 'object') {
@@ -72,7 +72,7 @@ function DjangoSherd_ClipForm() {
             if (end != undefined)
                 self.events.signal(djangosherd, 'clipend', { end: codeToSeconds(end) });
         }
-    }
+    };
 
     this.storage = {
         update : function(obj, just_downstream) {
@@ -85,7 +85,7 @@ function DjangoSherd_ClipForm() {
                 }
             }
         }
-    }
+    };
 
     this.initialize = function(create_obj) {
         // MochiKit!!!
@@ -137,8 +137,8 @@ function DjangoSherd_ClipForm() {
         connect(self.components.playClip, 'onclick', function(evt) {
             var obj = self.getState();
             self.events.signal(djangosherd, 'playclip', { start: obj.start, end: obj.end });
-        })
-    }
+        });
+    };
     
     this.microformat.create = function(obj) {
         var htmlID = 'clipform';
@@ -170,8 +170,8 @@ function DjangoSherd_ClipForm() {
                           </table>\
                       </div>\
                     </div></div>'
-        }
-    }
+        };
+    };
     
     this.microformat.components = function(html_dom, create_obj) 
     {
@@ -183,6 +183,6 @@ function DjangoSherd_ClipForm() {
             'startField' : document.getElementById('clipStart'),
             'endField' : document.getElementById('clipEnd'),
             'playClip' : document.getElementById('btnPlayClip')
-        }
-    }
+        };
+    };
 }
