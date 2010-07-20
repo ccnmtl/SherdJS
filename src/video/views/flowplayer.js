@@ -206,7 +206,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             self.events.queue('flowplayer ready to seek',[
                  {test: function() {
                      // Is the player ready yet?
-                     return self.media.state() > 2;
+                     return (self.media.state() > 2
+                             && self.media.duration() > 0 );
                  }, poll:500},
                  {call: function() {
                      self.events.signal(djangosherd, 'duration', { duration: self.media.duration() });

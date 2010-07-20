@@ -37,7 +37,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
 
     this.attachView = function(view) {
         this.targetview = view;
-    }
+    };
 
     this.getState = function() {
         var obj = {};
@@ -47,7 +47,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
         obj.duration = self.components.duration;
         obj.timestrip = self.components.timestrip;
         return obj;
-    }
+    };
 
     this.setState = function(obj) {
         if (typeof obj == 'object') {
@@ -59,7 +59,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
                 c.endtime = obj.end || c.starttime;
 
                 if (obj.duration > 1) {
-                    c.duration = obj.duration
+                    c.duration = obj.duration;
                     self.microformat._resize();
                 } else {
                     self.events.queue('quicktime has duration',
@@ -77,7 +77,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
             }
             return true;
         }
-    }
+    };
     
     // Event Listener: duration - from player
     // Assumes start & end times have been initialized through setState or are defaulted
@@ -86,16 +86,16 @@ if (!Sherd.Video.Annotators.ClipStrip) {
             self.components.duration = obj.duration;
             self.microformat._resize();
         }
-    }
+    };
     
     // Event Listener: clipstart - from clipform
     // Assumes self.components.duration has been initialized either through setState or setClipDuration
     this.setClipStart = function(obj) {
-        if (obj.start != undefined && self.components.duration) {
+        if (typeof obj.start != 'undefined' && self.components.duration) {
             self.components.starttime = obj.start;
             self.microformat._resize();
         }
-    }
+    };
     
     // Event Listener: clipend - from clipform
     // Assumes self.components.duration has been initialized
@@ -104,7 +104,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
             self.components.endtime = obj.end;
             self.microformat._resize();
         }
-    }
+    };
 
     this.initialize = function(create_obj) {
         // MochiKit!!!
@@ -127,7 +127,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
         
         // setup the clip markers in the default position
         self.microformat._resize();
-    }
+    };
 
     this.microformat.create = function(obj) {
         var htmlID = 'clipStrip';
@@ -142,8 +142,8 @@ if (!Sherd.Video.Annotators.ClipStrip) {
                             '<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>' + 
                         '</div>' + 
                     '</div>'
-        }
-    }
+        };
+    };
     
     // self.components -- Access to the internal player and any options needed at runtime
     this.microformat.components = function(html_dom,create_obj) {
@@ -157,10 +157,10 @@ if (!Sherd.Video.Annotators.ClipStrip) {
                 starttime: 0,
                 endtime: 0,
                 duration: 0
-            }
+            };
         } catch(e) {}
         return false;
-    }
+    };
     
     this.microformat._resize = function() {
         left = self.microformat._timeToPixels(self.components.starttime, self.components.duration, self.components.timestrip.trackWidth);
@@ -176,7 +176,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
         self.components.clipStartMarker.style.display = 'block';
         self.components.clipRange.style.display = 'block';
         self.components.clipEndMarker.style.display = 'block';
-    }
+    };
     
     this.microformat._timeToPixels = function(seconds, duration, width) {
        if (duration > 0) {
@@ -185,7 +185,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
        } else {
            return 0;
        }
-    }
+    };
  };
 
 }

@@ -49,7 +49,6 @@ function DjangoSherd_ClipForm() {
 
     this.setState = function(obj) {
         if (typeof obj == 'object') {
-            
             var start;
             if (obj.startCode) {
                 start = self.components.startField.value = obj.startCode;
@@ -90,16 +89,17 @@ function DjangoSherd_ClipForm() {
     this.initialize = function(create_obj) {
         // MochiKit!!!
         connect(self.components.startButton, 'onclick', function(evt) {
-                var movieTime = self.targetview.media.time();
-                var movieTimeCode = secondsToCode(movieTime);
+            var movieTime = self.targetview.media.time();
+            var movieTimeCode = secondsToCode(movieTime);
+            
+            self.components.startField.value = movieTimeCode; // update start time with movie time
                 
-                self.components.startField.value = movieTimeCode; // update start time with movie time
-                
-                if (movieTime > codeToSeconds(self.components.endField.value))
-                    self.components.endField.value = movieTimeCode; // update end time if start time is greater
-                
-                self.storage.update(self.getState(), false);
-            });
+            if (movieTime > codeToSeconds(self.components.endField.value)) {
+                // update end time if start time is greater
+                self.components.endField.value = movieTimeCode; 
+            }
+            self.storage.update(self.getState(), false);
+        });
         connect(self.components.endButton, 'onclick', function(evt) {
                 var movieTime = self.targetview.media.time();
                 var movieTimeCode = secondsToCode(movieTime);
@@ -144,32 +144,32 @@ function DjangoSherd_ClipForm() {
         var htmlID = 'clipform';
         return {
             htmlID : htmlID,
-            text : '<div id="' + htmlID + '">\
-                    <div id="clipcontrols">\
-                       <div class="cliptimeboxtable" style="width: 320px;">\
-                          <table width="100%" border="0" cellspacing="0" cellpadding="0">\
-                              <tr>\
-                              <td style="padding: 10px 2px 10px 7px;">\
-                                  <input type="button" class="regButton" style="width: 70px" value="start time:" id="btnClipStart"/>\
-                              </td>\
-                              <td style="padding: 10px 10px 10px 2px; border-right: 1px dotted #999;">\
-                                <input type="text" class="timecode" id="clipStart" value="00:00:00" />\
-                              </td>\
-                              <td style="padding: 10px 2px 10px 7px;">\
-                                 <input type="button" class="regButton" style="width: 70px" value="end time:" id="btnClipEnd"/>\
-                              </td>\
-                              <td style="padding: 10px 10px 10px 2px;">\
-                                  <input type="text" class="timecode" id="clipEnd" value="00:00:00" />\
-                              </td>\
-                            </tr>\
-                            <tr>\
-                               <td colspan="4" style="text-align: center; border-top: 2px solid #999; padding: 10px 0px">\
-                                  <input type="button" class="regButton" style="width: 100px" value="play portion" id="btnPlayClip"/>\
-                               </td>\
-                            </tr>\
-                          </table>\
-                      </div>\
-                    </div></div>'
+            text : '<div id="' + htmlID + '">'
+                +'<div id="clipcontrols">'
+                +   '<div class="cliptimeboxtable" style="width: 320px;">'
+                +      '<table width="100%" border="0" cellspacing="0" cellpadding="0">'
+                +       '<tr>'
+                +         '<td style="padding: 10px 2px 10px 7px;">'
+                +           '<input type="button" class="regButton" style="width: 70px" value="start time:" id="btnClipStart"/>'
+                +         '</td>'
+                +         '<td style="padding: 10px 10px 10px 2px; border-right: 1px dotted #999;">'
+                +           '<input type="text" class="timecode" id="clipStart" value="00:00:00" />'
+                +         '</td>'
+                +         '<td style="padding: 10px 2px 10px 7px;">'
+                +           '<input type="button" class="regButton" style="width: 70px" value="end time:" id="btnClipEnd"/>'
+                +         '</td>'
+                +         '<td style="padding: 10px 10px 10px 2px;">'
+                +           '<input type="text" class="timecode" id="clipEnd" value="00:00:00" />'
+                +         '</td>'
+                +       '</tr>'
+                +       '<tr>'
+                +         '<td colspan="4" style="text-align: center; border-top: 2px solid #999; padding: 10px 0px">'
+                +           '<input type="button" class="regButton" style="width: 100px" value="play portion" id="btnPlayClip"/>'
+                +         '</td>'
+                +       '</tr>'
+                +      '</table>'
+                +  '</div>'
+                +'</div></div>'
         };
     };
     
