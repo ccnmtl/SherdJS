@@ -104,6 +104,10 @@ SherdBookmarklet = {
 
                 jQuery.getJSON(baseUrl + "&method=flickr.photos.getInfo",
                     function(getInfoData) {
+                        if (getInfoData.photo.media=="video") {
+                            /*video is unsupported*/
+                            return callback([]);
+                        }
                         jQuery.getJSON(baseUrl + "&method=flickr.photos.getSizes",
                             function(getSizesData) {
                                 var w=0, 
@@ -881,7 +885,7 @@ SherdBookmarklet = {
                     M.run_with_jquery(grabber_func);
                     return;
                 }
-                var message = error||"This page does not contain an asset. Try going to an asset page.";
+                var message = error||"This page does not contain any supported media assets. Try going to an asset page.";
                 return alert(message);
             case 1:
                 if (assets[0].disabled)
