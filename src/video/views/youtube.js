@@ -39,7 +39,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             
             // massage the url options if needed, take off everything after the ? mark
             var url;
-            idx = obj.youtube.indexOf('?');
+            var idx = obj.youtube.indexOf('?');
             if (idx > -1) {
                 url = obj.youtube.substr(0, idx);
             } else {
@@ -50,7 +50,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             // For FF, the id needs to be placed in the embed.
             var objectID = '';
             var embedID = '';
-            if (navigator.userAgent.indexOf("MSIE") > -1) {
+            if (window.navigator.userAgent.indexOf("MSIE") > -1) {
                 objectID = 'id="' + playerID + '"';
             } else {
                 embedID = 'id="' + playerID + '"';
@@ -80,7 +80,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                         '  </embed>' + 
                         '</object>' + 
                       '</div>'
-            }
+            };
         };
         
         // self.components -- Access to the internal player and any options needed at runtime
@@ -146,7 +146,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     self.setState(obj);
                     self.media.play();
                 });
-        }
+        };
         
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
@@ -175,30 +175,33 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         // a problem if we ever have multiple players on the page
         window.onYTStateChange = function(newState) {
             //log('window.onYTStateChange: ' + newState);
-            
-            if (newState == 1) {
+            switch (newState) {
+            case 1:
                 var duration = self.media.duration();
                 if (duration > 1) {
                     self.events.signal(djangosherd, 'duration', { duration: duration });
                 }
-            } else if (newState == 2 || newState == 0) { // stopped or ended
-                self.events.clearTimers();
+                break;
+            case 2:// stopped or ended
+            case 0:
+                self.events.clearTimers();                
+                break;
             }
-        }
+        };
         
         this.media.duration = function() {
-            duration = 0;
+            var duration = 0;
             if (self.components.player) {
                 try {
                     duration = self.components.player.getDuration();
                     if (duration < 0)
-                        duration = 0
+                        duration = 0;
                 } catch(e) {
                     // media probably not yet initialized
                 }
             }
             return duration;
-        }
+        };
         
         this.media.pause = function() {
             if (self.components.player) { 
@@ -206,7 +209,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     self.components.player.pauseVideo();
                 } catch (e) {}
             }
-        }
+        };
         
         this.media.play = function() {
             if (self.components.player) {
@@ -214,11 +217,11 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     self.components.player.playVideo();
                 } catch (e) {}
             }
-        }
+        };
         
         this.media.ready = function() {
             return self.media._ready;
-        }
+        };
         
         this.media.isPlaying = function() {
             var playing = false;
@@ -254,44 +257,46 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         };
         
         this.media.time = function() {
-            time = 0;
+            var time = 0;
             if (self.components.player) {
                 try {
                     time = self.components.player.getCurrentTime();
                     if (time < 0)
-                        time = 0
+                        time = 0;
                 } catch (e) {
                     // media probably not yet initialized
                 }
             }
             return time;
-        }
+        };
         
         this.media.timestrip = function() {
             var w = self.components.player.width;
             if (self.components.presentation == 'small') {
-                return {w: w,
+                return {
+                    w: w,
                     trackX: 133,
                     trackWidth: 166,
                     visible:true
-                }
+                };
             } else {
-                return {w: w,
+                return {
+                    w: w,
                     trackX: 135,
                     trackWidth: w-180,
                     visible:true
-                }
+                };
             }
-        }
+        };
 
         // Used by tests. Might be nice to refactor state out so that
         // there's a consistent interpretation across controls
         this.media.state = function() {
             return self.components.player.getPlayerState();
-        }
+        };
 
         this.media.url = function() {
             return self.components.player.getVideoUrl();
-        }
-    }
+        };
+    };
 }

@@ -117,9 +117,10 @@ function DjangoSherd_decorate_citations(parent) {
         try {
             openCitation(this.href);
         } catch(e) {
-            if (window.debug && window.console) {
+            if (window.console) {
                 console.log('ERROR opening citation:'+e.message);
-            } else return;
+            } 
+            //if (!window.debug) return;
         }
         evt.preventDefault();
     });

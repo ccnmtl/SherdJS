@@ -8,15 +8,15 @@ if (!Sherd.Image.Annotators.FSIViewer) {
 
 	this.attachView = function(view) {
 	    self.targetview = view;
-	}
+	};
 	this.targetstorage = [];
 	this.addStorage = function(stor) {
 	    this.targetstorage.push(stor);
-	}
+	};
 
 	this.getState = function(){
 	    return self.targetview.getState();
-	}
+	};
 
         this.current_state = null;
 	var mode = 'create';//||'browse'
@@ -54,7 +54,7 @@ if (!Sherd.Image.Annotators.FSIViewer) {
                 self.storage.update(current_state);
 	    });
 
-	}
+	};
 	this.storage = {
 	    'update':function(obj,just_downstream){
 		if (!just_downstream) {
@@ -64,7 +64,7 @@ if (!Sherd.Image.Annotators.FSIViewer) {
 		    self.targetstorage[i].storage.update(obj);
 		}
 	    }
-	}
+	};
 	this.microformat = {
 	    'create':function(){
 		var id = Sherd.Base.newID('openlayers-annotator');
@@ -81,10 +81,10 @@ if (!Sherd.Image.Annotators.FSIViewer) {
 		    'center':buttons[0],
 		    'redo':buttons[1],
                     'instructions':html_dom.getElementsByTagName('p')[0]
-		}
+		};
 	    }
-	}
-    }//END Sherd.Image.Annotators.OpenLayers
+	};
+    };//END Sherd.Image.Annotators.OpenLayers
 }//END if (!Sherd.Image.Annotators.OpenLayers)
 
 

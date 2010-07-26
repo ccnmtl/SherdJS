@@ -13,14 +13,14 @@ if (!Sherd.Image.FSIViewer) {
         this.getState = function() {
             ///see this.initialize() for function that updates current_state
             return self.current_state;
-        }
+        };
 
         this._setState = function(obj) {
             if (obj && obj.set && obj.top) {
                 var clip_string = self.obj2arr(obj).join(', ');
                 self.components.top.SetVariable('FSICMD','Goto:'+clip_string);
             }
-        }
+        };
 
         this.setState = function(obj) {
             if (obj) for (a in obj) {
@@ -30,7 +30,7 @@ if (!Sherd.Image.FSIViewer) {
             if (self.ready) {
                 this._setState(obj); 
             } //else see InitComplete below
-        }            
+        };
         //called when you click on the dots-icon next to the save icon
         ///ArtStor custom button functions
         window.saveToImageGroup = function(clip_string, maybe_name, clip_embed_url) {
@@ -40,38 +40,38 @@ if (!Sherd.Image.FSIViewer) {
             console.log(clip_string);
             console.log(maybe_name);
             console.log(clip_embed_url);
-        }
+        };
         window.saveImage = function(clip_embed_url) {
             console.log(clip_embed_url);
-        }
+        };
         window.printImage = function(clip_embed_url) {
             console.log(clip_embed_url);
-        }
+        };
 
         ///utility functions to move from between array/obj repr
         this.obj2arr = function(o) {
             return [o.set, o.scene, o.left, o.top, o.right, o.bottom, o.rotation];
-        }
+        };
         this.arr2obj = function(a) {
             return {
                 'set':a[0],'scene':a[1],
                 'left':a[2],'top':a[3],'right':a[4],'bottom':a[5],
                 'rotation':a[6]
             };
-        }
+        };
 
 	this.presentations = {
 	    'thumb':{
-		height:function(){return '100px'},
-		width:function(){return '100px'},
+		height:function(){return '100px';},
+		width:function(){return '100px';},
                 extra:'NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
 		initialize:function(obj,presenter){
                     
                 }
 	    },
 	    'default':{
-		height:function(obj,presenter){return (Mochi.getViewportDimensions().h-250 )+'px'},
-		width:function(obj,presenter){return '100%'},
+		height:function(obj,presenter){return (Mochi.getViewportDimensions().h-250 )+'px';},
+		width:function(obj,presenter){return '100%';},
                 extra:'NoNav=undefined&amp;MenuAlign=TL',
 		initialize:function(obj,presenter){
                     connect(window,'onresize',function() {
@@ -82,12 +82,12 @@ if (!Sherd.Image.FSIViewer) {
                 }
 	    },
 	    'small':{
-		height:function(){return '240px'},
-		width:function(){return '320px'},
+		height:function(){return '240px';},
+		width:function(){return '320px';},
                 extra:'NoNav=undefined&amp;MenuAlign=BL',
 		initialize:function(){/*noop*/}
 	    }
-	}
+	};
         this.initialize = function(create_obj) {
             ///copied from openlayers code:
 		var presentation;
@@ -135,14 +135,14 @@ if (!Sherd.Image.FSIViewer) {
                 case 'TooTip': //more or less == hover
                     ///and more
                 }
-            }
+            };
             window[create_obj.htmlID+'_DoFSCommand'] = state_listener;
             window[create_obj.htmlID+'_embed_DoFSCommand'] = state_listener;
-        }
+        };
         this.microformat = {};
         this.microformat.components = function(html_dom, create_obj) {
             return {'top':html_dom};
-        }
+        };
         this.microformat.create = function(obj,doc) {
             var fsi_object_id = Sherd.Base.newID('fsiviewer-wrapper');
             var broken_url = obj.image_fpx.split('/');
@@ -156,6 +156,6 @@ if (!Sherd.Image.FSIViewer) {
                 htmlID:fsi_object_id,
                 text:html
             };
-        }
-    }
+        };
+    };
 }
