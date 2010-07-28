@@ -677,7 +677,9 @@ SherdBookmarklet = {
                               }
                               jQ('title',pb).each(function() {
                                   var titleType = jQ('titleType',this.parentNode).text();
-                                  if (titleType == 'Element') {
+                                  if (titleType == 'Element'
+                                      || document.title.indexOf(this.firstChild.data) > -1
+                                     ) {
                                       rv.sources.title = this.firstChild.data;
                                   } else {
                                       rv.metadata[titleType+':Title'] = [this.firstChild.data];
