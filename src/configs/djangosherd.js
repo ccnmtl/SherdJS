@@ -81,7 +81,7 @@ function DjangoSherd_Asset_Config() {
     });
 }
 
-function DjangoSherd_Project_Config(no_open_from_hash) {
+function DjangoSherd_Project_Config(options) {
     // /# load viewers
     // /# load assetfinders
     // /# if (no_open_from_hash and hash)
@@ -93,7 +93,11 @@ function DjangoSherd_Project_Config(no_open_from_hash) {
     // GenericAssetView is a wrapper in ../assets.js
     ds.assetview = new Sherd.GenericAssetView({ clipform:false, clipstrip: true});
 
-    if (!no_open_from_hash) {
+    if (options.project_json) {
+        ds.storage.get({type:'project',id:'xxx',url:options.project_json});
+    }
+
+    if (options.open_from_hash) {
         var annotation_to_open = String(document.location.hash).match(
                 /annotation=annotation(\d+)/);
         if (annotation_to_open != null) {
@@ -161,49 +165,53 @@ function DjangoSherd_createThumbs(materials) {
 function DjangoSherd_Storage() {
     /* read-only storage repo for annotation objects from MediaThread
      */
-    var self = this;
-    var _current_citation = false;
-    var _annotations = {};
-    var _projects = {};
-    this.initialize = function() {
-        ///'json' is used to avoid cache-poisoning the html version of the page
-        ///in GoogleChrome when we do Accept:application/json (so back button works)
-        jQuery.ajax({url:'json',
-                     dataType:'json',
-                     success:this.json_update
-                    });
-    };
+    var self = this,
+        _current_citation = false,
+        recent_project = false,
+        _cache = {
+            'annotations':{},
+            'asset':{},
+            'project':{}
+        };
     
+    this.lastProject = function() {
+        ///returns the last project info requested.
+        ///used in /media/js/project/project.js of MediaThread
+        return recent_project;
+    }
+
     this.get = function(subject, callback) {
-        var id = subject.id;
-        var obj_type = subject.type || 'annotations';
-        var expected_id = id;
-        if (subject.type == 'asset') {
-            expected_id = 'asset-'+id;
-        }
-        var ann_obj = null;
-        var delay = false;
+        ///currently obj_type in [annotations, asset, project]
+        /// that is used for the URL and a reference to the _cache{} section
+        var id = subject.id,
+            obj_type = subject.type || 'annotations',
+            ann_obj = null,
+            delay = false;
         if (id) {
             if (_current_citation) {
                 removeElementClass(_current_citation, 'active-annotation');
+                _current_citation = null;
             }
-            _current_citation = getFirstElementByTagAndClassName('div',
-                                                                'annotation' + id);
-            if (_current_citation != null)
-                addElementClass(_current_citation, 'active-annotation');
-            
-            if (id in _annotations) {
-                ann_obj = _annotations[id];
-            } else if (_current_citation != null) {
+            if (obj_type == 'annotations') {
+                _current_citation = getFirstElementByTagAndClassName('div',
+                                                                     'annotation'+id);
+                if (_current_citation != null)
+                    addElementClass(_current_citation, 'active-annotation');
+            }
+            if (id in _cache[obj_type]) {
+                ann_obj = _cache[obj_type][id];
+            } else if (_current_citation) {
                 ann_obj = djangosherd.annotationMicroformat.read( {
                     html : _current_citation
                 });// /***faux layer
             } else {
-                jQuery.ajax({url:'/'+obj_type+'/json/'+id+'/',
+                jQuery.ajax({url:(subject.url || '/'+obj_type+'/json/'+id+'/'),
                              dataType:'json',
                              success:function(json) {
-                                 if (self.json_update(json)) {
-                                     callback(_annotations[expected_id]);
+                                 var new_id = self.json_update(json, obj_type);
+                                 if (callback) {
+                                     id = (typeof new_id!='boolean')?new_id:id;
+                                     callback(_cache[obj_type][id])
                                  }
                              }
                             });
@@ -215,8 +223,11 @@ function DjangoSherd_Storage() {
         }
     };
     this.json_update = function(json) {
+        var new_id = true;
         if (json.project) {
-            _projects[json.project.id] = json.project;
+            _cache['project'][json.project.id] = json.project;
+            new_id = json.project.id;
+            recent_project = json.project;
         }
         for (asset_key in json.assets) {
             var a = json.assets[asset_key];
@@ -240,11 +251,13 @@ function DjangoSherd_Storage() {
             var ann = json.annotations[i];
             ann.asset = json.assets[ann.asset_key];
             ann.annotations = [ann.annotation];
-            _annotations[ann.id] = ann;
+            _cache['annotations'][ann.id] = ann;
+            if (json.type == 'asset') {
+                _cache['asset'][ann.asset_id] = ann;
+            }
         }
-        return true;//success?
+        return new_id;
     };
-    this.initialize();
 }
 
 // Object: DjangSherd_AssetMicroFormat
