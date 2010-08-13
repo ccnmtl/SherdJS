@@ -748,10 +748,11 @@ SherdBookmarklet = {
                                   result.primary_type = "image";
                                   result.sources["image"] = json.url;
                                   ///extension: openlayers tiling protocol
-                                  if (json.xyztile) 
+                                  if (json.xyztile) {
                                       var xyz = json.xyztile;
                                       result.sources["xyztile"] = xyz.url;
                                       result.sources["xyztile-metadata"] = "w"+xyz.width+"h"+xyz.height;
+                                  }
                                   break;
                                 case "video":
                                   result.primary_type = "video";
