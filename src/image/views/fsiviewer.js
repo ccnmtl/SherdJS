@@ -64,7 +64,7 @@ if (!Sherd.Image.FSIViewer) {
 	    'thumb':{
 		height:function(){return '100px';},
 		width:function(){return '100px';},
-                extra:'NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
+                extra:'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
 		initialize:function(obj,presenter){
                     
                 }
@@ -72,7 +72,7 @@ if (!Sherd.Image.FSIViewer) {
 	    'default':{
 		height:function(obj,presenter){return (Mochi.getViewportDimensions().h-250 )+'px';},
 		width:function(obj,presenter){return '100%';},
-                extra:'NoNav=undefined&amp;MenuAlign=TL',
+                extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
 		initialize:function(obj,presenter){
                     connect(window,'onresize',function() {
                         var top = presenter.components.top;
@@ -84,7 +84,7 @@ if (!Sherd.Image.FSIViewer) {
 	    'small':{
 		height:function(){return '240px';},
 		width:function(){return '320px';},
-                extra:'NoNav=undefined&amp;MenuAlign=BL',
+                extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=BL',
 		initialize:function(){/*noop*/}
 	    }
 	};
