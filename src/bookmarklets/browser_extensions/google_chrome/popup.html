@@ -1,0 +1,15 @@
+<script src="jquery.min.js"></script>
+<script src="sherd.js"></script>
+<div id="popup" style="width:500px;">
+    No assets found on this page
+</div>
+<button onclick="window.close()">Close</button>
+<script>
+  var popup = document.getElementById("popup");
+  chrome.tabs.getSelected(null, function(tab) {
+      chrome.tabs.sendRequest(tab.id, {sherd:'assets'}, function(response) {
+          //popup.innerHTML = response;
+      });
+  });
+
+</script>

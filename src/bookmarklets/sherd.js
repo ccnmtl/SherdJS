@@ -1223,16 +1223,7 @@ if (!window.SherdBookmarkletOptions) {
     window.SherdBookmarkletOptions = {};
 }
 
-if (!SherdBookmarkletOptions.decorate) {
-    var o = SherdBookmarkletOptions;
-    var host_url = o.host_url || o.mondrian_url;//legacy name
-    SherdBookmarklet.options = o;
-    SherdBookmarklet.debug = o.debug;
-    if (o.user_status) {
-        SherdBookmarklet.update_user_status(o.user_status);
-    }
-    SherdBookmarklet.runners[o.action](host_url,true);
-} else {
+if (SherdBookmarkletOptions.decorate) {
     var scripts = document.getElementsByTagName("script");
     var i = scripts.length;
     while (--i >= 0) {
@@ -1246,4 +1237,23 @@ if (!SherdBookmarkletOptions.decorate) {
             break;
         }
     }
-}
+} else if (chrome && chrome.extension) {
+    ///1. search for assets--as soon as we find one, break out and send show:true
+    ///2. on request, return a full asset list
+    ///3. allow the grabber to be created by sending an asset list to it
+    chrome.extension.sendRequest({show:true}, function(response) {});
+    chrome.extension.onRequest.addListener(
+        function(request,sender,sendResponse) {
+            sendResponse({'assets':[]});
+        });
+} else {
+    var o = SherdBookmarkletOptions;
+    var host_url = o.host_url || o.mondrian_url;//legacy name
+    SherdBookmarklet.options = o;
+    SherdBookmarklet.debug = o.debug;
+    if (o.user_status) {
+        SherdBookmarklet.update_user_status(o.user_status);
+    }
+    SherdBookmarklet.runners[o.action](host_url,true);
+} 
+

@@ -1,0 +1,14 @@
+http://code.google.com/chrome/extensions/
+
+Page action (what we do):
+     http://code.google.com/chrome/extensions/pageAction.html
+
+How a popup works:
+     http://code.google.com/chrome/extensions/browserAction.html#popups
+  
+
+Best related example:
+http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/docs/examples/api/pageAction/pageaction_by_content/
+
+Example with a popup:
+http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/docs/examples/api/browserAction/set_page_color/

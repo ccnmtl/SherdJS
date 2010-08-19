@@ -1,0 +1,29 @@
+{
+  "name": "Mediathread",
+  "version": "0.5",
+  "description": "Find assets to analyze in Mediathread",
+  "background_page":"background.html",
+  "page_action": {
+      "default_name": "Analyze with Mediathread",
+      "default_icon": "icon.png",
+      "default_popup": "popup.html"
+  },
+  "content_scripts" : [
+      {
+        "matches" : [
+          "http://*/*",  
+          "https://*/*"
+        ], 
+        "js" : ["jquery.min.js","sherd.js"],
+        "run_at" : "document_idle",
+        "all_frames" : false
+      }
+  ],
+  "permissions": [
+    "tabs",
+    "http://mediathread.ccnmtl.columbia.edu/*"
+  ],
+  "icons":{
+      "128":"icon.png"
+  }
+}
