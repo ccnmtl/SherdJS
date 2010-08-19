@@ -283,6 +283,9 @@ Sherd.Base = {
  con_func(event,src
  */
 if (typeof MochiKit != 'undefined') {
+    Sherd.winHeight = function() {
+        return MochiKit.Style.getViewportDimensions().h-250;
+    };
     Sherd.Base.Events = {
         'connect' : function(subject, event, self, func) {
             if (typeof subject.nodeType != 'undefined' || subject == window
@@ -302,6 +305,11 @@ if (typeof MochiKit != 'undefined') {
     };
 } //mochikit
 else if (typeof jQuery != 'undefined') {
+    ///TODO: before making jQuery take precedent over MochiKit, we need to
+    /// make sure  viewers using self.events.connect()/signal() work with jQuery
+    Sherd.winHeight = function() {
+        return jQuery(window).height()-235;
+    };
     Sherd.Base.Events = {
         'connect' : function(subject, event, self, func) {
             var disc = jQuery(subject).bind(event, function() {

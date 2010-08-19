@@ -1,3 +1,4 @@
+//jQuery dependencies
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Image) {Sherd.Image = {};}
 if (!Sherd.Image.FSIViewer) {
@@ -5,7 +6,7 @@ if (!Sherd.Image.FSIViewer) {
         var self = this;
         Sherd.Base.AssetView.apply(this,arguments); //inherit
 
-	var Mochi = MochiKit.DOM;
+	var Mochi = MochiKit.Style;
         this.ready = false;
         this.current_state = {type:'fsiviewer'};
         this.intended_states = [];
@@ -70,13 +71,13 @@ if (!Sherd.Image.FSIViewer) {
                 }
 	    },
 	    'default':{
-		height:function(obj,presenter){return (Mochi.getViewportDimensions().h-250 )+'px';},
+		height:function(obj,presenter){return Sherd.winHeight()+'px';},
 		width:function(obj,presenter){return '100%';},
                 extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
 		initialize:function(obj,presenter){
                     connect(window,'onresize',function() {
                         var top = presenter.components.top;
-			top.setAttribute('height',(Mochi.getViewportDimensions().h-250 )+'px');
+			top.setAttribute('height',Sherd.winHeight()+'px');
                         self.current_state.wh_ratio = ( top.width / (top.height-30) );
 		    });
                 }
