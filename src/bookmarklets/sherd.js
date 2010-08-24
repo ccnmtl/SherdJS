@@ -813,8 +813,9 @@ SherdBookmarklet = {
     }
     return destination;
   },/*obj2url*/
-  "obj2form": function(host_url,obj,doc) {
+  "obj2form": function(host_url,obj,doc,target) {
       doc = doc||document;
+      target = target||'_top';
       if (!obj.sources["url"]) obj.sources["url"] = doc.location;
       var destination =  host_url;
       if (obj.hash) {
@@ -825,7 +826,7 @@ SherdBookmarklet = {
           +(obj.label||obj.primary_type||'Unknown')
           +'</div>';
       form.action = destination;
-      form.target = '_top';
+      form.target = target;
       var ready = window.SherdBookmarklet.user_ready();
       form.method = (ready) ? 'POST' : 'GET'; 
       /* just auto-save immediately
@@ -1131,11 +1132,12 @@ SherdBookmarklet = {
       }
 
   },
-  "Grabber" : function (host_url, page_handler, options) {
+  "Grabber" : function (host_url, options) {
       var M = SherdBookmarklet;
       this.options = {
           tab_label:"Analyze in Mediathread",
           target:((M.hasBody(document))? document.body : null),
+          postTarget:'_top',
           top:100,
           side:"left",
           fixed:true,
@@ -1198,14 +1200,14 @@ SherdBookmarklet = {
 
       this.findAssets = function() {
           self.showWindow();
-          var finder = new M.Finder();
+          self.finder = new M.Finder();
 
-          finder.ASYNC.display = self.displayAsset;
-          finder.ASYNC.remove = self.removeAsset;
-          finder.ASYNC.best_frame = self.maybeShowInFrame;
-          finder.ASYNC.finished = self.finishedCollecting;
+          self.finder.ASYNC.display = self.displayAsset;
+          self.finder.ASYNC.remove = self.removeAsset;
+          self.finder.ASYNC.best_frame = self.maybeShowInFrame;
+          self.finder.ASYNC.finished = self.finishedCollecting;
 
-          finder.findAssets();
+          self.finder.findAssets();
       };
 
       this.maybeShowInFrame = function(frame) {
@@ -1225,7 +1227,7 @@ SherdBookmarklet = {
           var doc = comp.ul.ownerDocument;
           var li = doc.createElement("li");
           var jump_url = M.obj2url(host_url, asset);
-          var form = M.obj2form(host_url, asset, doc);
+          var form = M.obj2form(host_url, asset, doc, o.postTarget);
           li.id = asset.html_id;
           li.appendChild(form);
           li.style.listStyleType = 'none';
@@ -1283,11 +1285,26 @@ if (SherdBookmarkletOptions.decorate) {
     ///1. search for assets--as soon as we find one, break out and send show:true
     ///2. on request, return a full asset list
     ///3. allow the grabber to be created by sending an asset list to it
-    chrome.extension.sendRequest({show:true}, function(response) {});
+    var finder = new SherdBookmarklet.Finder();
+    var found_one = false;
+    finder.ASYNC.display = function(asset) {
+        if (!found_one) {//just run once
+            found_one = true;
+            chrome.extension.sendRequest({show:true}, function(response) {});
+        }
+    }
     chrome.extension.onRequest.addListener(
         function(request,sender,sendResponse) {
-            sendResponse({'assets':[]});
+            console.log(finder.assets_found);
+            sendResponse({'assets':JSON.parse(
+                JSON.stringify(finder.assets_found,function(key,value){
+                    if (typeof value=='object' && value.tagName) {
+                        return '';
+                    } else return value;
+                }))
+            });
         });
+    finder.findAssets();
 } else {
     var o = SherdBookmarkletOptions;
     var host_url = o.host_url || o.mondrian_url;//legacy name

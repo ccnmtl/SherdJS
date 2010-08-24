@@ -22,7 +22,7 @@
   "permissions": [
     "tabs",
     "http://mediathread.ccnmtl.columbia.edu/*",
-    "http://*/*",
+    "http://*/*"
   ],
   "ccnmtl:documentation":{
       "permissions":

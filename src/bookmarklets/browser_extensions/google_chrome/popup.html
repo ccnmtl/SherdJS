@@ -1,15 +1,22 @@
 <script src="jquery.min.js"></script>
 <script src="sherd.js"></script>
-<div id="popup" style="width:500px;">
+<div id="popup" style="height:400px;width:400px;">
     No assets found on this page
 </div>
 <button onclick="window.close()">Close</button>
 <script>
+  var host_url = "http://mediathread.ccnmtl.columbia.edu/save";
   var popup = document.getElementById("popup");
+  var G = new SherdBookmarklet.Grabber(host_url, {
+    postTarget:"_blank"
+  });
+  G.showWindow();
   chrome.tabs.getSelected(null, function(tab) {
       chrome.tabs.sendRequest(tab.id, {sherd:'assets'}, function(response) {
-          //popup.innerHTML = response;
+         var asts = response.assets;
+         for (var i=0;asts.length>i;i++) {
+           G.displayAsset(asts[i]);
+         }
       });
   });
-
 </script>
