@@ -934,7 +934,10 @@ SherdBookmarklet = {
   "hasClass":function (elem,cls) {
       return (" " + (elem.className || elem.getAttribute("class")) + " ").indexOf(cls) > -1;
   },
-    "xml2dom":function (str,xhr) {
+  "hasBody":function(doc) {
+          return ('body'==doc.body.tagName.toLowerCase());
+  },
+  "xml2dom":function (str,xhr) {
       if (window.DOMParser) {
           var p = new DOMParser();
           return p.parseFromString(str,'text/xml');
@@ -966,13 +969,173 @@ SherdBookmarklet = {
           }
       }
   },
-  "Grabber" : function (host_url, page_handler, options) {
-      this.hasBody = function(doc) {
-          return ('body'==doc.body.tagName.toLowerCase());
+  "Finder" : function() {
+      var self = this;
+      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+
+      this.handler_count = 0;
+      this.final_count = 0;
+      this.assets_found = [];
+      this.page_resource_count = 0;
+      this.best_frame = null;
+
+      this.ASYNC = {
+          remove:function(asset){},
+          display:function(asset){},
+          finish:function(){},
+          best_frame:function(frame){}
       }
+
+      this.bestFrame = function() {
+          return self.best_frame;
+      }
+
+      this.findAssets = function() {
+          var handler = SherdBookmarklet.gethosthandler();
+          if (handler) {
+              handler.find.call(handler, self.collectAssets);
+              if (handler.also_find_general) {
+                  self.findGeneralAssets();
+              }
+          } else {
+              self.findGeneralAssets();
+          }
+      };
+      this.findGeneralAssets = function() {
+          self.no_assets_yet = true;
+          self.asset_keys = {};
+
+          var handlers = SherdBookmarklet.assethandler;
+          var frames = self.walkFrames();
+          self.best_frame = frames.best;
+          self.ASYNC.best_frame(frames.best);
+          self.final_count += frames.all.length;
+
+          jQ(frames.all).each(function(i,context) {
+              ++self.handler_count; //for each frame
+              for (h in SherdBookmarklet.assethandler) {
+                  ++self.final_count;
+              }
+              for (h in SherdBookmarklet.assethandler) {
+                  try {///DEBUG
+                      handlers[h].find.call(handlers[h],self.collectAssets,context);
+                  } catch(e) {
+                      ++self.handler_count;
+                      SherdBookmarklet.error = e;
+                      alert("Bookmarklet Error in "+h+": "+e.message);
+                  }
+              }
+          });
+      }
+      this.assetHtmlID = function(asset) {
+          return ('sherdbookmarklet-asset-' + (asset.ref_id || Math.floor(Math.random()*10000)));
+      }
+      this.redundantInGroup = function(asset, primary_type) {
+          //return merged asset, so new asset has benefits of both
+
+          self.asset_keys['ref_id'] = self.asset_keys['ref_id'] || {};
+          var list = self.asset_keys[primary_type] = (self.asset_keys[primary_type] || {});
+          var merge_with = false;
+          if (asset.page_resource
+              && asset != self.assets_found[0]
+              && self.assets_found.length-self.page_resource_count < 2
+             ) {
+              //if there's only one asset on the page and rest are page_resources
+              merge_with = self.assets_found[self.assets_found.length-2];
+          } else if (asset.ref_id && asset.ref_id in self.asset_keys['ref_id']) {
+              //a hack to let the page match two assets explicitly
+              merge_with = self.asset_keys['ref_id'][asset.ref_id];
+          } else if (asset.sources[primary_type] in list) {
+              //if primary source urls are identical
+              merge_with = list[ asset.sources[primary_type] ];
+          } 
+          if (merge_with) {
+              if (merge_with.html_id) {
+                  self.ASYNC.remove(merge_with)
+                  delete merge_with.html_id;//so it doesn't over-write asset
+              } else if (window.console) window.console.log('ERROR: No html_id on merge-item');
+
+              //jQuery 1.0compat (for drupal)
+              jQ.extend(merge_with.sources, asset.sources);
+              ///not trying to merge individual arrays
+              if (merge_with.metadata && asset.metadata)
+                  jQ.extend(merge_with.metadata, asset.metadata);
+              jQ.extend(asset, merge_with);
+              ///keep our pointers singular
+              list[ asset.sources[merge_with.primary_type] ] = asset;
+          }
+          list[asset.sources[primary_type]] = asset;
+          if (asset.ref_id)
+              self.asset_keys['ref_id'][asset.ref_id] = asset;
+          return asset;
+      }
+      this.mergeRedundant = function(asset) {
+          ///assumes assets without primary types could be redundant on anything
+          ///actually, all assets must have a primary_type for assetHtmlID()
+          if (asset.primary_type) {
+              return this.redundantInGroup(asset, asset.primary_type);
+          } else {
+              throw Error("asset does not have a primary type.");
+              for (s in this.asset.sources) {
+                  if (s=='url' || s.indexOf('-metadata') > -1) 
+                      continue;
+                  var rig = this.redundantInGroup(asset, s);
+                  if (rig) return rig;
+              }
+              return asset;
+          }
+      };
+      this.collectAssets = function(assets,errors) {
+          Array.prototype.push.apply(self.assets_found,assets);
+          for (var i=0;i<assets.length;i++) {
+              self.no_assets_yet = false;
+              if (assets[i].page_resource) ++self.page_resource_count;
+              var after_merge = self.mergeRedundant(assets[i]);
+              if (after_merge) {
+                  after_merge.html_id = self.assetHtmlID(after_merge); 
+                  self.ASYNC.display(after_merge); 
+              }
+          }
+          ++self.handler_count;
+          if (self.handler_count >= self.final_count) {
+              self.ASYNC.finish();
+          }
+      };
+      this.walkFrames = function() {
+          var rv = {all:[]}
+          rv.all.unshift({'frame':window, 
+                          'document':document,
+                          'window':window,
+                          'hasBody':SherdBookmarklet.hasBody(document)});
+          var max =(rv.all[0].hasBody *document.body.offsetWidth *document.body.offsetHeight) || 0;
+          rv.best = ((max)? rv.all[0] : null);
+          function _walk(index,domElement) {
+              try {
+                  var doc = this.contentDocument||this.contentWindow.document;
+                  doc.getElementsByTagName('frame');//if this fails, security issue
+                  var context = {
+                      frame:this,document:doc,
+                      window:this.contentWindow,
+                      hasBody:self.hasBody(doc)
+                  };
+                  rv.all.push(context);
+                  var area = self.hasBody(doc) * this.offsetWidth * this.offsetHeight;
+                  if (area > max) {
+                      rv.best = context;
+                  }
+                  jQ('frame,iframe',doc).each(_walk);
+              } catch(e) {/*probably security error*/}
+          }
+          jQ('frame,iframe').each(_walk);
+          return rv;
+      }
+
+  },
+  "Grabber" : function (host_url, page_handler, options) {
+      var M = SherdBookmarklet;
       this.options = {
           tab_label:"Analyze in Mediathread",
-          target:((this.hasBody(document))? document.body : null),
+          target:((M.hasBody(document))? document.body : null),
           top:100,
           side:"left",
           fixed:true,
@@ -981,7 +1144,6 @@ SherdBookmarklet = {
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
 
       var o = this.options;
-      var M = SherdBookmarklet;
       var self = this;
       var comp = this.components = {};
 
@@ -1030,128 +1192,36 @@ SherdBookmarklet = {
               self.windowStatus = false;
           });
       };
-      if (o.target) {
+      if (o.target) {///****
           this.setupContent(o.target);
       }
 
-      this.handler_count = 0;
-      this.final_count = 0;
-      this.assets_found = [];
-      this.page_resource_count = 0;
       this.findAssets = function() {
           self.showWindow();
-          var handler = SherdBookmarklet.gethosthandler();
-          if (handler) {
-              handler.find.call(handler, self.collectAssets);
-              if (handler.also_find_general) {
-                  self.findGeneralAssets();
-              }
-          } else {
-              self.findGeneralAssets();
-          }
-      };
-      this.findGeneralAssets = function() {
-          self.no_assets_yet = true;
-          self.asset_keys = {};
+          var finder = new M.Finder();
 
-          var handlers = SherdBookmarklet.assethandler;
-          var frames = self.walkFrames();
+          finder.ASYNC.display = self.displayAsset;
+          finder.ASYNC.remove = self.removeAsset;
+          finder.ASYNC.best_frame = self.maybeShowInFrame;
+          finder.ASYNC.finished = self.finishedCollecting;
+
+          finder.findAssets();
+      };
+
+      this.maybeShowInFrame = function(frame) {
           if (!comp.window && frames.best) {
-              var target = o.target || frames.best.document.body;
+              var target = o.target || frame.document.body;
               self.setupContent(target);
               self.showWindow();
           }
-          self.final_count += frames.all.length;
-
-          jQ(frames.all).each(function(i,context) {
-              ++self.handler_count; //for each frame
-              for (h in SherdBookmarklet.assethandler) {
-                  ++self.final_count;
-              }
-              for (h in SherdBookmarklet.assethandler) {
-                  try {///DEBUG
-                      handlers[h].find.call(handlers[h],self.collectAssets,context);
-                  } catch(e) {
-                      ++self.handler_count;
-                      SherdBookmarklet.error = e;
-                      alert("Bookmarklet Error in "+h+": "+e.message);
-                  }
-              }
-          });
-      }
-      this.assetHtmlID = function(asset) {
-          return ('sherdbookmarklet-asset-' + (asset.ref_id || Math.floor(Math.random()*10000)));
-      }
-      this.redundantInGroup = function(asset, primary_type) {
-          //return merged asset, so new asset has benefits of both
-
-          self.asset_keys['ref_id'] = self.asset_keys['ref_id'] || {};
-          var list = self.asset_keys[primary_type] = (self.asset_keys[primary_type] || {});
-          var merge_with = false;
-          if (asset.page_resource
-              && asset != self.assets_found[0]
-              && self.assets_found.length-self.page_resource_count < 2
-             ) {
-              //if there's only one asset on the page and rest are page_resources
-              merge_with = self.assets_found[self.assets_found.length-2];
-          } else if (asset.ref_id && asset.ref_id in self.asset_keys['ref_id']) {
-              //a hack to let the page match two assets explicitly
-              merge_with = self.asset_keys['ref_id'][asset.ref_id];
-          } else if (asset.sources[primary_type] in list) {
-              //if primary source urls are identical
-              merge_with = list[ asset.sources[primary_type] ];
-          } 
-          if (merge_with) {
-              if (merge_with.html_id) {
-                  jQ('#'+merge_with.html_id).remove();
-                  delete merge_with.html_id;//so it doesn't over-write asset
-              } else if (window.console) window.console.log('ERROR: No html_id on merge-item');
-
-              //jQuery 1.0compat (for drupal)
-              jQ.extend(merge_with.sources, asset.sources);
-              ///not trying to merge individual arrays
-              if (merge_with.metadata && asset.metadata)
-                  jQ.extend(merge_with.metadata, asset.metadata);
-              jQ.extend(asset, merge_with);
-              ///keep our pointers singular
-              list[ asset.sources[merge_with.primary_type] ] = asset;
-          }
-          list[asset.sources[primary_type]] = asset;
-          if (asset.ref_id)
-              self.asset_keys['ref_id'][asset.ref_id] = asset;
-          return asset;
-      }
-      this.mergeRedundant = function(asset) {
-          ///assumes assets without primary types could be redundant on anything
-          ///actually, all assets must have a primary_type for assetHtmlID()
-          if (asset.primary_type) {
-              return this.redundantInGroup(asset, asset.primary_type);
-          } else {
-              throw Error("asset does not have a primary type.");
-              for (s in this.asset.sources) {
-                  if (s=='url' || s.indexOf('-metadata') > -1) 
-                      continue;
-                  var rig = this.redundantInGroup(asset, s);
-                  if (rig) return rig;
-              }
-              return asset;
-          }
       };
-      this.collectAssets = function(assets,errors) {
-          Array.prototype.push.apply(self.assets_found,assets);
-          for (var i=0;i<assets.length;i++) {
-              self.no_assets_yet = false;
-              if (assets[i].page_resource) ++self.page_resource_count;
-              self.displayAsset(self.mergeRedundant(assets[i]));
-          }
-          ++self.handler_count;
-          if (self.handler_count >= self.final_count) {
-              self.finishedCollecting();
-          }
+
+      this.removeAsset = function(asset) {
+          jQ('#'+asset.html_id).remove();
       };
+
       this.displayAsset = function(asset) {
           if (!asset) return;
-          asset.html_id = self.assetHtmlID(asset);
           var doc = comp.ul.ownerDocument;
           var li = doc.createElement("li");
           var jump_url = M.obj2url(host_url, asset);
@@ -1186,34 +1256,6 @@ SherdBookmarklet = {
               }
           }
       };
-      this.walkFrames = function() {
-          var rv = {all:[]}
-          rv.all.unshift({frame:window, 
-                          document:document,
-                          window:window,
-                          hasBody:self.hasBody(document)});
-          var max =(rv.all[0].hasBody *document.body.offsetWidth *document.body.offsetHeight) || 0;
-          rv.best = ((max)? rv.all[0] : null);
-          function _walk(index,domElement) {
-              try {
-                  var doc = this.contentDocument||this.contentWindow.document;
-                  doc.getElementsByTagName('frame');//if this fails, security issue
-                  var context = {
-                      frame:this,document:doc,
-                      window:this.contentWindow,
-                      hasBody:self.hasBody(doc)
-                  };
-                  rv.all.push(context);
-                  var area = self.hasBody(doc) * this.offsetWidth * this.offsetHeight;
-                  if (area > max) {
-                      rv.best = context;
-                  }
-                  jQ('frame,iframe',doc).each(_walk);
-              } catch(e) {/*probably security error*/}
-          }
-          jQ('frame,iframe').each(_walk);
-          return rv;
-      }
 
   }/*Grabber*/
 };/*SherdBookmarklet (root)*/

@@ -6,6 +6,14 @@
 ###
 ### code available at: http://github.com/Constellation/crxmake
 ###
+#
+#RUN THIS FROM sherdjs/ like
+# $ scripts/make_chromium.sh
+#
+#OUTPUT
+# sherdjs/google_chrome.pem
+# sherdjs/src/bookmarklets/mediathread.crx
+
 
 cp lib/jquery.min.js src/bookmarklets/browser_extensions/google_chrome/
 cp src/bookmarklets/sherd.js src/bookmarklets/browser_extensions/google_chrome/

@@ -21,8 +21,13 @@
   ],
   "permissions": [
     "tabs",
-    "http://mediathread.ccnmtl.columbia.edu/*"
+    "http://mediathread.ccnmtl.columbia.edu/*",
+    "http://*/*",
   ],
+  "ccnmtl:documentation":{
+      "permissions":
+      "We need full website access (http://*/*), so we can do ajax for metadata at the sites that support pbcore and artstor,youtube,flickr examples.  We could be conservative and only list the ones we intend to support, but that seems short-sited"
+  },
   "icons":{
       "128":"icon.png"
   }
