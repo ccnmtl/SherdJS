@@ -875,7 +875,7 @@ SherdBookmarklet = {
         var M = SherdBookmarklet;
         var handler = M.gethosthandler();
         var grabber_func = function(jQuery) {
-            M.g = new M.Grabber(host_url);
+            M.g = new M.Interface(host_url);
             M.g.findAssets();
         };
         if (!handler) {
@@ -912,7 +912,7 @@ SherdBookmarklet = {
         var M = SherdBookmarklet;
         function go(run_func) {
             M.run_with_jquery(function() {
-                M.g = new M.Grabber(host_url);
+                M.g = new M.Interface(host_url);
                 if (run_func=='onclick') M.g.findAssets();
             });
         }
@@ -970,6 +970,9 @@ SherdBookmarklet = {
           }
       }
   },
+  /**************
+   Finder finds assets in a document (and all sub-frames)
+   *************/
   "Finder" : function() {
       var self = this;
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
@@ -1131,8 +1134,10 @@ SherdBookmarklet = {
           return rv;
       }
 
-  },
-  "Grabber" : function (host_url, options) {
+  },/*****************
+     END Finder
+     *****************/
+  "Interface" : function (host_url, options) {
       var M = SherdBookmarklet;
       this.options = {
           tab_label:"Analyze in Mediathread",
@@ -1194,7 +1199,7 @@ SherdBookmarklet = {
               self.windowStatus = false;
           });
       };
-      if (o.target) {///****
+      if (o.target) {
           this.setupContent(o.target);
       }
 
@@ -1259,7 +1264,7 @@ SherdBookmarklet = {
           }
       };
 
-  }/*Grabber*/
+  }/*Interface*/
 };/*SherdBookmarklet (root)*/
 
 window.MondrianBookmarklet = SherdBookmarklet; //legacy name
