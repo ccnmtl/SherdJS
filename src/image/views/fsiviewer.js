@@ -160,8 +160,8 @@ if (!Sherd.Image.FSIViewer) {
             return {'top':html_dom};
         };
         this.microformat.create = function(obj,doc) {
-            var fsi_object_id = Sherd.Base.newID('fsiviewer-wrapper');
-            fsi_object_id = 'sky_is_awesome';
+            ///NOTE: we need underscores because this will become a javascript function name
+            var fsi_object_id = Sherd.Base.newID('fsiviewer_wrapper');
             var broken_url = obj.image_fpx.split('/');
             var presentation = self.presentations[ obj.presentation ||'default' ];
             obj.image_fpx_base = broken_url.slice(0,3).join('/') + '/';
