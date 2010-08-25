@@ -29,7 +29,7 @@ if (!Sherd.Image.FSIViewer) {
             }
             self.intended_states.push(obj);
             if (self.ready) {
-                this._setState(obj); 
+                this._setState(obj);
             } //else see InitComplete below
         };
         //called when you click on the dots-icon next to the save icon
@@ -38,15 +38,17 @@ if (!Sherd.Image.FSIViewer) {
             //could be: set, scene, left, top, right, bottom, rotation
             //example: asset-level: 1, 1, 0, 0, 1, 1, 0
             //example:  1,   1,     0.53, 0.43,0.711, 0.6114, 0
+            /*
             console.log(clip_string);
             console.log(maybe_name);
             console.log(clip_embed_url);
+            */
         };
         window.saveImage = function(clip_embed_url) {
-            console.log(clip_embed_url);
+            //console.log(clip_embed_url);
         };
         window.printImage = function(clip_embed_url) {
-            console.log(clip_embed_url);
+            //console.log(clip_embed_url);
         };
 
         ///utility functions to move from between array/obj repr
@@ -139,6 +141,19 @@ if (!Sherd.Image.FSIViewer) {
             };
             window[create_obj.htmlID+'_DoFSCommand'] = state_listener;
             window[create_obj.htmlID+'_embed_DoFSCommand'] = state_listener;
+
+            if (self.components.top.attachEvent) {
+                ///Is this hacky or what?! IE SUX!
+                /// http://code.google.com/p/swfobject/wiki/faq#5._Why_doesn't_fscommand_work_in_Internet_Explorer_with_dyn
+                /// http://www.phpied.com/dynamic-script-and-style-elements-in-ie/
+                var script = document.createElement('script');
+                script.setAttribute('type','text/javascript');
+                script.setAttribute('event','FSCommand(command,args)');
+                script.setAttribute('for',create_obj.htmlID);
+                script.text = create_obj.htmlID+'_DoFSCommand(command,args);'
+                
+                document.getElementsByTagName('head')[0].appendChild(script);
+            }
         };
         this.microformat = {};
         this.microformat.components = function(html_dom, create_obj) {
@@ -146,12 +161,24 @@ if (!Sherd.Image.FSIViewer) {
         };
         this.microformat.create = function(obj,doc) {
             var fsi_object_id = Sherd.Base.newID('fsiviewer-wrapper');
+            fsi_object_id = 'sky_is_awesome';
             var broken_url = obj.image_fpx.split('/');
             var presentation = self.presentations[ obj.presentation ||'default' ];
             obj.image_fpx_base = broken_url.slice(0,3).join('/') + '/';
             obj.image_fpx_src = broken_url.slice(3).join('/');
             var fpx = obj["image_fpx-metadata"];
-            var html = '<object width="'+presentation.width()+'" height="'+presentation.height()+'" type="application/x-shockwave-flash" data="'+obj.fsiviewer+'?FPXBase='+obj.image_fpx_base+'&amp;FPXSrc='+obj.image_fpx_src+'&amp;FPXWidth='+fpx.width+'&amp;FPXHeight='+fpx.height+'&amp;'+presentation.extra+'" id="'+fsi_object_id+'" name="'+fsi_object_id+'"><param name="wmode" value="opaque"><param name="allowScriptAccess" value="always"><param name="swliveconnect" value="true"><param name="menu" value="false"><param name="quality" value="high"><param name="scale" value="noscale"><param name="salign" value="LT"><param name="bgcolor" value="#FFFFFF"></object>';
+            var full_fpx_url = obj.fsiviewer
+                +'?FPXBase='+obj.image_fpx_base
+                +'&amp;FPXSrc='+obj.image_fpx_src
+                +'&amp;FPXWidth='+fpx.width
+                +'&amp;FPXHeight='+fpx.height+'&amp;'+presentation.extra;
+
+            var html = '<object width="'+presentation.width()+'" height="'+presentation.height()+'" '
+                +'type="application/x-shockwave-flash" data="'+full_fpx_url+'" '
+                +'id="'+fsi_object_id+'" name="'+fsi_object_id+'">'
+                +'<param name="wmode" value="opaque"/><param name="allowScriptAccess" value="always"/><param name="swliveconnect" value="true"/><param name="menu" value="false"/><param name="quality" value="high"/><param name="scale" value="noscale"/><param name="salign" value="LT"/><param name="bgcolor" value="FFFFFF"/>'
+                +'<param name="Movie" value="'+full_fpx_url+'" />' ///required for IE to display movie
+                +'</object>';
             return {
                 object:obj,
                 htmlID:fsi_object_id,
