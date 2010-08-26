@@ -576,17 +576,36 @@ SherdBookmarklet = {
           find:function(callback,context) {
               var videos = context.document.getElementsByTagName("video");
               var result = [];
+              var codecs = /[.\/](ogg|webm|mp4)/i;
+              var addSource = function(source,rv,video) {
+                  if (!source.src) return;
+                  var vid_type = 'video';
+                  var mtype = String(video.type).match(codecs)
+                  if (mtype) {
+                      vid_type = mtype[1].toLowerCase();
+                      if (video.canPlayType(video.type)=="probably")
+                          rv.primary_type = vid_type;
+                  } else if (mtype = String(source.src).match(codecs)) {
+                      vid_type = mtype[1].toLowerCase();
+                  }
+                  if (rv.primary_type == 'video')
+                      rv.primary_type = vid_type;
+                  rv.sources[vid_type] = source.src;
+                  rv.sources[vid_type+'-metadata'] = "w"+video.videoWidth+"h"+video.videoHeight
+              }
               for (var i=0;i<videos.length;i++) {
-		  var src = videos[i].src;
-                  result.push({
+                  var rv = {
                       "html":videos[i],
-                      "primary_type":"ogg",
 		      "label": "video",
-                      "sources": {
-                          "ogg":src,
-                          "ogg-metadata":"w"+videos[i].width+"h"+videos[i].height
-                      }
-                  });
+                      "primary_type":"video",
+                      "sources": {}
+                  }
+                  addSource(videos[i], rv, videos[i]);
+                  var sources = videos[i].getElementsByTagName('source');
+                  for (var j=0;j<sources.length;j++) {
+                      addSource(sources[j], rv, videos[i]);
+                  }
+                  result.push(rv);
               }
               callback(result);
           }
@@ -1286,7 +1305,7 @@ if (SherdBookmarkletOptions.decorate) {
             break;
         }
     }
-} else if (chrome && chrome.extension) {
+} else if (window.chrome && chrome.extension) {
     ///1. search for assets--as soon as we find one, break out and send show:true
     ///2. on request, return a full asset list
     ///3. allow the grabber to be created by sending an asset list to it

@@ -53,7 +53,6 @@ function DjangoSherd_Asset_Config() {
                 obj = evalJSON(orig_annotation_data
                         .getAttribute('data-annotation'));
                 ds.assetview.setState(obj);
-
                 if (ds.assetview.clipform)
                     ds.assetview.clipform.setState(obj);
 

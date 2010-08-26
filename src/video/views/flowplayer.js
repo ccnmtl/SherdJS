@@ -53,7 +53,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 htmlID: wrapperID,
                 playerID: playerID, // Used by .initialize post initialization
                 playerParams: params,
-                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper">'
+                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper sherd-video-wrapper">'
                     +  '<div class="sherd-flowplayer"'
                     +       'style="display:block; width:' + obj.options.width + 'px;'
                     +       'height:' + obj.options.height + 'px;" id="' + playerID + '">'

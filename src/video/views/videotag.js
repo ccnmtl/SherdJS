@@ -10,6 +10,12 @@ Documentation:
 	,errortext:'Error text.'
 	,type:'video/ogg'
 	};
+  ISSUES:
+     2010/August/26:
+     Firefox does not have .seekable implemented
+     There is no 'canseek' event.
+     WebKit (Chrome) does not trigger 'progress' event, but triggers 'canplaythrough' like progress
+     Would be nice to know if a particular event is supported (maybe even per-object)
  */
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
@@ -24,30 +30,56 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
             var wrapperID = Sherd.Base.newID('videotag-wrapper-');
             var playerID = Sherd.Base.newID('videotag-player-');
             var controllerID = Sherd.Base.newID('videotag-controller-');
-            var console = 'Console'+playerID;
             
-            if (!obj.options) {
-                obj.options = {
-                    width: (obj.presentation == 'small' ? 320 : (obj.width||480)), 
-                    height: (obj.presentation == 'small' ? 240 : (obj.height||360)) 
-                };
+            var supported = self.microformat._getPlayerParams(obj);
+            if (supported) {
+                if (!obj.options) {
+                    obj.options = {
+                        width: (obj.presentation == 'small' ? 320 : (obj.width||480)), 
+                        height: (obj.presentation == 'small' ? 240 : (obj.height||360)) 
+                    };
+                }
+                var create_obj = {
+                    object: obj,
+                    htmlID: wrapperID,
+                    playerID: playerID, // Used by .initialize post initialization
+                    text: '<div id="' + wrapperID + '" class="sherd-videotag-wrapper sherd-video-wrapper" '
+                        + '     style="width:'+obj.options.width+'px">' 
+                        + '<video id="'+playerID+'" controls="controls"'
+                        + '       height="'+obj.options.height+'" width="'+obj.options.width+'"'
+                        + '       type=\''+ supported.mimetype +'\''
+		        + '       src="'+ supported.url +'">'
+                        + '</video>'
+                        + '</div>',
+                    provider: supported.provdier
+                }
+                return create_obj;
             }
-            
-            var create_obj = {
-                object: obj,
-                htmlID: wrapperID,
-                playerID: playerID, // Used by .initialize post initialization
-                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper" '
-                    + '     style="width:'+obj.options.width+'px">' 
-                    + '<video id="'+playerID+'" controls="controls"'
-                    + '        height="'+obj.options.height+'" width="'+obj.options.width+'"'
-		    + '        src="'+ obj.ogg +'">'
-                    + '</video>'
-                    + '</div>'
-            }
-            return create_obj;
         };
-        
+        this.microformat._getPlayerParams = function(obj) {
+            var types = {
+                ogg:'video/ogg; codecs="theora, vorbis"',
+                webm:'video/webm; codecs="vp8, vorbis"',
+                mp4:'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+            }
+            var vid = document.createElement('video');
+            var browser_supported = [];
+            for (a in types) {
+                switch(vid.canPlayType(types[a])) {
+                case 'probably': browser_supported.unshift(a);break;
+                case 'maybe': browser_supported.push(a);break;
+                }
+            }
+            for (var i=0;i<browser_supported.length;i++) {
+                if (obj[browser_supported[i]]) {
+                    return {
+                        'provider':browser_supported[i],
+                        'url':obj[browser_supported[i]],
+                        'mimetype':types[browser_supported[i]]
+                    }
+                }
+            }
+        };
         this.microformat.components = function(html_dom,create_obj) {
             try {
                 var rv = {};
@@ -55,9 +87,9 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                     rv.wrapper = html_dom;
                 }
                 if (create_obj) {
-		    rv.player = html_dom.getElementsByTagName('video');
+		    rv.player = html_dom.getElementsByTagName('video')[0];
                     rv.width = (create_obj.options && create_obj.options.width) || rv.player.offsetWidth;
-                    rv.mediaUrl = create_obj.ogg;
+                    rv.mediaUrl = create_obj.object[create_obj.provider];
                 } 
                 return rv;
             } catch(e) {}
@@ -71,7 +103,7 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
             var found = [];
             return found;
         };
-        
+    
         // Return asset object description (parameters) in a serialized JSON format.
         // Will be used for things like printing, or spitting out a description.
         // works in conjunction with find
@@ -85,17 +117,18 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            return false;
-            if (obj.ogg && self.components.player && self.media.ready()) {
+            var supported = self.microformat._getPlayerParams(obj);
+            if (supported && self.components.player) {
                 try {
-		    self.components.player.src = obj.ogg;
-		    self.components.mediaUrl = obj.ogg;
+		    self.components.player.type = supported.mimetype;
+		    self.components.player.src = supported.url;
+		    self.components.mediaUrl = supported.url;
                     return true;
                 } catch(e) { }
             }
             return false;
         }
-        
+    
         
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
@@ -106,11 +139,15 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                     self.setState(obj);
                     self.media.play();
                 });
-
-        };
-        
-        // Overriding video.js
-        this.deinitialize = function() {
+            if (self.components.player) {
+                function signal_duration() {
+                    self.events.signal(djangosherd, 'duration', { duration: self.media.duration() });
+                }
+                if (self.media.duration() > 0) 
+                    signal_duration()
+                else
+                    self.events.connect(self.components.player, 'loadedmetadata', signal_duration);
+            }
         };
         
         ////////////////////////////////////////////////////////////////////////
@@ -118,29 +155,73 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         
         this.media.duration = function() {
             var duration = 0;
+            if (self.components.player) 
+                duration = self.components.player.duration||0;
             return duration;
         };
         
         this.media.pause = function() {
+            (self.components.player 
+             && self.components.player.pause())
         };
         
         this.media.play = function() {
+            (self.components.player 
+             && self.components.player.play())
         };
         
         // Used by tests
         this.media.isPlaying = function() {
-            return false;
+            return (self.components.player 
+                    && !self.components.player.paused)
         };
-        
+    
         this.media.ready = function() {
-	    return true;
+            ///http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#dom-media-have_metadata
+	    return (self.components.player 
+                    && self.components.player.readyState > 2);
         };
-
-        this.media.seek = function(starttime, endtime) {
+    
+        this.media.seek = function(starttime, endtime, autoplay) {
+            if (self.components.player) {
+                var c,d = {}; //event listeners
+                function _seek(evt) {
+                    if (starttime != undefined) {
+                        try {
+                            self.components.player.currentTime = starttime;
+                            if (d.disconnect) d.disconnect();
+                        } catch(e) {
+                            return {error:true}
+                        }
+                    }
+                    if (endtime != undefined)
+                        self.media.pauseAt(endtime);
+                    if (autoplay || self.components.autoplay)
+                        self.media.play();
+                    return {}
+                }
+                if (_seek().error) {
+                    var progress_triggers = 0;
+                    d = self.events.connect(self.components.player,'progress', function(evt) {
+                        progress_triggers = 1;
+                        _seek(evt);
+                    });
+                    ///WebKit(Chrome) doesn't trigger progress, but 'canplaythrough' seems to trigger enough
+                    c = self.events.connect(self.components.player,'canplaythrough', function(evt) {
+                        if (progress_triggers == 1) {
+                            c.disconnect();
+                        } else {
+                            if (!progress_triggers--) d.disconnect();
+                            d = c;
+                            _seek(evt);
+                        }
+                    });
+                }
+            }
         }
-        
+
         this.media.time = function() {
-            return 0;
+            return (!self.components.player || self.components.player.currentTime);
         }
         
         this.media.timescale = function() {
@@ -150,8 +231,8 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         this.media.timestrip = function() {
             var w = self.components.player.width;
             return {w: w,
-                trackX: 110,
-                trackWidth: w-220,
+                trackX: 40,
+                trackWidth: w-140,
                 visible:true
             }
         }
@@ -165,7 +246,7 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         this.media.url = function() {
             return self.components.mediaUrl;
         }
-        
+   
     } //Sherd.Video.Videotag
 
 }
