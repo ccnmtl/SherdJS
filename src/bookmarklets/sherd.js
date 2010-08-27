@@ -93,17 +93,17 @@ SherdBookmarklet = {
                 if (!apikey) 
                     return callback([]);
 
-                var bits = document.location.pathname.split("/");//expected:/photos/userid/imageid/
+                var bits = document.location.pathname.split("/");//expected:/photos/<userid>/<imageid>/
                 var imageId = bits[3];
 
                 if (imageId.length < 1 || imageId.search(/\d{1,12}/) < 0)
                     return callback([]);
 
                 /* http://docs.jquery.com/Release:jQuery_1.2/Ajax#Cross-Domain_getJSON_.28using_JSONP.29 */
-                var baseUrl = "http://api.flickr.com/services/rest/?jsoncallback=?&format=json&api_key="+apikey+"&photo_id="+imageId;
-
-                jQuery.getJSON(baseUrl + "&method=flickr.photos.getInfo",
-                    function(getInfoData) {
+                var baseUrl = "http://api.flickr.com/services/rest/?format=json&api_key="
+                    +apikey+"&photo_id="+imageId
+                    + ((SherdBookmarklet.options.cross_origin) ? '&nojsoncallback=1' : '&jsoncallback=?');
+                jQuery.getJSON(baseUrl + "&method=flickr.photos.getInfo",function(getInfoData) {
                         if (getInfoData.photo.media=="video") {
                             /*video is unsupported*/
                             return callback([]);
@@ -142,9 +142,9 @@ SherdBookmarklet = {
                                     };
 
                                 return callback( [{html:img, primary_type:"image", sources:sources}] );
-                           });
-                    });
-            });
+                            })
+                });/*end jQuery.ajax*/
+            });/*end run_with_jquery*/
         },
         decorate:function(objs) {
         }
@@ -243,63 +243,16 @@ SherdBookmarklet = {
     },
     "youtube.com": {
         find:function(callback) {
-            var video = document.getElementById("movie_player");
-            if (video && video != null) {
-                function getTitle(VIDEO_ID) {
-                    var raw_title = '';
-                    function cleanTitle(str) {
-                        return str.replace(/<SPAN[^>]*>/,'').replace('</SPAN>','').replace(/^\s*/,"").replace(/\s*$/,"");
-                    }
-                    if (/www.youtube.com\/watch/.test(document.location)) {
-                        raw_title = (document.getElementsByTagName("h1")[0].textContent
-                                     || document.getElementsByTagName("h1")[0].innerHTML);
-                    } else {
-                        var for_channels = document.getElementById("playnav-curvideo-title");
-                        if (for_channels != null) {
-                            raw_title = (document.getElementById("playnav-curvideo-title").textContent
-                                         || document.getElementById("playnav-curvideo-title").innerHTML);
-                        }
-                    }
-                    return cleanTitle(raw_title);
-                }
-                function getThumb(VIDEO_ID) {
-                    var tries = [/*last-first*/
-                        [document.getElementById("playnav-video-play-uploads-0-"+VIDEO_ID)],
-                        goog.dom.getElementsByTagNameAndClass("div","playnav-item-selected"),
-                        goog.dom.getElementsByTagNameAndClass("div","watch-playlist-row-playing")
-                    ]; var i=tries.length;
-                    while (--i >= 0) {
-                        if (tries[i].length && tries[i][0] != null) {
-                            return tries[i][0].getElementsByTagName("img")[0].src;
-                        }
-                    }
-                    var try_embed = video.getAttribute('flashvars').match(/thumbnailUrl=([^&?]*)/);
-                    if (try_embed) {
-                        return unescape(try_embed[1]);
-                    }
-                    return undefined;
-                }
-                var VIDEO_ID = video.getVideoUrl().match(/[?&]v=([^&]*)/)[1];
-                video.pauseVideo();
-                var obj = {
-                    "html":video,
-                    "hash":"start="+video.getCurrentTime(),
-                    "disabled":video.getVideoEmbedCode() == "",
-                    "primary_type":'youtube',
-                    "sources":{
-                        "title":getTitle(VIDEO_ID),
-                        "thumb":getThumb(VIDEO_ID),
-                        "url":"http://www.youtube.com/watch?v="+VIDEO_ID,
-                        "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
-                        "gdata":"http://gdata.youtube.com/feeds/api/videos/"+VIDEO_ID
-                    }
-                };
-                if (video.getCurrentTime() == video.getDuration()) 
-                    delete obj.hash;
-                
-                return callback([obj]);
-
-            } else callback([]);
+            SherdBookmarklet.run_with_jquery(function _find(jQuery) {
+                var video = document.getElementById("movie_player");
+                if (video && video != null) {
+                    SherdBookmarklet.assethandler.objects_and_embeds.players
+                    .youtube.asset(video, 
+                                   video.getAttribute('flashvars').match(/video_id=([^&]*)/),
+                                   {'window':window,'document':document},0,
+                                   function(ind,rv){ callback([rv]); });
+                } else callback([]);
+            });//end run_with_jquery for youtube.com
         },
         decorate:function(objs) {
         }
@@ -375,6 +328,10 @@ SherdBookmarklet = {
                               ///DOCS: http://code.google.com/apis/youtube/2.0/reference.html#Searching_for_videos
                               "gdata":'http://gdata.youtube.com/feeds/api/videos/'+VIDEO_ID
                           }};
+                      if (emb.getCurrentTime) {
+                          if (emb.getCurrentTime() == emb.getDuration()) 
+                              rv["hash"]="start="+emb.getCurrentTime();
+                      }
                       var yt_callback = 'sherd_youtube_callback_'+index;
                       window[yt_callback] = function(yt_data) {
                           var e = yt_data['entry'];
@@ -382,23 +339,32 @@ SherdBookmarklet = {
                           var th = e['media$group']['media$thumbnail'][0];
                           rv.sources['thumb'] = th.url;
                           rv.sources['thumb-metadata'] = "w"+th.width+"h"+th.height;
-                          
                           rv.metadata = {
-                              'description':[e.content['$t']],
-                              'author':[e.author[0].name],
-                              'author_uri':[e.author[0].uri],
+                              'description':[e['media$group']['media$description']['$t']],
+                              'author':[e.author[0].name['$t']],
+                              'author_uri':[e.author[0].uri['$t']],
+                              'published':[e.published['$t']],
                               'youtube_link':['http://www.youtube.com/watch?v='+VIDEO_ID]
                           };
                           if (e['media$group']['media$category'].length) {
                               rv.metadata['category'] = [e['media$group']['media$category'][0].label];
                           }
+                          if (e['yt$noembed']) {
+                              rv.disabled = true;
+                          }
                           optional_callback(index, rv);
                       }
-                      jQ.ajax({
+                      var ajax_options = {
                           url: rv.sources.gdata+'?v=2&alt=json-in-script&callback='+yt_callback,
                           dataType: 'script',
                           error:function(){optional_callback(index);}
-                      });
+                      }
+                      if (SherdBookmarklet.options.cross_origin) {
+                          ajax_options['dataType'] = 'json';
+                          ajax_options['success'] = window[yt_callback];
+                          ajax_options['url'] = rv.sources.gdata+'?v=2&alt=json';
+                      }
+                      jQ.ajax(ajax_options);
                       return rv;
                   }
               },/*end youtube embeds*/
@@ -1001,6 +967,7 @@ SherdBookmarklet = {
       this.assets_found = [];
       this.page_resource_count = 0;
       this.best_frame = null;
+      this.asset_keys = {};
 
       this.ASYNC = {
           remove:function(asset){},
@@ -1109,7 +1076,7 @@ SherdBookmarklet = {
           }
       };
       this.collectAssets = function(assets,errors) {
-          Array.prototype.push.apply(self.assets_found,assets);
+          self.assets_found = self.assets_found.concat(assets);
           for (var i=0;i<assets.length;i++) {
               self.no_assets_yet = false;
               if (assets[i].page_resource) ++self.page_resource_count;
@@ -1264,7 +1231,11 @@ SherdBookmarklet = {
           if (img) {
               form.firstChild.innerHTML = "<img src=\""+img+"\" style=\"width:20%;max-width:120px;max-height:120px;\" /> ";
           }
-          form.lastChild.innerHTML = "<input type=\"submit\"  style=\"display:block;padding:4px;margin:4px;\" value=\"analyze\" />";
+          if (asset.disabled) {
+              form.lastChild.innerHTML = "This asset cannot be embedded on external sites.";
+          } else {
+              form.lastChild.innerHTML = "<input type=\"submit\"  style=\"display:block;padding:4px;margin:4px;\" value=\"analyze\" />";
+          }
 
           if (comp.ul) {
               if (comp.ul.firstChild != null 
@@ -1309,17 +1280,17 @@ if (SherdBookmarkletOptions.decorate) {
     ///1. search for assets--as soon as we find one, break out and send show:true
     ///2. on request, return a full asset list
     ///3. allow the grabber to be created by sending an asset list to it
+    SherdBookmarklet.options = SherdBookmarkletOptions;
     var finder = new SherdBookmarklet.Finder();
     var found_one = false;
     finder.ASYNC.display = function(asset) {
-        if (!found_one) {//just run once
+        if (!asset.disabled && !found_one) {//just run once
             found_one = true;
             chrome.extension.sendRequest({show:true}, function(response) {});
         }
     }
     chrome.extension.onRequest.addListener(
         function(request,sender,sendResponse) {
-            console.log(finder.assets_found);
             sendResponse({'assets':JSON.parse(
                 JSON.stringify(finder.assets_found,function(key,value){
                     if (typeof value=='object' && value.tagName) {

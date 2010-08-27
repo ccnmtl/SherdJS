@@ -14,7 +14,7 @@
           "http://*/*",  
           "https://*/*"
         ], 
-        "js" : ["jquery.min.js","sherd.js"],
+        "js" : ["jquery.min.js","settings.js","sherd.js"],
         "run_at" : "document_idle",
         "all_frames" : false
       }
@@ -22,7 +22,7 @@
   "permissions": [
     "tabs",
     "http://mediathread.ccnmtl.columbia.edu/*",
-    "http://*/*"
+    "http://*/"
   ],
   "ccnmtl:documentation":{
       "permissions":
