@@ -21,7 +21,6 @@
   ],
   "permissions": [
     "tabs",
-    "http://mediathread.ccnmtl.columbia.edu/*",
     "http://*/"
   ],
   "ccnmtl:documentation":{

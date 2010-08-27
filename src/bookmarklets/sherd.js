@@ -921,7 +921,7 @@ SherdBookmarklet = {
       return (" " + (elem.className || elem.getAttribute("class")) + " ").indexOf(cls) > -1;
   },
   "hasBody":function(doc) {
-          return ('body'==doc.body.tagName.toLowerCase());
+          return (doc.body && 'body'==doc.body.tagName.toLowerCase());
   },
   "xml2dom":function (str,xhr) {
       if (window.DOMParser) {
@@ -981,6 +981,7 @@ SherdBookmarklet = {
       }
 
       this.findAssets = function() {
+          self.assets_found = [];
           var handler = SherdBookmarklet.gethosthandler();
           if (handler) {
               handler.find.call(handler, self.collectAssets);
@@ -1097,7 +1098,7 @@ SherdBookmarklet = {
                           'document':document,
                           'window':window,
                           'hasBody':SherdBookmarklet.hasBody(document)});
-          var max =(rv.all[0].hasBody *document.body.offsetWidth *document.body.offsetHeight) || 0;
+          var max =((rv.all[0].hasBody) ? document.body.offsetWidth*document.body.offsetHeight: 0);
           rv.best = ((max)? rv.all[0] : null);
           function _walk(index,domElement) {
               try {
@@ -1132,7 +1133,9 @@ SherdBookmarklet = {
           top:100,
           side:"left",
           fixed:true,
-          no_assets_message:'Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.'
+          message_no_assets:'Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.',
+          message_disabled_asset:'This asset cannot be embedded on external sites.',
+          widget_name:'the bookmarklet'
       }; if (options) for (a in options) {this.options[a]=options[a]};
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
 
@@ -1155,33 +1158,49 @@ SherdBookmarklet = {
               comp.window.style.display = "block";
               comp.tab.style.display = "none";
               comp.ul.innerHTML = "";
+              if (!SherdBookmarklet.user_ready()) {
+                  comp.h2.innerHTML = 'Login required';
+                  o.login_url = o.login_url || host_url.split("/",3).join("/");
+                  comp.message.innerHTML = '<a style="color:#8C3B2E;" href="'+o.login_url+'" target="_blank">Please login to your course, and rerun '+o.widget_name+' before adding assets.</a>';
+              } else {
+                  comp.h2.innerHTML = 'Choose an asset to import for analysis';
+                  comp.message.innerHTML = '';
+              }
           }
+
       };
       this.setupContent = function(target) {
-          comp.top = target.ownerDocument.createElement("div");
-          comp.top.setAttribute("class","sherd-analyzer");
-          target.appendChild(comp.top);
+          var exists = jQ('div.sherd-analyzer',target);
+          if (exists.length) {
+              comp.top = exists.get(0);
+          } else {
+              comp.top = target.ownerDocument.createElement("div");
+              comp.top.setAttribute("class","sherd-analyzer");
+              target.appendChild(comp.top);
+          }
           var pageYOffset = self.visibleY(target)+o.top;
 
-          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an asset to import for analysis</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
+          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;left:0;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an asset to import for analysis</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
           comp.tab = comp.top.firstChild;
           comp.window = comp.top.lastChild;
           comp.ul = comp.top.getElementsByTagName("ul")[0];
+          comp.h2 = comp.top.getElementsByTagName("h2")[0];
           comp.close = comp.top.getElementsByTagName("button")[0];
           comp.move = comp.top.getElementsByTagName("button")[1];
           comp.message = comp.top.getElementsByTagName("p")[0];
           M.connect(comp.tab, "click", this.onclick);
           M.connect(comp.move, "click", function(evt) {
               var s = comp.window.style;
+              var dir = ((s.left=='0px')? 'right' : 'left');
               s.left = s.right = null;
-              //s.top = s.bottom = null;
-              s.right = '0px';
-              //s.top = '0px';
+              s[dir] = '0px';
           });
           M.connect(comp.close, "click", function(evt) {
               comp.ul.innerHTML = "";
               comp.window.style.display = "none";
-              comp.tab.style.display = "block";
+              if (SherdBookmarklet.options.decorate) {
+                  comp.tab.style.display = 'block';
+              }
               self.windowStatus = false;
           });
       };
@@ -1209,6 +1228,9 @@ SherdBookmarklet = {
           }
       };
 
+      this.clearAssets = function() {
+          comp.ul.innerHTML = '';
+      }
       this.removeAsset = function(asset) {
           jQ('#'+asset.html_id).remove();
       };
@@ -1232,14 +1254,14 @@ SherdBookmarklet = {
               form.firstChild.innerHTML = "<img src=\""+img+"\" style=\"width:20%;max-width:120px;max-height:120px;\" /> ";
           }
           if (asset.disabled) {
-              form.lastChild.innerHTML = "This asset cannot be embedded on external sites.";
-          } else {
+              form.lastChild.innerHTML = o.message_disabled_asset;
+          } else if (SherdBookmarklet.user_ready()){
               form.lastChild.innerHTML = "<input type=\"submit\"  style=\"display:block;padding:4px;margin:4px;\" value=\"analyze\" />";
           }
 
           if (comp.ul) {
               if (comp.ul.firstChild != null 
-                  && comp.ul.firstChild.innerHTML == o.no_assets_message) {
+                  && comp.ul.firstChild.innerHTML == o.message_no_assets) {
                   jQ(comp.ul.firstChild).remove();
               }
               comp.ul.appendChild(li);
@@ -1249,7 +1271,7 @@ SherdBookmarklet = {
           if (comp.message) {
               comp.message.innerHTML = "";/*erase searching message*/
               if (self.no_assets_yet) {
-                  comp.ul.innerHTML = "<li>"+o.no_assets_message+"</li>";
+                  comp.ul.innerHTML = "<li>"+o.message_no_assets+"</li>";
               }
           }
       };
@@ -1286,18 +1308,34 @@ if (SherdBookmarkletOptions.decorate) {
     finder.ASYNC.display = function(asset) {
         if (!asset.disabled && !found_one) {//just run once
             found_one = true;
-            chrome.extension.sendRequest({show:true}, function(response) {});
+            ///request sent TO background.html
+            chrome.extension.sendRequest({found_asset:true,show_icon:true}, function(response) {});
         }
     }
-    chrome.extension.onRequest.addListener(
-        function(request,sender,sendResponse) {
-            sendResponse({'assets':JSON.parse(
-                JSON.stringify(finder.assets_found,function(key,value){
+    ///request sent TO background.html
+    chrome.extension.sendRequest({show_icon:true}, function(response) {});
+    function cleanup(obj) {
+        return JSON.parse(
+                JSON.stringify(obj,function(key,value){
                     if (typeof value=='object' && value.tagName) {
                         return '';
                     } else return value;
-                }))
-            });
+                }));
+    }
+    chrome.extension.onRequest.addListener(
+        //for request sent FROM popup.html
+        function(request,sender,sendResponse) {
+            if (finder.assets_found.length) {
+                sendResponse({'assets':cleanup(finder.assets_found)});
+            } else {
+                ///try again
+                finder.ASYNC.display = function(asset) {
+                    sendResponse({'assets':cleanup(finder.assets_found),
+                                  'where':'after'
+                                 });
+                }
+                finder.findAssets();
+            }
         });
     finder.findAssets();
 } else {

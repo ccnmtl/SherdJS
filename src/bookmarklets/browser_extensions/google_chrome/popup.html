@@ -12,18 +12,32 @@
 </div>
 <button onclick="window.close()">Close</button>
 <script>
-  var popup = document.getElementById("popup");
-  var G = new SherdBookmarklet.Interface(SherdBookmarklet.options.host_url, {
-    postTarget:"_blank"
-  });
-  G.showWindow();
-  chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.sendRequest(tab.id, {sherd:'assets'}, function(response) {
-         var asts = response.assets;
-         for (var i=0;asts.length>i;i++) {
-             if (asts[i].html_id) //wasn't merged
-                 G.displayAsset(asts[i]);
-         }
-      });
-  });
+    ///seems to run every time we click the icon
+    var r4=function(){return '?nocache='+Number(new Date());}
+    var SBO = SherdBookmarklet.options;
+    function check_login() {
+        var x=document.createElement('script'); x.src=SBO.user_url+r4();
+        document.body.appendChild(x);
+        return x;
+    }
+    var popup = document.getElementById("popup");
+    var G = new SherdBookmarklet.Interface(SBO.host_url, {
+        postTarget:"_blank"
+    });
+    chrome.tabs.getSelected(null, function(tab) {
+        check_login().onload = function() {
+            G.showWindow();
+            chrome.tabs.sendRequest(tab.id,{sherd:'assets'},
+              function withResponse(response) {
+                  G.showWindow();
+                  G.clearAssets();
+                  var asts = response.assets;
+                  for (var i=0;asts.length>i;i++) {
+                      if (asts[i].html_id) //wasn't merged
+                          G.displayAsset(asts[i]);
+                  }
+              }); //end sendRequest
+        };//end onload
+    });
+
 </script>
