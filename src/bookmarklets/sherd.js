@@ -496,7 +496,8 @@ SherdBookmarklet = {
                               "html":objemb,
                               "primary_type":'quicktime',
                               "sources":{
-                                  "quicktime":abs(src, context.document)
+                                  "quicktime":abs(src, context.document),
+                                  "quicktime-metadata":"w"+objemb.width+"h"+objemb.height
                               }
                           }
                       } else {
