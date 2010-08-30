@@ -1,0 +1,6 @@
+besides different build behaviors and APIs, differences include:
+
+panel/popup html:
+  chrome: re-created each time on show
+  firefox: cached and loaded once, even across tabs
+
