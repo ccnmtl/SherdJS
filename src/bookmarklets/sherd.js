@@ -1090,7 +1090,7 @@ SherdBookmarklet = {
           }
           ++self.handler_count;
           if (self.handler_count >= self.final_count) {
-              self.ASYNC.finish();
+              self.ASYNC.finish({'found':!self.no_assets_yet});
           }
       };
       this.walkFrames = function() {
@@ -1135,6 +1135,7 @@ SherdBookmarklet = {
           side:"left",
           fixed:true,
           message_no_assets:'Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.',
+          message_no_assets_short:'No Assets',
           message_disabled_asset:'This asset cannot be embedded on external sites.',
           widget_name:'the bookmarklet'
       }; if (options) for (a in options) {this.options[a]=options[a]};
@@ -1162,7 +1163,7 @@ SherdBookmarklet = {
               if (!SherdBookmarklet.user_ready()) {
                   comp.h2.innerHTML = 'Login required';
                   o.login_url = o.login_url || host_url.split("/",3).join("/");
-                  comp.message.innerHTML = '<a style="color:#8C3B2E;" href="'+o.login_url+'" target="_blank">Please login to your course, and rerun '+o.widget_name+' before adding assets.</a>';
+                  comp.message.innerHTML = 'You are not logged in to MediaThread. <br />Please <a style="color:#8C3B2E;" href="'+o.login_url+'" target="_blank">login to your MediaThread course</a>, and then use '+o.widget_name+' to import assets.';
               } else {
                   comp.h2.innerHTML = 'Choose an asset to import for analysis';
                   comp.message.innerHTML = '';
@@ -1216,7 +1217,7 @@ SherdBookmarklet = {
           self.finder.ASYNC.display = self.displayAsset;
           self.finder.ASYNC.remove = self.removeAsset;
           self.finder.ASYNC.best_frame = self.maybeShowInFrame;
-          self.finder.ASYNC.finished = self.finishedCollecting;
+          self.finder.ASYNC.finish = self.finishedCollecting;
 
           self.finder.findAssets();
       };
@@ -1268,10 +1269,11 @@ SherdBookmarklet = {
               comp.ul.appendChild(li);
           }
       };
-      this.finishedCollecting = function() {
+      this.finishedCollecting = function(results) {
           if (comp.message) {
-              comp.message.innerHTML = "";/*erase searching message*/
-              if (self.no_assets_yet) {
+              comp.message ="";/*erase searching message*/
+              if (!results.found) {
+                  comp.h2.innerHTML = o.message_no_assets_short;
                   comp.ul.innerHTML = "<li>"+o.message_no_assets+"</li>";
               }
           }
