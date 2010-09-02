@@ -20,5 +20,5 @@ cp src/bookmarklets/sherd.js src/bookmarklets/browser_extensions/google_chrome/
 
 #/var/lib/gems/1.8/bin/crxmake --pack-extension=src/bookmarklets/browser_extensions/google_chrome --pack-extension-key=$1  --extension-output=src/bookmarklets/mediathread.crx  
 
-/var/lib/gems/1.8/bin/crxmake --pack-extension=src/bookmarklets/browser_extensions/google_chrome  --extension-output=src/bookmarklets/mediathread.crx  
+/var/lib/gems/1.8/bin/crxmake --pack-extension=src/bookmarklets/browser_extensions/google_chrome  --extension-output=src/bookmarklets/mediathread.crx  --pack-extension-key=$1
 
