@@ -72,7 +72,7 @@ if (!Sherd.Image.OpenLayers) {
 		width:function(obj,presenter){return '100%';},
 		initialize:function(obj,presenter){
 		    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
-		    connect(window,'onresize',function() {
+		    self.events.connect(window,'resize',function() {
 			presenter.components.top.style.height = Sherd.winHeight()+'px';
 		    });
 		}

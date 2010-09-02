@@ -71,6 +71,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 self.components.endField.value = start;
                 end = start;
             }
+            ///Used to communicate with the clipstrip
             if (start != undefined)
                 self.events.signal(djangosherd, 'clipstart', { start: codeToSeconds(start) });    
             
@@ -94,10 +95,9 @@ if (!Sherd.Video.Annotators.ClipForm) {
 
     this.initialize = function(create_obj) {
         // MochiKit!!!
-        self.events.connect(self.components.startButton, 'onclick', function(evt) {
+        self.events.connect(self.components.startButton, 'click', function(evt) {
             var movieTime = self.targetview.media.time();
             var movieTimeCode = secondsToCode(movieTime);
-            
             self.components.startField.value = movieTimeCode; // update start time with movie time
                 
             if (movieTime > codeToSeconds(self.components.endField.value)) {
@@ -106,7 +106,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
             }
             self.storage.update(self.getState(), false);
         });
-        self.events.connect(self.components.endButton, 'onclick', function(evt) {
+        self.events.connect(self.components.endButton, 'click', function(evt) {
                 var movieTime = self.targetview.media.time();
                 var movieTimeCode = secondsToCode(movieTime);
             
@@ -118,7 +118,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 
                 self.storage.update(self.getState(), false);
             });
-        self.events.connect(self.components.startField, 'onchange', function(evt) {
+        self.events.connect(self.components.startField, 'change', function(evt) {
             var obj = self.getState();
 
             // if the start time is greater then the endtime, make end time match start time
@@ -129,7 +129,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
             }
             self.storage.update(obj, false);
         });
-        self.events.connect(self.components.endField, 'onchange', function(evt) {
+        self.events.connect(self.components.endField, 'change', function(evt) {
             var obj = self.getState();
 
             // if the start time is greater then the endtime, make start time match end time
@@ -140,7 +140,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
             }
             self.storage.update(obj, false);
         });
-        self.events.connect(self.components.playClip, 'onclick', function(evt) {
+        self.events.connect(self.components.playClip, 'click', function(evt) {
             var obj = self.getState();
             self.events.signal(djangosherd, 'playclip', { start: obj.start, end: obj.end });
         });

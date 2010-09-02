@@ -108,13 +108,13 @@ if (!Sherd.Video.Annotators.ClipStrip) {
 
     this.initialize = function(create_obj) {
         // MochiKit!!!
-        self.events.connect(self.components.clipStartMarker, 'onclick', function(evt) {
+        self.events.connect(self.components.clipStartMarker, 'click', function(evt) {
                 self.events.signal(djangosherd, 'seek', self.components.starttime);
              });
-        self.events.connect(self.components.clipEndMarker, 'onclick', function(evt) {
+        self.events.connect(self.components.clipEndMarker, 'click', function(evt) {
                 self.events.signal(djangosherd, 'seek', self.components.endtime);
             });
-        self.events.connect(self.components.clipRange, 'onclick', function(evt) {
+        self.events.connect(self.components.clipRange, 'click', function(evt) {
             var obj = self.getState();
             self.events.signal(djangosherd, 'playclip', { start: obj.starttime, end: obj.endtime });
         });

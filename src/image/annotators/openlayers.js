@@ -58,10 +58,10 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		self.storage.update(current_state);
 	    }
 	    ///# 3. button listeners
-	    connect(self.components.center,'onclick',function(evt) {
+	    self.events.connect(self.components.center,'click',function(evt) {
 		self.targetview.setState({feature:self.targetview.currentfeature});
 	    });
-	    connect(self.components.redo,'onclick',function(evt) {
+	    self.events.connect(self.components.redo,'click',function(evt) {
 		if (mode != 'create') {
 		    mode = 'create';
 		    self.openlayers.editingtoolbar.activate();

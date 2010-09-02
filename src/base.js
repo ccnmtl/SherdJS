@@ -282,17 +282,40 @@ Sherd.Base = {
 /* connected functions
  con_func(event,src
  */
-if (typeof MochiKit != 'undefined') {
+if (typeof jQuery != 'undefined') {
+    ///TODO: before making jQuery take precedent over MochiKit, we need to
+    /// make sure  viewers using self.events.connect()/signal() work with jQuery
+    Sherd.winHeight = function() {
+        return jQuery(window).height()-235;
+    };
+    Sherd.Base.Events = {
+        'connect' : function(subject, event, func) {
+            var disc = jQuery(subject).bind(event, function(evt, param) {
+                if (param) func(param);
+                else func(evt);
+            });
+            return {
+                disconnect : function() {
+                    jQuery(disc).unbind(event);
+                }
+            };
+        },
+        'signal' : function(subject, event, param) {
+            jQuery(subject).trigger(event, [param]);
+        }
+    };
+} //end jquery
+else if (typeof MochiKit != 'undefined') {
     Sherd.winHeight = function() {
         return MochiKit.Style.getViewportDimensions().h-250;
     };
     Sherd.Base.Events = {
-        'connect' : function(subject, event, self, func) {
+        'connect' : function(subject, event, func) {
             if (typeof subject.nodeType != 'undefined' || subject == window
                     || subject == document) {
                 event = 'on' + event;
             }
-            var disc = MochiKit.Signal.connect(subject, event, self, func);
+            var disc = MochiKit.Signal.connect(subject, event, func);
             return {
                 disconnect : function() {
                     MochiKit.Signal.disconnect(disc);
@@ -303,29 +326,7 @@ if (typeof MochiKit != 'undefined') {
             MochiKit.Signal.signal(subject, event, param);
         }
     };
-} //mochikit
-else if (typeof jQuery != 'undefined') {
-    ///TODO: before making jQuery take precedent over MochiKit, we need to
-    /// make sure  viewers using self.events.connect()/signal() work with jQuery
-    Sherd.winHeight = function() {
-        return jQuery(window).height()-235;
-    };
-    Sherd.Base.Events = {
-        'connect' : function(subject, event, self, func) {
-            var disc = jQuery(subject).bind(event, function() {
-                func.call(self, event, this);
-            });
-            return {
-                disconnect : function() {
-                    disc.unbind(event);
-                }
-            };
-        },
-        'signal' : function(subject, event) {
-            jQuery(subject).trigger(event);
-        }
-    };
-} //jquery
+} //end mochikit
 else {
     throw Error("Use a framework, Dude! MochiKit, jQuery, YUI, whatever!");
 }

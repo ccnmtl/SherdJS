@@ -46,10 +46,10 @@ if (!Sherd.Image.Annotators.FSIViewer) {
 
 	this.initialize = function(create_obj) {
 	    ///button listeners
-	    connect(self.components.center,'onclick',function(evt) {
+	    self.events.connect(self.components.center,'click',function(evt) {
 		self.targetview.setState(self.current_state);
 	    });
-	    connect(self.components.redo,'onclick',function(evt) {
+	    self.events.connect(self.components.redo,'click',function(evt) {
                 var current_state = self.targetview.getState();
                 self.storage.update(current_state);
 	    });

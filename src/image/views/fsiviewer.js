@@ -77,7 +77,7 @@ if (!Sherd.Image.FSIViewer) {
 		width:function(obj,presenter){return '100%';},
                 extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
 		initialize:function(obj,presenter){
-                    connect(window,'onresize',function() {
+                    self.events.connect(window,'resize',function() {
                         var top = presenter.components.top;
 			top.setAttribute('height',Sherd.winHeight()+'px');
                         self.current_state.wh_ratio = ( top.width / (top.height-30) );
