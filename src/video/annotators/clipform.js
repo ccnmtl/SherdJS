@@ -11,7 +11,13 @@
 // clipstart - the clip start time has changed. signals self.targetview.media
 // clipend -- the clip end time has changed. signals self.targetview.media
 
-function DjangoSherd_ClipForm() {
+
+
+if (!Sherd) {Sherd = {};}
+if (!Sherd.Video) {Sherd.Video = {};}
+if (!Sherd.Video.Annotators) {Sherd.Video.Annotators= {};}
+if (!Sherd.Video.Annotators.ClipForm) {
+ Sherd.Video.Annotators.ClipForm = function() {
     var secondsToCode = Sherd.Video.secondsToCode; // @todo -- consider moving these functions out of Video  
     var codeToSeconds = Sherd.Video.codeToSeconds; // and into a separate Utilities or Helpers file?
     
@@ -185,4 +191,5 @@ function DjangoSherd_ClipForm() {
             'playClip' : document.getElementById('btnPlayClip')
         };
     };
+ }
 }

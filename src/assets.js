@@ -20,7 +20,7 @@ if (!Sherd.GenericAssetView) {
         var self = this;
         //consts
         var Clipstripper = Sherd.Video.Annotators.ClipStrip;
-        var Clipformer = DjangoSherd_ClipForm;
+        var Clipformer = Sherd.Video.Annotators.ClipForm;
 	this.options = options;
         // //INIT
         this.settings = {};
