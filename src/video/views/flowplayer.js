@@ -289,7 +289,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 self.microformat._queueReadyToSeekEvent();
                 
                 // register for notifications from clipstrip to seek to various times in the video
-                self.events.connect(djangosherd, 'seek', self.media, 'seek');
+                self.events.connect(djangosherd, 'seek', self.media.seek);
                 
                 self.events.connect(djangosherd, 'playclip', function(obj) {
                     // Call seek directly

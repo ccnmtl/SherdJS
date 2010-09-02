@@ -108,22 +108,22 @@ if (!Sherd.Video.Annotators.ClipStrip) {
 
     this.initialize = function(create_obj) {
         // MochiKit!!!
-        connect(self.components.clipStartMarker, 'onclick', function(evt) {
+        self.events.connect(self.components.clipStartMarker, 'onclick', function(evt) {
                 self.events.signal(djangosherd, 'seek', self.components.starttime);
              });
-        connect(self.components.clipEndMarker, 'onclick', function(evt) {
+        self.events.connect(self.components.clipEndMarker, 'onclick', function(evt) {
                 self.events.signal(djangosherd, 'seek', self.components.endtime);
             });
-        connect(self.components.clipRange, 'onclick', function(evt) {
+        self.events.connect(self.components.clipRange, 'onclick', function(evt) {
             var obj = self.getState();
             self.events.signal(djangosherd, 'playclip', { start: obj.starttime, end: obj.endtime });
         });
     
         
         // listen for changes in duration from the movie and clipstart/end changes from clipform
-        self.events.connect(djangosherd, 'duration', self, 'setClipDuration'); //player
-        self.events.connect(djangosherd, 'clipstart', self, 'setClipStart'); //clipform
-        self.events.connect(djangosherd, 'clipend', self, 'setClipEnd'); //clipform
+        self.events.connect(djangosherd, 'duration', self.setClipDuration); //player
+        self.events.connect(djangosherd, 'clipstart', self.setClipStart); //clipform
+        self.events.connect(djangosherd, 'clipend', self.setClipEnd); //clipform
         
         // setup the clip markers in the default position
         self.microformat._resize();

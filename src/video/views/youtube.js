@@ -140,12 +140,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         this.initialize = function(create_obj) {
             // register for notifications from clipstrip to seek to various times in the video
-            self.events.connect(djangosherd, 'seek', self.media, 'seek');
+            self.events.connect(djangosherd, 'seek', self.media.seek);
             
             self.events.connect(djangosherd, 'playclip', function(obj) {
-                    self.setState(obj);
-                    self.media.play();
-                });
+                self.setState(obj);
+                self.media.play();
+            });
         };
         
         ////////////////////////////////////////////////////////////////////////

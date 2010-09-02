@@ -275,7 +275,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             self.microformat._startUpdateDisplayTimer(create_obj);
             
             // register for notifications from clipstrip to seek to various times in the video
-            self.events.connect(djangosherd, 'seek', self.media, 'seek');
+            self.events.connect(djangosherd, 'seek', self.media.seek);
             
             self.events.connect(djangosherd, 'playclip', function(obj) {
                 self.setState(obj);

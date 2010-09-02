@@ -145,7 +145,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         // AssetView Overrides
         
         this.initialize = function(create_obj) {
-            self.events.connect(djangosherd, 'seek', self.media, 'seek');
+            self.events.connect(djangosherd, 'seek', self.media.seek);
             self.events.connect(djangosherd, 'playclip', function(obj) {
                 self.setState(obj, {autoplay:true});
                 self.media.play();
