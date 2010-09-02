@@ -20,7 +20,6 @@ function DjangoSherd_Asset_Config() {
         ds.dom_assets = ds.assetMicroFormat.find();
         if (!ds.dom_assets.length)
             return;// no assets!
-        
         // GenericAssetView is a wrapper in ../assets.js.
         ds.assetview = new Sherd.GenericAssetView( {
             'clipform' : true,
@@ -28,7 +27,6 @@ function DjangoSherd_Asset_Config() {
             'storage' : ds.noteform,
 	    'targets':{clipstrip:'clipstrip-display'}
         });
-
         var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
         ds.assetview.html.push(obj_div, {
             asset : ds.assetMicroFormat.read(ds.dom_assets[0])
@@ -522,6 +520,10 @@ function openCitation(url, no_autoplay_or_options) {
         if (!/WebKit/.test(navigator.userAgent)) {
             //WebKit doesn't replace history correctly
             document.location.replace('#annotation=annotation' + id);
+        }
+
+        if (typeof options.callback=='function') {
+            options.callback(return_value);
         }
         if (djangosherd.onOpenCitation) {
             djangosherd.onOpenCitation(id,ann_obj,options,targets);
