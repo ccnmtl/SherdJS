@@ -46,6 +46,7 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                     text: '<div id="' + wrapperID + '" class="sherd-videotag-wrapper sherd-video-wrapper" '
                         + '     style="width:'+obj.options.width+'px">' 
                         + '<video id="'+playerID+'" controls="controls"'
+                        + (obj.poster) ? ' poster="'+obj.poster+'" ' : ''
                         + '       height="'+obj.options.height+'" width="'+obj.options.width+'"'
                         + '       type=\''+ supported.mimetype +'\''
 		        + '       src="'+ supported.url +'">'

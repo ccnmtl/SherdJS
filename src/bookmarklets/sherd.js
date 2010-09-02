@@ -567,6 +567,10 @@ SherdBookmarklet = {
                       "primary_type":"video",
                       "sources": {}
                   }
+                  if (videos[i].poster) {
+                      rv.sources['poster'] =
+                          rv.sources['image'] = videos[i].poster;
+                  }
                   addSource(videos[i], rv, videos[i]);
                   var sources = videos[i].getElementsByTagName('source');
                   for (var j=0;j<sources.length;j++) {
