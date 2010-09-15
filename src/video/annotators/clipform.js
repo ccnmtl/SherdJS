@@ -73,10 +73,10 @@ if (!Sherd.Video.Annotators.ClipForm) {
             }
             ///Used to communicate with the clipstrip
             if (start != undefined)
-                self.events.signal(djangosherd, 'clipstart', { start: codeToSeconds(start) });    
+                self.events.signal(self.targetview, 'clipstart', { start: codeToSeconds(start) });    
             
             if (end != undefined)
-                self.events.signal(djangosherd, 'clipend', { end: codeToSeconds(end) });
+                self.events.signal(self.targetview, 'clipend', { end: codeToSeconds(end) });
         }
     };
 
@@ -142,7 +142,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
         });
         self.events.connect(self.components.playClip, 'click', function(evt) {
             var obj = self.getState();
-            self.events.signal(djangosherd, 'playclip', { start: obj.start, end: obj.end });
+            self.events.signal(self.targetview, 'playclip', { start: obj.start, end: obj.end });
         });
     };
     

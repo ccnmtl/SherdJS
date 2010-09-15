@@ -145,8 +145,8 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         // AssetView Overrides
         
         this.initialize = function(create_obj) {
-            self.events.connect(djangosherd, 'seek', self.media.seek);
-            self.events.connect(djangosherd, 'playclip', function(obj) {
+            self.events.connect(self, 'seek', self.media.playAt);
+            self.events.connect(self, 'playclip', function(obj) {
                 self.setState(obj, {autoplay:true});
                 self.media.play();
             });
@@ -176,7 +176,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                     && typeof self.components.player.GetLength != 'undefined') {
                     ///Real API returns milliseconds
                     duration = self.components.player.GetLength()/1000 ;
-                    self.events.signal(djangosherd, 'duration', { duration: duration });
+                    self.events.signal(self, 'duration', { duration: duration });
                 }
             } catch(e) {}
             return duration;
@@ -235,7 +235,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                     p.SetPosition(starttime*1000);
                     if (play) self.media.play();
                 }
-                if (endtime != undefined) {
+                if (endtime) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     self.media.pauseAt(endtime);
                 }

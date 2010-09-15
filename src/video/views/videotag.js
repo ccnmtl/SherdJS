@@ -135,14 +135,14 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         // AssetView Overrides
         
         this.initialize = function(create_obj) {
-            self.events.connect(djangosherd, 'seek', self.media.seek);
-            self.events.connect(djangosherd, 'playclip', function(obj) {
+            self.events.connect(self, 'seek', self.media.playAt);
+            self.events.connect(self, 'playclip', function(obj) {
                     self.setState(obj);
                     self.media.play();
                 });
             if (self.components.player) {
                 function signal_duration() {
-                    self.events.signal(djangosherd, 'duration', { duration: self.media.duration() });
+                    self.events.signal(self, 'duration', { duration: self.media.duration() });
                 }
                 if (self.media.duration() > 0) 
                     signal_duration()
@@ -195,7 +195,7 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                             return {error:true}
                         }
                     }
-                    if (endtime != undefined)
+                    if (endtime)
                         self.media.pauseAt(endtime);
                     if (autoplay || self.components.autoplay)
                         self.media.play();

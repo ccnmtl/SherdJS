@@ -148,6 +148,10 @@ if (!Sherd.Video.Base) {
             ,
             play : unimplemented
             ,
+            playAt : function(starttime) {
+                self.media.seek(starttime, false, /*autoplay*/true);
+            }
+            ,
             isPlaying : function() { 
                 return false; // Used by ClipForm to determine whether the media is playing. 
                 // Maybe should be one level up so that ClipForm doesn't know about media 

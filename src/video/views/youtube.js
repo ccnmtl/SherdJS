@@ -140,9 +140,9 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         this.initialize = function(create_obj) {
             // register for notifications from clipstrip to seek to various times in the video
-            self.events.connect(djangosherd, 'seek', self.media.seek);
+            self.events.connect(self, 'seek', self.media.playAt);
             
-            self.events.connect(djangosherd, 'playclip', function(obj) {
+            self.events.connect(self, 'playclip', function(obj) {
                 self.setState(obj);
                 self.media.play();
             });
@@ -179,7 +179,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             case 1:
                 var duration = self.media.duration();
                 if (duration > 1) {
-                    self.events.signal(djangosherd, 'duration', { duration: duration });
+                    self.events.signal(self, 'duration', { duration: duration });
                 }
                 break;
             case 2:// stopped or ended
@@ -231,17 +231,17 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             return playing;
         };
 
-        this.media.seek = function(starttime, endtime) {
+        this.media.seek = function(starttime, endtime, autoplay) {
             if (self.media.ready()) {
                 if (starttime != undefined) {
-                    if (self.components.autoplay) {
+                    if (autoplay || self.components.autoplay) {
                         self.components.player.seekTo(starttime, true);
                     } else {
                         self.components.player.cueVideoByUrl(self.components.mediaUrl, starttime);
                     }
                 }
             
-                if (endtime != undefined) {
+                if (endtime) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     // Delay the pause a few seconds. In an update situation, there can be a slight
                     // race condition between a prior seek with a greater end time. In that situation,

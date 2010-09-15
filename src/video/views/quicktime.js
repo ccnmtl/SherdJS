@@ -227,7 +227,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                   if (newDuration != self.media._duration) {
                                       self.media._duration = newDuration;
                                       self.components.duration.innerHTML = self.secondsToCode(newDuration);
-                                      self.events.signal(djangosherd, 'duration', { duration: newDuration });
+                                      self.events.signal(self, 'duration', { duration: newDuration });
                                   }
                                   if (self.media.ready() ) {
                                       if (self.components.timedisplay.style.display == 'none') {
@@ -275,9 +275,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             self.microformat._startUpdateDisplayTimer(create_obj);
             
             // register for notifications from clipstrip to seek to various times in the video
-            self.events.connect(djangosherd, 'seek', self.media.seek);
+            self.events.connect(self, 'seek', self.media.playAt);
             
-            self.events.connect(djangosherd, 'playclip', function(obj) {
+            self.events.connect(self, 'playclip', function(obj) {
                 self.setState(obj);
                 
                 // give it a second
@@ -384,7 +384,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                         p.Play();
                     }
                 }
-                if (endtime != undefined) {
+                if (endtime) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     self.media.pauseAt(endtime);
                 }

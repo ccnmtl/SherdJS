@@ -210,7 +210,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                              && self.media.duration() > 0 );
                  }, poll:500},
                  {call: function() {
-                     self.events.signal(djangosherd, 'duration', { duration: self.media.duration() });
+                     self.events.signal(self/*==view*/, 'duration', { duration: self.media.duration() });
                      self.setState({ start: self.state.starttime, end: self.state.endtime});
                  }
                  }]);
@@ -289,9 +289,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 self.microformat._queueReadyToSeekEvent();
                 
                 // register for notifications from clipstrip to seek to various times in the video
-                self.events.connect(djangosherd, 'seek', self.media.seek);
+                self.events.connect(self, 'seek', self.media.playAt);
                 
-                self.events.connect(djangosherd, 'playclip', function(obj) {
+                self.events.connect(self, 'playclip', function(obj) {
                     // Call seek directly
                     self.components.player.seek(obj.start);
                     
@@ -366,7 +366,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     self.components.player.seek(starttime);
                 }
                 
-                if (endtime != undefined) {
+                if (endtime) {
                     self.media.pauseAt(endtime);
                 }
                 
