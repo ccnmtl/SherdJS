@@ -29,13 +29,7 @@
             G.showWindow();
             chrome.tabs.sendRequest(tab.id,{sherd:'assets'},
               function withResponse(response) {
-                  G.showWindow();
-                  G.clearAssets();
-                  var asts = response.assets;
-                  for (var i=0;asts.length>i;i++) {
-                      if (asts[i].html_id) //wasn't merged
-                          G.displayAsset(asts[i]);
-                  }
+                  G.showAssets(response.assets);
               }); //end sendRequest
         };//end onload
     });

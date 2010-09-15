@@ -27,61 +27,75 @@ SherdBookmarklet = {
   },
   "hosthandler": {
     /*Try to keep them ALPHABETICAL by 'brand' */
-    "library.artstor.org": {
+    "artstor.org": {
         find:function(callback) {
             /*must have floating pane open to find image*/
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
+                var found_images = [];
                 var floating_pane = jQuery(".MetaDataWidgetRoot");
-                if (!floating_pane.length) {
-                    return callback([],"Try opening the image information pane by clicking its title under the thumbnail.");
+                var selected_thumbs = jQuery(".thumbNailImageSelected");
+                if (floating_pane.length) {
+                    var dom = floating_pane.get(0);
+                    found_images.push({
+                        "artstorId":dom.id.substr(3),/*after 'mdw'*/
+                        "sources":{},"metadata":{},"primary_type":'image_fpx',
+                        "html":dom
+                    });
+                } else if (selected_thumbs.length) {
+                    selected_thumbs.each(function() {
+                        found_images.push({
+                            "artstorId":dijit.byId(String(this.id).split('_')[0]).objectId,
+                            "sources":{},"metadata":{},"primary_type":'image_fpx',
+                            "html":this
+                        });
+                    });
                 } else {
-                    var obj = {
-                        "sources":{},
-                        "html":floating_pane.get(0),
-                        "metadata":{},
-                        "primary_type":'image_fpx'
-                    };
-                    var objectId = obj.html.id.substr(3);/*after 'mdw'*/
-                    var done = 2; //# of queries
-                    function obj_final() {
-                        return callback([obj]);
-                    }
-                    jQuery
-                    .ajax({url:"http://library.artstor.org/library/secure/imagefpx/"+objectId+"/103/5",
-                           dataType:'json',
-                           success:function(fpxdata,textStatus) {
-                               var f = fpxdata[0];
-                               obj.sources["fsiviewer"] = "http://viewer2.artstor.org/erez3/fsi4/fsi.swf";
-                               obj.sources["image_fpx"] = f.imageServer+f.imageUrl;
-                               obj.sources["image_fpx-metadata"] = "w"+f.width+"h"+f.height;
-                               if (--done==0) obj_final();
-                           },
-                           error:function(){
-                               if (--done==0) obj_final();
-                           }
-                          });
-                    jQuery
-                    .ajax({url:"http://library.artstor.org/library/secure/metadata/"+objectId,
-                           dataType:'json',
-                           success:function(metadata,textStatus) {
-                               var img_link = metadata.imageUrl.match(/size\d\/(.*)\.\w+$/);
-                               obj.sources["title"] = metadata.title;
-                               obj.sources["thumb"] = "http://library.artstor.org"+metadata.imageUrl;
-                               var m = metadata.metaData;
-                               for (var i=0;i<m.length;i++) {
-                                   ///so multiple values are still OK
-                                   if (m[i].fieldName in obj.metadata) {
-                                       obj.metadata[m[i].fieldName].push(m[i].fieldValue);
-                                   } else {
-                                       obj.metadata[m[i].fieldName] = [m[i].fieldValue];
-                                   }
+                    return callback([],"Try selecting one or more images by clicking on a thumbnail.");
+                } 
+                var done = found_images.length * 2; //# of queries
+                var obj_final = function() {
+                    return callback(found_images);
+                }
+                for (var i=0;i<found_images.length;i++) {
+                    function getArtStorData(obj) {
+                        jQuery
+                        .ajax({url:"http://"+location.hostname+"/library/secure/imagefpx/"+obj.artstorId+"/103/5",
+                               dataType:'json',
+                               success:function(fpxdata,textStatus) {
+                                   var f = fpxdata[0];
+                                   obj.sources["fsiviewer"] = "http://viewer2.artstor.org/erez3/fsi4/fsi.swf";
+                                   obj.sources["image_fpx"] = f.imageServer+f.imageUrl;
+                                   obj.sources["image_fpx-metadata"] = "w"+f.width+"h"+f.height;
+                                   if (--done==0) obj_final();
+                               },
+                               error:function(){
+                                   if (--done==0) obj_final();
                                }
-                               if (--done==0) obj_final(); 
-                           },
-                           error:function(){
-                               if (--done==0) obj_final(); 
-                           }
-                          });
+                              });
+                        jQuery
+                        .ajax({url:"http://"+location.hostname+"/library/secure/metadata/"+obj.artstorId,
+                               dataType:'json',
+                               success:function(metadata,textStatus) {
+                                   var img_link = metadata.imageUrl.match(/size\d\/(.*)\.\w+$/);
+                                   obj.sources["title"] = metadata.title;
+                                   obj.sources["thumb"] = "http://library.artstor.org"+metadata.imageUrl;
+                                   var m = metadata.metaData;
+                                   for (var i=0;i<m.length;i++) {
+                                       ///so multiple values are still OK
+                                       if (m[i].fieldName in obj.metadata) {
+                                           obj.metadata[m[i].fieldName].push(m[i].fieldValue);
+                                       } else {
+                                           obj.metadata[m[i].fieldName] = [m[i].fieldValue];
+                                       }
+                                   }
+                                   if (--done==0) obj_final(); 
+                               },
+                               error:function(){
+                                   if (--done==0) obj_final(); 
+                               }
+                              });
+                    }
+                    getArtStorData(found_images[i]);
                 }
             });
         }
@@ -783,11 +797,9 @@ SherdBookmarklet = {
   },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
-      if (document.location.hostname in hosthandler) {
-          return hosthandler[document.location.hostname];
-      } else if (document.location.hostname.slice(4) in hosthandler) {
-          /*for www. domains */
-          return hosthandler[document.location.hostname.slice(4)];
+      for (host in hosthandler) {
+          if (new RegExp(host+'$').test(location.hostname)) 
+              return hosthandler[host];
       }
   },/*gethosthandler*/
   "obj2url": function(host_url,obj) {
@@ -891,11 +903,15 @@ SherdBookmarklet = {
                     document.body.appendChild(form); //for IE7 sux
                     form.submit();
                 }
+                break;
+            default:
+                M.g = new M.Interface(host_url);
+                M.g.showAssets(assets);
             }
             if (window.console) {/*if we get here, we're debugging*/
                 window.console.log(assets);
             }
-        };
+        };/*end jump_with_first_asset*/
         handler.find.call(handler, jump_with_first_asset);
     },
     decorate: function(host_url) {
@@ -1282,6 +1298,13 @@ SherdBookmarklet = {
               }
           }
       };
+      this.showAssets = function(assets) {
+          self.showWindow();
+          self.clearAssets();
+          for (var i=0;assets.length>i;i++) {
+              self.displayAsset(assets[i]);
+          }
+      };
 
   }/*Interface*/
 };/*SherdBookmarklet (root)*/
@@ -1322,12 +1345,18 @@ if (SherdBookmarkletOptions.decorate) {
     ///request sent TO background.html
     chrome.extension.sendRequest({show_icon:true}, function(response) {});
     function cleanup(obj) {
-        return JSON.parse(
-                JSON.stringify(obj,function(key,value){
-                    if (typeof value=='object' && value.tagName) {
-                        return '';
-                    } else return value;
-                }));
+        var json_safe =  JSON.parse(
+            JSON.stringify(obj,function(key,value){
+                if (typeof value=='object' && value.tagName) {
+                    return '';
+                } else return value;
+            }));
+        //remove merged assets
+        for (var i=0;i<json_safe.length;i++) {
+            if ( ! json_safe[i].html_id)
+                json_safe.splice(--i,1); //decrement to combat loop
+        }
+        return json_safe;
     }
     chrome.extension.onRequest.addListener(
         //for request sent FROM popup.html
