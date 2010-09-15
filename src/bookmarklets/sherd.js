@@ -636,7 +636,7 @@ SherdBookmarklet = {
                                   "html":image,
                                   "primary_type":"image",
                                   "sources": {
-                                      "title":tile_root.split('/').pop(),
+                                      "title":tile_root.split('/').pop(),//better guess than 0-0-0.jpg
                                       "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
                                       "thumb":img.src,
                                       "image":img.src, /*nothing bigger available*/

@@ -133,7 +133,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
 		    htmlID:id,
-		    text:'<div id="'+id+'" style="height:3em;"><button style="display:none;" class="sherd-image-center">Center Annotation</button> <button style="display:none;" class="sherd-image-redo">Redo Annotation</button><p class="sherd-image-instructions sherd-instructions">Choose a drawing tool.  The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p></div>'
+		    text:'<div id="'+id+'" class="sherd-image-annotator"><button style="display:none;" class="sherd-image-center">Center Annotation</button> <button style="display:none;" class="sherd-image-redo">Redo Annotation</button><p class="sherd-image-instructions sherd-instructions">Choose a drawing tool.  The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p></div>'
 		};
 	    },
 	    'components':function(html_dom,create_obj) {
