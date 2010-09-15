@@ -187,7 +187,7 @@ SherdBookmarklet = {
                         "thumb":thumb,
                         "image":img.src /*nothing bigger available*/
                     };
-                    /*do a query to see what the full dimensions are of the tiles
+                    /*could do a query to see what the full dimensions are of the tiles
                       but instead of this hack what about using 
                       img_root+"/source/"+img_key+"/"+img_key+"/ImageProperties.xml"
                      */
@@ -599,6 +599,9 @@ SherdBookmarklet = {
           find:function(callback,context) {
               var imgs = context.document.getElementsByTagName("img");
               var result = [];
+              var zoomify_urls = {};
+              var done = 0;
+              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
               for (var i=0;i<imgs.length;i++) {
                   //IGNORE headers/footers/logos
                   var image = imgs[i];
@@ -618,6 +621,40 @@ SherdBookmarklet = {
                               "image-metadata":"w"+image.width+"h"+image.height
                           }
                       });
+                  } else {
+                      ////Zoomify Tile Images support
+                      var zoomify_match = String(image.src).match(/^(.*)\/TileGroup\d\//);
+                      if (zoomify_match) {
+                          var tile_root = SherdBookmarklet.absolute_url(zoomify_match[1],context.document);
+                          if (tile_root in zoomify_urls)
+                              continue;
+                          else {
+                              zoomify_urls[tile_root] = 1;
+                              var img = document.createElement("img");
+                              img.src = tile_root+"/TileGroup0/0-0-0.jpg";
+                              var zoomify = {
+                                  "html":image,
+                                  "primary_type":"image",
+                                  "sources": {
+                                      "title":tile_root.split('/').pop(),
+                                      "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
+                                      "thumb":img.src,
+                                      "image":img.src, /*nothing bigger available*/
+                                      "image-metadata":"w"+img.width+"h"+img.height
+                                  }
+                              };
+                              result.push(zoomify);
+                              done++;
+                              /*Get width/height from zoomify's XML file
+                                img_root+"/source/"+img_key+"/"+img_key+"/ImageProperties.xml"
+                               */
+                              jQ.get(tile_root+"/ImageProperties.xml",null,function(dir) {
+                                  var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
+                                  zoomify.sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
+                                  if (--done==0) callback(result);
+                              },"text");
+                          }
+                      }
                   }
               }
               callback(result);
@@ -1202,7 +1239,7 @@ SherdBookmarklet = {
           }
           var pageYOffset = self.visibleY(target)+o.top;
 
-          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:9998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;left:0;position:absolute;z-index:9999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an asset to import for analysis</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
+          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;left:0;position:absolute;z-index:999999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an asset to import for analysis</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
           comp.tab = comp.top.firstChild;
           comp.window = comp.top.lastChild;
           comp.ul = comp.top.getElementsByTagName("ul")[0];
@@ -1354,7 +1391,7 @@ if (SherdBookmarkletOptions.decorate) {
         //remove merged assets
         for (var i=0;i<json_safe.length;i++) {
             if ( ! json_safe[i].html_id)
-                json_safe.splice(--i,1); //decrement to combat loop
+                json_safe.splice(i--,1); //decrement after splice to combat loop
         }
         return json_safe;
     }
