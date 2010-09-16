@@ -27,8 +27,8 @@ function DjangoSherd_Asset_Config() {
             'storage' : ds.noteform,
 	    'targets':{clipstrip:'clipstrip-display'}
         });
-        ///MOCHI
-        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
+        // id=videoclip
+        var obj_div = getFirstElementByTagAndClassName('div', 'asset-display'); ///MOCHI
         ds.assetview.html.push(obj_div, {
             asset : ds.assetMicroFormat.read(ds.dom_assets[0])
         });
@@ -429,9 +429,8 @@ function DjangoSherd_NoteForm() {
             // top is the form
             self.components.top['annotation-range1'].value = range1;
             self.components.top['annotation-range2'].value = range2;
-            ///MOCHI
-            self.components.top['annotation-annotation_data'].value = serializeJSON(obj);// TODO
-                                                                                            // obj!
+
+            self.components.top['annotation-annotation_data'].value = serializeJSON(obj);///MOCHI
         }
     };
     // TODO: less barebones
