@@ -27,6 +27,7 @@ function DjangoSherd_Asset_Config() {
             'storage' : ds.noteform,
 	    'targets':{clipstrip:'clipstrip-display'}
         });
+        ///MOCHI
         var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
         ds.assetview.html.push(obj_div, {
             asset : ds.assetMicroFormat.read(ds.dom_assets[0])
@@ -48,7 +49,7 @@ function DjangoSherd_Asset_Config() {
             var obj = false;
             try {
                 // /#initialize for editing
-                obj = evalJSON(orig_annotation_data
+                obj = evalJSON(orig_annotation_data ///MOCHI
                         .getAttribute('data-annotation'));
                 ds.assetview.setState(obj);
                 if (ds.assetview.clipform)
@@ -146,7 +147,7 @@ function DjangoSherd_createThumbs(materials) {
                 break;
             }
             ds.thumbs.push(view);
-            var obj_div = DIV( {
+            var obj_div = DIV( { //MOCHI
                 'class' : 'thumb'
             });
             found_obj.html.parentNode.appendChild(obj_div);
@@ -186,14 +187,14 @@ function DjangoSherd_Storage() {
             delay = false;
         if (id) {
             if (_current_citation) {
-                removeElementClass(_current_citation, 'active-annotation');
+                removeElementClass(_current_citation, 'active-annotation');///MOCHI
                 _current_citation = null;
             }
             if (obj_type == 'annotations') {
-                _current_citation = getFirstElementByTagAndClassName('div',
+                _current_citation = getFirstElementByTagAndClassName('div',///MOCHI
                                                                      'annotation'+id);
                 if (_current_citation != null)
-                    addElementClass(_current_citation, 'active-annotation');
+                    addElementClass(_current_citation, 'active-annotation');///MOCHI
             }
             if (id in _cache[obj_type]) {
                 ann_obj = _cache[obj_type][id];
@@ -266,7 +267,7 @@ function DjangoSherd_Storage() {
 function DjangoSherd_AssetMicroFormat() {
     this.find = function(dom) {
         dom = dom || document;
-        var assets = getElementsByTagAndClassName('div', 'asset-links', dom);
+        var assets = getElementsByTagAndClassName('div', 'asset-links', dom);///MOCHI
         return map(function(e) {
             return {"html": e };
         }, assets);
@@ -282,8 +283,8 @@ function DjangoSherd_AssetMicroFormat() {
     };
     this.read = function(found_obj) {
         var rv = {};
-        forEach(
-                getElementsByTagAndClassName('a', 'assetsource', found_obj.html),
+        forEach(///MOCHI
+                getElementsByTagAndClassName('a', 'assetsource', found_obj.html),///MOCHI
                 function(elt) {
                     var reg = String(elt.className).match(/assetlabel-(\w+)/);
                     if (reg != null) {
@@ -301,7 +302,7 @@ function DjangoSherd_AssetMicroFormat() {
                                 width : wh[1],
                                 height : wh[2]
                             };
-                            if (hasElementClass(elt, 'asset-primary')) {
+                            if (hasElementClass(elt, 'asset-primary')) {///MOCHI
                                 rv['width'] = wh[1];
                                 rv['height'] = wh[2];
                             }
@@ -355,7 +356,7 @@ function DjangoSherd_AnnotationMicroFormat() {
     var video = new Sherd.Video.Helpers();
     this.find = function(dom) {
         dom = dom || document;
-        var annotations = getElementsByTagAndClassName('div', 'annotation', dom);
+        var annotations = getElementsByTagAndClassName('div', 'annotation', dom);///MOCHI
         return map(function(e) {
             return {"html" : e };
         }, annotations);
@@ -390,13 +391,13 @@ function DjangoSherd_AnnotationMicroFormat() {
             rv.asset = asset_mf.read(asset_elts[0]);
         }
 
-        var data_elt = getFirstElementByTagAndClassName('div',
+        var data_elt = getFirstElementByTagAndClassName('div',///MOCHI
                 'annotation-data', found_obj.html);
-        var ann_title = getFirstElementByTagAndClassName('div',
+        var ann_title = getFirstElementByTagAndClassName('div',///MOCHI
                 'annotation-title', found_obj.html);
         if (ann_title)
             rv.metadata['title'] = ann_title.textContent;
-        var ann_data = evalJSON(data_elt.getAttribute('data-annotation'));
+        var ann_data = evalJSON(data_elt.getAttribute('data-annotation'));///MOCHI
         
         // /TODO: remove these--maybe we can with no problem
         ann_data.start = parseInt(data_elt.getAttribute('data-begin'), 10);// CHOP
@@ -428,6 +429,7 @@ function DjangoSherd_NoteForm() {
             // top is the form
             self.components.top['annotation-range1'].value = range1;
             self.components.top['annotation-range2'].value = range2;
+            ///MOCHI
             self.components.top['annotation-annotation_data'].value = serializeJSON(obj);// TODO
                                                                                             // obj!
         }
@@ -472,8 +474,8 @@ function openCitation(url, no_autoplay_or_options) {
 	var asset_target = ((options.targets && options.targets.asset) 
 			    ? options.targets.asset
 			    : 'videoclipbox');
-        showElement(asset_target);
-        var $$$$= getFirstElementByTagAndClassName;
+        showElement(asset_target); ///MOCHI
+        var $$$$= getFirstElementByTagAndClassName;///MOCHI
         var targets = {
             "top":asset_target,
             "clipstrip":$$$$('div','clipstrip-display',asset_target),
