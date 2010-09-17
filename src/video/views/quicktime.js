@@ -90,31 +90,34 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 currentTimeID:'currtime'+playerID,
                 durationID:'totalcliplength'+playerID,
                 object:obj,
-                text: clicktoplay + '<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">\
-                <!--[if IE]>\
-                    <object id="'+playerID+'" \
-                    width="'+obj.presentation_width+'" height="'+full_height+'" \
-                    style="behavior:url(#qt_event_source)"  \
-                    codebase="http://www.apple.com/qtactivex/qtplugin.cab"  \
-                    classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"> \
-                <![endif]--> \
-                <!--[if !IE]><--> \
-                    <object id="'+playerID+'" type="'+opt.mimetype+'" \
-                    data="'+opt.url+'" \
-                    width="'+obj.presentation_width+'" height="'+full_height+'">  \
-                <!-- ><![endif]--> \
-                <param name="src" value="'+opt.url+'" /> \
-                <param name="controller" value="'+opt.controller+'" /> \
-                <param name="type" value="'+opt.mimetype+'" /> \
-                <param name="enablejavascript" value="true" /> \
-                <param name="autoplay" value="'+opt.autoplay+'" /> \
-                <param name="width" value="'+obj.presentation_width+'"> \
-                <param name="height" value="'+full_height+'"> \
-                <param name="postdomevents" value="true" /> \
-                <param name="scale" value="aspect" /> \
-                '+opt.extra+'\
-                '+opt.errortext+'</object></div>\
-                <div id="timedisplay'+playerID+'" style="display: none;"><span id="currtime'+playerID+'">00:00:00</span>/<span id="totalcliplength'+playerID+'">00:00:00</span></div>'
+                text: clicktoplay + '<div id="'+wrapperID+'" class="sherd-quicktime-wrapper">'
+                    + '<div id="timedisplay'+playerID+'" style="visibility:hidden">'
+                    +   '<span id="currtime'+playerID+'">00:00:00</span>'
+                    +   '/<span id="totalcliplength'+playerID+'">00:00:00</span></div>'
+                    + '<!--[if IE]>'
+                    + '<object id="'+playerID+'" '
+                    + 'width="'+obj.presentation_width+'" height="'+full_height+'" '
+                    + 'style="behavior:url(#qt_event_source)"  '
+                    + 'codebase="http://www.apple.com/qtactivex/qtplugin.cab"  '
+                    + 'classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B">'
+                    + '<![endif]-->'
+                    + '<!--[if !IE]><-->'
+                    + '    <object id="'+playerID+'" type="'+opt.mimetype+'" '
+                    + '    data="'+opt.url+'" '
+                    + '    width="'+obj.presentation_width+'" height="'+full_height+'">'
+                    + '<!-- ><![endif]--> '
+                    + '<param name="src" value="'+opt.url+'" />'
+                    + '<param name="controller" value="'+opt.controller+'" />'
+                    + '<param name="type" value="'+opt.mimetype+'" />'
+                    + '<param name="enablejavascript" value="true" />'
+                    + '<param name="autoplay" value="'+opt.autoplay+'" />'
+                    + '<param name="width" value="'+obj.presentation_width+'">'
+                    + '<param name="height" value="'+full_height+'">'
+                    + '<param name="postdomevents" value="true" />'
+                    + '<param name="scale" value="aspect" />'
+                    + opt.extra+''
+                    + opt.errortext+'</object></div>'
+                
             };
         };
         
@@ -128,8 +131,9 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                     //the first works for everyone except safari
                     //the latter probably works everywhere except IE
                     rv.player = document[create_obj.playerID] || document.getElementById(create_obj.playerID);
-                    rv.duration = document[create_obj.durationID] || document.getElementById(create_obj.durationID);
-                    rv.elapsed = document[create_obj.currentTimeID] || document.getElementById(create_obj.currentTimeID);
+                    rv.duration = document.getElementById(create_obj.durationID);
+                    rv.elapsed = document.getElementById(create_obj.currentTimeID);
+                    rv.timedisplay = document.getElementById(create_obj.timedisplayID);
                     rv.autoplay = create_obj.object.autoplay == 'true';
                     rv.playerID = create_obj.playerID;
                     rv.htmlID = create_obj.htmlID;
@@ -230,20 +234,19 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                       self.events.signal(self, 'duration', { duration: newDuration });
                                   }
                                   if (self.media.ready() ) {
-                                      if (self.components.timedisplay.style.display == 'none') {
-                                          self.components.timedisplay.style.display = 'inline';
-                                      }
+                                      self.components.timedisplay.style.visibility = 'visible';
                                       // set dimensions correctly
                                       self.media.resize(create_obj.object.presentation_width, 
                                                         create_obj.object.presentation_height, create_obj);
 
                                   }
+
                                   // Update the tick count
                                   self.media._updateTickCount();
 
                                   return false;
                               }, 
-                                poll:400},
+                                poll:500}
                               ]);
         }
         
@@ -271,7 +274,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                                   "end":self.components.endtime});
                                 }
                                }]);
-            
+
             self.microformat._startUpdateDisplayTimer(create_obj);
             
             // register for notifications from clipstrip to seek to various times in the video

@@ -52,8 +52,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 object: obj,
                 htmlID: wrapperID,
                 playerID: playerID, // Used by .initialize post initialization
+                timedisplayID: 'timedisplay'+playerID,
+                currentTimeID: 'currtime'+playerID,
+                durationID: 'totalcliplength'+playerID,
                 playerParams: params,
-                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper sherd-video-wrapper">'
+                text: '<div id="timedisplay'+playerID+'" style="visibility:hidden;"><span id="currtime'+playerID+'">00:00:00</span>/<span id="totalcliplength'+playerID+'">00:00:00</span></div><div id="' + wrapperID + '" class="sherd-flowplayer-wrapper sherd-video-wrapper">'
                     +  '<div class="sherd-flowplayer"'
                     +       'style="display:block; width:' + obj.options.width + 'px;'
                     +       'height:' + obj.options.height + 'px;" id="' + playerID + '">'
@@ -76,6 +79,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.mediaUrl = create_obj.playerParams.url;
                     rv.presentation = create_obj.object.presentation;
                     rv.autoplay = create_obj.object.autoplay ? true : false;
+                    rv.timedisplay = document.getElementById(create_obj.timedisplayID);
+                    rv.elapsed = document.getElementById(create_obj.currentTimeID);
+                    rv.duration = document.getElementById(create_obj.durationID);
                 }
                 return rv;
             } catch(e) {}
@@ -248,7 +254,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         controls:{
                             autoHide:false,
                             volume:false,
-                            fullscreen:false
+                            mute:false,
+                            time:false,
+                            fastForward:false,
+                            fullscreen:true
                         }
 
                     },
@@ -290,7 +299,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 
                 // register for notifications from clipstrip to seek to various times in the video
                 self.events.connect(self, 'seek', self.media.playAt);
-                
+                self.events.connect(self, 'duration', function(obj) {
+                    self.components.timedisplay.style.visibility = 'visible';
+                    self.components.duration.innerHTML = self.secondsToCode(obj.duration);
+                });                
                 self.events.connect(self, 'playclip', function(obj) {
                     // Call seek directly
                     self.components.player.seek(obj.start);
@@ -301,6 +313,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     // Play likewise gets a little messed up if the previous clip is still around. So, delaying that too.
                     setTimeout(function() { if (!self.media.isPlaying()) self.media.play(); if (obj.end) self.media.pauseAt(obj.end); }, 750);
                 });
+                self.events.queue('tick count',
+                                  [{test:function() {
+                                      self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
+                                   },
+                                    poll:1000}
+                                  ]);
             }
         };
         
@@ -401,7 +419,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var w = self.components.width;
             return {w: w,
                     trackX: 43,
-                    trackWidth: w-202,
+                    trackWidth: w-85,
                     visible:true
                    };
         };

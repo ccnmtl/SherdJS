@@ -65,18 +65,18 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 text: '<div id="' + wrapperID + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' +
                         ' classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' + objectID + '>' + 
-                        '  <param name="movie" value="' + url + '?fs=0&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
+                        '  <param name="movie" value="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"/></param>' + 
                         '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
-                        '  <param name="allowfullscreen" value="false"></param>' +
-                        '  <embed src="' + url + '?fs=0&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"' + 
+                        '  <param name="allowfullscreen" value="true"></param>' +
+                        '  <embed src="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
                         '    autoplay="' + autoplay + '"' + 
                         '    width="' + obj.options.width + '" height="' + obj.options.height + '"' + 
-                        '    allowfullscreen="false" ' + embedID +  
+                        '    allowfullscreen="true" ' + embedID +  
                         '  </embed>' + 
                         '</object>' + 
                       '</div>'
@@ -272,21 +272,12 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
         
         this.media.timestrip = function() {
             var w = self.components.player.width;
-            if (self.components.presentation == 'small') {
-                return {
-                    w: w,
-                    trackX: 133,
-                    trackWidth: 166,
-                    visible:true
-                };
-            } else {
-                return {
-                    w: w,
-                    trackX: 135,
-                    trackWidth: w-180,
-                    visible:true
-                };
-            }
+            return {
+                w: w,
+                trackX: 3,
+                trackWidth: w-2,
+                visible:true
+            };
         };
 
         // Used by tests. Might be nice to refactor state out so that
