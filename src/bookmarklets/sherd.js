@@ -1192,8 +1192,8 @@ SherdBookmarklet = {
           side:"left",
           fixed:true,
           message_no_assets:'Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.',
-          message_no_assets_short:'No Assets',
-          message_disabled_asset:'This asset cannot be embedded on external sites.',
+          message_no_assets_short:'No Items',
+          message_disabled_asset:'This item cannot be embedded on external sites.',
           widget_name:'the bookmarklet'
       }; if (options) for (a in options) {this.options[a]=options[a]};
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
@@ -1220,9 +1220,9 @@ SherdBookmarklet = {
               if (!SherdBookmarklet.user_ready()) {
                   comp.h2.innerHTML = 'Login required';
                   o.login_url = o.login_url || host_url.split("/",3).join("/");
-                  comp.message.innerHTML = 'You are not logged in to MediaThread. <br />Please <a style="color:#8C3B2E;" href="'+o.login_url+'" target="_blank">login to your MediaThread course</a>, and then use '+o.widget_name+' to import assets.';
+                  comp.message.innerHTML = 'You are not logged in to MediaThread. <br />Please <a style="color:#8C3B2E;" href="'+o.login_url+'" target="_blank">login to your MediaThread course</a>, and then click the '+o.widget_name+' again to import items.';
               } else {
-                  comp.h2.innerHTML = 'Choose an asset to import for analysis';
+                  comp.h2.innerHTML = 'Choose an item to import for analysis';
                   comp.message.innerHTML = '';
               }
           }
@@ -1239,7 +1239,7 @@ SherdBookmarklet = {
           }
           var pageYOffset = self.visibleY(target)+o.top;
 
-          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;left:0;position:absolute;z-index:999999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an asset to import for analysis</h2><p class=\"sherd-message\">Searching for assets....</p><ul></ul></div></div>";
+          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;left:0;position:absolute;z-index:999999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an item to import for analysis</h2><p class=\"sherd-message\">Searching for items....</p><ul></ul></div></div>";
           comp.tab = comp.top.firstChild;
           comp.window = comp.top.lastChild;
           comp.ul = comp.top.getElementsByTagName("ul")[0];
