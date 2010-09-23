@@ -449,7 +449,7 @@ SherdBookmarklet = {
                           return '';
                       }
                       var primary_type = type+get_provider(clip);
-                      sources[primary_type] = clip.originalUrl || clip.url || clip;
+                      sources[primary_type] = clip.originalUrl || clip.resolvedUrl || clip.url || clip;
                       if (/_pseudo/.test(primary_type)
                           && cfg.plugins[clip.provider].queryString
                          ) {
