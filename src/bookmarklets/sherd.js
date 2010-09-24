@@ -163,6 +163,92 @@ SherdBookmarklet = {
         decorate:function(objs) {
         }
     },
+    "mcah.columbia.edu": {
+        find:function(callback) {
+            SherdBookmarklet.run_with_jquery(function(jQuery) { 
+                var rv = [];
+                var abs = SherdBookmarklet.absolute_url;
+                jQuery('table table table table table table img').each(function() {
+                    var match_img = String(this.src).match(/arthum2\/mediafiles\/(\d+)\/(.*)$/);
+                    if (match_img) {
+                        var img = document.createElement("img");
+                        img.src = "http://www.mcah.columbia.edu/arthum2/mediafiles/1200/"+match_img[2];
+                        var img_data = {
+                            'html':this,
+                            'primary_type':'image',
+                            'metadata':{},
+                            'sources':{
+                                "url":abs(this.getAttribute('onclick').match(/item.cgi[^\']+/)[0],document),
+                                "thumb":this.src,
+                                "image":img.src,
+                                "image-metadata":"w"+img.width+"h"+img.height
+                            }
+                        };
+                        if (typeof document.evaluate == 'function') {
+                            //only do metadata if we can do XPath, otherwise, it's insane
+                            var ancestor = jQuery(this).parents().get(9);
+                            function tryEval(obj,name,xpath,inArray) {
+                                var res = document.evaluate(xpath,ancestor,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null).snapshotItem(0);
+                                if (res) {
+                                    var v = res.textContent.replace(/\s+/,' ');
+                                    obj[name] = ((inArray)?[v]:v);
+                                }
+                            }
+                            //xpath begins right after the tbody/tr[2]/
+                            tryEval(img_data.sources,'title','td[5]/table[2]/tbody/tr[3]/td/table/tbody/tr/td');
+                            tryEval(img_data.metadata,'creator','td[5]/table[1]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'date','td[5]/table[1]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'materials','td[5]/table[3]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'dimensions','td[5]/table[3]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'techniques','td[5]/table[4]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'repository','td[5]/table[5]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'city','td[5]/table[5]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'note','td[5]/table[6]/tbody/tr[3]/td/table/tbody/tr/td',true);
+                        }
+                        rv.push(img_data);
+                    }
+                    
+                });
+                var done = 1;
+                if (jQuery('#flashcontent embed').length) {
+                    done = 0;
+                    var p = document.location.pathname.split('/');
+                    p.pop();
+                    jQuery.ajax({
+                        url:p.join('/')+'/gallery.xml',
+                        dataType:'text',
+                        success:function(gallery_xml,textStatus,xhr) {
+                            var gxml = SherdBookmarklet.xml2dom(gallery_xml,xhr);
+                            var i_path = jQuery('simpleviewerGallery',gxml).attr('imagePath');
+                            var t_path = jQuery('simpleviewerGallery',gxml).attr('thumbPath');
+                            jQuery('image',gxml).each(function() {
+                                var filename = jQuery('filename',this).text();
+                                var image_data = {
+                                    "html":this,
+                                    "primary_type":'image',
+                                    "sources":{
+                                        "title":jQuery('caption',this).text(),
+                                        "image":abs(p.join('/')+'/'+i_path+filename,document),
+                                        "thumb":abs(p.join('/')+'/'+t_path+filename,document),
+                                        "url":document.location +'#'+ filename
+                                    }
+                                };
+                                var img = document.createElement('img');
+                                img.src = image_data.sources.image;
+                                image_data.sources['image-metadata']="w"+img.width+"h"+img.height
+                                rv.push(image_data);
+                                jQuery('#flashcontent').hide();
+                                
+                            });
+                            return callback(rv);
+                        },
+                        error:function(err,xhr){ return callback(rv); }
+                    });
+                }
+                if (done) return callback(rv);
+            })
+        }
+    },
     "thlib.org": {
         /*e.g. those on http://www.thlib.org/places/monasteries/meru-nyingpa/murals/ */
         also_find_general:true,
