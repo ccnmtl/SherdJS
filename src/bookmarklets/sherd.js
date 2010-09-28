@@ -696,15 +696,17 @@ SherdBookmarklet = {
                       ||/logo/.test(image.id) //drupal logo
                       ||/logo\W/.test(image.src) //web.mit.edu/shakespeare/asia/
                      ) continue;
-                  /*use offsetWidth, so display:none's are excluded */
-                  if (image.offsetWidth > 400 || image.offsetHeight > 400) {
+                  /*recreate the <img> so we get the real width/height */
+                  var image_ind = document.createElement('img');
+                  image_ind.src = image.src;
+                  if (image_ind.width >= 400 || image_ind.height >= 400) {
                       result.push({
                           "html":image,
                           "primary_type":"image",
                           "sources": {
                               "title":image.title || undefined,
                               "image":image.src,
-                              "image-metadata":"w"+image.width+"h"+image.height
+                              "image-metadata":"w"+image_ind.width+"h"+image_ind.height
                           }
                       });
                   } else {
@@ -743,7 +745,13 @@ SherdBookmarklet = {
                       }
                   }
               }
-              callback(result);
+              for (var i=0;i<result.length;i++) {
+                  result[i].metadata = SherdBookmarklet.microdataSearch(result[i].html) || undefined;
+                  if (result[i].metadata && result[i].metadata.title) {
+                      result[i].sources["title"] = result[i].metadata.title.shift();
+                  }
+              }
+              if (done==0) callback(result);
           }
       },/* end image assethandler */
       "mediathread": {
@@ -927,7 +935,8 @@ SherdBookmarklet = {
   },/*gethosthandler*/
   "obj2url": function(host_url,obj) {
     /*excluding metadata because too short for GET string*/
-    if (!obj.sources["url"]) obj.sources["url"] = document.location;
+    if (!obj.sources["url"]) obj.sources["url"] = String(document.location)
+      + '#'+obj.sources[obj.primary_type].split('#')[0].split('/').pop();
     var destination =  host_url;
     for (a in obj.sources) {
         if (typeof obj.sources[a] =="undefined") continue;
@@ -941,13 +950,15 @@ SherdBookmarklet = {
   "obj2form": function(host_url,obj,doc,target) {
       doc = doc||document;
       target = target||'_top';
-      if (!obj.sources["url"]) obj.sources["url"] = doc.location;
+      if (!obj.sources["url"]) obj.sources["url"] = String(doc.location)  
+          + '#'+obj.sources[obj.primary_type].split('#')[0].split('/').pop();
+
       var destination =  host_url;
       if (obj.hash) {
           destination += "#"+obj.hash;
       }
       var form = doc.createElement("form");
-      form.innerHTML = '<span></span><div class="">Type: '
+      form.innerHTML = '<span></span><div style="border:0;margin:0;float:right;">Type: '
           +(obj.label||obj.primary_type||'Unknown')
           +'</div>';
       form.action = destination;
@@ -1066,6 +1077,32 @@ SherdBookmarklet = {
   },
   "hasBody":function(doc) {
           return (doc.body && 'body'==doc.body.tagName.toLowerCase());
+  },
+  "microdataSearch":function(elem) {
+      var item;
+      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+      jQ(elem).parents('*[itemscope=]').each(function(){ item = this; });
+      if (item) {
+          if (item.properties) {
+              return item.properties;
+          } else {
+              var props = {};
+              var abs = SherdBookmarklet.absolute_url;
+              jQ('*[itemprop]',item).each(function(){
+                  var p = this.getAttribute('itemprop');
+                  props[p] = props[p] || [];
+                  switch(String(this.tagName).toLowerCase()) {
+                  case "a":case "link":case "area":
+                      props[p].push(abs(this.href));
+                  case "audio":case "embed":case "iframe":case "img":case "source":case "video":
+                      props[p].push(abs(this.src));
+                  default:
+                      props[p].push(jQ(this).text());
+                  }
+              });
+              return props;
+          }
+      }
   },
   "xml2dom":function (str,xhr) {
       if (window.DOMParser) {
@@ -1392,7 +1429,7 @@ SherdBookmarklet = {
           li.style.padding = '4px';
           li.style.margin = '4px';
           li.style.border = '1px solid black';
-          jQ('input.sherd-form-title',form).prev().html("<div><label for='title'>Title:</label></div>");
+          jQ('input.sherd-form-title',form).prev().html("<div style='margin:0;border:0;padding:3px 0;'><label for='title'>Title:</label></div>");
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
