@@ -163,12 +163,13 @@ SherdBookmarklet = {
         decorate:function(objs) {
         }
     },
-    "mcah.columbia.edu": {
+    "learn.columbia.edu": {
+    /*and www.mcah.columbia.edu */
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function(jQuery) { 
                 var rv = [];
                 var abs = SherdBookmarklet.absolute_url;
-                jQuery('table table table table table table img').each(function() {
+                jQuery('table table table img').each(function() {
                     var match_img = String(this.src).match(/arthum2\/mediafiles\/(\d+)\/(.*)$/);
                     if (match_img) {
                         var img = document.createElement("img");
@@ -187,6 +188,8 @@ SherdBookmarklet = {
                         if (typeof document.evaluate == 'function') {
                             //only do metadata if we can do XPath, otherwise, it's insane
                             var ancestor = jQuery(this).parents().get(9);
+                            //td[5] for gallery searches, td[3] for image portfolios
+                            var cell = (jQuery(ancestor).children('td').length==5) ? 'td[5]' : 'td[3]' ;
                             function tryEval(obj,name,xpath,inArray) {
                                 var res = document.evaluate(xpath,ancestor,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null).snapshotItem(0);
                                 if (res) {
@@ -195,15 +198,15 @@ SherdBookmarklet = {
                                 }
                             }
                             //xpath begins right after the tbody/tr[2]/
-                            tryEval(img_data.sources,'title','td[5]/table[2]/tbody/tr[3]/td/table/tbody/tr/td');
-                            tryEval(img_data.metadata,'creator','td[5]/table[1]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
-                            tryEval(img_data.metadata,'date','td[5]/table[1]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
-                            tryEval(img_data.metadata,'materials','td[5]/table[3]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
-                            tryEval(img_data.metadata,'dimensions','td[5]/table[3]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
-                            tryEval(img_data.metadata,'techniques','td[5]/table[4]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
-                            tryEval(img_data.metadata,'repository','td[5]/table[5]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
-                            tryEval(img_data.metadata,'city','td[5]/table[5]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
-                            tryEval(img_data.metadata,'note','td[5]/table[6]/tbody/tr[3]/td/table/tbody/tr/td',true);
+                            tryEval(img_data.sources,'title',cell+'/table[2]/tbody/tr[3]/td/table/tbody/tr/td');
+                            tryEval(img_data.metadata,'creator',cell+'/table[1]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'date',cell+'/table[1]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'materials',cell+'/table[3]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'dimensions',cell+'/table[3]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'techniques',cell+'/table[4]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'repository',cell+'/table[5]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'city',cell+'/table[5]/tbody/tr[3]/td[3]/table/tbody/tr/td',true);
+                            tryEval(img_data.metadata,'note',cell+'/table[6]/tbody/tr[3]/td/table/tbody/tr/td',true);
                         }
                         rv.push(img_data);
                     }
@@ -928,6 +931,7 @@ SherdBookmarklet = {
   },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
+      hosthandler['mcah.columbia.edu'] = hosthandler['learn.columbia.edu'] 
       for (host in hosthandler) {
           if (new RegExp(host+'$').test(location.hostname)) 
               return hosthandler[host];
@@ -1362,7 +1366,7 @@ SherdBookmarklet = {
           }
           var pageYOffset = self.visibleY(target)+o.top;
 
-          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;left:0;position:absolute;z-index:999999;top:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an item to import for analysis</h2><p class=\"sherd-message\">Searching for items....</p><ul></ul></div></div>";
+          comp.top.innerHTML = "<div class=\"sherd-tab\" style=\"display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;\">"+o.tab_label+"</div><div class=\"sherd-window\" style=\"display:none;left:0;position:absolute;z-index:999999;top:0;margin:0;padding:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc\"><div class=\"sherd-window-inner\" style=\"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;\"><button class=\"sherd-close\" style=\"float:right;\">close</button><button class=\"sherd-move\" style=\"float:right;\">move</button><h2>Choose an item to import for analysis</h2><p class=\"sherd-message\">Searching for items....</p><ul></ul></div></div>";
           comp.tab = comp.top.firstChild;
           comp.window = comp.top.lastChild;
           comp.ul = comp.top.getElementsByTagName("ul")[0];
