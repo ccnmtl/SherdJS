@@ -129,8 +129,8 @@ SherdBookmarklet = {
                                     img_url='',
                                     thumb_url='';
                                 jQuery.each(getSizesData.sizes.size, function(i,item) {
-                                    if (item.width > w) {
-                                        w = item.width;
+                                    if (parseInt(item.width) > w) {
+                                        w = parseInt(item.width);
                                         h = item.height;
                                         img_url = item.source;
                                     }
