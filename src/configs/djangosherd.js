@@ -473,15 +473,14 @@ function openCitation(url, no_autoplay_or_options) {
     djangosherd.storage.get({id:id,type:ann_url[1]}, function(ann_obj) {
 	var asset_target = ((options.targets && options.targets.asset) 
 			    ? options.targets.asset
-			    : 'videoclipbox');
-        showElement(asset_target); ///MOCHI
-        var $$$$= getFirstElementByTagAndClassName;///MOCHI
+			    : document.getElementById('videoclipbox'));
+	jQuery(asset_target).show();
         var targets = {
             "top":asset_target,
-            "clipstrip":$$$$('div','clipstrip-display',asset_target),
-            "asset":$$$$('div', 'asset-display',asset_target),
-            "asset_title":$$$$('div', 'asset-title',asset_target),
-            "annotation_title":$$$$('div', 'annotation-title',asset_target)
+            "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
+            "asset":jQuery('div.asset-display',asset_target).get(0),
+            "asset_title":jQuery('div.asset-title',asset_target).get(0),
+            "annotation_title":jQuery('div.annotation-title',asset_target).get(0)
         };
         if (targets.annotation_title) {
             targets.annotation_title.innerHTML = ((ann_obj.metadata
