@@ -490,7 +490,7 @@ function openCitation(url, no_autoplay_or_options) {
         }
         if (ann_obj.asset) {
             ann_obj.asset.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
-            ann_obj.asset.presentation = 'small';
+            ann_obj.asset.presentation = options.presentation || 'small';
 
             if (targets.asset_title) {
                 targets.asset_title.innerHTML = ((ann_obj.asset.title 
