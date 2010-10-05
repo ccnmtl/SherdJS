@@ -505,7 +505,6 @@ SherdBookmarklet = {
                               var url = (typeof p=='string') ? p : p.url;
                               if (/\.(jpg|jpeg|png|gif)/.test(url)) {
                                   //redundant urls wasteful, but useful
-                                  sources.image = url;
                                   sources.thumb = url;
                                   sources.poster = url;
                                   if (p.width) {
@@ -671,8 +670,7 @@ SherdBookmarklet = {
                       "sources": {}
                   }
                   if (videos[i].poster) {
-                      rv.sources['poster'] =
-                          rv.sources['image'] = videos[i].poster;
+                      rv.sources['poster'] = videos[i].poster;
                   }
                   addSource(videos[i], rv, videos[i]);
                   var sources = videos[i].getElementsByTagName('source');
