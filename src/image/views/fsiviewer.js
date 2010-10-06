@@ -80,7 +80,7 @@ if (!Sherd.Image.FSIViewer) {
                     self.events.connect(window,'resize',function() {
                         var top = presenter.components.top;
 			top.setAttribute('height',Sherd.winHeight()+'px');
-                        self.current_state.wh_ratio = ( top.width / (top.height-30) );
+                        self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
 		    });
                 }
 	    },
@@ -103,7 +103,7 @@ if (!Sherd.Image.FSIViewer) {
                 presentation.initialize(create_obj.object, self);
 
             var top = self.components.top;
-            self.current_state.wh_ratio = ( top.width / (top.height-30) );
+            self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
 
             var state_listener = function(fsi_event, params) {
                 //console.log('FSI EVENT:'+fsi_event);

@@ -10,6 +10,11 @@ if (typeof djangosherd == 'undefined') {
 // / when attached to clipform: media.duration,media.timescale (and probably
 // media.time)
 
+function legacy_json(unparsed_json) {
+    //workaround a bug from MochiKit's serializeJSON() method
+    return unparsed_json.replace('"wh_ratio":NaN','"wh_ratio":null');
+}
+
 function DjangoSherd_Asset_Config() {
     var ds = djangosherd;
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
@@ -50,13 +55,14 @@ function DjangoSherd_Asset_Config() {
             var obj = false;
             try {
                 // /#initialize for editing
-                obj = JSON.parse(
-                    orig_annotation_data.getAttribute('data-annotation'));
+                obj = JSON.parse(legacy_json(
+                    orig_annotation_data.getAttribute('data-annotation')));
                 ds.assetview.setState(obj);
                 if (ds.assetview.clipform)
                     ds.assetview.clipform.setState(obj);
 
             } catch (e) {/* non-valid json? */
+                Sherd.Base.log(e);
             }
         } else {
             // Viewing the Original Asset, possibly with params from queryString
@@ -391,15 +397,21 @@ function DjangoSherd_AnnotationMicroFormat() {
                         .each(function(){
                             rv.metadata['title'] = this.textContent;
                         });
-            
-        var ann_data = JSON.parse(data_elt.getAttribute('data-annotation'));
+        
+
+        try {
+            var ann_data = JSON.parse(legacy_json(
+                data_elt.getAttribute('data-annotation')));
        
-        // /TODO: remove these--maybe we can with no problem
-        ann_data.start = parseInt(data_elt.getAttribute('data-begin'), 10);// CHOP
-        ann_data.end = parseInt(data_elt.getAttribute('data-end'), 10);// CHOP
-        ann_data.startCode = video.secondsToCode(ann_data.start);// CHOP
-        ann_data.endCode = video.secondsToCode(ann_data.end);// CHOP
-        rv.annotations.push(ann_data);
+            // /TODO: remove these--maybe we can with no problem
+            ann_data.start = parseInt(data_elt.getAttribute('data-begin'), 10);// CHOP
+            ann_data.end = parseInt(data_elt.getAttribute('data-end'), 10);// CHOP
+            ann_data.startCode = video.secondsToCode(ann_data.start);// CHOP
+            ann_data.endCode = video.secondsToCode(ann_data.end);// CHOP
+            rv.annotations.push(ann_data);
+        } catch(e) {/* non-valid json? */
+            Sherd.Base.log(e);
+        }
         return rv;
     };
 
@@ -414,12 +426,13 @@ function DjangoSherd_NoteForm() {
         update : function(obj) {
             var range1 = '0';
             var range2 = '0';
+            ///if isNaN, then it's an empty value to be saved as null
             if (obj.start || obj.end) {// video
-                range1 = obj.start;
-                range2 = obj.end;
+                range1 = ((isNaN(obj.start) ? '' : obj.start));
+                range2 = ((isNaN(obj.end) ? '' : obj.start));
             } else if (obj.x) {// image
-                range1 = obj.x;
-                range2 = obj.y;
+                range1 = ((isNaN(obj.x) ? '' : obj.start));
+                range2 = ((isNaN(obj.y) ? '' : obj.start));
             }
             // top is the form
             self.components.top['annotation-range1'].value = range1;
