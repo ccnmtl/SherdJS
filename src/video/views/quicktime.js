@@ -53,10 +53,13 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 obj.presentation_width = Number(opt.width);
                 obj.presentation_height = Number(opt.height);
             }
+            var ratio = opt.height/opt.width;
             if (obj.presentation == 'small') {
-                var ratio = opt.height/opt.width;
                 obj.presentation_width = 320;
                 obj.presentation_height = parseInt(320 * ratio,10);
+            } else if (obj.presentation_width > 620) {
+                obj.presentation_width = 620;
+                obj.presentation_height = parseInt(620 * ratio,10);
             }
             var full_height = obj.presentation_height + Number(opt.controller_height);
             opt.href= '';//for poster support
