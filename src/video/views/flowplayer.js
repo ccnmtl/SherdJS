@@ -228,6 +228,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         this.initialize = function(create_obj) {
             if (create_obj) {
+                var tracker;
+                if (window._gat && window._gaq_mediathread) {
+                    tracker = _gat._getTracker(_gaq_mediathread);
+                }
                 options = {
                     clip: {
                         scaling:"fit",
