@@ -1342,7 +1342,7 @@ SherdBookmarklet = {
           top:100,
           side:"left",
           fixed:true,
-          message_no_assets:'Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.',
+          message_no_assets:'Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page.  If there is a video on the page, press play and then try again.',
           message_no_assets_short:'No Items',
           message_disabled_asset:'This item cannot be embedded on external sites.',
           widget_name:'the bookmarklet'
