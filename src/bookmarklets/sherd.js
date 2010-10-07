@@ -648,7 +648,7 @@ SherdBookmarklet = {
           find:function(callback,context) {
               var videos = context.document.getElementsByTagName("video");
               var result = [];
-              var codecs = /[.\/](ogg|webm|mp4)/i;
+              var codecs = /[.\/](ogv|ogg|webm|mp4)/i;
               var addSource = function(source,rv,video) {
                   if (!source.src) return;
                   var vid_type = 'video';
@@ -658,7 +658,7 @@ SherdBookmarklet = {
                       if (video.canPlayType(video.type)=="probably")
                           rv.primary_type = vid_type;
                   } else if (mtype = String(source.src).match(codecs)) {
-                      vid_type = mtype[1].toLowerCase();
+                      vid_type = mtype[1].toLowerCase().replace('ogv','ogg');
                   }
                   if (rv.primary_type == 'video')
                       rv.primary_type = vid_type;
