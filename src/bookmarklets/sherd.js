@@ -488,7 +488,7 @@ SherdBookmarklet = {
                                2. 
                        */
                       var sources = {};
-
+                      var abs = SherdBookmarklet.absolute_url;
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var $f = (context.window.$f && context.window.$f(obj.parentNode));
                       
@@ -502,14 +502,11 @@ SherdBookmarklet = {
                       if (cfg.playlist && ( !clip.url || cfg.playlist.length > 1)) {
                           for (var i=0;i<cfg.playlist.length;i++) {
                               var p = cfg.playlist[i];
-                              var url = (typeof p=='string') ? p : p.url;
+                              var url =  abs((typeof p=='string') ? p : p.url,context.document);
                               if (/\.(jpg|jpeg|png|gif)/.test(url)) {
                                   //redundant urls wasteful, but useful
                                   sources.thumb = url;
                                   sources.poster = url;
-                                  if (p.width) {
-                                      sources['image-metadata'] = "w"+p.width+"h"+p.height;
-                                  }
                                   continue;
                               } 
                               else if (!clip.type || clip.type == 'image') {
@@ -525,9 +522,10 @@ SherdBookmarklet = {
                               }
                           }
                       }
+                      var provider = (clip.provider && cfg.plugins[clip.provider]) || false;
                       function get_provider(c) {
-                          if (c.provider && cfg.plugins[c.provider]) {
-                              var plugin = cfg.plugins[c.provider].url;
+                          if (provider) {
+                              var plugin = provider.url;
                               if (/pseudostreaming/.test(plugin)) {
                                   return '_pseudo';
                               } else if (/rtmp/.test(plugin)) {
@@ -538,6 +536,11 @@ SherdBookmarklet = {
                       }
                       var primary_type = type+get_provider(clip);
                       sources[primary_type] = clip.originalUrl || clip.resolvedUrl || clip.url || clip;
+                      if (provider && provider.netConnectionUrl)
+			  sources[primary_type] = provider.netConnectionUrl+sources[primary_type]
+
+                      ///TODO:is context.document the right relative URL instead of the SWF?
+		      sources[primary_type] = abs(sources[primary_type],context.document);
                       if (/_pseudo/.test(primary_type)
                           && cfg.plugins[clip.provider].queryString
                          ) {
