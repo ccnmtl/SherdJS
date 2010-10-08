@@ -170,6 +170,11 @@ if (!Sherd.Image.OpenLayers) {
 		maxExtent:new OpenLayers.Bounds(-180, -90, 180, 90)
 		//,units:'m'
 	    };
+            if (obj['image-metadata']) {
+                obj.options.numZoomLevels = Math.ceil(
+                    Math.log2(Math.max(obj['image-metadata'].height,
+                                       obj['image-metadata'].width))-6);
+            }
 	    return {
 		object:obj,
 		htmlID:wrapperID,
