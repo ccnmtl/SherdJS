@@ -173,7 +173,7 @@ if (!Sherd.Image.OpenLayers) {
             if (obj['image-metadata']) {
                 obj.options.numZoomLevels = Math.ceil(
                     Math.log2(Math.max(obj['image-metadata'].height,
-                                       obj['image-metadata'].width))-6);
+                                       obj['image-metadata'].width))-5);
             }
 	    return {
 		object:obj,
