@@ -426,13 +426,16 @@ function DjangoSherd_NoteForm() {
         update : function(obj) {
             var range1 = '0';
             var range2 = '0';
+            function numOrEmpty(v) {
+                return v || ((v==0) ? v: '' );
+            }
             ///if isNaN, then it's an empty value to be saved as null
             if (obj.start || obj.end) {// video
-                range1 = ((isNaN(obj.start) ? '' : obj.start));
-                range2 = ((isNaN(obj.end) ? '' : obj.start));
+                range1 = numOrEmpty(obj.start);
+                range2 = numOrEmpty(obj.end);
             } else if (obj.x) {// image
-                range1 = ((isNaN(obj.x) ? '' : obj.start));
-                range2 = ((isNaN(obj.y) ? '' : obj.start));
+                range1 = numOrEmpty(obj.x);
+                range2 = numOrEmpty(obj.y);
             }
             // top is the form
             self.components.top['annotation-range1'].value = range1;
