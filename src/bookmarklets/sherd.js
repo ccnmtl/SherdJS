@@ -17,13 +17,18 @@ SherdBookmarklet = {
       return SherdBookmarklet.user_status.ready;
   },
   update_user_status:function(user_status) {
+      var uninit = (! window.SherdBookmarklet.user_status.ready);
       for (a in user_status) {
           window.SherdBookmarklet.user_status[a] = user_status[a];
       }
-      //find assets again, so obj2form can include metadata
-      //if (!uninit && user_status.ready && SherdBookmarklet.g) {
-      //SherdBookmarklet.g.findAssets();
-      //}
+      if (window.console) {
+          window.console.log(user_status);
+      }
+      //Safari sometimes loads logged_in.js last, even when added first
+      if (uninit && user_status.ready && SherdBookmarklet.g) {
+          //find assets again
+          SherdBookmarklet.g.findAssets();
+      }
   },
   "hosthandler": {
     /*Try to keep them ALPHABETICAL by 'brand' */
