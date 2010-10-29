@@ -105,6 +105,26 @@ SherdBookmarklet = {
             });
         }
     },
+    "dropbox.com": {
+        find:function(callback) {
+            var rv = [], 
+                save_link = document.getElementById('gallery_save');
+            if (save_link && window.token && token.user_id
+                && token.path == '/Public') {
+                var regex = String(save_link.href).match(/dropbox.com\/s\/[^\/]+(\/[^?]+)/);
+                if (regex) {
+                    rv.push({
+                        primary_type:'image',
+                        sources:{
+                            'image':'http://dl.dropbox.com/u/'+token.user_id+regex[1],
+                            'url':String(document.location)
+                        }
+                    })
+                }
+            }
+            callback(rv);
+        }
+    },
     "flickr.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function(jQuery) { 
@@ -945,8 +965,7 @@ SherdBookmarklet = {
   },/*gethosthandler*/
   "obj2url": function(host_url,obj) {
     /*excluding metadata because too short for GET string*/
-    if (!obj.sources["url"]) obj.sources["url"] = String(document.location)
-      + '#'+obj.sources[obj.primary_type].split('#')[0].split('/').pop();
+    if (!obj.sources["url"]) obj.sources["url"] = String(document.location);
     var destination =  host_url;
     for (a in obj.sources) {
         if (typeof obj.sources[a] =="undefined") continue;
@@ -957,13 +976,13 @@ SherdBookmarklet = {
     }
     return destination;
   },/*obj2url*/
-  "obj2form": function(host_url,obj,doc,target) {
+  "obj2form": function(host_url,obj,doc,target, index) {
       var M = window.SherdBookmarklet;
       doc = doc||document;
       target = target||'_top';
       if (!obj.sources["url"]) obj.sources["url"] = String(doc.location)  
-          + '#'+obj.sources[obj.primary_type].split('#')[0].split('/').pop();
-
+          ///if more than one asset, we should try to prefix this to keep url= unique
+          + (index ? '#'+obj.sources[obj.primary_type].split('#')[0].split('/').pop() : '');
       var destination =  host_url;
       if (obj.hash) {
           destination += "#"+obj.hash;
@@ -1185,7 +1204,7 @@ SherdBookmarklet = {
 
       this.ASYNC = {
           remove:function(asset){},
-          display:function(asset){},
+          display:function(asset,index){},
           finish:function(){},
           best_frame:function(frame){}
       }
@@ -1298,7 +1317,7 @@ SherdBookmarklet = {
               var after_merge = self.mergeRedundant(assets[i]);
               if (after_merge) {
                   after_merge.html_id = self.assetHtmlID(after_merge); 
-                  self.ASYNC.display(after_merge); 
+                  self.ASYNC.display(after_merge, /*index*/assets.length-1); 
               }
           }
           ++self.handler_count;
@@ -1484,12 +1503,12 @@ SherdBookmarklet = {
           jQ('#'+asset.html_id).remove();
       };
 
-      this.displayAsset = function(asset) {
+      this.displayAsset = function(asset,index) {
           if (!asset) return;
           var doc = comp.ul.ownerDocument;
           var li = doc.createElement("li");
           var jump_url = M.obj2url(host_url, asset);
-          var form = M.obj2form(host_url, asset, doc, o.postTarget);
+          var form = M.obj2form(host_url, asset, doc, o.postTarget, index);
           li.id = asset.html_id;
           li.appendChild(form);
           li.style.listStyleType = 'none';
