@@ -107,22 +107,28 @@ SherdBookmarklet = {
     },
     "dropbox.com": {
         find:function(callback) {
-            var rv = [], 
-                save_link = document.getElementById('gallery_save');
+            SherdBookmarklet.run_with_jquery(function(jQ) { 
+            var save_link = document.getElementById('gallery_save');
             if (save_link && window.token && token.user_id
                 && token.path == '/Public') {
                 var regex = String(save_link.href).match(/dropbox.com\/s\/[^\/]+(\/[^?]+)/);
                 if (regex) {
-                    rv.push({
-                        primary_type:'image',
-                        sources:{
-                            'image':'http://dl.dropbox.com/u/'+token.user_id+regex[1],
-                            'url':String(document.location)
-                        }
+                    var img = document.createElement("img");
+                    img.src = 'http://dl.dropbox.com/u/'+token.user_id+regex[1];
+                    jQ(img).bind('load',function() {
+                        callback([{
+                            primary_type:'image',
+                            sources:{
+                                'image':img.src,
+                                'url':String(document.location),
+                                'image-metadata':"w"+img.width+"h"+img.height
+                            }
+                        }]);
                     })
-                }
-            }
-            callback(rv);
+                } else callback([])
+                
+            } else callback([]);
+            });
         }
     },
     "flickr.com": {
