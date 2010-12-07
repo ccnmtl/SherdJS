@@ -37,10 +37,9 @@ if (!Sherd.Image.Annotators.FSIViewer) {
                 }
                 var img_src = obj.imageUrl.replace('[width]',dim.w).replace('[height]',dim.h);
                 self.components.image.src = img_src;
-                showElement(self.components.image);///MOCHI
+                self.components.image.style.display = 'block';
             } else {
-                hideElement(self.components.image);///MOCHI
-
+                self.components.image.style.display = 'none';
             }
 	};
 

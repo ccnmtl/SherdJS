@@ -94,7 +94,6 @@ if (!Sherd.Video.Annotators.ClipForm) {
     };
 
     this.initialize = function(create_obj) {
-        // MochiKit!!!
         self.events.connect(self.components.startButton, 'click', function(evt) {
             var movieTime = self.targetview.media.time();
             var movieTimeCode = secondsToCode(movieTime);

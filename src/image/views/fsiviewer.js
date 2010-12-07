@@ -6,7 +6,6 @@ if (!Sherd.Image.FSIViewer) {
         var self = this;
         Sherd.Base.AssetView.apply(this,arguments); //inherit
 
-	var Mochi = MochiKit.Style;
         this.ready = false;
         this.current_state = {type:'fsiviewer'};
         this.intended_states = [];

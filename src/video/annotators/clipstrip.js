@@ -112,7 +112,6 @@ if (!Sherd.Video.Annotators.ClipStrip) {
     };
 
     this.initialize = function(create_obj) {
-        // MochiKit!!!
         self.events.connect(self.components.clipStartMarker, 'click', function(evt) {
                 self.events.signal(self.targetview, 'seek', self.components.starttime);
              });

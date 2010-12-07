@@ -17,7 +17,6 @@ if (!Sherd.Image.OpenLayers) {
      */
     Sherd.Image.OpenLayers = function() {
 	var self = this;
-	var Mochi = MochiKit.DOM;
 	Sherd.Base.AssetView.apply(this,arguments); //inherit
 
 	this.openlayers = {

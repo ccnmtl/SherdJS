@@ -1,4 +1,3 @@
-//requires MochiKit
 //requires jQuery
 if (typeof djangosherd == 'undefined') {
     djangosherd = {};
@@ -21,7 +20,7 @@ function DjangoSherd_Asset_Config() {
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     ds.noteform = new DjangoSherd_NoteForm();// see below
 
-    addLoadEvent(function() {
+    jQuery(function() {
         // /# Find assets.
         ds.dom_assets = ds.assetMicroFormat.find();
         if (!ds.dom_assets.length)
