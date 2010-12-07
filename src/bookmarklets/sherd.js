@@ -380,9 +380,15 @@ SherdBookmarklet = {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
                 var video = document.getElementById("movie_player");
                 if (video && video != null) {
+                    var v_match = video.getAttribute('flashvars');
+                    if (v_match) {
+                        v_match = v_match.match(/video_id=([^&]*)/);
+                    } else { //mostly for <OBJECT>
+                        v_match = document.location.search.match(/[?&]v=([^&]*)/);
+                    } 
                     SherdBookmarklet.assethandler.objects_and_embeds.players
                     .youtube.asset(video, 
-                                   video.getAttribute('flashvars').match(/video_id=([^&]*)/),
+                                   v_match,
                                    {'window':window,'document':document},0,
                                    function(ind,rv){ callback([rv]); });
                 } else callback([]);
@@ -508,7 +514,7 @@ SherdBookmarklet = {
                           return String(obj.data).match(/flowplayer[\.\-\w]+3[.\d]+\.swf/);
                       } else {//IE7 ?+
                           var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
-                          var movie = jQ('param[name=movie]',obj);
+                          var movie = SherdBookmarklet.find_by_attr(jQ,'param','name','movie',obj);
                           return ((movie.length) 
                                   ?String(movie.get(0).value).match(/flowplayer-3[\.\d]+\.swf/)
                                   :null);
@@ -522,7 +528,7 @@ SherdBookmarklet = {
                       var abs = SherdBookmarklet.absolute_url;
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var $f = (context.window.$f && context.window.$f(obj.parentNode));
-                      
+
                       var cfg = (($f)? $f.getConfig() 
                                  :jQ.parseJSON(jQ('param[name=flashvars]').get(0)
                                                .value.substr(7)));//config=
@@ -1155,6 +1161,15 @@ SherdBookmarklet = {
           return div;
       }
   },
+  "find_by_attr":function (jq,tag,attr,val,par) {
+      if (/^1.0/.test(jq.prototype.jquery)) {
+          return jq(tag,par).filter(function(elt) {
+              return (elt.getAttribute && elt.getAttribute(attr) == val);
+          })
+      } else {
+          return jq(tag+'['+attr+'='+val+']',par)
+      }
+  },
   "absolute_url":function (maybe_local_url, doc) {
       if (/:\/\//.test(maybe_local_url)) {
           return maybe_local_url;
@@ -1181,6 +1196,7 @@ SherdBookmarklet = {
           t.setAttribute('style',style);
       else for (a in style) {
           t.setAttribute(a,style[a]);
+          if (style[a] === null) t.removeAttribute(a);
       }
       if (children) {
           for (var i=0;i<children.length;i++) {
@@ -1399,7 +1415,7 @@ SherdBookmarklet = {
               comp.tab.style.display = "none";
               jQ(comp.ul).empty();
               if (!SherdBookmarklet.user_ready()) {
-                  jQ(comp.h2).text('Login required');
+                  comp.h2.innerHTML = 'Login required';
                   o.login_url = o.login_url || host_url.split("/",3).join("/");
                   jQ(comp.message).empty().append(
                       self.elt(null,'span','',{},
@@ -1416,7 +1432,9 @@ SherdBookmarklet = {
                   );
               } else {
                   jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Choose an item to import for analysis'));
-                  jQ(comp.message).empty();
+                  if (comp.message.tagName) {
+                      jQ(comp.message).empty();
+                  }
               }
           }
 
@@ -1525,7 +1543,7 @@ SherdBookmarklet = {
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              jQ(form.firstChild).empty().append(self.elt(null,'img','',{src:img,style:'width:20%;max-width:120px;max-height:120px;'}));
+              jQ(form.firstChild).empty().append(self.elt(null,'img','',{src:img,style:'width:20%;max-width:120px;max-height:120px;',height:null}));
           }
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
