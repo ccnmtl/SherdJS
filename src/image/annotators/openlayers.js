@@ -22,6 +22,10 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	this.setState = function(obj){
 	    if (typeof obj=='object') {
 		//because only one annotation is allowed at once.
+                ///At the moment, we could do a better job of saving 'all' features
+                /// in an annotation rather than overwriting with the last one
+                /// but then we run into confusion where people think they're making
+                /// a lot of annotations, but really made one.
 		self.openlayers.editingtoolbar.deactivate();
 
 		///show buttons
@@ -50,7 +54,6 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                 var current_state = self.targetview.getState();
                 var geojson = self.targetview.openlayers.feature2json(feature);
                 for (a in geojson) {current_state[a] = geojson[a]};
-                console.log(current_state);
 		///this should probably be through a signal?
 		self.targetview.setState({feature:feature,
 					  preserveCurrentFocus:true
@@ -65,6 +68,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		if (mode != 'create') {
 		    mode = 'create';
 		    self.openlayers.editingtoolbar.activate();
+                    self.openlayers.editingtoolbar.sherd.squareHandler.activate();
 		    ///visit current feature
 		    //self.targetview.setState({feature:self.targetview.currentfeature});
 
@@ -91,8 +95,6 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 			//keep our own stuff contained;
 			this.sherd = {};
 			this.sherd.navigation = new OpenLayers.Control.Navigation({autoActivate:true});
-			///NEEDS MORE WORK, SO it's a BOX
-			//new OpenLayers.Control.DrawFeature(layer, OpenLayers.Handler.Box, {'displayClass': 'olControlNavToolbar'}),
 			this.sherd.pointHandler = new OpenLayers.Control.DrawFeature(
 			    layer, 
 			    OpenLayers.Handler.Point, 
@@ -103,6 +105,14 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 			    OpenLayers.Handler.Polygon, 
 			    {'displayClass': 'olControlDrawFeaturePolygon'}
 			);
+	                this.sherd.squareHandler = new OpenLayers.Control.DrawFeature(
+			    layer, 
+			    OpenLayers.Handler.RegularPolygon, 
+			    {'displayClass': 'olControlDrawFeatureSquare',
+                             /*note, this is not supported by openlayers--we need to make our own icons*/
+                             'handlerOptions':{sides:4,irregular:true}
+                            }
+			);
 			function featureAdded() {
 			    if (typeof self.featureAdded=='function') {
 				self.featureAdded.apply(self,arguments);
@@ -110,9 +120,12 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 			}
 			this.sherd.pointHandler.featureAdded = featureAdded;
 			this.sherd.polygonHandler.featureAdded = featureAdded;
+			this.sherd.squareHandler.featureAdded = featureAdded;
 			this.addControls([this.sherd.navigation,
 					  this.sherd.pointHandler, 
-					  this.sherd.polygonHandler]);
+					  this.sherd.squareHandler,
+					  this.sherd.polygonHandler
+                                         ]);
 		    }
 		})
 	};//end this.openlayers

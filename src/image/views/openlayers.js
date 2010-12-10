@@ -322,6 +322,28 @@ if (!Sherd.Image.OpenLayers) {
 
 		self.openlayers.map.addControl(new OpenLayers.Control.MousePosition());
 
+                /* /// Issues with overview window:
+                   /// 1. loads slowly
+                   /// 2. positioning is too zoomed in and not synced with map (xy coords)
+
+                self.openlayers.graphicOverview = self.openlayers.graphic.clone();		    
+
+                self.openlayers.graphicOverview.getImageSize = function(){return null;};
+
+                self.openlayers.ovwin = new OpenLayers.Control.OverviewMap({
+                  maximized:true,
+                  layers:[self.openlayers.graphicOverview],
+                  minRatio:1,
+                  //needs to be low or we don't see the image altogether
+                  maxRatio:2,
+                  mapOptions: OpenLayers.Util.extend(objopt, {
+                     numZoomLevels:objopt.numZoomLevels-1,
+                    
+                  })
+                })
+  	        self.openlayers.map.addControl(self.openlayers.ovwin);
+                */
+
 		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
 
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
@@ -329,7 +351,7 @@ if (!Sherd.Image.OpenLayers) {
 		     'externalProjection': new OpenLayers.Projection(projection)}
 		);
 
-		presentation.initialize(create_obj.object,self);
+               presentation.initialize(create_obj.object,self);
 	    }
 	};
 	this.microformat.components = function(html_dom,create_obj) {
