@@ -1,9 +1,8 @@
 [submodule "lib/tiny_mce3"]
 	path = lib/tiny_mce3
-        url = git://github.com/ccnmtl/TinyMCE-clone.git
+        url = git://github.com/tinymce/tinymce.git
         #doesn't have minified files
-        #that includes more than tiny_mce.js (minified)
-        #url = git://github.com/tinymce/tinymce.git
+        #thus we build (run `ant`) and place jscripts/tiny_mce.js in lib/tiny_mce3_min.js
 [submodule "lib/openlayers"]
 	path = lib/openlayers
 	url = git://github.com/ccnmtl/openlayers.git
