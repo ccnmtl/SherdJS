@@ -184,7 +184,7 @@ function DjangoSherd_Storage() {
         return recent_project;
     }
 
-    this.get = function(subject, callback) {
+    this.get = function(subject, callback, list_callback) {
         ///currently obj_type in [annotations, asset, project]
         /// that is used for the URL and a reference to the _cache{} section
         var id = subject.id,
@@ -215,6 +215,9 @@ function DjangoSherd_Storage() {
                                  if (callback) {
                                      id = (typeof new_id!='boolean')?new_id:id;
                                      callback(_cache[obj_type][id])
+                                 }
+                                 if (typeof list_callback==='function') {
+                                     list_callback(json);
                                  }
                              }
                             });
@@ -255,7 +258,7 @@ function DjangoSherd_Storage() {
             ann.asset = json.assets[ann.asset_key];
             ann.annotations = [ann.annotation];
             _cache['annotations'][ann.id] = ann;
-            if (json.type == 'asset') {
+            if (json.type == 'asset' && i==0) {
                 _cache['asset'][ann.asset_id] = ann;
             }
         }
