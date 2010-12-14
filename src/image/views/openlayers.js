@@ -53,6 +53,58 @@ if (!Sherd.Image.OpenLayers) {
 	    }
 	};
 
+        this.Layer = function(){};
+        this.Layer.prototype = {
+            _anns:{},
+            create:function(name) {
+                this.v = new OpenLayers.Layer.Vector(name||"Annotations",{projection:'Flatland:1'});
+		this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
+                self.openlayers.map.addLayers([this.v]);
+                return this;
+            },
+            destroy:function() {
+                this.v.destroy();
+                for (ann_id in this._anns) 
+                    delete this._anns[ann_id];
+            },
+            add:function(ann, opts) {
+                var feature_bg = self.openlayers.GeoJSON.parseFeature(ann);
+                var feature_fg = feature_bg.clone();
+                var features = [feature_bg, feature_fg];
+                feature_bg.renderIntent = 'black';
+                feature_fg.renderIntent = 'defaultx';
+                
+                if (opts) {
+                    if (opts.id)
+                        this._anns[opts.id] = features;
+                    if (opts.color) {
+                        if (! opts.color in this.v.styleMap.styles) {
+                            this.v.styleMap.styles[opts.color] = new
+                            OpenLayers.Style({fillOpacity:0,strokeWidth:2,strokeColor:opts.color});
+                        }
+                        feature_fg.renderIntent = opts.color;
+                    }
+                }
+                this.v.addFeatures(features);
+            },
+            remove:function(ann_id) {
+                if (ann_id in this._anns) {
+                    this.v.removeFeatures(this._anns[ann_id]);
+                    delete this._anns[ann_id];
+                }
+            },
+            removeAll:function() {
+                this.v.removeAllFeatures();
+                for (ann_id in this._anns) 
+                    delete this._anns[ann_id];
+            },
+            show:function() {
+                this.v.display(true);
+            },
+            hide:function() {
+                this.v.display(false);
+            }
+        }
 
 	this.presentations = {
 	    'thumb':{
@@ -132,8 +184,8 @@ if (!Sherd.Image.OpenLayers) {
 		self.openlayers.features = [self.currentfeature, self.currentfeature.clone()];
 
 		//self.currentfeature.style = self.openlayers.vectors.styleMap.styles['sky'];
-		self.openlayers.features[1].renderIntent = 'sky2';
-		self.currentfeature.renderIntent = 'sky';
+		self.openlayers.features[1].renderIntent = 'defaultx';
+		self.currentfeature.renderIntent = 'black';
 		//self.openlayers.features[1].style = self.openlayers.vectors.styleMap.styles['sky'];
 
 		self.openlayers.vectors.addFeatures( self.openlayers.features );
@@ -305,20 +357,18 @@ if (!Sherd.Image.OpenLayers) {
 
 		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
 		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer",
-								      {projection:projection
-
-								      }
+								      {projection:projection}
 								     );
-		var styles  = {
-		    'sky':new OpenLayers.Style({fillOpacity:0,
+		self.openlayers.styles  = {
+		    'black':new OpenLayers.Style({fillOpacity:0,
 						strokeWidth:4,
 						strokeColor:'#000000'
 					       }),
-		    'sky2':new OpenLayers.Style({fillOpacity:0,
+		    'defaultx':new OpenLayers.Style({fillOpacity:0,
 						 strokeWidth:2
 						})
 		};
-		self.openlayers.vectors.styleMap = new OpenLayers.StyleMap(styles);
+		self.openlayers.vectors.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
 
 		self.openlayers.map.addControl(new OpenLayers.Control.MousePosition());
 
@@ -344,7 +394,9 @@ if (!Sherd.Image.OpenLayers) {
   	        self.openlayers.map.addControl(self.openlayers.ovwin);
                 */
 
-		self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
+	        self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
+
+                self.multiple = new this.Layer().create()
 
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,
