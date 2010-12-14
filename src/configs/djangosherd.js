@@ -421,6 +421,24 @@ function DjangoSherd_AnnotationMicroFormat() {
 function DjangoSherd_NoteList() {
 }
 
+function DjangSherd_ColorMapping() {
+  return [
+    '#ff9900',	/*orange*/	   
+    '#00ff33', /*light green*/
+    '#ffff00', /*yellow*/
+    '#ff66ff',	/*pink*/	   
+    '#3399ff', /*sky blue*/
+    '#cc99ff',	/*lavender*/
+    '#ff6666', /*salmon*/
+    '#00ffff', /*cyan*/   
+    '#cccccc', /*grey*/
+    '#990000', /*dark red*/
+    '#cccc33', /*dark yellow*/
+    '#0033ff', /*blue*/
+    '#ff0000', /*red*/
+  ];
+}
+
 function DjangoSherd_NoteForm() {
     var self = this;
     Sherd.Base.DomObject.apply(this, arguments);// inherit
