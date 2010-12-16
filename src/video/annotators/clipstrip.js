@@ -29,7 +29,7 @@ if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.Annotators) {Sherd.Video.Annotators= {};}
 if (!Sherd.Video.Annotators.ClipStrip) {
- Sherd.Video.Annotators.ClipStrip = function() {
+Sherd.Video.Annotators.ClipStrip = function() {
     var self = this;
     var CLIP_MARKER_WIDTH = 7;
 
@@ -178,13 +178,25 @@ if (!Sherd.Video.Annotators.ClipStrip) {
     };
     
     this.microformat._timeToPixels = function(seconds, duration, width) {
-       if (duration > 0) {
-           var ratio = width / duration;
-           return ratio * seconds;
-       } else {
-           return 0;
-       }
+        if (duration > 0) {
+            var ratio = width / duration;
+            return ratio * seconds;
+        } else {
+            return 0;
+        }
     };
- };
 
-}
+    this.Layer = function(){};
+    this.Layer.prototype = {
+        _anns:{},
+        create:function(name) {},
+        destroy:function() {},
+        add:function(ann,opts) {},
+        remove:function(ann_id) {},
+        removeAll:function() {},
+        show:function() {},
+        hide:function() {}
+    }
+ };/* function Sherd.Video.Annotators.ClipStrip() */
+
+}/*if !ClipStrip...*/
