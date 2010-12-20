@@ -187,6 +187,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             } else if (obj.video) {
                 rc.url = obj.video;
                 rc.provider = '';
+            } else if (obj.mp3) {
+                rc.url = obj.mp3;
             }
             if (rc.provider == 'pseudo' && /\{start\}/.test(rc.url)) {
                 var pieces = rc.url.split('?');
@@ -212,10 +214,22 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             self.events.queue('flowplayer ready to seek',[
                  {test: function() {
                      // Is the player ready yet?
+                     if (self.media.state() > 2) {
+                         if (self.media.duration() > 0) {
+                             return true;
+                         } else if (self.media.isPlaying() && self.components.player.getClip().type === 'audio') {
+                             ///SUPER HACKY: MP3's don't load duration until a pause event
+                             ///http://flowplayer.org/forum/8/37767
+                             ///so we really quickly pause/play for MP3's
+                             self.components.player.pause();
+                             self.components.player.play();
+                         }
+                     }
                      return (self.media.state() > 2
                              && self.media.duration() > 0 );
                  }, poll:500},
                  {call: function() {
+                     
                      self.events.signal(self/*==view*/, 'duration', { duration: self.media.duration() });
                      self.setState({ start: self.state.starttime, end: self.state.endtime});
                  }
@@ -439,7 +453,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             5   ended
         **/
         this.media.state = function() {
-            return self.components.player.getState(); 
+            return ((self.components.player) ? self.components.player.getState() : -1); 
+
         };
 
     };
