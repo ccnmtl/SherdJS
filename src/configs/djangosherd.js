@@ -119,11 +119,18 @@ function DjangoSherd_Project_Config(options) {
 
     });
 }
+
+var current_citation = null;
 function DjangoSherd_decorate_citations(parent) {
     ///decorate LINKS to OPEN annotations
     jQuery('a.materialCitation',parent).click(function(evt) {
         try {
             openCitation(this.href);
+            if (current_citation) {
+                jQuery(current_citation).removeClass('active-annotation');
+            }
+            jQuery(this).addClass('active-annotation');
+            current_citation = this;
         } catch(e) {
             if (window.console) {
                 console.log('ERROR opening citation:'+e.message);
