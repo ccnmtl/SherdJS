@@ -241,7 +241,7 @@ if (!Sherd.Image.OpenLayers) {
 	};
 	this.initialize = function(create_obj) {
 	    if (create_obj) {
-	    var top = document.getElementById(create_obj.htmlID);
+	        var top = document.getElementById(create_obj.htmlID);
 	    
 		var presentation;
 		switch (typeof create_obj.object.presentation) {
@@ -289,9 +289,11 @@ if (!Sherd.Image.OpenLayers) {
 			//"http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Portland/ESRI_LandBase_WebMercator/MapServer/tile/${z}/${y}/${x}",
 			objopt
 		    );
+                    self.openlayers.map.maxExtent = objopt.maxExtent;
 		    ///HACK: to make the tiler work for partial tiles (e.g. not exactly 256x256)
 		    self.openlayers.graphic.getImageSize = function(){return null;};
 		    self.openlayers.graphic.zoomToMaxExtent=function(){
+                        
 			self.openlayers.map.setCenter(this.maxExtent.getCenterLonLat());
 		    };
                     ///HACK: to support Zoomify XYZ tiling as seen at thlib.org

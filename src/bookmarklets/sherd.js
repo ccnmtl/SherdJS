@@ -722,6 +722,19 @@ SherdBookmarklet = {
               callback(result);
           }
       },/* end image assethandler */
+      "audio": {
+          find:function(callback,context) {
+              if (/.mp3$/.test(document.location)) {
+                  callback({
+                      "html":document.documentElement,
+                      "primary_type":"mp3",
+                      "sources": {
+                          "mp3": String(document.location)
+                      }
+                  });
+              }
+          }
+      },
       "image": {
           find:function(callback,context) {
               var imgs = context.document.getElementsByTagName("img");

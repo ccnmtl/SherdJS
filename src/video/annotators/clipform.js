@@ -106,6 +106,11 @@ if (!Sherd.Video.Annotators.ClipForm) {
             self.storage.update(self.getState(), false);
         });
         self.events.connect(self.components.endButton, 'click', function(evt) {
+                if (self.targetview.media.pause) {
+                    ///due to overwhelming user feedback for it to pause on clicking end-button
+                    self.targetview.media.pause();
+                }
+
                 var movieTime = self.targetview.media.time();
                 var movieTimeCode = secondsToCode(movieTime);
             

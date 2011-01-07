@@ -182,8 +182,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     self.events.signal(self, 'duration', { duration: duration });
                 }
                 break;
-            case 2:// stopped or ended
-            case 0:
+            case 2:// stopped
+                ///Do NOT clear timers here, because clicking 'play' cycles through a 2-state
+                break;
+            case 0://finished
                 self.events.clearTimers();                
                 break;
             }
