@@ -19,6 +19,7 @@ function DjangoSherd_Asset_Config() {
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     ds.noteform = new DjangoSherd_NoteForm();// see below
+    ds.storage = new DjangoSherd_Storage();
 
     jQuery(function() {
         // /# Find assets.
@@ -164,6 +165,28 @@ function DjangoSherd_createThumbs(materials) {
             view.setState(ann_obj.annotations[0]);
         }
     });
+}
+
+function DjangoSherd_ShowAllAnnotations(asset_id) {
+    djangosherd.storage.get(
+        {
+            id:asset_id,
+            type:'asset',
+            url:'/asset/json/'+asset_id+'/?annotations=true'
+        },
+        false,
+        function(asset_full){
+            console.log(asset_full);
+            //TODO: abstract inside AssetView
+            var lay = (new djangosherd.assetview.settings.image.view.Layer()).create('all');
+            for (var i=0;i<asset_full.annotations.length;i++) {
+                var a = asset_full.annotations[i];
+                if (a.annotation) {
+                    lay.add(a.annotation,{id:a.id});
+                }
+            }
+            window.lay = lay;
+        })
 }
 
 function DjangoSherd_Storage() {

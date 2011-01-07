@@ -1,3 +1,34 @@
+/****
+An annotation looks like this:
+///1
+{"type":"Feature", 
+ "id":"OpenLayers.Feature.Vector_92", 
+ "properties":{}, 
+ "geometry":{"type":"Polygon", 
+             "coordinates":[[ [-37.8125, 17.1875], 
+                              [-37.5, -2.5], 
+                              [-2.8125, 11.25], 
+                              [-37.8125, 17.1875]
+                           ]]
+            }, 
+ "crs":{"type":"OGC", 
+        "properties":{"urn":"urn:ogc:def:crs:OGC:1.3:CRS84"}}
+}
+
+///2
+{"type":"Feature", 
+ "id":"OpenLayers.Feature.Vector_78", 
+ "properties":{},  
+ "geometry":{"type":"Point", 
+             "coordinates":[0.3125, -2.96875]
+            }, 
+ "crs":{"type":"OGC", 
+        "properties":{"urn":"urn:ogc:def:crs:OGC:1.3:CRS84"}}
+}
+
+
+***/
+
 if (!Math.log2) {
     var div = Math.log(2);
     Math.log2 = function(x) {
@@ -377,7 +408,7 @@ if (!Sherd.Image.OpenLayers) {
                 /* /// Issues with overview window:
                    /// 1. loads slowly
                    /// 2. positioning is too zoomed in and not synced with map (xy coords)
-
+                   /// TODO: investigate further 
                 self.openlayers.graphicOverview = self.openlayers.graphic.clone();		    
 
                 self.openlayers.graphicOverview.getImageSize = function(){return null;};
@@ -424,36 +455,3 @@ if (!Sherd.Image.OpenLayers) {
     };//END Sherd.Image.OpenLayers
 
 }//END if (!Sherd.Image.OpenLayers)
-
-
-/****
-An annotation looks like this:
-///1
-{"type":"Feature", 
- "id":"OpenLayers.Feature.Vector_92", 
- "properties":{}, 
- "geometry":{"type":"Polygon", 
-             "coordinates":[[ [-37.8125, 17.1875], 
-                              [-37.5, -2.5], 
-                              [-2.8125, 11.25], 
-                              [-37.8125, 17.1875]
-                           ]]
-            }, 
- "crs":{"type":"OGC", 
-        "properties":{"urn":"urn:ogc:def:crs:OGC:1.3:CRS84"}}
-}
-
-
-///2
-{"type":"Feature", 
- "id":"OpenLayers.Feature.Vector_78", 
- "properties":{},  
- "geometry":{"type":"Point", 
-             "coordinates":[0.3125, -2.96875]
-            }, 
- "crs":{"type":"OGC", 
-        "properties":{"urn":"urn:ogc:def:crs:OGC:1.3:CRS84"}}
-}
-
-
-***/
