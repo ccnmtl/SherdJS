@@ -539,7 +539,8 @@ SherdBookmarklet = {
                       if (cfg.playlist && ( !clip.url || cfg.playlist.length > 1)) {
                           for (var i=0;i<cfg.playlist.length;i++) {
                               var p = cfg.playlist[i];
-                              var url =  abs((typeof p=='string') ? p : p.url,context.document);
+                              var url =  abs( ((typeof p=='string') ? p : p.url),
+                                  context.document,p.baseUrl);
                               if (/\.(jpg|jpeg|png|gif)/.test(url)) {
                                   //redundant urls wasteful, but useful
                                   sources.thumb = url;
@@ -573,9 +574,11 @@ SherdBookmarklet = {
                       }
                       var primary_type = type+get_provider(clip);
                       sources[primary_type] = clip.originalUrl || clip.resolvedUrl || clip.url || clip;
-                      if (provider && provider.netConnectionUrl)
+                      if (provider && provider.netConnectionUrl) {
 			  sources[primary_type] = provider.netConnectionUrl+sources[primary_type]
-
+                      } else if (clip.baseUrl) {
+                          sources[primary_type] = clip.baseUrl+sources[primary_type]
+                      }
                       ///TODO:is context.document the right relative URL instead of the SWF?
 		      sources[primary_type] = abs(sources[primary_type],context.document);
                       if (/_pseudo/.test(primary_type)
@@ -1098,9 +1101,6 @@ SherdBookmarklet = {
                 M.g = new M.Interface(host_url);
                 M.g.showAssets(assets);
             }
-            if (window.console) {/*if we get here, we're debugging*/
-                window.console.log(assets);
-            }
         };/*end jump_with_first_asset*/
         handler.find.call(handler, jump_with_first_asset);
     },
@@ -1183,7 +1183,8 @@ SherdBookmarklet = {
           return jq(tag+'['+attr+'='+val+']',par)
       }
   },
-  "absolute_url":function (maybe_local_url, doc) {
+  "absolute_url":function (maybe_local_url, doc, maybe_suffix) {
+      maybe_local_url = (maybe_suffix || '') + maybe_local_url;
       if (/:\/\//.test(maybe_local_url)) {
           return maybe_local_url;
       } else {
@@ -1353,6 +1354,9 @@ SherdBookmarklet = {
               if (after_merge) {
                   after_merge.html_id = self.assetHtmlID(after_merge); 
                   self.ASYNC.display(after_merge, /*index*/assets.length-1); 
+                  if (window.console) {
+                      window.console.log(assets);
+                  }
               }
           }
           ++self.handler_count;
