@@ -108,17 +108,17 @@ SherdBookmarklet = {
     "dropbox.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function(jQ) { 
-            var save_link = document.getElementById('gallery_save');
-            if (save_link && window.token && token.user_id
-                && token.path == '/Public') {
-                var regex = String(save_link.href).match(/dropbox.com\/s\/[^\/]+(\/[^?]+)/);
+            var save_link = document.getElementById('gallery_full_size');
+            if (save_link) {
+                var regex = String(save_link.href).match(/dropbox.com\/s\/[^\/]+\/([^?]+)/);
                 if (regex) {
                     var img = document.createElement("img");
-                    img.src = 'http://dl.dropbox.com/u/'+token.user_id+regex[1];
+                    img.src = save_link
                     jQ(img).bind('load',function() {
                         callback([{
                             primary_type:'image',
                             sources:{
+                                'title':regex[1],
                                 'image':img.src,
                                 'url':String(document.location),
                                 'image-metadata':"w"+img.width+"h"+img.height
