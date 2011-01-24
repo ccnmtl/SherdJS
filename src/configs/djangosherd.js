@@ -183,7 +183,9 @@ function DjangoSherd_ShowAllAnnotations(asset_id) {
         },
         false,
         function(asset_full){
-            console.log(asset_full);
+            if (window.console)
+                console.log(asset_full);
+            window.assetsky = asset_full;
             //TODO: abstract inside AssetView
             var lay = (new djangosherd.assetview.settings.image.view.Layer()).create('all');
             for (var i=0;i<asset_full.annotations.length;i++) {
@@ -450,9 +452,15 @@ function DjangoSherd_AnnotationMicroFormat() {
 }
 function DjangoSherd_NoteList() {
 }
+var current_colors = {};
+last_color = -1;
+function DjangSherd_GetColor(str) {
+    return (current_colors[str]
+            || current_colors[str] = DjangoSherd_ColorMapping(++last_color));
+}
 
-function DjangSherd_ColorMapping() {
-  return [
+function DjangSherd_ColorMapping(num) {
+    var colors = [
     '#ff9900',	/*orange*/	   
     '#00ff33', /*light green*/
     '#ffff00', /*yellow*/
@@ -467,6 +475,7 @@ function DjangSherd_ColorMapping() {
     '#0033ff', /*blue*/
     '#ff0000', /*red*/
   ];
+    return colors[num];
 }
 
 function DjangoSherd_NoteForm() {
