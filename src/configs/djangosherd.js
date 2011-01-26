@@ -471,7 +471,7 @@ window.DjangoSherd_Colors = new (function() {
     ];
     this.get = function(str) {
         return (this.current_colors[str]
-                || this.current_colors[str] = this.mapping(++this.last_color));
+                || (this.current_colors[str] = this.mapping(++this.last_color)));
     }
     this.mapping = function(num) {
         return this.colors[num];

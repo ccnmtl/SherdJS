@@ -109,7 +109,7 @@ if (!Sherd.Image.OpenLayers) {
                     if (opts.id)
                         this._anns[opts.id] = features;
                     if (opts.color) {
-                        if (! opts.color in this.v.styleMap.styles) {
+                        if (! (opts.color in this.v.styleMap.styles)) {
                             this.v.styleMap.styles[opts.color] = new
                             OpenLayers.Style({fillOpacity:0,strokeWidth:2,strokeColor:opts.color});
                         }
