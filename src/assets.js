@@ -179,5 +179,12 @@ if (!Sherd.GenericAssetView) {
                 }
             }
         };
+        this.layer = function() {
+            if (self.settings[current_type].Layer) {
+                return new self.settings[current_type].Layer();
+            } else if (self.clipstrip && self.clipstrip.Layer) {
+                return new self.clipstrip.Layer();
+            }
+        }
     };//GenericAssetView
 }

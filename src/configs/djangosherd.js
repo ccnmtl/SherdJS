@@ -187,7 +187,7 @@ function DjangoSherd_ShowAllAnnotations(asset_id) {
                 console.log(asset_full);
             window.assetsky = asset_full;
             //TODO: abstract inside AssetView
-            var lay = (new djangosherd.assetview.settings.image.view.Layer()).create('all');
+            var lay = djangosherd.assetview.layer().create('all');
             for (var i=0;i<asset_full.annotations.length;i++) {
                 var a = asset_full.annotations[i];
                 if (a.annotation) {
@@ -452,31 +452,36 @@ function DjangoSherd_AnnotationMicroFormat() {
 }
 function DjangoSherd_NoteList() {
 }
-var current_colors = {};
-last_color = -1;
-function DjangSherd_GetColor(str) {
-    return (current_colors[str]
-            || current_colors[str] = DjangoSherd_ColorMapping(++last_color));
-}
 
-function DjangSherd_ColorMapping(num) {
-    var colors = [
-    '#ff9900',	/*orange*/	   
-    '#00ff33', /*light green*/
-    '#ffff00', /*yellow*/
-    '#ff66ff',	/*pink*/	   
-    '#3399ff', /*sky blue*/
-    '#cc99ff',	/*lavender*/
-    '#ff6666', /*salmon*/
-    '#00ffff', /*cyan*/   
-    '#cccccc', /*grey*/
-    '#990000', /*dark red*/
-    '#cccc33', /*dark yellow*/
-    '#0033ff', /*blue*/
-    '#ff0000', /*red*/
-  ];
-    return colors[num];
-}
+window.DjangoSherd_Colors = new (function() {
+    this.colors = [
+        '#ff9900',	/*orange*/	   
+        '#00ff33', /*light green*/
+        '#ffff00', /*yellow*/
+        '#ff66ff',	/*pink*/	   
+        '#3399ff', /*sky blue*/
+        '#cc99ff',	/*lavender*/
+        '#ff6666', /*salmon*/
+        '#00ffff', /*cyan*/   
+        '#cccccc', /*grey*/
+        '#990000', /*dark red*/
+        '#cccc33', /*dark yellow*/
+        '#0033ff', /*blue*/
+        '#ff0000', /*red*/
+    ];
+    this.get = function(str) {
+        return (this.current_colors[str]
+                || this.current_colors[str] = this.mapping(++this.last_color));
+    }
+    this.mapping = function(num) {
+        return this.colors[num];
+    }
+    this.reset = function() {
+        this.last_color = -1;
+        this.current_colors = {};
+    }
+    this.reset();
+})();
 
 function DjangoSherd_NoteForm() {
     var self = this;
