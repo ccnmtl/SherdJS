@@ -233,7 +233,7 @@ function DjangoSherd_Storage() {
                 if (_current_citation != null)
                     jQuery(_current_citation).addClass('active-annotation');
             }
-            if (id in _cache[obj_type]) {
+            if (id in _cache[obj_type] && !list_callback) {
                 ann_obj = _cache[obj_type][id];
             } else if (_current_citation) {
                 ann_obj = djangosherd.annotationMicroformat.read( {
@@ -455,7 +455,7 @@ function DjangoSherd_NoteList() {
 
 window.DjangoSherd_Colors = new (function() {
     this.colors = [
-        '#ff9900',	/*orange*/	   
+        //'#ff9900', //remove orange, since it's 'selected' color /*orange*/	   
         '#00ff33', /*light green*/
         '#ffff00', /*yellow*/
         '#ff66ff',	/*pink*/	   
