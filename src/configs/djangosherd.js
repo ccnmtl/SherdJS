@@ -21,7 +21,6 @@ function DjangoSherd_Asset_Config() {
     ds.noteform = new DjangoSherd_NoteForm();// see below
     ds.storage = new DjangoSherd_Storage();
 
-    jQuery(function() {
         // /# Find assets.
         ds.dom_assets = ds.assetMicroFormat.find();
         if (!ds.dom_assets.length)
@@ -83,7 +82,6 @@ function DjangoSherd_Asset_Config() {
                 ds.assetview.setState();
             }
         }
-    });
 }
 
 function DjangoSherd_Project_Config(options) {
