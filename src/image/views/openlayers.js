@@ -94,7 +94,7 @@ if (!Sherd.Image.OpenLayers) {
                 this.v = new OpenLayers.Layer.Vector(name||"Annotations",{projection:'Flatland:1'});
 		this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
                 self.openlayers.map.addLayers([this.v]);
-                this.v.setZIndex(200);
+                this.v.setZIndex((opts && opts.zIndex) || 200);
 
                 if (opts) {
                     if (opts.onhover) {//must be above onclick

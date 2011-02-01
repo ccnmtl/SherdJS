@@ -38,8 +38,6 @@ function DjangoSherd_Asset_Config() {
                 asset : ds.assetMicroFormat.read(ds.dom_assets[0])
             });
 
-        // /# Editable? (i.e. note-form?)
-        ds.noteform.html.put($('clip-form'));
         // /# load asset into note-form
         var clipform = $('clipform-display');
         if (clipform) {
@@ -484,6 +482,11 @@ window.DjangoSherd_Colors = new (function() {
 function DjangoSherd_NoteForm() {
     var self = this;
     Sherd.Base.DomObject.apply(this, arguments);// inherit
+    this.form_name = 'clip-form';
+    this.f = function(field) {
+        //returns field from form, but without keeping pointers around
+        return document.forms[self.form_name].elements[field];
+    }
     this.storage = {
         update : function(obj) {
             var range1 = '0';
@@ -500,14 +503,12 @@ function DjangoSherd_NoteForm() {
                 range2 = numOrEmpty(obj.y);
             }
             // top is the form
-            self.components.top['annotation-range1'].value = range1;
-            self.components.top['annotation-range2'].value = range2;
+            self.f('annotation-range1').value = range1;
+            self.f('annotation-range2').value = range2;
 
-            self.components.top['annotation-annotation_data'].value = JSON.stringify(obj);
+            self.f('annotation-annotation_data').value = JSON.stringify(obj);
         }
     };
-    // TODO: less barebones
-    // 1. send signal for updates when replaced
 }
 
 /*******************************************************************************
