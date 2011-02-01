@@ -450,33 +450,64 @@ function DjangoSherd_NoteList() {
 }
 
 window.DjangoSherd_Colors = new (function() {
-    this.colors = [
-        //'#ff9900', //remove orange, since it's 'selected' color /*orange*/	   
-        '#00ff33', /*light green*/
-        '#ffff00', /*yellow*/
-        '#ff66ff',	/*pink*/	   
-        '#3399ff', /*sky blue*/
-        '#cc99ff',	/*lavender*/
-        '#ff6666', /*salmon*/
-        '#00ffff', /*cyan*/   
-        '#cccccc', /*grey*/
-        '#990000', /*dark red*/
-        '#cccc33', /*dark yellow*/
-        '#0033ff', /*blue*/
-        '#ff0000', /*red*/
-    ];
     this.get = function(str) {
         return (this.current_colors[str]
                 || (this.current_colors[str] = this.mapping(++this.last_color)));
     }
     this.mapping = function(num) {
-        return this.colors[num];
+        var hue = (num*30) % 240;
+        var sat = 100 - (parseInt(num*30 / 240)%3 * 40);
+        var lum = 55 + 5 * ((parseInt(num*30 / 240 / 3 ) % 5));
+        return this.hsl2rgb(hue,sat,lum);
+    }
+    this.hsl2rgb = function(h,s,l) {
+        var rgb = hsl2rgb(h,s,l);
+        return 'rgb('+parseInt(rgb.r)+','+parseInt(rgb.g)+','+parseInt(rgb.b)+')'
+        //return 'hsl('+h+','+s+'%,'+l+'%)'; //only for hsl() supported browsers: IE9+everyone else
     }
     this.reset = function() {
         this.last_color = -1;
         this.current_colors = {};
     }
     this.reset();
+
+    function HueToRgb(m1, m2, hue) {
+	var v;
+	if (hue < 0)
+		hue += 1;
+	else if (hue > 1)
+		hue -= 1;
+	if (6 * hue < 1)
+		v = m1 + (m2 - m1) * hue * 6;
+	else if (2 * hue < 1)
+		v = m2;
+	else if (3 * hue < 2)
+		v = m1 + (m2 - m1) * (2/3 - hue) * 6;
+	else
+		v = m1;
+	return 255 * v;
+    }
+    function hsl2rgb(h, s, l) {
+	var m1, m2, hue;
+	var r, g, b
+	s /=100;
+	l /= 100;
+	if (s == 0)
+		r = g = b = (l * 255);
+	else {
+		if (l <= 0.5)
+			m2 = l * (s + 1);
+		else
+			m2 = l + s - l * s;
+		m1 = l * 2 - m2;
+		hue = h / 360;
+		r = HueToRgb(m1, m2, hue + 1/3);
+		g = HueToRgb(m1, m2, hue);
+		b = HueToRgb(m1, m2, hue - 1/3);
+	}
+	return {r: r, g: g, b: b};
+    }
+
 })();
 
 function DjangoSherd_NoteForm() {
