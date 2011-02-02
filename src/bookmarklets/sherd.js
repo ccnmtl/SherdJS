@@ -756,6 +756,11 @@ SherdBookmarklet = {
                   /*recreate the <img> so we get the real width/height */
                   var image_ind = document.createElement('img');
                   image_ind.src = image.src;
+                  if (image_ind.width == 0) {
+                      //for if it doesn't load immediately
+                      //cheating: TODO - jQ(image_ind).bind('load',function() { /*see dropbox.com above*/ });
+                      image_ind = image;
+                  }
                   if (image_ind.width >= 400 || image_ind.height >= 400) {
                       result.push({
                           "html":image,
@@ -1432,7 +1437,7 @@ SherdBookmarklet = {
               comp.tab.style.display = "none";
               jQ(comp.ul).empty();
               if (!SherdBookmarklet.user_ready()) {
-                  comp.h2.innerHTML = 'Login required';
+                  jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Login required'));
                   o.login_url = o.login_url || host_url.split("/",3).join("/");
                   jQ(comp.message).empty().append(
                       self.elt(null,'span','',{},
