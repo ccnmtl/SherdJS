@@ -12,7 +12,7 @@
 
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
-if (!Sherd.Video.YouTube && Sherd.Video.Base) {
+if (!Sherd.Video.YouTube) {
     Sherd.Video.YouTube = function() {
         var self = this;
         

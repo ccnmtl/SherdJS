@@ -18,7 +18,7 @@ http://developer.apple.com/safari/library/documentation/QuickTime/Conceptual/QTS
  */
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
-if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
+if (!Sherd.Video.QuickTime) {
     Sherd.Video.QuickTime = function() {
         var self = this;
         self._played = false; // See this.media.seek

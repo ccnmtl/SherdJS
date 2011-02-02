@@ -19,7 +19,7 @@ Documentation:
  */
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
-if (!Sherd.Video.Videotag && Sherd.Video.Base) {
+if (!Sherd.Video.Videotag) {
     Sherd.Video.Videotag = function() {
         var self = this;
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
