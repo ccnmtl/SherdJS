@@ -155,7 +155,8 @@ Sherd.Video.Annotators.ClipStrip = function() {
                 timestrip: create_obj.timestrip,
                 starttime: 0,
                 endtime: 0,
-                duration: 0
+                duration: 0,
+                layers: {},
             };
         } catch(e) {}
         return false;
@@ -175,6 +176,21 @@ Sherd.Video.Annotators.ClipStrip = function() {
         self.components.clipStartMarker.style.display = 'block';
         self.components.clipRange.style.display = 'block';
         self.components.clipEndMarker.style.display = 'block';
+        
+        for (layerName in self.components.layers) {
+            var layer = self.components.layers[layerName];
+            for (annotationName in layer._anns) {
+                var annotation = layer._anns[annotationName];
+                
+                left = self.microformat._timeToPixels(annotation.starttime, self.components.duration, self.components.timestrip.trackWidth);
+                right = self.microformat._timeToPixels(annotation.endtime, self.components.duration, self.components.timestrip.trackWidth);
+                width = (right - left);
+                if (width < 0) width = 0;
+                
+                jQuery("#" + annotation.htmlID).css("left", left);
+                jQuery("#" + annotation.htmlID).css("width", width);
+            }
+        }
     };
     
     this.microformat._timeToPixels = function(seconds, duration, width) {
@@ -188,14 +204,76 @@ Sherd.Video.Annotators.ClipStrip = function() {
 
     this.Layer = function(){};
     this.Layer.prototype = {
-        _anns:{},
-        create:function(name) {},
-        destroy:function() {},
-        add:function(ann,opts) {},
-        remove:function(ann_id) {},
-        removeAll:function() {},
-        show:function() {},
-        hide:function() {}
+        create:function(name, opts) {
+            // create a layer
+            this.name = name;
+            this.htmlID = 'clipStripLayer_' + name;
+            this.title = (opts && opts['title']) || this.name;
+            this._anns = {};
+            
+            var html = '<div class="clipStrip" id="' + this.htmlID + '">' +   
+                           '<div class="clipStripLayerTitle" style="left: ' + (self.components.timestrip.trackX - 98) + 'px">' + this.title + '&nbsp;</div>' + 
+                           '<div class="clipStripLayer"' +
+                               ' style="left: ' + self.components.timestrip.trackX + 'px; ' + 
+                               ' width: ' + self.components.timestrip.trackWidth + 'px;">' + 
+                           '</div>' + 
+                       '</div>';
+            
+            jQuery("#" + self.components.clipStrip.id).append(html);
+            self.components.layers[name] = this;
+            
+            if (opts.onhover)
+                self.onhover = opts.onhover;
+            if (opts.onclick)
+                self.onclick = opts.onclick;
+            
+            return this;
+        },
+        destroy:function() {
+            this.removeAll();
+            jQuery("#" + this.htmlID).remove();
+            delete self.components.layers[name];
+        },
+        add:function(ann,opts) {
+            this._anns[opts.id] = { starttime: ann.start, endtime: ann.end, htmlID: 'annotationLayer_' + opts.id }
+            
+            jQuery("#" + this.htmlID).children(".clipStripLayer").append('<div class="annotationLayer" id="' + this._anns[opts.id].htmlID + '"></div>');
+            
+            if (opts.color)
+                jQuery("#" + this._anns[opts.id].htmlID).css("background-color", opts.color); 
+            
+            jQuery("#" + this._anns[opts.id].htmlID).hover(function() {
+                if (self.onhover) {
+                    self.onhover(opts.id, this.name);
+                }
+            });
+            
+            jQuery("#" + this._anns[opts.id].htmlID).click(function() {
+                if (self.onclick) {
+                    self.onclick(opts.id, this.name);
+                }
+            });
+            
+            self.microformat._resize();
+        },
+        remove:function(ann_id) {
+            if (ann_id in this._anns) {
+                jQuery("#" + this._anns[ann_id].htmlID).remove();
+                delete this._anns[ann_id];
+            }
+        },
+        removeAll:function() {
+            for (ann_id in this._anns)  {
+                this.remove(ann_id);
+                delete this._anns[ann_id];
+            }
+        },
+        show:function() {
+            jQuery("#" + this.htmlID).show();
+        },
+        hide:function() {
+            jQuery("#" + this.htmlID).hide();
+        }
     }
  };/* function Sherd.Video.Annotators.ClipStrip() */
 
