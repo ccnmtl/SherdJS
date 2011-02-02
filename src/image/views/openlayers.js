@@ -86,12 +86,16 @@ if (!Sherd.Image.OpenLayers) {
 
         this.Layer = function(){};
         this.Layer.prototype = {
-            _anns:{},
             create:function(name, opts) {
                 /* opts = {onclick, onhover, title, }
                     
                 */
-                this.v = new OpenLayers.Layer.Vector(name||"Annotations",{projection:'Flatland:1'});
+                this.v = new OpenLayers.Layer.Vector(name||"Annotations",{projection:'Flatland:1',
+                                                                          rendererOptions:{zIndexing:true,
+                                                                                           yOrdering:true}
+                                                                         });
+                this.name = name;
+                this._anns = {};
 		this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
                 self.openlayers.map.addLayers([this.v]);
                 this.v.setZIndex((opts && opts.zIndex) || 200);
@@ -100,9 +104,11 @@ if (!Sherd.Image.OpenLayers) {
                     if (opts.onhover) {//must be above onclick
                         this.onhover = new OpenLayers.Control.SelectFeature(
                             this.v, {'hover':true,
-                                     'overFeature':opts.onhover,
+                                     'overFeature':function(feature) {
+                                         opts.onhover(feature.sherd_id, name);
+                                     },
                                      outFeature:function(){},//stop deselection
-                                     highlightOnly:true,renderIntent:"temporary" //overkill
+                                     highlightOnly:true, renderIntent:"temporary" //overkill
                                     }
                         );
                         self.openlayers.map.addControl(this.onhover);
@@ -138,22 +144,37 @@ if (!Sherd.Image.OpenLayers) {
                 feature_fg.renderIntent = 'defaulta';
                 
                 if (opts) {
-                    if (opts.id)
-                        this._anns[opts.id] = features;
+                    if (opts.id) {
+                        this._anns[opts.id] = {'f':features,
+                                               'opts':opts};
+                        feature_fg.sherd_id = opts.id;
+                        feature_bg.sherd_id = opts.id;
+                    }
                     if (opts.color) {
                         if (! (opts.color in this.v.styleMap.styles)) {
-                            this.v.styleMap.styles[opts.color] = new
-                            OpenLayers.Style({fillOpacity:0,strokeWidth:2,strokeColor:opts.color});
+                            this.v.styleMap.styles[opts.color] = new OpenLayers.Style(
+                                {fillOpacity:0,
+                                 strokeWidth:2,
+                                 strokeColor:opts.color,
+                                 pointerEvents:(opts.pointerEvents || undefined),
+                                 graphicZIndex:(opts.zIndex || 300+ parseInt(feature_fg.geometry.getBounds().top))
+                                });
                         }
                         feature_fg.renderIntent = opts.color;
+                    }
+                    if (opts.pointerEvents === 'none') {
+                        features.shift(); //TODO: necessary?
                     }
                 }
                 this.v.addFeatures(features);
             },
             remove:function(ann_id) {
+                //returns the opts that were used to add it
                 if (ann_id in this._anns) {
-                    this.v.removeFeatures(this._anns[ann_id]);
+                    this.v.removeFeatures(this._anns[ann_id].f);
+                    var o = this._anns[ann_id].opts;
                     delete this._anns[ann_id];
+                    return o;
                 }
             },
             removeAll:function() {
@@ -427,22 +448,26 @@ if (!Sherd.Image.OpenLayers) {
 		self.openlayers.styles  = {
 		    'black':new OpenLayers.Style({fillOpacity:0,
 						strokeWidth:4,
-						strokeColor:'#000000'
+						strokeColor:'#000000',
+                                                graphicZIndex:0
 					       }),
 		    'defaulta':new OpenLayers.Style({fillOpacity:0,
-						 strokeWidth:2
+						 strokeWidth:2,
+                                                graphicZIndex:0
 						    }),
                     /*pointerEvents is 'none', so the event can be captured by a Layer underneath */
 		    'white':new OpenLayers.Style({fillOpacity:0,
 						strokeWidth:4,
 						  strokeColor:'#ffffff',
                                                   pointerEvents:'none',
-                                                  labelSelect:false
+                                                  labelSelect:false,
+                                                graphicZIndex:0
 					       }),
 		    'defaultx':new OpenLayers.Style({fillOpacity:0,
 						 strokeWidth:2,
                                                   pointerEvents:'none',
-                                                  labelSelect:false
+                                                  labelSelect:false,
+                                                graphicZIndex:0
 						    })
 		};
 		self.openlayers.vectors.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
