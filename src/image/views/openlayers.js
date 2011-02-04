@@ -86,9 +86,47 @@ if (!Sherd.Image.OpenLayers) {
 
         this.Layer = function(){};
         this.Layer.prototype = {
+            all_layers:[],
+            root:{hover:false, click:false, layers:{} },
+            adoptIntoRootContainer:function(new_layer,opts) {
+                layerSelf = this;
+                if (this.root.globalMouseListener) {
+                    this.root.globalMouseListener.destroy();
+                }
+                this.all_layers.push(new_layer);
+                var listeners = this.root.layers[new_layer.id] = {index:this.all_layers.length -1 };
+                if (opts.onhover) {
+                    this.root.hover = true;
+                    listeners.onhover = opts.onhover;
+                }
+                if (opts.onclick) {
+                    this.root.click = true;
+                    listeners.onclick = opts.onclick;
+                }
+
+                this.root.globalMouseListener = new OpenLayers.Control.SelectFeature(this.all_layers,{
+                    'hover':this.root.hover,
+                    overFeature:function(feature){
+                        var lay = layerSelf.root.layers[feature.layer.id];
+                        if (lay.onhover) {
+                            lay.onhover(feature.sherd_id, feature.layer.sherd_layername);
+                        }
+                    },
+                    clickFeature:function(feature){
+                        var lay = layerSelf.root.layers[feature.layer.id];
+                        if (lay.onclick) {
+                            lay.onclick(feature.sherd_id, feature.layer.sherd_layername);
+                        }
+                    },
+                    outFeature:function(){},
+                    highlightOnly:true, renderIntent:"temporary"
+                });
+                self.openlayers.map.addControl(this.root.globalMouseListener);
+                this.root.globalMouseListener.activate();
+                
+            },
             create:function(name, opts) {
-                /* opts = {onclick, onhover, title, }
-                    
+                /* opts = {title, onclick(ann_id, layer_name), onhover(ann_id, layer_name), }
                 */
                 this.v = new OpenLayers.Layer.Vector(name||"Annotations",{projection:'Flatland:1',
                                                                           rendererOptions:{zIndexing:true,
@@ -97,46 +135,27 @@ if (!Sherd.Image.OpenLayers) {
                 this.name = name;
                 this._anns = {};
 		this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
-                self.openlayers.map.addLayers([this.v]);
                 this.v.setZIndex((opts && opts.zIndex) || 200);
+                this.v.sherd_layername = name;
 
-                if (opts) {
-                    if (opts.onhover) {//must be above onclick
-                        this.onhover = new OpenLayers.Control.SelectFeature(
-                            this.v, {'hover':true,
-                                     'overFeature':function(feature) {
-                                         opts.onhover(feature.sherd_id, name);
-                                     },
-                                     outFeature:function(){},//stop deselection
-                                     highlightOnly:true, renderIntent:"temporary" //overkill
-                                    }
-                        );
-                        self.openlayers.map.addControl(this.onhover);
-                        this.onhover.activate();
-                    }
-                    if (opts.onclick) {
-                        ///better downstream: select OR eventListeners.beforefeaturehighlighted
-                        this.onclick = new OpenLayers.Control.SelectFeature(
-                            this.v, {'clickFeature':opts.onclick}
-                        );
-                        self.openlayers.map.addControl(this.onclick);
-                        this.onclick.activate();
-                    }
-                }
+                self.openlayers.map.addLayer(this.v);
+                this.adoptIntoRootContainer(this.v, opts);
+
                 return this;
             },
             destroy:function() {
+                //remove from mouselistener obj
+                this.all_layers.splice(this.root.layers[this.v.id].index,1);
+                delete this.root.layers[this.v.id];
+                //destroy layer -- openlayers does the rest
                 this.v.destroy();
+                //delete ann pointers
                 for (ann_id in this._anns) 
                     delete this._anns[ann_id];
-                if (this.onclick) {
-                    self.openlayers.map.removeControl(this.onclick);
-                }
-                if (this.onhover) {
-                    self.openlayers.map.removeControl(this.onhover);
-                }
             },
             add:function(ann, opts) {
+                if (!this.v) 
+                    throw Error('layer not created yet');
                 var feature_bg = self.openlayers.GeoJSON.parseFeature(ann);
                 var feature_fg = feature_bg.clone();
                 var features = [feature_bg, feature_fg];
@@ -156,8 +175,8 @@ if (!Sherd.Image.OpenLayers) {
                                 {fillOpacity:0,
                                  strokeWidth:2,
                                  strokeColor:opts.color,
-                                 pointerEvents:(opts.pointerEvents || undefined),
-                                 graphicZIndex:(opts.zIndex || 300+ parseInt(feature_fg.geometry.getBounds().top))
+                                 pointerEvents:(opts.pointerEvents),
+                                 graphicZIndex:(opts.zIndex || 300- parseInt(feature_fg.geometry.getBounds().top))
                                 });
                         }
                         feature_fg.renderIntent = opts.color;
@@ -170,7 +189,7 @@ if (!Sherd.Image.OpenLayers) {
             },
             remove:function(ann_id) {
                 //returns the opts that were used to add it
-                if (ann_id in this._anns) {
+                if (this.v && ann_id in this._anns) {
                     this.v.removeFeatures(this._anns[ann_id].f);
                     var o = this._anns[ann_id].opts;
                     delete this._anns[ann_id];
@@ -178,6 +197,7 @@ if (!Sherd.Image.OpenLayers) {
                 }
             },
             removeAll:function() {
+                if (!this.v) return;
                 this.v.removeAllFeatures();
                 for (ann_id in this._anns) 
                     delete this._anns[ann_id];
@@ -443,12 +463,17 @@ if (!Sherd.Image.OpenLayers) {
 
 		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
 		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer",
-								      {projection:projection}
+								      {projection:projection,
+                                                                       rendererOptions:{zIndexing:true,
+                                                                                        yOrdering:false
+                                                                                       }
+                                                                      }
 								     );
 		self.openlayers.styles  = {
 		    'black':new OpenLayers.Style({fillOpacity:0,
 						strokeWidth:4,
 						strokeColor:'#000000',
+                                                pointerEvents:'none',
                                                 graphicZIndex:0
 					       }),
 		    'defaulta':new OpenLayers.Style({fillOpacity:0,
@@ -495,11 +520,8 @@ if (!Sherd.Image.OpenLayers) {
                 })
   	        self.openlayers.map.addControl(self.openlayers.ovwin);
                 */
-
 	        self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
-                self.openlayers.vectors.setZIndex(900);
-
-                self.multiple = new this.Layer().create()
+                self.openlayers.vectors.setZIndex(900); //doesn't work -- need to make this a layer
 
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,
