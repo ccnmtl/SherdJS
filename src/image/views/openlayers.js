@@ -89,6 +89,14 @@ if (!Sherd.Image.OpenLayers) {
             all_layers:[],
             root:{hover:false, click:false, layers:{} },
             adoptIntoRootContainer:function(new_layer,opts) {
+                /* In order to get mouse events through layers, they need to
+                   all exist within the same SVG object.  In OpenLayers, this is done 
+                   with OpenLayers/Layer/Vector/RootContainer.js which can only
+                   be instantiated through SelectFeature (which we use anyway)
+
+                   This means each added layer, we need to recreate a global SelectFeature
+                   so it can consolidate all of the layers.
+                 */
                 layerSelf = this;
                 if (this.root.globalMouseListener) {
                     this.root.globalMouseListener.destroy();
@@ -171,6 +179,7 @@ if (!Sherd.Image.OpenLayers) {
                     }
                     if (opts.color) {
                         if (! (opts.color in this.v.styleMap.styles)) {
+                            //console.log(feature_fg.geometry.getArea()); //alt zIndex measure
                             this.v.styleMap.styles[opts.color] = new OpenLayers.Style(
                                 {fillOpacity:0,
                                  strokeWidth:2,
