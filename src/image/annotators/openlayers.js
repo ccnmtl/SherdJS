@@ -38,7 +38,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 
 	this.initialize = function(create_obj) {
 	    self.openlayers.editingtoolbar = new self.openlayers.CustomEditingToolbar(
-		self.targetview.openlayers.vectors
+		self.targetview.openlayers.vectorLayer.getLayer()
 	    );
 	    self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
 	    //Q: this doubles mousewheel listening, e.g. why did we need it?
@@ -53,15 +53,17 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	    self.openlayers.editingtoolbar.featureAdded = function(feature) {
                 var current_state = self.targetview.getState();
                 var geojson = self.targetview.openlayers.feature2json(feature);
+                //copy feature properties to current_state
                 for (a in geojson) {current_state[a] = geojson[a]};
-		///this should probably be through a signal?
-		self.targetview.setState({feature:feature,
-					  preserveCurrentFocus:true
-					 });
+                //use geojson object as annotation
+                geojson.preserveCurrentFocus = true;
+		self.targetview.setState(geojson);
+
 		self.storage.update(current_state);
 	    }
 	    ///# 3. button listeners
 	    self.events.connect(self.components.center,'click',function(evt) {
+                
 		self.targetview.setState({feature:self.targetview.currentfeature});
 	    });
 	    self.events.connect(self.components.redo,'click',function(evt) {
@@ -75,9 +77,8 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		    //reset feature BAD BAD BAD (because we're not going through a function )
 		    self.targetview.currentfeature = false;
 		    //delete all (assumes only one annotation)
-		    self.targetview.openlayers.vectors.removeFeatures(
-			self.targetview.openlayers.vectors.features
-		    );
+		    self.targetview.openlayers.vectorLayer.removeAll();
+
                     self.components.instructions.style.display = 'inline';                    
 		    self.components.center.style.display = 'none';
 		    self.components.redo.style.display = 'none';

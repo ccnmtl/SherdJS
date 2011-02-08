@@ -88,7 +88,7 @@ if (!Sherd.Image.OpenLayers) {
         this.Layer.prototype = {
             all_layers:[],
             root:{hover:false, click:false, layers:{} },
-            adoptIntoRootContainer:function(new_layer,opts) {
+            _adoptIntoRootContainer:function(new_layer,opts) {
                 /* In order to get mouse events through layers, they need to
                    all exist within the same SVG object.  In OpenLayers, this is done 
                    with OpenLayers/Layer/Vector/RootContainer.js which can only
@@ -101,8 +101,19 @@ if (!Sherd.Image.OpenLayers) {
                 if (this.root.globalMouseListener) {
                     this.root.globalMouseListener.destroy();
                 }
+                var listeners = this.root.layers[new_layer.id] = {};
+
                 this.all_layers.push(new_layer);
-                var listeners = this.root.layers[new_layer.id] = {index:this.all_layers.length -1 };
+                this.all_layers.sort(function(a,b) {
+                    return a.sherd_layerapi.zIndex - b.sherd_layerapi.zIndex;
+                })
+                //setting the setLayerIndex reorders the map array, so we respect opts.zIndex
+                //setting the .index allows clinical removal in .remove();
+                for (var i=0,l=this.all_layers.length;i<l;i++) {
+                    var layer = this.all_layers[i]
+                    this.root.layers[layer.id].index = i;
+                    layer.map.setLayerIndex(layer,i+1);//+1 for the baseLayer
+                }
                 if (opts.onmouseenter) { 
                     this.root.hover = true;
                     listeners.onmouseenter = opts.onmouseenter;
@@ -152,11 +163,13 @@ if (!Sherd.Image.OpenLayers) {
                 this.name = name;
                 this._anns = {};
 		this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
-                this.v.setZIndex((opts && opts.zIndex) || 200);
+                this.zIndex = (opts && opts.zIndex) || 200; //used to order layers
+                this.v.setZIndex(this.zIndex);
                 this.v.sherd_layername = name;
+                this.v.sherd_layerapi = this;
 
                 self.openlayers.map.addLayer(this.v);
-                this.adoptIntoRootContainer(this.v, opts);
+                this._adoptIntoRootContainer(this.v, opts);
 
                 return this;
             },
@@ -176,7 +189,7 @@ if (!Sherd.Image.OpenLayers) {
                 var feature_bg = self.openlayers.GeoJSON.parseFeature(ann);
                 var feature_fg = feature_bg.clone();
                 var features = [feature_bg, feature_fg];
-                feature_bg.renderIntent = 'black';
+                feature_bg.renderIntent = 'blackbg';
                 feature_fg.renderIntent = 'defaulta';
                 
                 if (opts) {
@@ -191,13 +204,16 @@ if (!Sherd.Image.OpenLayers) {
                             //console.log(feature_fg.geometry.getArea()); //alt zIndex measure
                             this.v.styleMap.styles[opts.color] = new OpenLayers.Style(
                                 {fillOpacity:0,
-                                 strokeWidth:2,
+                                 strokeWidth:1,
                                  strokeColor:opts.color,
                                  pointerEvents:(opts.pointerEvents),
                                  graphicZIndex:(opts.zIndex || 300- parseInt(feature_fg.geometry.getBounds().top))
                                 });
                         }
                         feature_fg.renderIntent = opts.color;
+                    }
+                    if (opts.bgcolor) {//cheating--ASSUME color already exists
+                        feature_bg.renderIntent = opts.bgcolor;
                     }
                     if (opts.pointerEvents === 'none') {
                         features.shift(); //TODO: necessary?
@@ -225,6 +241,10 @@ if (!Sherd.Image.OpenLayers) {
             },
             hide:function() {
                 this.v.setVisibility(false);
+            },
+            //extension for internal openlayers stuff
+            getLayer:function() {
+                return this.v;
             }
         }
 
@@ -300,17 +320,15 @@ if (!Sherd.Image.OpenLayers) {
 		    self.currentfeature = false;
 		}
 	    }
+            self.openlayers.vectorLayer.removeAll();
 	    if (self.currentfeature) {
-		var style = self.openlayers.vectors.styleMap.styles.select;
+                self.openlayers.vectorLayer.add(self.openlayers.feature2json(self.currentfeature),
+                                                {color:'grey',
+                                                 bgcolor:'white',
+                                                 zIndex:850//lower than the highlight layer in assets.js
+                                                });
+                
 		var bounds = self.currentfeature.geometry.getBounds();
-		self.openlayers.features = [self.currentfeature, self.currentfeature.clone()];
-
-		//self.currentfeature.style = self.openlayers.vectors.styleMap.styles['sky'];
-		self.openlayers.features[1].renderIntent = 'defaultx';
-		self.currentfeature.renderIntent = 'white';
-		//self.openlayers.features[1].style = self.openlayers.vectors.styleMap.styles['sky'];
-
-		self.openlayers.vectors.addFeatures( self.openlayers.features );
                 if (!obj.preserveCurrentFocus) {
                     if (obj.zoom &&
                         obj.zoom < self.openlayers.map.getZoomForExtent(bounds)
@@ -480,16 +498,14 @@ if (!Sherd.Image.OpenLayers) {
 		}
 
 		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
-		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer",
-								      {projection:projection,
-                                                                       rendererOptions:{zIndexing:true,
-                                                                                        yOrdering:false
-                                                                                       }
-                                                                      }
-								     );
 		self.openlayers.styles  = {
-		    'black':new OpenLayers.Style({fillOpacity:0,
-						strokeWidth:4,
+		    'grey':new OpenLayers.Style({fillOpacity:0,
+						strokeWidth:2,
+						strokeColor:'#7e7e7e',
+                                                graphicZIndex:0
+					       }),
+		    'blackbg':new OpenLayers.Style({fillOpacity:0,
+						strokeWidth:3,
 						strokeColor:'#000000',
                                                 pointerEvents:'none',
                                                 graphicZIndex:0
@@ -513,7 +529,6 @@ if (!Sherd.Image.OpenLayers) {
                                                 graphicZIndex:0
 						    })
 		};
-		self.openlayers.vectors.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
 
 		self.openlayers.map.addControl(new OpenLayers.Control.MousePosition());
 
@@ -538,8 +553,10 @@ if (!Sherd.Image.OpenLayers) {
                 })
   	        self.openlayers.map.addControl(self.openlayers.ovwin);
                 */
-	        self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
-                self.openlayers.vectors.setZIndex(900); //doesn't work -- need to make this a layer
+	        self.openlayers.map.addLayers([self.openlayers.graphic]);
+                self.openlayers.vectorLayer = new self.Layer().create('annotating',{
+                    zIndex:1000
+                })
 
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,
