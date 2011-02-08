@@ -103,9 +103,13 @@ if (!Sherd.Image.OpenLayers) {
                 }
                 this.all_layers.push(new_layer);
                 var listeners = this.root.layers[new_layer.id] = {index:this.all_layers.length -1 };
-                if (opts.onhover) {
+                if (opts.onmouseenter) { 
                     this.root.hover = true;
-                    listeners.onhover = opts.onhover;
+                    listeners.onmouseenter = opts.onmouseenter;
+                }
+                if (opts.onmouseleave) {
+                    this.root.hover = true;
+                    listeners.onmouseleave = opts.onmouseleave;
                 }
                 if (opts.onclick) {
                     this.root.click = true;
@@ -116,8 +120,8 @@ if (!Sherd.Image.OpenLayers) {
                     'hover':this.root.hover,
                     overFeature:function(feature){
                         var lay = layerSelf.root.layers[feature.layer.id];
-                        if (lay.onhover) {
-                            lay.onhover(feature.sherd_id, feature.layer.sherd_layername);
+                        if (lay.onmouseenter) {
+                            lay.onmouseenter(feature.sherd_id, feature.layer.sherd_layername);
                         }
                     },
                     clickFeature:function(feature){
@@ -126,7 +130,12 @@ if (!Sherd.Image.OpenLayers) {
                             lay.onclick(feature.sherd_id, feature.layer.sherd_layername);
                         }
                     },
-                    outFeature:function(){},
+                    outFeature:function(feature){
+                        var lay = layerSelf.root.layers[feature.layer.id];
+                        if (lay.onmouseleave) {
+                            lay.onmouseleave(feature.sherd_id, feature.layer.sherd_layername);
+                        }
+                    },
                     highlightOnly:true, renderIntent:"temporary"
                 });
                 self.openlayers.map.addControl(this.root.globalMouseListener);

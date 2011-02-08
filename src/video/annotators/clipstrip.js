@@ -239,8 +239,10 @@ Sherd.Video.Annotators.ClipStrip = function() {
             
             self.components.layers[name] = this;
             
-            if (opts.onhover)
-                self.onhover = opts.onhover;
+            if (opts.onmouseenter)
+                self.onmouseenter = opts.onmouseenter;
+            if (opts.onmouseleave)
+                self.onmouseleave = opts.onmouseleave;
             if (opts.onclick)
                 self.onclick = opts.onclick;
             
@@ -263,11 +265,18 @@ Sherd.Video.Annotators.ClipStrip = function() {
             if (opts.color)
                 jQuery("#" + this._anns[opts.id].htmlID).css("background-color", opts.color); 
             
-            jQuery("#" + this._anns[opts.id].htmlID).hover(function() {
-                if (self.onhover) {
-                    self.onhover(opts.id, this.name);
+            jQuery("#" + this._anns[opts.id].htmlID).hover(
+                function enter() {
+                    if (self.onmouseenter) {
+                        self.onmouseenter(opts.id, this.name);
+                    }
+                },
+                function leave() {
+                    if (self.onmouseleave) {
+                        self.onmouseleave(opts.id, this.name);
+                    }
                 }
-            });
+            );
             
             jQuery("#" + this._anns[opts.id].htmlID).click(function() {
                 if (self.onclick) {
