@@ -143,11 +143,11 @@
         var layerOne = new view.clipstrip.Layer();
         var layerTwo = new view.clipstrip.Layer();
         
-        var layer1 = layerOne.create('one', { title: "Layer One", color: "#FF0000" });
+        var layer1 = layerOne.create('one', { title: "Layer One", color: "#FF0000", zIndex: 100 });
         layer1.add({ start: 0, end: 0 }, { id: 1 });
         layer1.add({ start: 0, end: 0 }, { id: 2 });
         
-        var layer2 = layerTwo.create('two', { title: "Layer Two", color: "#00FF00" });
+        var layer2 = layerTwo.create('two', { title: "Layer Two", color: "#00FF00", zIndex: 900 });
         layer2.add({ start: 0, end: 0 }, { id: 3 });
         layer2.add({ start: 0, end: 0 }, { id: 4 });
 
@@ -157,12 +157,12 @@
         // verify all both clipStrip layers exist w/their annotations
         t.ok(jQuery("#clipStripLayer_one").length > 0, 'Layer 1 exists');
         t.ok(jQuery("#clipStripLayer_one").is(":visible"));
-        t.ok(jQuery("#annotationLayer_1").length > 0, 'Layer 1 -- 1st annotation exists');
-        t.ok(jQuery("#annotationLayer_2").length > 0, 'Layer 1 -- 2nd annotation exists');
+        t.ok(jQuery("#one_annotation_1").length > 0, 'Layer 1 -- 1st annotation exists');
+        t.ok(jQuery("#one_annotation_2").length > 0, 'Layer 1 -- 2nd annotation exists');
         t.ok(jQuery("#clipStripLayer_two").length > 0, 'Layer 2 exists');
         t.ok(jQuery("#clipStripLayer_two").is(":visible"));
-        t.ok(jQuery("#annotationLayer_3").length > 0, 'Layer 1 -- 3st annotation exists');
-        t.ok(jQuery("#annotationLayer_4").length > 0, 'Layer 1 -- 4nd annotation exists');
+        t.ok(jQuery("#two_annotation_3").length > 0, 'Layer 1 -- 3st annotation exists');
+        t.ok(jQuery("#two_annotation_4").length > 0, 'Layer 1 -- 4nd annotation exists');
 
         layer1.hide();
         t.ok(!jQuery("#clipStripLayer_one").is(":visible"));
@@ -170,16 +170,55 @@
         t.ok(jQuery("#clipStripLayer_one").is(":visible"));
 
         layer1.remove(1);
-        t.ok(jQuery("#annotationLayer_1").length < 1, 'Layer 1 -- 1st annotation no longer exists');
+        t.ok(jQuery("#one_annotation_1").length < 1, 'Layer 1 -- 1st annotation no longer exists');
         layer1.removeAll();
-        t.ok(jQuery("#annotationLayer_2").length < 1, 'Layer 1 -- 2nd annotation no longer exists');
+        t.ok(jQuery("#one_annotation_2").length < 1, 'Layer 1 -- 2nd annotation no longer exists');
         layer1.destroy();
         t.ok(jQuery("#clipStripLayer_one").length < 1, 'Layer 1 no longer exists');
 
         layer2.destroy();
-        t.ok(jQuery("#annotationLayer_3").length < 1, 'Layer 2 -- 1st annotation no longer exists');
-        t.ok(jQuery("#annotationLayer_4").length < 1, 'Layer 3 -- 2nd annotation no longer exists');
+        t.ok(jQuery("#two_annotation_3").length < 1, 'Layer 2 -- 1st annotation no longer exists');
+        t.ok(jQuery("#two_annotation_4").length < 1, 'Layer 3 -- 2nd annotation no longer exists');
         t.ok(jQuery("#clipStripLayer_two").length < 1, 'Layer 2 no longer exists');
+    }
+
+    function testLayerOrder(t) {
+        var view = _initializeView(t);
+
+        var layer = new view.clipstrip.Layer();
+        var layer4 = layer.create('four', {});
+
+        layer = new view.clipstrip.Layer();
+        var layer3 = layer.create('three', { zIndex: 100 });
+        
+        layer = new view.clipstrip.Layer();
+        var layer2 = layer.create('two', { zIndex: 900 });
+
+        layer = new view.clipstrip.Layer();
+        var layer1 = layer.create('one', { zIndex: 1000 });
+
+        layer = new view.clipstrip.Layer();
+        var layer5 = layer.create('five', {});
+
+        jQuery(".clipStripLayerContainer").each(function(index, value) {
+            if (index == 0) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_one');
+            } else if (index == 1) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_two');
+            } else if (index == 2) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_three');
+            } else if (index == 3) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_four');
+            } else if (index == 4) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_five');
+            }
+        });
+
+        layer1.destroy();
+        layer2.destroy();
+        layer3.destroy();
+        layer4.destroy();
+        layer5.destroy();
     }
 
     function _initializeView(t) {

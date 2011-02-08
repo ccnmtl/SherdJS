@@ -211,15 +211,32 @@ Sherd.Video.Annotators.ClipStrip = function() {
             this.title = (opts && opts['title']) || this.name;
             this._anns = {};
             
-            var html = '<div class="clipStrip" id="' + this.htmlID + '">' +   
+            var html = '<div class="clipStripLayerContainer" id="' + this.htmlID + '" style="z-index:' + opts.zIndex + '">' +   
                            '<div class="clipStripLayerTitle" style="left: ' + (self.components.timestrip.trackX - 98) + 'px">' + this.title + '&nbsp;</div>' + 
                            '<div class="clipStripLayer"' +
                                ' style="left: ' + self.components.timestrip.trackX + 'px; ' + 
-                               ' width: ' + self.components.timestrip.trackWidth + 'px;">' + 
+                               ' width: ' + self.components.timestrip.trackWidth + 'px;">'
                            '</div>' + 
                        '</div>';
             
-            jQuery("#" + self.components.clipStrip.id).append(html);
+            
+            // z-index -- An element with greater stack order is always in front of an element with a lower stack order.
+            // For ClipStrip, the property is overloaded to mean top to bottom order. greater z-index == higher in the list
+            var inserted = false;
+            if (opts.zIndex != undefined) {
+                jQuery(".clipStripLayerContainer").each(function(index, value) {
+                    var zindex = jQuery(this).css("z-index");
+                    if ((zindex && opts.zIndex > zindex) || (zindex == undefined || zindex == "auto")) {
+                        jQuery(this).before(html);
+                        inserted = true;
+                        return false;
+                    }
+                });
+            }
+                
+            if (!inserted) // insert at end
+                jQuery("#" + self.components.clipStrip.id).append(html);
+            
             self.components.layers[name] = this;
             
             if (opts.onhover)
@@ -235,7 +252,11 @@ Sherd.Video.Annotators.ClipStrip = function() {
             delete self.components.layers[name];
         },
         add:function(ann,opts) {
-            this._anns[opts.id] = { starttime: ann.start, endtime: ann.end, htmlID: 'annotationLayer_' + opts.id }
+            
+            if (ann.duration != undefined && ann.duration > 1 && self.components.duration < 1)
+                self.components.duration = ann.duration;
+            
+            this._anns[opts.id] = { starttime: ann.start, endtime: ann.end, htmlID: this.name + '_annotation_' + opts.id, duration: ann.duration }
             
             jQuery("#" + this.htmlID).children(".clipStripLayer").append('<div class="annotationLayer" id="' + this._anns[opts.id].htmlID + '"></div>');
             
