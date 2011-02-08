@@ -170,30 +170,6 @@ function DjangoSherd_createThumbs(materials) {
     });
 }
 
-function DjangoSherd_ShowAllAnnotations(asset_id) {
-    djangosherd.storage.get(
-        {
-            id:asset_id,
-            type:'asset',
-            url:'/asset/json/'+asset_id+'/?annotations=true'
-        },
-        false,
-        function(asset_full){
-            if (window.console)
-                console.log(asset_full);
-            window.assetsky = asset_full;
-            //TODO: abstract inside AssetView
-            var lay = djangosherd.assetview.layer().create('all');
-            for (var i=0;i<asset_full.annotations.length;i++) {
-                var a = asset_full.annotations[i];
-                if (a.annotation) {
-                    lay.add(a.annotation,{id:a.id});
-                }
-            }
-            window.lay = lay;
-        })
-}
-
 function DjangoSherd_Storage() {
     /* read-only storage repo for annotation objects from MediaThread
      */
@@ -538,6 +514,11 @@ function DjangoSherd_NoteForm() {
             self.f('annotation-range2').value = range2;
 
             self.f('annotation-annotation_data').value = JSON.stringify(obj);
+            ///TODO: eventually this whole DjangoSherd_NoteForm will
+            ///      BE part of AnnotationList -- or a wrapper
+            if (window.AnnotationList) {
+                AnnotationList.clearAnnotation();
+            }
         }
     };
 }
