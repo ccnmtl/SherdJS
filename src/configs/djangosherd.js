@@ -517,6 +517,7 @@ function DjangoSherd_NoteForm() {
             ///TODO: eventually this whole DjangoSherd_NoteForm will
             ///      BE part of AnnotationList -- or a wrapper
             if (window.AnnotationList) {
+                ///TODO: make this updateAnnotation(null, obj)
                 AnnotationList.clearAnnotation();
             }
         }

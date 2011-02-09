@@ -215,9 +215,6 @@ if (!Sherd.Image.OpenLayers) {
                     if (opts.bgcolor) {//cheating--ASSUME color already exists
                         feature_bg.renderIntent = opts.bgcolor;
                     }
-                    if (opts.pointerEvents === 'none') {
-                        features.shift(); //TODO: necessary?
-                    }
                 }
                 this.v.addFeatures(features);
             },
@@ -325,6 +322,7 @@ if (!Sherd.Image.OpenLayers) {
                 self.openlayers.vectorLayer.add(self.openlayers.feature2json(self.currentfeature),
                                                 {color:'grey',
                                                  bgcolor:'white',
+                                                 //pointerEvents:'none',
                                                  zIndex:850//lower than the highlight layer in assets.js
                                                 });
                 
@@ -499,10 +497,18 @@ if (!Sherd.Image.OpenLayers) {
 
 		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
 		self.openlayers.styles  = {
+		    'highlight':new OpenLayers.Style({fillOpacity:0,
+						strokeWidth:6,
+						  strokeColor:'#ffffff',
+                                                  pointerEvents:'none',
+                                                  labelSelect:false,
+                                                graphicZIndex:1
+					       }),
 		    'grey':new OpenLayers.Style({fillOpacity:0,
 						strokeWidth:2,
-						strokeColor:'#7e7e7e',
-                                                graphicZIndex:0
+						strokeColor:'#905050',
+                                                 pointerEvents:'none',
+                                                graphicZIndex:5
 					       }),
 		    'blackbg':new OpenLayers.Style({fillOpacity:0,
 						strokeWidth:3,
