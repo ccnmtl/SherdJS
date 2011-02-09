@@ -134,13 +134,13 @@ Sherd.Video.Annotators.ClipStrip = function() {
         return {
             htmlID : htmlID,
             timestrip : timestrip,
-            text : '<div id="clipStrip" style="width: ' + timestrip.w + 'px">' + 
-                        '<div id="clipStripTrack"  style="width: ' + timestrip.trackWidth + 'px; left: ' + timestrip.trackX + 'px">' + 
-                            '<div id="clipStripStart" class="clipSlider" onmouseover="return escape(\'Go to note start time\')" style="display:none"></div>' + 
-                            '<div id="clipStripRange" class="clipStripRange" style="display:none"></div>' + 
-                            '<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>' + 
-                        '</div>' + 
-                    '</div>'
+            text : '<div id="clipStrip" style="width: ' + timestrip.w + 'px">'
+                +'<div id="clipStripTrack"  style="width: ' + timestrip.trackWidth + 'px; left: ' + timestrip.trackX + 'px">' 
+                +            '<div id="clipStripStart" class="clipSlider" onmouseover="return escape(\'Go to note start time\')" style="display:none"></div>'
+                +            '<div id="clipStripRange" class="clipStripRange" style="display:none"></div>' 
+                +            '<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>' 
+                +        '</div>'
+                +    '</div>'
         };
     };
     
@@ -211,13 +211,13 @@ Sherd.Video.Annotators.ClipStrip = function() {
             this.title = (opts && opts['title']) || this.name;
             this._anns = {};
             
-            var html = '<div class="clipStripLayerContainer" id="' + this.htmlID + '" style="z-index:' + opts.zIndex + '">' +   
-                           '<div class="clipStripLayerTitle" style="left: ' + (self.components.timestrip.trackX - 98) + 'px">' + this.title + '&nbsp;</div>' + 
-                           '<div class="clipStripLayer"' +
-                               ' style="left: ' + self.components.timestrip.trackX + 'px; ' + 
-                               ' width: ' + self.components.timestrip.trackWidth + 'px;">'
-                           '</div>' + 
-                       '</div>';
+            var html = '<div class="clipStripLayerContainer" id="' + this.htmlID + '" style="z-index:' + opts.zIndex + '">'
+                       +    '<div class="clipStripLayerTitle" style="left: ' + (self.components.timestrip.trackX - 98) + 'px">' + this.title + '&nbsp;</div>' 
+                       +    '<div class="clipStripLayer"' 
+                       +        ' style="left: ' + self.components.timestrip.trackX + 'px; ' 
+                       +        ' width: ' + self.components.timestrip.trackWidth + 'px;">'
+                       +    '</div>' 
+                       +'</div>';
             
             
             // z-index -- An element with greater stack order is always in front of an element with a lower stack order.
