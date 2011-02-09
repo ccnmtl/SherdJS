@@ -156,7 +156,7 @@ Sherd.Video.Annotators.ClipStrip = function() {
                 starttime: 0,
                 endtime: 0,
                 duration: 0,
-                layers: {},
+                layers: {}
             };
         } catch(e) {}
         return false;

@@ -431,7 +431,8 @@ window.DjangoSherd_Colors = new (function() {
                 || (this.current_colors[str] = this.mapping(++this.last_color)));
     }
     this.mapping = function(num) {
-        var hue = (num*30) % 240;
+        //would like to get purple = 270or280 in (green is currently over represented)
+        var hue = (num*45) % 240;
         var sat = 100 - (parseInt(num*30 / 240)%3 * 40);
         var lum = 55 + 5 * ((parseInt(num*30 / 240 / 3 ) % 5));
         return this.hsl2rgb(hue,sat,lum);
