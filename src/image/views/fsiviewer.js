@@ -174,11 +174,13 @@ if (!Sherd.Image.FSIViewer) {
 
             var html = '<object width="'+presentation.width()+'" height="'+presentation.height()+'" '
                 +'type="application/x-shockwave-flash" data="'+full_fpx_url+'" '
+                //MS IE SUX !!!  this might break Opera--that's what you get for falsifying browser strings
+                + ((/MSIE/.test(navigator.userAgent)) ? ' classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' : '')
                 +'id="'+fsi_object_id+'" name="'+fsi_object_id+'">'
                 +'<param name="wmode" value="opaque"/><param name="allowScriptAccess" value="always"/><param name="swliveconnect" value="true"/><param name="menu" value="false"/><param name="quality" value="high"/><param name="scale" value="noscale"/><param name="salign" value="LT"/><param name="bgcolor" value="FFFFFF"/>'
                 +'<param name="Movie" value="'+full_fpx_url+'" />' ///required for IE to display movie
-                +'</object>';
-            return {
+                +'</object>'; 
+           return {
                 object:obj,
                 htmlID:fsi_object_id,
                 text:html
