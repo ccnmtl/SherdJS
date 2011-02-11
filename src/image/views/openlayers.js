@@ -157,8 +157,7 @@ if (!Sherd.Image.OpenLayers) {
                 /* opts = {title, onclick(ann_id, layer_name), onhover(ann_id, layer_name), }
                 */
                 this.v = new OpenLayers.Layer.Vector(name||"Annotations",{projection:'Flatland:1',
-                                                                          rendererOptions:{zIndexing:true,
-                                                                                           yOrdering:true}
+                                                                          rendererOptions:{zIndexing:true}
                                                                          });
                 this.name = name;
                 this._anns = {};
@@ -200,17 +199,21 @@ if (!Sherd.Image.OpenLayers) {
                         feature_bg.sherd_id = opts.id;
                     }
                     if (opts.color) {
-                        if (! (opts.color in this.v.styleMap.styles)) {
+                        if (opts.color in this.v.styleMap.styles) {
+                            feature_fg.renderIntent = opts.color;
+                        } else {
+                            //unique to each feature, for graphicZIndex
+                            var feature_style = feature_fg.id+':'+opts.color
                             //console.log(feature_fg.geometry.getArea()); //alt zIndex measure
-                            this.v.styleMap.styles[opts.color] = new OpenLayers.Style(
+                            this.v.styleMap.styles[feature_style] = new OpenLayers.Style(
                                 {fillOpacity:0,
                                  strokeWidth:1,
                                  strokeColor:opts.color,
                                  pointerEvents:(opts.pointerEvents),
-                                 graphicZIndex:(opts.zIndex || 300- parseInt(feature_fg.geometry.getBounds().top))
+                                 graphicZIndex:(opts.zIndex || 300 -parseInt(feature_fg.geometry.getBounds().top))
                                 });
+                            feature_fg.renderIntent = feature_style;
                         }
-                        feature_fg.renderIntent = opts.color;
                     }
                     if (opts.bgcolor) {//cheating--ASSUME color already exists
                         feature_bg.renderIntent = opts.bgcolor;
