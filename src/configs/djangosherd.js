@@ -102,8 +102,9 @@ function DjangoSherd_Project_Config(options) {
         var annotation_to_open = String(document.location.hash).match(
                 /annotation=annotation(\d+)/);
         if (annotation_to_open != null) {
-            addLoadEvent(function() {
-                openCitation(annotation_to_open[1] + '/', {autoplay:false});
+            jQuery(function() {
+                //TODO:no longer works in discussions, since the DIV doesn't exist yet
+                openCitation('/annotations/'+annotation_to_open[1] + '/', {autoplay:false});
             });
         }
     }
