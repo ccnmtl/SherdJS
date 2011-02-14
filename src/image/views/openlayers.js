@@ -98,12 +98,13 @@ if (!Sherd.Image.OpenLayers) {
                    so it can consolidate all of the layers.
                  */
                 layerSelf = this;
-                if (this.root.globalMouseListener) {
+                if (this.root.globalMouseListener
+                    && this.root.globalMouseListener.map) {
                     this.root.globalMouseListener.destroy();
                 }
-                var listeners = this.root.layers[new_layer.id] = {};
+                var listeners = this.root.layers[new_layer.v.id] = {me:new_layer};
 
-                this.all_layers.push(new_layer);
+                this.all_layers.push(new_layer.v);
                 this.all_layers.sort(function(a,b) {
                     return a.sherd_layerapi.zIndex - b.sherd_layerapi.zIndex;
                 })
@@ -168,7 +169,7 @@ if (!Sherd.Image.OpenLayers) {
                 this.v.sherd_layerapi = this;
 
                 self.openlayers.map.addLayer(this.v);
-                this._adoptIntoRootContainer(this.v, opts);
+                this._adoptIntoRootContainer(this, opts);
 
                 return this;
             },
@@ -376,10 +377,20 @@ if (!Sherd.Image.OpenLayers) {
 	this.microformat.update = function(obj,html_dom) {
 	    ///1. test if something exists in components now (else return false)
 	    ///2. assert( obj ~= from_obj) (else return false)
-
-	    ///TODO (replace map (as a new layer--hide/show?)
+            //map is destroyed during .deinitialize(), so we don't need to 
 	    
 	};
+	this.deinitialize = function() {
+            if (this.openlayers.map) {
+                var lays = this.Layer.prototype.root.layers;
+                for (a in lays) {
+                    if (lays[a].name != 'annotating')
+                        lays[a].me.destroy();
+                }
+
+                this.openlayers.map.destroy();
+            }
+        }
 	this.initialize = function(create_obj) {
 	    if (create_obj) {
 	        var top = document.getElementById(create_obj.htmlID);
