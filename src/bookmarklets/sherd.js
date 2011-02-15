@@ -194,6 +194,67 @@ SherdBookmarklet = {
         decorate:function(objs) {
         }
     },
+    "vital.ccnmtl.columbia.edu": {
+        allow_save_all:true,
+        find:function(callback) {
+            if (! /materialsLib/.test(document.location.pathname)) {
+                callback([],'Go to the Course Library page and run the bookmarklet again');
+            }
+            SherdBookmarklet.run_with_jquery(function(jQuery) { 
+                var found_videos = [];
+                var course_library = jQuery('a.thumbnail');
+                var done = course_library.length;
+                var obj_final = function() {
+                    return callback(found_videos);
+                }
+                course_library.each(function() {
+                    var asset = {
+                        "html":this,
+                        "vitalId":String(this.href).match(/\&id=(\d+)/)[1],
+                        "sources":{},"metadata":{},"primary_type":"quicktime"
+                    };
+                    jQuery.ajax({
+                        url:'basicAdmin.smvc?action=display&entity=material&id='+asset.vitalId,
+                        dataType:'text',
+                        success:function(edit_html) {
+                            var split_html = edit_html.split('Video Categories:');
+                            ///Basic URLs and Title
+                            split_html[0].replace(
+                                new RegExp('<input[^>]+name="(\\w+)" value="([^"]+)"','mg'),
+                                function(full,name,val) {
+                                    switch(name) {
+                                    case "title": asset.sources['title'] = val;break;
+                                    case "url": asset.sources['quicktime'] = val;break;
+                                    case "thumbUrl": asset.sources['thumb'] = val;break;
+                                    }
+                                });
+                            ///don't procede if we didn't get the quicktime url
+                            if (asset.sources.quicktime) {
+                                ///TODO: VITAL Metadata
+                                   //Topics = assignments
+                                ///Extra Metadata
+                                if (split_html.length > 0 ) {
+                                    split_html[1].replace(
+                                        new RegExp('<b>([^<]+):</b>[\\s\\S]*?value="([^"]+)"[\\s\\S]*?value="([^"]+)"','mg'),
+                                        function(full,name,value_id,val) {
+                                            asset.metadata[name] = [val];
+                                        });
+                                }
+                                ///PUSH
+                                found_videos.push(asset);
+                            }
+                            if (--done==0) obj_final(); 
+                        },
+                        error:function() {
+                            if (--done==0) obj_final(); 
+                        }
+                    });
+                        
+                    
+                });
+            });            
+        }
+    },
     "learn.columbia.edu": {
     /*and www.mcah.columbia.edu */
         find:function(callback) {
@@ -332,49 +393,6 @@ SherdBookmarklet = {
         decorate:function(objs) {
         }
     }, /*end thlib.org */
-    "vietnamwararchive.ccnmtl.columbia.edu": {
-        single:function() {
-            return (document.location.pathname.search("/record/display") == 0);
-        },
-        find:function(callback) {
-            var rv = [];
-            if (this.single()) 
-                rv = [ this.update() ];
-            callback(rv);
-        },
-        decorate:function(objs) {
-        },
-        update:function(obj) {
-            var hash = false;
-            var embs = document.getElementsByTagName("embed");
-            if (embs.length) {
-                var e = embs[0];
-                if (e && e.Stop) {
-                    try{
-                        e.Stop();
-                        hash = "start="+Math.floor(e.GetTime()/e.GetTimeScale());
-                    } finally{}
-                }
-            }
-            var thumb;
-            if (SHARETHIS 
-                && typeof SHARETHIS.shareables == "object"
-                && SHARETHIS.shareables.length
-               ) {
-                thumb = SHARETHIS.shareables[0].properties.icon;
-            }
-            return {"html":$(".media").get(0),
-                    "hash": hash||undefined,
-                    "primary_type": 'quicktime',
-                    "sources":{
-                        "title":document.title,
-                        "quicktime":$(".media").media("api").options.src,
-                        "poster":$(".media img").get(0).src,
-                        "thumb": thumb
-                    }
-                   };
-        }
-    },
     "youtube.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
@@ -1103,7 +1121,7 @@ SherdBookmarklet = {
                 }
                 break;
             default:
-                M.g = new M.Interface(host_url);
+                M.g = new M.Interface(host_url, {'allow_save_all': handler.allow_save_all});
                 M.g.showAssets(assets);
             }
         };/*end jump_with_first_asset*/
@@ -1570,7 +1588,8 @@ SherdBookmarklet = {
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
           } else if (SherdBookmarklet.user_ready()){
-              jQ(form.lastChild).empty().append(self.elt(null,'input','',{type:'submit',style:'display:block;padding:4px;margin:4px;',value:'analyze'}));
+              form.submitButton = self.elt(null,'input','',{type:'submit',style:'display:block;padding:4px;margin:4px;',value:'analyze'});
+              jQ(form.lastChild).empty().append(form.submitButton);
           }
 
           if (comp.ul) {
@@ -1587,7 +1606,7 @@ SherdBookmarklet = {
               if (!results.found) {
                   jQ(comp.h2).text(o.message_no_assets_short);
                   jQ(comp.ul).html(self.elt(comp.ul.ownerDocument,'li','','',[o.message_no_assets]));
-              }
+              } 
           }
       };
       this.showAssets = function(assets) {
@@ -1596,7 +1615,94 @@ SherdBookmarklet = {
           for (var i=0;assets.length>i;i++) {
               self.displayAsset(assets[i]);
           }
+          if (assets.length > 1 && o.allow_save_all) {
+              self.addSaveAllButton(assets.length);
+          }
       };
+      this.addSaveAllButton = function(count) {
+          var save_all = document.createElement('li');
+          comp.ul.appendChild(save_all);
+          ///TODO: cheating without possible dom weirdness
+          save_all.innerHTML = '<button onclick="SherdBookmarklet.g.saveAll()">Save All '+count+' Items</button>';
+          comp.saveAll = save_all;
+          comp.saveAllButton = save_all.firstChild;
+      }
+      this.saveAll = function() {
+          ///TODO: cheating without possible dom weirdness (e.g. assuming same document)
+          if (!confirm('Are you sure?  This could take some time....')) {
+              return;
+          }
+          comp.saveAllButton.disabled = true;
+          comp.saveAllButton.innerHTML = 'Saving...';
+
+          var all_forms = jQ('form', comp.ul);
+          var done = 0, 
+              frmids = 0,
+              todo = all_forms.length,
+              form_dict = {},
+              updateForm = function(frm, new_href) {
+                  if (frm) {
+                      frm.disabled = true;
+                      jQ(frm.submitButton).remove();
+                      if (new_href) {
+                          jQ(frm).append(self.elt(null,'span','',{},[
+                              self.elt(null,'a','',{href:new_href},['Link in MediaThread'])
+                          ]));
+                      } else {
+                          jQ(frm).append(self.elt(null,'span','',{},[' Saved! ']));
+                      }
+                  }
+              };
+          if (window.postMessage) {
+              jQ(window).bind('message',function(jevt) {
+                  //eh, let's not use this after all
+                  var evt = jevt.originalEvent;
+                  if (host_url.indexOf(evt.origin) === -1 ) 
+                      return;
+                  var parsed = evt.data.split('|');
+                  updateForm(form_dict[ parsed[1] ], parsed[0]);
+              })
+          }
+          all_forms.each(function() {
+              var iframe = document.createElement('iframe');
+                  iframe.height = iframe.width = 1;
+                  iframe.id = this.id + '-iframesubmit';
+              comp.window.appendChild(iframe);
+              var target = iframe.contentDocument||iframe.contentWindow.document;
+
+
+              var new_frm = target.createElement('form');
+                  new_frm.action = this.action;
+                  new_frm.method = 'POST';
+                  new_frm.innerHTML = this.innerHTML;
+              target.body.appendChild(new_frm);
+
+              var noui = target.createElement('input');
+                  noui.name = 'noui';
+                  noui.value = 'postMessage'+ (++frmids);
+                  noui.type = 'hidden';
+              new_frm.appendChild(noui);
+
+              //save value so we can get to it later
+              this.id = 'sherdbookmarklet-form-'+ (noui.value);
+              form_dict[noui.value] = this;
+
+              //special since it was set by DOM (or changed) above
+              new_frm.elements['title'].value = this.elements['title'].value
+              
+              jQ(iframe).load(function(evt) {
+                  ++done;
+                  comp.saveAllButton.innerHTML = 'Saved '+done+' of '+todo+'...';
+
+                  var frmid = String(this.id).slice(0,-('-iframesubmit'.length));
+                  updateForm(document.getElementById(frmid), false);
+                  
+              });
+              new_frm.submit();
+              
+          });
+          //TODO: this will be a huge pain, since it needs to be cross-domain.
+      }
 
   }/*Interface*/
 };/*SherdBookmarklet (root)*/
