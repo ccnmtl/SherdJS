@@ -211,7 +211,8 @@ SherdBookmarklet = {
                     var asset = {
                         "html":this,
                         "vitalId":String(this.href).match(/\&id=(\d+)/)[1],
-                        "sources":{},"metadata":{},"primary_type":"quicktime"
+                        "sources":{'quicktime-metadata':"w320h240"},
+                        "metadata":{},"primary_type":"quicktime"
                     };
                     jQuery.ajax({
                         url:'basicAdmin.smvc?action=display&entity=material&id='+asset.vitalId,
