@@ -234,7 +234,7 @@ SherdBookmarklet = {
                                 ///TODO: VITAL Metadata
                                    //Topics = assignments
                                 ///Extra Metadata
-                                if (split_html.length > 0 ) {
+                                if (split_html.length > 1 ) {
                                     split_html[1].replace(
                                         new RegExp('<b>([^<]+):</b>[\\s\\S]*?value="([^"]+)"[\\s\\S]*?value="([^"]+)"','mg'),
                                         function(full,name,value_id,val) {
