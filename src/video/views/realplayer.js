@@ -74,7 +74,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                     + '</object>'
                     + '<div class="time-display"><span id="currtime'+playerID+'">00:00:00</span>/<span id="totalcliplength'+playerID+'">00:00:00</span></div>'
                     + '</div>'
-            }
+            };
             return create_obj;
         };
         
@@ -111,8 +111,8 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         // Works in conjunction with read
         this.microformat.find = function(html_dom) {
             throw Error("unimplemented");
-            var found = [];
-            return found;
+            //var found = [];
+            //return found;
         };
         
         // Return asset object description (parameters) in a serialized JSON format.
@@ -120,15 +120,15 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         // works in conjunction with find
         this.microformat.read = function(found_obj) {
             throw Error("unimplemented");
-            var obj = {};
-            return obj;
+            //var obj = {};
+            //return obj;
         };
 
         this.microformat.type = function() { return 'realplayer'; };
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            return false;
+            /*
             if (obj.realplayer && self.components.player && self.media.ready()) {
                 try {
                     if (obj.realplayer != self.components.mediaUrl) {
@@ -136,9 +136,9 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                     }
                     return true;
                 } catch(e) { }
-            }
+            }*/
             return false;
-        }
+        };
         
         
         ////////////////////////////////////////////////////////////////////////
@@ -215,7 +215,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
             var status;
             try {
                 var p = self.components.player;
-                return (p && typeof p.GetPlayState != 'undefined') 
+                return (p && typeof p.GetPlayState != 'undefined');
             } catch(e) {
                 return false;
             } 
@@ -223,14 +223,14 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         this.media.seekable = function() {
             var s = self.components.player.GetPlayState();
             return (self.media.ready() && s>1 && s<5);
-        }
+        };
 
         var seek_last = 0;
         this.media.seek = function(starttime, endtime, play) {
             var my_seek = ++seek_last;
             var p = self.components.player;
             if (self.media.seekable()) {
-                if (starttime != undefined) {
+                if (starttime !== undefined) {
                     ///API in milliseconds
                     p.SetPosition(starttime*1000);
                     if (play) self.media.play();
@@ -256,7 +256,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
             // store the values away for when the player is ready
             self.components.starttime = starttime;
             self.components.endtime = endtime;
-        }
+        };
         
         this.media.time = function() {
             var time = 0;
@@ -264,11 +264,11 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                 time = self.components.player.GetPosition()/1000;
             } catch(e) {}
             return time;
-        }
+        };
         
         this.media.timescale = function() {
             return 1;
-        }
+        };
         
         this.media.timestrip = function() {
             var w = self.components.player.width;
@@ -276,8 +276,8 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
                 trackX: 110,
                 trackWidth: w-220,
                 visible:true
-            }
-        }
+            };
+        };
         
         //returns true, if we're sure it is. Not currently used
         this.media.isStreaming = function() {
@@ -287,8 +287,8 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         // Used by tests.
         this.media.url = function() {
             throw Error("unimplemented function media.url");
-        }
+        };
         
-    } //Sherd.Video.RealPlayer
+    }; //Sherd.Video.RealPlayer
 
 }

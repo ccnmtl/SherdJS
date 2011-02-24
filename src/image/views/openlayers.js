@@ -107,11 +107,11 @@ if (!Sherd.Image.OpenLayers) {
                 this.all_layers.push(new_layer.v);
                 this.all_layers.sort(function(a,b) {
                     return a.sherd_layerapi.zIndex - b.sherd_layerapi.zIndex;
-                })
+                });
                 //setting the setLayerIndex reorders the map array, so we respect opts.zIndex
                 //setting the .index allows clinical removal in .remove();
                 for (var i=0,l=this.all_layers.length;i<l;i++) {
-                    var layer = this.all_layers[i]
+                    var layer = this.all_layers[i];
                     this.root.layers[layer.id].index = i;
                     layer.map.setLayerIndex(layer,i+1);//+1 for the baseLayer
                 }
@@ -180,7 +180,7 @@ if (!Sherd.Image.OpenLayers) {
                 //destroy layer -- openlayers does the rest
                 this.v.destroy();
                 //delete ann pointers
-                for (ann_id in this._anns) 
+                for (var ann_id in this._anns) 
                     delete this._anns[ann_id];
             },
             add:function(ann, opts) {
@@ -204,14 +204,14 @@ if (!Sherd.Image.OpenLayers) {
                             feature_fg.renderIntent = opts.color;
                         } else {
                             //unique to each feature, for graphicZIndex
-                            var feature_style = feature_fg.id+':'+opts.color
+                            var feature_style = feature_fg.id+':'+opts.color;
                             //console.log(feature_fg.geometry.getArea()); //alt zIndex measure
                             this.v.styleMap.styles[feature_style] = new OpenLayers.Style(
                                 {fillOpacity:0,
                                  strokeWidth:1,
                                  strokeColor:opts.color,
                                  pointerEvents:(opts.pointerEvents),
-                                 graphicZIndex:(opts.zIndex || 300 -parseInt(feature_fg.geometry.getBounds().top))
+                                 graphicZIndex:(opts.zIndex || 300 -parseInt(feature_fg.geometry.getBounds().top,10))
                                 });
                             feature_fg.renderIntent = feature_style;
                         }
@@ -234,7 +234,7 @@ if (!Sherd.Image.OpenLayers) {
             removeAll:function() {
                 if (!this.v) return;
                 this.v.removeAllFeatures();
-                for (ann_id in this._anns) 
+                for (var ann_id in this._anns) 
                     delete this._anns[ann_id];
             },
             show:function() {
@@ -247,7 +247,7 @@ if (!Sherd.Image.OpenLayers) {
             getLayer:function() {
                 return this.v;
             }
-        }
+        };
 
 	this.presentations = {
 	    'thumb':{
@@ -288,7 +288,7 @@ if (!Sherd.Image.OpenLayers) {
 	    var m = self.openlayers.map;
 	    if (m) {
 		var center = m.getCenter();
-		geojson['default'] = (!geojson.geometry && center.lon==0 && center.lat==0);
+		geojson['default'] = (!geojson.geometry && center.lon===0 && center.lat===0);
 		geojson['x']=center.lon; 
 		geojson['y']=center.lat;
 		geojson['zoom']=m.getZoom();
@@ -307,9 +307,9 @@ if (!Sherd.Image.OpenLayers) {
 		//x:-135,y:45,
 		'zoom':2
 	    };
-            if (obj==null) obj = {};
+            if (obj===null) obj = {};
 
-	    if (typeof obj=='object' && obj!=null) {
+	    if (typeof obj==='object' && obj!==null) {
 		if (obj.feature) {
 		    self.currentfeature = obj.feature;
 		} else if (obj.geometry) {//obj is a json feature
@@ -383,14 +383,14 @@ if (!Sherd.Image.OpenLayers) {
 	this.deinitialize = function() {
             if (this.openlayers.map) {
                 var lays = this.Layer.prototype.root.layers;
-                for (a in lays) {
+                for (var a in lays) {
                     if (lays[a].name != 'annotating')
                         lays[a].me.destroy();
                 }
 
                 this.openlayers.map.destroy();
             }
-        }
+        };
 	this.initialize = function(create_obj) {
 	    if (create_obj) {
 	        var top = document.getElementById(create_obj.htmlID);
@@ -409,8 +409,8 @@ if (!Sherd.Image.OpenLayers) {
 		if (create_obj.object.xyztile) {
 		    ///DOC: Tile x0,y0 upper left starts at (-180,80)
 		    ///DOC: whereas single images start at (-180,90)
+		    var md = create_obj.object['xyztile-metadata'];
 		    if (create_obj.object['xyztile-metadata']) {
-			var md = create_obj.object['xyztile-metadata'];
 			objopt.numZoomLevels = Math.ceil(
 			    Math.log2(Math.max(md.height,md.width))-7);
 			var dim = self.openlayers.object_proportioned(md);
@@ -454,7 +454,6 @@ if (!Sherd.Image.OpenLayers) {
                        tile coordinates.
                      */
                     if (/TileGroup\d/.test(create_obj.object.xyztile)) {
-                        var md = create_obj.object['xyztile-metadata'];
                         var tiles_x = Math.ceil(md.width/256)*2;
                         var tiles_y = Math.ceil(md.height/256)*2;
                         var tiles = [];
@@ -495,7 +494,7 @@ if (!Sherd.Image.OpenLayers) {
 		    var o2b = self.openlayers.object2bounds;
 		    var bounds = o2b(create_obj.object);
 		    ///TODO: if no create_obj.object.width, test with createElement('img')
-		    var dim = self.openlayers.object_proportioned(create_obj.object);
+		    var odim = self.openlayers.object_proportioned(create_obj.object);
 
 		    objopt.maxExtent = o2b(create_obj.object);
 		    self.openlayers.graphic = new OpenLayers.Layer.Image(
@@ -504,7 +503,7 @@ if (!Sherd.Image.OpenLayers) {
 			bounds,
 			//just proportional size: probably much smaller than the actual image
 			///this allows us to 'zoom out' to smaller than actual image size
-			new OpenLayers.Size(dim.w, dim.h),
+			new OpenLayers.Size(odim.w, odim.h),
 			objopt
 		    );
 		}
@@ -571,12 +570,12 @@ if (!Sherd.Image.OpenLayers) {
                     
                   })
                 })
-  	        self.openlayers.map.addControl(self.openlayers.ovwin);
+                self.openlayers.map.addControl(self.openlayers.ovwin);
                 */
 	        self.openlayers.map.addLayers([self.openlayers.graphic]);
                 self.openlayers.vectorLayer = new self.Layer().create('annotating',{
                     zIndex:1000
-                })
+                });
 
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,

@@ -17,8 +17,8 @@ if (!Sherd.Video.Helpers) {
         // it'll create one
         var tc = {};
         intTime = Math.floor(seconds);
-        tc.hr = parseInt(intTime / 3600);
-        tc.min = parseInt((intTime % 3600) / 60);
+        tc.hr = parseInt(intTime / 3600, 10);
+        tc.min = parseInt((intTime % 3600) / 60, 10);
         tc.sec = intTime % 60;
         tc.fraction = seconds - intTime;
 
@@ -43,7 +43,7 @@ if (!Sherd.Video.Helpers) {
         var seconds = 0;
         if (x.indexOf('.') >= 0) { // 00.0 format is for frames
             // ignore frames
-            x = parseInt(t.pop());
+            x = parseInt(t.pop(), 10);
         }
         var timeUnits = 1; // seconds -> minutes -> hours
         while (x || t.length > 0) {
@@ -75,7 +75,7 @@ if (!Sherd.Video.Base) {
         this.queryformat = {
             find:function(str) {
                 var start_point = String(str).match(/start=([.\d]+)/);
-                if (start_point != null) {
+                if (start_point !== null) {
                     var start = Number(start_point[1]);
                     if (!isNaN(start)) {
                         return [ {
@@ -192,7 +192,7 @@ if (!Sherd.Video.Base) {
         // if not loaded -- then do this as soon as you load (if ready)
         this.setState = function(obj, options) {
             if (typeof obj == 'object') {
-                if (obj==null) 
+                if (obj===null) 
                     //endtime is different so it doesn't start playing
                     this.media.seek(0, 0.1);
                 else
@@ -220,7 +220,7 @@ if (!Sherd.Video.Base) {
         };
 
         this.events.clearTimers = function() {
-            for (name in this._timers) {
+            for (var name in this._timers) {
                 window.clearTimeout(this._timers[name]);
             }
             this._timers = {};
@@ -249,7 +249,7 @@ if (!Sherd.Video.Base) {
                 var timeoutID;
                 
                 //TODO: event, broadcast attrs
-                function advance() {
+                var advance = function() {
                     if (pollID)
                         window.clearTimeout(pollID);
                     if (timeoutID)
@@ -259,7 +259,7 @@ if (!Sherd.Video.Base) {
                         cur = plan[current];
                         next();
                     }
-                }
+                };
                 next = function() {
                     var fired = false;
                     var curself = (cur.self) ? cur.self : this;

@@ -23,7 +23,7 @@ if (!Sherd.Image.FSIViewer) {
         };
 
         this.setState = function(obj) {
-            if (obj) for (a in obj) {
+            if (obj) for (var a in obj) {
                 self.current_state[a] = obj[a];
             }
             self.intended_states.push(obj);
@@ -111,7 +111,7 @@ if (!Sherd.Image.FSIViewer) {
                 case 'View':
                     if (self.ready) {
                     var o = self.arr2obj(params.split(', '));
-                    for (a in o) {
+                    for (var a in o) {
                         self.current_state[a] = o[a];
                     }
                     }
@@ -149,7 +149,7 @@ if (!Sherd.Image.FSIViewer) {
                 script.setAttribute('type','text/javascript');
                 script.setAttribute('event','FSCommand(command,args)');
                 script.setAttribute('for',create_obj.htmlID);
-                script.text = create_obj.htmlID+'_DoFSCommand(command,args);'
+                script.text = create_obj.htmlID+'_DoFSCommand(command,args);';
                 
                 document.getElementsByTagName('head')[0].appendChild(script);
             }

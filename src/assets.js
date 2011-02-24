@@ -25,7 +25,7 @@ if (!Sherd.GenericAssetView) {
         // //INIT
         this.settings = {};
         if (Sherd.Video) {
-            function decorateVideo(options, viewgroup) {
+            var decorateVideo = function(options, viewgroup) {
                 if (options.clipform) {
                     viewgroup.clipform = new Clipformer();// see clipform.js
                     viewgroup.clipform.attachView(viewgroup.view);
@@ -37,7 +37,7 @@ if (!Sherd.GenericAssetView) {
                     viewgroup.clipstrip = new Clipstripper();
                     viewgroup.clipstrip.attachView(viewgroup.view);
                 }
-            }
+            };
             if (Sherd.Video.QuickTime) {
                 var quicktime = this.settings.quicktime = {'view':new Sherd.Video.QuickTime() };
                 decorateVideo(options, quicktime);
@@ -186,6 +186,6 @@ if (!Sherd.GenericAssetView) {
             } else if (self.clipstrip && self.clipstrip.Layer) {
                 return new self.clipstrip.Layer();
             }
-        }
+        };
     };//GenericAssetView
 }

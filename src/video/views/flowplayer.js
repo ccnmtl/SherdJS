@@ -398,7 +398,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 self.state.starttime = starttime;
                 self.state.endtime = endtime;   
             } else {
-                if (starttime != undefined) {
+                if (starttime !== undefined) {
                     self.components.player.seek(starttime);
                 }
                 

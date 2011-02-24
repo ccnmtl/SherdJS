@@ -8,15 +8,15 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 
 	this.attachView = function(view) {
 	    self.targetview = view;
-	}
+	};
 	this.targetstorage = [];
 	this.addStorage = function(stor) {
 	    this.targetstorage.push(stor);
-	}
+	};
 
 	this.getState = function(){
 	    return {};
-	}
+	};
 
 	var mode = 'create';//||'browse'
 	this.setState = function(obj){
@@ -54,13 +54,13 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                 var current_state = self.targetview.getState();
                 var geojson = self.targetview.openlayers.feature2json(feature);
                 //copy feature properties to current_state
-                for (a in geojson) {current_state[a] = geojson[a]};
+                for (var a in geojson) { current_state[a] = geojson[a]; }
                 //use geojson object as annotation
                 geojson.preserveCurrentFocus = true;
 		self.targetview.setState(geojson);
 
 		self.storage.update(current_state);
-	    }
+	    };
 	    ///# 3. button listeners
 	    self.events.connect(self.components.center,'click',function(evt) {
                 
@@ -85,7 +85,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		}
 	    });
 
-	}
+	};
 	this.openlayers = {
 	    CustomEditingToolbar :OpenLayers.Class(
 		OpenLayers.Control.EditingToolbar, {
@@ -140,9 +140,9 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		    self.targetstorage[i].storage.update(obj);
 		}
 	    }
-	}
+	};
 
- 	this.microformat = {
+        this.microformat = {
 	    'create':function(){
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
@@ -157,10 +157,10 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		    'center':buttons[0],
 		    'redo':buttons[1],
                     'instructions':html_dom.getElementsByTagName('p')[0]
-		}
+		};
 	    }
-	}
-    }//END Sherd.Image.Annotators.OpenLayers
+	};
+    };//END Sherd.Image.Annotators.OpenLayers
 }//END if (!Sherd.Image.Annotators.OpenLayers)
 
 

@@ -46,7 +46,7 @@ if (!Sherd.Video.QuickTime) {
                 loadingposter:false,
                 extra:''
             };
-            for (a in opt) {
+            for (var a in opt) {
                 if (obj[a]) opt[a] = obj[a];
             }
             if (!obj.presentation_width) {
@@ -222,7 +222,7 @@ if (!Sherd.Video.QuickTime) {
                 } catch(e) { }
             }
             return false;
-        }
+        };
         
         this.microformat._startUpdateDisplayTimer = function(create_obj) {
             self.media._duration = 0;
@@ -251,7 +251,7 @@ if (!Sherd.Video.QuickTime) {
                               }, 
                                 poll:500}
                               ]);
-        }
+        };
         
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
@@ -379,14 +379,14 @@ if (!Sherd.Video.QuickTime) {
         this.media.seek = function(starttime, endtime, autoplay) {
             if (self.media.ready()) {
                 var p = self.components.player;
-                if (starttime != undefined) {
+                if (starttime !== undefined) {
                     playRate = p.GetRate();
                     if (playRate > 0)
                         p.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
                     try {
                         p.SetTime(starttime * self.media.timescale());
                     } catch(e) {}
-                    if (autoplay || self.components.autoplay || playRate != 0) {
+                    if (autoplay || self.components.autoplay || playRate !== 0) {
                         p.Play();
                     }
                 }
@@ -399,7 +399,7 @@ if (!Sherd.Video.QuickTime) {
             // store the values away for when the player is ready
             self.components.starttime = starttime;
             self.components.endtime = endtime;
-        }
+        };
         
         this.media.time = function() {
             var time = 0;
@@ -407,7 +407,7 @@ if (!Sherd.Video.QuickTime) {
                 time = self.components.player.GetTime()/self.media.timescale();
             } catch(e) {}
             return time;
-        }
+        };
         
         this.media.timescale = function() {
             var timescale = 1;
@@ -415,7 +415,7 @@ if (!Sherd.Video.QuickTime) {
                 timescale = self.components.player.GetTimeScale();
             } catch(e) {}
             return timescale;
-        }
+        };
         
         this.media.timestrip = function() {
             var w = self.components.player.width;
@@ -423,8 +423,8 @@ if (!Sherd.Video.QuickTime) {
                 trackX: 40,
                 trackWidth: w-92,
                 visible:true
-            }
-        }
+            };
+        };
         
         //returns true, if we're sure it is. Not currently used
         this.media.isStreaming = function() {
@@ -436,14 +436,14 @@ if (!Sherd.Video.QuickTime) {
         // Used by tests.
         this.media.url = function() {
             return self.components.player.GetURL();
-        }
+        };
         
         this.media._updateTickCount = function() {
             if (typeof self.components.player.GetRate != 'undefined'
                 && self.components.player.GetRate() > 0) { 
                 self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
             } 
-        }
+        };
         this.media.resize = function(w,h, obj) {
             if (!self.debug) return;//RETURN
 
@@ -460,15 +460,15 @@ if (!Sherd.Video.QuickTime) {
                 p.SetRectangle("0,0,"+w+","+h);
                 
             }
-        }
-    } //Sherd.AssetViews.QuickTime
+        };
+    }; //Sherd.AssetViews.QuickTime
 
 
     ////ARCHIVED FROM VITAL CODE
     /*this was trying to solve a harder problem 
       when we don't know the proportions, but what if we know them?
      */
-    function conformProportions(mymovie, w, h) {
+    var conformProportions = function(mymovie, w, h) {
     /*
       This function still doesn't work when QT loads the movie
       in the mini-window that comes up before it auto-sizes.
@@ -479,7 +479,7 @@ if (!Sherd.Video.QuickTime) {
       Ideally we would stop it from loading in that stupid little window
       to begin with.
     */
-    return;
+    if (true) return;
     //ASSUME width is always greater than height
     //    alert(theMovie.GetPluginStatus()+mymovie.GetRectangle()+mymovie.GetMatrix());
 
@@ -495,7 +495,7 @@ if (!Sherd.Video.QuickTime) {
     matrix[5] = Math.round(h-newH);
     mymovie.SetMatrix(matrix.join(','));
     //    alert('w'+w+' newH:'+newH+' '+theMovie.GetPluginStatus()+"-- "+matrix.join(','));
-    }
+    };
 
 }
 

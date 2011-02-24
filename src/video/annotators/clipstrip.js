@@ -57,7 +57,7 @@ Sherd.Video.Annotators.ClipStrip = function() {
     this.setState = function(obj) {
         if (typeof obj == 'object') {
             var c = self.components;
-            if (obj == null) {
+            if (obj === null) {
                 c.starttime = c.endtime = c.duration = 0;
             } else {
                 c.starttime = obj.start || 0;
@@ -105,7 +105,7 @@ Sherd.Video.Annotators.ClipStrip = function() {
     // Event Listener: clipend - from clipform
     // Assumes self.components.duration has been initialized
     this.setClipEnd = function(obj) {
-        if (obj.end != undefined && self.components.duration) {
+        if (obj.end !== undefined && self.components.duration) {
             self.components.endtime = obj.end;
             self.microformat._resize();
         }
@@ -177,9 +177,9 @@ Sherd.Video.Annotators.ClipStrip = function() {
         self.components.clipRange.style.display = 'block';
         self.components.clipEndMarker.style.display = 'block';
         
-        for (layerName in self.components.layers) {
+        for (var layerName in self.components.layers) {
             var layer = self.components.layers[layerName];
-            for (annotationName in layer._anns) {
+            for (var annotationName in layer._anns) {
                 var annotation = layer._anns[annotationName];
                 
                 left = self.microformat._timeToPixels(annotation.starttime, self.components.duration, self.components.timestrip.trackWidth);
@@ -223,10 +223,10 @@ Sherd.Video.Annotators.ClipStrip = function() {
             // z-index -- An element with greater stack order is always in front of an element with a lower stack order.
             // For ClipStrip, the property is overloaded to mean top to bottom order. greater z-index == higher in the list
             var inserted = false;
-            if (opts.zIndex != undefined) {
+            if (opts.zIndex !== undefined) {
                 jQuery(".clipStripLayerContainer").each(function(index, value) {
                     var zindex = jQuery(this).css("z-index");
-                    if ((zindex && opts.zIndex > zindex) || (zindex == undefined || zindex == "auto")) {
+                    if ((zindex && opts.zIndex > zindex) || (zindex === undefined || zindex === "auto")) {
                         jQuery(this).before(html);
                         inserted = true;
                         return false;
@@ -255,10 +255,10 @@ Sherd.Video.Annotators.ClipStrip = function() {
         },
         add:function(ann,opts) {
             
-            if (ann.duration != undefined && ann.duration > 1 && self.components.duration < 1)
+            if (ann.duration !== undefined && ann.duration > 1 && self.components.duration < 1)
                 self.components.duration = ann.duration;
             
-            this._anns[opts.id] = { starttime: ann.start, endtime: ann.end, htmlID: this.name + '_annotation_' + opts.id, duration: ann.duration }
+            this._anns[opts.id] = { starttime: ann.start, endtime: ann.end, htmlID: this.name + '_annotation_' + opts.id, duration: ann.duration };
             
             jQuery("#" + this.htmlID).children(".clipStripLayer").append('<div class="annotationLayer" id="' + this._anns[opts.id].htmlID + '"></div>');
             
@@ -293,7 +293,7 @@ Sherd.Video.Annotators.ClipStrip = function() {
             }
         },
         removeAll:function() {
-            for (ann_id in this._anns)  {
+            for (var ann_id in this._anns)  {
                 this.remove(ann_id);
                 delete this._anns[ann_id];
             }
@@ -304,7 +304,7 @@ Sherd.Video.Annotators.ClipStrip = function() {
         hide:function() {
             jQuery("#" + this.htmlID).hide();
         }
-    }
+    };
  };/* function Sherd.Video.Annotators.ClipStrip() */
 
 }/*if !ClipStrip...*/

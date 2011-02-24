@@ -235,7 +235,7 @@ if (!Sherd.Video.YouTube) {
 
         this.media.seek = function(starttime, endtime, autoplay) {
             if (self.media.ready()) {
-                if (starttime != undefined) {
+                if (starttime !== undefined) {
                     if (autoplay || self.components.autoplay) {
                         self.components.player.seekTo(starttime, true);
                     } else {

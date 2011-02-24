@@ -72,10 +72,10 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 end = start;
             }
             ///Used to communicate with the clipstrip
-            if (start != undefined)
+            if (start !== undefined)
                 self.events.signal(self.targetview, 'clipstart', { start: codeToSeconds(start) });    
             
-            if (end != undefined)
+            if (end !== undefined)
                 self.events.signal(self.targetview, 'clipend', { end: codeToSeconds(end) });
         }
     };
@@ -195,5 +195,5 @@ if (!Sherd.Video.Annotators.ClipForm) {
             'playClip' : document.getElementById('btnPlayClip')
         };
     };
- }
+ };
 }
