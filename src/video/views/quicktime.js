@@ -64,7 +64,7 @@ if (!Sherd.Video.QuickTime) {
             var full_height = obj.presentation_height + Number(opt.controller_height);
             opt.href= '';//for poster support
             opt.autohref= '';//for poster support
-            if (!(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
+            if (!(/Macintosh.*Version\/[3-9][.0-9]+ Safari/.test(navigator.userAgent)
                     || /Linux/.test(navigator.userAgent)
             )) {
                 opt.mimetype = 'image/x-quicktime';
@@ -226,7 +226,6 @@ if (!Sherd.Video.QuickTime) {
         
         this.microformat._startUpdateDisplayTimer = function(create_obj) {
             self.media._duration = 0;
-            //console.log(create_obj);
             self.events.queue('quicktime duration watcher & tick count',
                               [{test: function() {
                                   // Update the duration
@@ -262,10 +261,8 @@ if (!Sherd.Video.QuickTime) {
             // kickoff some timers
             self.events.queue('quicktime ready to seek',
                               [{test: function() {
-                                  // Is the duration valid yet?
-                                  var adjustedDuration = self.media.duration();
                                   ready = (self.media.ready() 
-                                           && adjustedDuration > 0
+                                           && self.media.duration() > 0 // Is the duration valid yet?
                                            && (self.components.player.GetMaxTimeLoaded()/self.media.timescale()) > self.components.starttime);
                                   
                                   return ready; 
@@ -273,9 +270,12 @@ if (!Sherd.Video.QuickTime) {
                                 poll:500
                                },
                                {call: function() {
-                                   self.setState({"start":self.components.starttime, 
-                                                  "end":self.components.endtime});
-                                }
+                                   //we wait here for the situation of suckage:
+                                   //Mac Chrome: auto-seeking from poster-frame needs some time to 'really' load the video
+                                   setTimeout(function() {
+                                       self.setState({"start":self.components.starttime, 
+                                                      "end":self.components.endtime});
+                                   },400); }
                                }]);
 
             self.microformat._startUpdateDisplayTimer(create_obj);
@@ -287,6 +287,7 @@ if (!Sherd.Video.QuickTime) {
                 self.setState(obj);
                 
                 // give it a second
+                ///TODO: should just use self.setState(obj, {autoplay:true});
                 window.setTimeout(function() { self.media.play(); }, 200);
             });
 
@@ -328,19 +329,7 @@ if (!Sherd.Video.QuickTime) {
         
         this.media.play = function() {
             if (self.media.ready()) {
-                var p = self.components.player;
-                ///WARNING: mimetype doesn't change after HREF advancement
-                ///         so we need to test if we're already advanced
-                var mimetype = p.GetMIMEType();
-                var href = p.GetHREF();
-                if (href && !self._played && /image/.test(mimetype)) {
-                    // Setting the URL in this manner is only needed the first time through
-                    // In order to facilitate fast seeking and update, keep track of the first time
-                    // via the _played class variable, then default to a regular play event
-                    p.SetURL(href);
-                    p.SetHREF('');
-                    self._played = true;
-                } else {
+                if (!self.media.swapPoster() ) {
                     self.components.player.Play();
                 }       
             } else {
@@ -351,6 +340,28 @@ if (!Sherd.Video.QuickTime) {
             }
         };
         
+        this.media.swapPoster = function() {
+            var p = self.components.player;
+            ///WARNING: mimetype doesn't change after HREF advancement
+            ///         so we need to test if we're already advanced
+            var mimetype ='';
+            try {//Safari SUX: dies on GetMIMEType for no reason.
+                mimetype = p.GetMIMEType();
+            } catch(e) {/*pass*/}
+            var href = p.GetHREF();
+            if (href && !self._played && /image/.test(mimetype)) {
+                // Setting the URL in this manner is only needed the first time through
+                // In order to facilitate fast seeking and update, keep track of the first time
+                // via the _played class variable, then default to a regular play event
+                p.SetURL(href);
+                p.SetHREF('');
+                self._played = true;
+                return true;
+            } else {
+                return false;
+            }
+        };
+
         // Used by tests
         this.media.isPlaying = function() {
             var playing = false;
@@ -479,22 +490,22 @@ if (!Sherd.Video.QuickTime) {
       Ideally we would stop it from loading in that stupid little window
       to begin with.
     */
-    if (true) return;
-    //ASSUME width is always greater than height
-    //    alert(theMovie.GetPluginStatus()+mymovie.GetRectangle()+mymovie.GetMatrix());
+        if (true) return;
+        //ASSUME width is always greater than height
+        //    alert(theMovie.GetPluginStatus()+mymovie.GetRectangle()+mymovie.GetMatrix());
 
-    var cur_wh = mymovie.GetRectangle().split(',');
-    
-    oldW = parseInt(cur_wh[2],10) - parseInt(cur_wh[0],10);
-    oldH = parseInt(cur_wh[3],10) - parseInt(cur_wh[1],10);
-    var newH = w*oldH/oldW;
-    mymovie.SetRectangle("0,0,"+w+","+newH);
-
-    matrix = mymovie.GetMatrix().split(',');
-    //    alert(mymovie.GetMatrix());
-    matrix[5] = Math.round(h-newH);
-    mymovie.SetMatrix(matrix.join(','));
-    //    alert('w'+w+' newH:'+newH+' '+theMovie.GetPluginStatus()+"-- "+matrix.join(','));
+        var cur_wh = mymovie.GetRectangle().split(',');
+        
+        oldW = parseInt(cur_wh[2],10) - parseInt(cur_wh[0],10);
+        oldH = parseInt(cur_wh[3],10) - parseInt(cur_wh[1],10);
+        var newH = w*oldH/oldW;
+        mymovie.SetRectangle("0,0,"+w+","+newH);
+        
+        matrix = mymovie.GetMatrix().split(',');
+        //    alert(mymovie.GetMatrix());
+        matrix[5] = Math.round(h-newH);
+        mymovie.SetMatrix(matrix.join(','));
+        //    alert('w'+w+' newH:'+newH+' '+theMovie.GetPluginStatus()+"-- "+matrix.join(','));
     };
 
 }
