@@ -375,6 +375,46 @@ SherdBookmarklet = {
                    };
         }
     },
+    "vimeo.com": {
+        find:function(callback) {
+            SherdBookmarklet.run_with_jquery(function(jQuery) { 
+                var bits = document.location.pathname.split("/"); //expected: http://vimeo.com/<videoid>/
+                var videoId = bits[1];
+
+                if (video.length < 1)
+                    return callback([]);
+
+                /* http://vimeo.com/api/docs/simple-api */
+                var url = "http://vimeo.com/api/v2/video/" + videoId + ".json?callback=?";
+                jQuery.getJSON(url,function(getInfoData) {
+                    if (getInfoData.length < 1) {
+                        return callback([]);
+                    }
+                    var sources = {
+                        "url": getInfoData.url,
+                        "id": getInfoData.id,
+                        "title": getInfoData.title,
+                        "thumb": getInfoData.thumbnail_medium,
+                        "archive": getInfoData.url,
+                        "metadata-owner":getInfoData.user_name ||undefined,
+                        "width": getInfoData.width,
+                        "height": getInfoData.height,
+                    };
+                    
+                    return {
+                        "html":emb,
+                        "primary_type": "swf",
+                        "hash": hash||undefined,
+                        "sources": sources,
+                    };
+
+                    return callback( [{html:img, primary_type:"image", sources:sources}] );
+                });/*end jQuery.ajax*/
+            });/*end run_with_jquery*/
+        },
+        decorate:function(objs) {
+        }
+    },
     "youtube.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
