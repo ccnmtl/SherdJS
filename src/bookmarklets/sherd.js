@@ -345,55 +345,6 @@ SherdBookmarklet = {
             })
         }
     },
-    "thlib.org": {
-        /*e.g. those on http://www.thlib.org/places/monasteries/meru-nyingpa/murals/ */
-        also_find_general:true,
-        find:function(callback) {
-            if (window.frames["gallery"]) {
-                var myloc = window.frames["gallery"].location.href; 
-                var matches =  myloc.match(/(.*)\/([^\/]+)\/([^\/]+)\/([^\/]+)$/);/*split last 3 "/" */
-                if(typeof(myloc) == "string" && matches[4] != "gallery.html") { 
-                    var img_key = matches[3];
-                    var img_root = matches[1];
-                    var tile_root = img_root+"/source/"+img_key+"/"+img_key;
-                    var thumb = img_root+"/preview/"+img_key.toLowerCase()+".jpg";
-                    var img = document.createElement("img");
-                    img.src = tile_root+"/TileGroup0/0-0-0.jpg";
-                    var sources = {
-                        "title":img_key,
-                        "archive":String(document.location),
-                        /*must be unique, but no good return link :-(*/
-                        "url":tile_root+".htm", 
-                        "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
-                        "image-metadata":"w"+img.width+"h"+img.height,
-                        "thumb":thumb,
-                        "image":img.src /*nothing bigger available*/
-                    };
-                    /*could do a query to see what the full dimensions are of the tiles
-                      but instead of this hack what about using 
-                      img_root+"/source/"+img_key+"/"+img_key+"/ImageProperties.xml"
-                     */
-                    jQuery.get(tile_root+"/ImageProperties.xml",null,function(dir) {
-                        /*was for url = tile_root+"/TileGroup0/" parsing:
-                          var zooms = dir.split("\">").reverse()[3].match(/\d+/);
-                          var exp = Math.pow(2,zooms);
-                          sources["xyztile-metadata"] = "w"+(img.width*exp)+"h"+(img.height*exp);
-                         */
-                        var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
-                        sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
-                        callback( [{"html": window.frames["gallery"].document["Zoomify Dynamic Flash"], 
-                                    "sources": sources,
-                                    "primary_type": 'image'
-                                   } ]);
-                    },"text");
-                    return; //found something
-                }
-            } 
-            return callback([]);
-        },
-        decorate:function(objs) {
-        }
-    }, /*end thlib.org */
     "youtube.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
@@ -668,6 +619,94 @@ SherdBookmarklet = {
                           return {};
                       }
                   }                  
+              },
+              "zoomify":{
+                  match:function(objemb) {
+                      return (String(objemb.innerHTML).match(/zoomifyImagePath=([^&\"\']*)/)
+                              || String(objemb.flashvars).match(/zoomifyImagePath=([^&\"\']*)/));
+                  },
+                  asset:function(objemb,match,context,index,optional_callback) {
+                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                      var tile_root = SherdBookmarklet.absolute_url(match[1],context.document);
+                      tile_root = tile_root.replace(/\/$/,'');//chomp trailing /
+                      var img = document.createElement("img");
+                      img.src = tile_root+"/TileGroup0/0-0-0.jpg";
+                      var rv_zoomify = {
+                          "html":objemb,
+                          "primary_type":"image",
+                          "label":"Zoomify",
+                          "sources": {
+                              "title":tile_root.split('/').pop(),//better guess than 0-0-0.jpg
+                              "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
+                              "thumb":img.src,
+                              "image":img.src, /*nothing bigger available*/
+                              "image-metadata":"w"+img.width+"h"+img.height
+                          },
+                          wait:true
+                      };
+                      var hard_way = function(error) {
+                          //security error?  
+                          //Let's try it the hard way!
+                          var dim = {z:0,x:0,y:0,tilegrp:0};
+                          function walktiles(mode) {
+                              var tile = document.createElement("img");
+                              tile.onload = function() {
+                                  switch(mode) {
+                                  case 'z': ++dim.z;
+                                      dim.width = tile.width;
+                                      dim.height = tile.height;
+                                      break;
+                                  case 'x': ++dim.x; break;
+                                  case 'y': ++dim.y; break;
+                                  case 'tilegrp': ++dim.tilegrp; break;
+                                  }
+                                  walktiles(mode);
+                              }
+                              tile.onerror = function() {
+                                  switch(mode) {
+                                  case 'z': --dim.z; dim.mode = 'x'; return walktiles('x');
+                                  case 'x': --dim.x; dim.mode = 'y'; return walktiles('y');
+                                  case 'y': 
+                                      if (dim.mode!='tilegrp'){
+                                          ++dim.tilegrp; dim.mode='y'; return walktiles('tilegrp');
+                                      } else {
+                                          --dim.y; 
+                                          rv_zoomify.sources["xyztile-metadata"] = (
+                                              "w"+(dim.width*dim.x)+"h"+(dim.height*dim.y));
+                                          rv_zoomify._data_collection = 'Hackish tile walk';
+                                          return optional_callback(index,rv_zoomify);
+                                      }
+                                  case 'tilegrp': --dim.tilegrp;
+                                      var m = dim.mode; dim.mode = 'tilegrp'; 
+                                      return walktiles(m);
+                                  }
+                              }
+                              tile.src = tile_root+'/TileGroup'+dim.tilegrp+'/'+dim.z+'-'+dim.x+'-'+dim.y+'.jpg';
+                          }
+                          walktiles('z');
+                      };
+                      try {
+                          jQuery.ajax({
+                              url:tile_root+"/ImageProperties.xml",
+                              dataType:'text',
+                              success:function(dir) {
+                                  /*was for url = tile_root+"/TileGroup0/" parsing:
+                                 var zooms = dir.split("\">").reverse()[3].match(/\d+/);
+                                 var exp = Math.pow(2,zooms);
+                                 sources["xyztile-metadata"] = "w"+(img.width*exp)+"h"+(img.height*exp);
+                                */
+                                  var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
+                                  rv_zoomify.sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2])
+                                  rv_zoomify._data_collection = 'ImageProperties.xml';
+                                  optional_callback(index,rv_zoomify);
+                              },
+                              error:hard_way
+                          });
+                      } catch(ie_security_error) {
+                          hard_way();
+                      }
+                      return rv_zoomify;
+                  }
               }
           },
           find:function(callback,context) {
@@ -698,7 +737,6 @@ SherdBookmarklet = {
                   matchNsniff(embs[i]);
               for (var i=0;i<objs.length;i++) 
                   matchNsniff(objs[i]);
-
               if (waiting==0)
                   callback(result);
           }
@@ -1403,7 +1441,7 @@ SherdBookmarklet = {
                   var context = {
                       frame:this,document:doc,
                       window:this.contentWindow,
-                      hasBody:self.hasBody(doc)
+                      hasBody:SherdBookmarklet.hasBody(doc)
                   };
                   rv.all.push(context);
                   var area = self.hasBody(doc) * this.offsetWidth * this.offsetHeight;
