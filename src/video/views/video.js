@@ -74,6 +74,7 @@ if (!Sherd.Video.Base) {
 
         this.queryformat = {
             find:function(str) {
+                //legacy
                 var start_point = String(str).match(/start=([.\d]+)/);
                 if (start_point !== null) {
                     var start = Number(start_point[1]);
@@ -82,6 +83,15 @@ if (!Sherd.Video.Base) {
                             start : start
                         } ];
                     }
+                }
+                //MediaFragment
+                var videofragment = String(str).match(/t=([.\d]+)?,?([.\d]+)?/);
+                if (videofragment !== null) {
+                    var ann = {
+                        start:Number(videofragment[1])||0,
+                        end:Number(videofragment[2])||undefined
+                    }
+                    return [ann];
                 }
                 return [];
             }

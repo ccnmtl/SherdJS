@@ -251,8 +251,8 @@ function DjangoSherd_Storage() {
                         a.height = a.sources[j].height;
                     }
                     a[a.sources[j].label+'-metadata'] = {
-                        'width':a.sources[j].width,
-                        'height':a.sources[j].height
+                        'width':Number(a.sources[j].width),
+                        'height':Number(a.sources[j].height)
                     };
                 }
             }
@@ -309,12 +309,12 @@ function DjangoSherd_AssetMicroFormat() {
                 if (metadata != null) {
                     var wh = metadata.match(/w(\d+)h(\d+)/);
                     rv[reg[1] + '-metadata'] = {
-                        width : wh[1],
-                        height : wh[2]
+                        width : Number(wh[1]),
+                        height : Number(wh[2])
                     };
                     if (jQuery(elt).hasClass('asset-primary')) {
-                        rv['width'] = wh[1];
-                        rv['height'] = wh[2];
+                        rv['width'] = Number(wh[1]);
+                        rv['height'] = Number(wh[2]);
                     }
                 }
             }

@@ -59,6 +59,53 @@ if (!Sherd.Image.OpenLayers) {
 		    )};
 		}
 	    },
+            'features2svg':function() {
+                throw Error('not implemented correctly');
+                ///This gets it from the vectorLayer, which is
+                /// abandoned for a Rootcontainer object, which will be different
+                /// also the svg will be relative to the MapContainer div's pos-style
+                var x = new OpenLayers.Format.XML();
+                return x.write(self.openlayers.vectorLayer.v.renderer.rendererRoot);
+            },
+            'frag2feature':function(obj,map) {
+                var extent = self.openlayers.map.getMaxExtent().toArray(); //left,?bottom,right,top
+                var geow = extent[2]-extent[0],
+                    geoh = extent[3]-extent[1];
+
+                if (self.current_obj.type === 'xyztile') {
+                    ///bottom extent is not reliable, so we use 1000px = 90deg
+                    geoh = self.current_obj.dim.height * 90/1000;
+                }
+                switch(obj.xywh.units) {
+                case 'pixel':
+                    geow /= self.current_obj.dim.width;
+                    geoh /= self.current_obj.dim.height;
+                    break;
+                case 'percent':
+                    geow /= 100;
+                    geoh /= 100;
+                    break;
+                default:return false //unsupported type
+                }
+                var topleft = [
+                    extent[0] + obj.xywh.x*geow,
+                    extent[3] - obj.xywh.y*geoh
+                ];
+                var geometry = {type:'Polygon',coordinates:[]};
+                if (obj.xywh.w ===0 && obj.xywh.h===0) {
+                    geometry.type = 'Point';
+                    geometry.coordinates = topleft;
+                } else {
+                    var right = topleft[0]+geow*obj.xywh.w;
+                    var bottom = topleft[1]-geoh*obj.xywh.h;
+                    geometry.coordinates.push([topleft,
+                                               [right,topleft[1]], //topright
+                                               [right,bottom], //bottomright
+                                               [topleft[0],bottom], //bottomleft
+                                               topleft]); //return to topleft
+                }
+                return self.openlayers.GeoJSON.parseFeature({geometry:geometry});
+            },
 	    'object_proportioned':function(object) {
 		var dim = {w:180,h:90};
 		var w = object.width||180;//76.23;//
@@ -205,7 +252,7 @@ if (!Sherd.Image.OpenLayers) {
                         } else {
                             //unique to each feature, for graphicZIndex
                             var feature_style = feature_fg.id+':'+opts.color;
-                            //console.log(feature_fg.geometry.getArea()); //alt zIndex measure
+                            //feature_fg.geometry.getArea(); //alt zIndex measure
                             this.v.styleMap.styles[feature_style] = new OpenLayers.Style(
                                 {fillOpacity:0,
                                  strokeWidth:1,
@@ -279,7 +326,7 @@ if (!Sherd.Image.OpenLayers) {
 	};
 
 	this.currentfeature = false;
-
+        this.current_obj = false;
 	this.getState = function() {
 	    var geojson = {};
 	    if (self.currentfeature) {
@@ -314,6 +361,8 @@ if (!Sherd.Image.OpenLayers) {
 		    self.currentfeature = obj.feature;
 		} else if (obj.geometry) {//obj is a json feature
 		    self.currentfeature = self.openlayers.GeoJSON.parseFeature(obj);
+		} else if (obj.xywh) {//obj is a mediafragment box
+                    self.currentfeature = self.openlayers.frag2feature(obj,self.openlayers.map);
 		} else {
 		    if (obj.x) state.x = obj.x;
 		    if (obj.y) state.y = obj.y;
@@ -448,12 +497,18 @@ if (!Sherd.Image.OpenLayers) {
                         
 			self.openlayers.map.setCenter(this.maxExtent.getCenterLonLat());
 		    };
+                    self.current_obj = {create_obj:create_obj,
+                                        dim:md,
+                                        type:'xyztile'
+                                       };
                     ///HACK: to support Zoomify XYZ tiling as seen at thlib.org
                     /* Zoomify groups tiles into directories each with a maximum of
                        256 tiles.  This code changes the 'TileGroup' based on x,y,z
                        tile coordinates.
                      */
+
                     if (/TileGroup\d/.test(create_obj.object.xyztile)) {
+                        self.current_obj.zoomify = true;
                         var tiles_x = Math.ceil(md.width/256)*2;
                         var tiles_y = Math.ceil(md.height/256)*2;
                         var tiles = [];
@@ -474,7 +529,6 @@ if (!Sherd.Image.OpenLayers) {
                             var y = Math.round((this.maxExtent.top - bounds.top) 
                                                / (res * this.tileSize.h));
                             var z = this.map.getZoom();
-                            var limit = Math.pow(2, z);
                             var url = this.url;
                             ///BEGIN different from XYZ.js
                             var tile_sum = tiles[z].x * y + x;
@@ -506,6 +560,12 @@ if (!Sherd.Image.OpenLayers) {
 			new OpenLayers.Size(odim.w, odim.h),
 			objopt
 		    );
+                    self.current_obj = {
+                        create_obj: create_obj,
+                        dim:create_obj.object['image-metadata'],
+                        type:'image'
+                        
+                    };
 		}
 
 		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
@@ -591,9 +651,20 @@ if (!Sherd.Image.OpenLayers) {
 
 	this.queryformat = {
 	    find:function(str) {
+                var xywh = String(str).match(/xywh=((\w+):)?([.\d]+),([.\d]+),([.\d]+),([.\d]+)/);
+                if (xywh !== null) {
+                    var ann = {
+                        xywh:{
+                            x:Number(xywh[3]),
+                            y:Number(xywh[4]),
+                            w:Number(xywh[5]),
+                            h:Number(xywh[6]),
+                            units:xywh[2]||'pixel'
+                        }
+                    }
+                    return [ann];
+                }
 		return [];
-	    },
-	    read:function(found_obj) {
 	    }
 	};
 
