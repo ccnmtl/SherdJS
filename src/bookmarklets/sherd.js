@@ -1114,9 +1114,9 @@ SherdBookmarklet = {
   },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
-      hosthandler['mcah.columbia.edu'] = hosthandler['learn.columbia.edu'] 
+      hosthandler['mcah.columbia.edu'] = hosthandler['learn.columbia.edu'];
       for (host in hosthandler) {
-          if (new RegExp(host+'$').test(location.hostname)) 
+          if (new RegExp(host+'$').test(location.hostname.replace('.ezproxy.cul.columbia.edu',''))) 
               return hosthandler[host];
       }
   },/*gethosthandler*/
