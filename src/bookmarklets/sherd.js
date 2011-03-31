@@ -48,24 +48,49 @@ SherdBookmarklet = {
                        },
                        success:function(json,textStatus) {
                            var rv = [];
-                           if (json && json.tracks && json.tracks.length > 0) {
-                               var t = json.tracks[0];
-                               var i = 0; //ASSUME: all chunks refer to same video file?
-                               var asp_vid = {
-                                   "primary_type":"video_rtmp",
-                                   "sources":{
-                                       'title':t.title.replace(/\+/g,' '),
-                                       'video_rtmp':t.chunks[i].high.split('?')[0],
-                                       'video_rtmp_low':t.chunks[i].low.split('?')[0]
-                                   },
-                                   "metadata":{}
-                               };
-                               for (var a in t.metadata) {
-                                   if (t.metadata[a] && ! /id$/.test(a)) {
-                                       asp_vid.metadata[a] = [ t.metadata[a].replace(/\+/g,' ') ];
+                           function deplus(str,arr) {
+                             if (str) {
+                               return ((arr)?[str.replace(/\+/g,' ')]:str.replace(/\+/g,' '))
+                             }
+                           }
+                           if (json) {
+                               if (json.tracks && json.tracks.length > 0
+                                   && json.tracks[0].chunks.length > 0) {
+                                   var t = json.tracks[0];
+                                   var i = 0; //ASSUME: all chunks refer to same video file?
+                                   var asp_vid = {
+                                       "primary_type":"video_rtmp",
+                                       "sources":{
+                                           'title':deplus(t.title),
+                                           'video_rtmp':t.chunks[i].high.split('?')[0],
+                                           'video_rtmp_low':t.chunks[i].low.split('?')[0]
+                                       },
+                                       "metadata":{},
+                                       "_jsondump":json
+                                   };
+                                   for (var a in t.metadata) {
+                                       if (t.metadata[a] && ! /id$/.test(a)) {
+                                           asp_vid.metadata[a] = [ deplus(t.metadata[a])];
+                                       }
                                    }
+                                   rv.push(asp_vid);
+                               } else if (json.video && json.video.length > 0) {
+                                   var v = json.video[0];
+                                   rv.push({
+                                       "primary_type":"video_rtmp",
+                                       "sources":{
+                                           'title':deplus(v.title),
+                                           'video_rtmp':v.high.split('?')[0],
+                                           'video_rtmp_low':v.low.split('?')[0]
+                                       },
+                                       "metadata":{
+                                           'Copyright':deplus(v.copyright,1)||undefined,
+                                           'Publication Year':deplus(v.publicationyear,1)||undefined,
+                                           'Publisher':deplus(v.publisher,1)||undefined
+                                       },
+                                       "_jsondump":json
+                                   });
                                }
-                               rv.push(asp_vid);
                            }
                            return callback(rv);
                        },
