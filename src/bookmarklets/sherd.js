@@ -32,6 +32,48 @@ SherdBookmarklet = {
   },
   "hosthandler": {
     /*Try to keep them ALPHABETICAL by 'brand' */
+    "alexanderstreet.com": {
+        find:function(callback) {
+            SherdBookmarklet.run_with_jquery(function _find(jQuery) {
+                var token = document.documentElement.innerHTML.match(/token=([^&\"\']+)/);
+                if (! token) {
+                    return callback([]);
+                }
+                jQuery
+                .ajax({url:"http://"+location.hostname+"/video/meta/"+token[1],
+                       dataType:'json',
+                       dataFilter: function(data,type) {
+                           ///removes 'json=' prefix and unescapes content
+                           return unescape(String(data).substr(5));
+                       },
+                       success:function(json,textStatus) {
+                           var rv = [];
+                           if (json && json.tracks && json.tracks.length > 0) {
+                               var t = json.tracks[0];
+                               var i = 0; //ASSUME: all chunks refer to same video file?
+                               var asp_vid = {
+                                   "primary_type":"video_rtmp",
+                                   "sources":{
+                                       'title':t.title.replace(/\+/g,' '),
+                                       'video_rtmp':t.chunks[i].high.split('?')[0],
+                                       'video_rtmp_low':t.chunks[i].low.split('?')[0]
+                                   },
+                                   "metadata":{}
+                               };
+                               for (var a in t.metadata) {
+                                   if (t.metadata[a] && ! /id$/.test(a)) {
+                                       asp_vid.metadata[a] = [ t.metadata[a].replace(/\+/g,' ') ];
+                                   }
+                               }
+                               rv.push(asp_vid);
+                           }
+                           return callback(rv);
+                       },
+                       error:function() { callback([]); }
+                      });
+            });
+        }
+    },
     "artstor.org": {
         find:function(callback) {
             /*must have floating pane open to find image*/
