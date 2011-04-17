@@ -57,26 +57,32 @@ if (!Sherd.Video.Annotators.ClipForm) {
         if (typeof obj == 'object') {
             var start;
             if (obj.startCode) {
-                start = self.components.startField.value = obj.startCode;
+                start = obj.startCode;
             } else if (obj.start) {
-                start = self.components.startField.value = secondsToCode(obj.start);
+                start = secondsToCode(obj.start);
             }
             
             var end;
             if (obj.endCode) {
-                end = self.components.endField.value = obj.endCode;
+                end = obj.endCode;
             } else if (obj.end) {
-                end = self.components.endField.value = secondsToCode(obj.end);
+                end = secondsToCode(obj.end);
             } else if (start) {
-                self.components.endField.value = start;
                 end = start;
             }
             ///Used to communicate with the clipstrip
-            if (start !== undefined)
+            if (start !== undefined) {
+                if (self.components.startField)
+                    self.components.startField.value = start;
+                self.components.start = start;
                 self.events.signal(self.targetview, 'clipstart', { start: codeToSeconds(start) });    
-            
-            if (end !== undefined)
+            }
+            if (end !== undefined) {
+                if (self.components.endField)  
+                    self.components.endField.value = end; 
+                self.components.end = end;
                 self.events.signal(self.targetview, 'clipend', { end: codeToSeconds(end) });
+            }
         }
     };
 
@@ -163,13 +169,13 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 +           '<input type="button" class="regButton" value="start time:" id="btnClipStart"/>'
                 +         '</td>'
                 +         '<td class="sherd-clipform-timecodestart">'
-                +           '<input type="text" class="timecode" id="clipStart" value="00:00:00" />'
+                +           '<input type="text" class="timecode" id="clipStart" value="' + self.components.start + '" />'
                 +         '</td>'
                 +         '<td>'
                 +           '<input type="button" class="regButton" value="end time:" id="btnClipEnd"/>'
                 +         '</td>'
                 +         '<td>'
-                +           '<input type="text" class="timecode" id="clipEnd" value="00:00:00" />'
+                +           '<input type="text" class="timecode" id="clipEnd" value="' + self.components.end + '" />'
                 +         '</td>'
                 +       '</tr>'
                 +       '<tr>'
@@ -192,7 +198,9 @@ if (!Sherd.Video.Annotators.ClipForm) {
             'endButton' : document.getElementById('btnClipEnd'),
             'startField' : document.getElementById('clipStart'),
             'endField' : document.getElementById('clipEnd'),
-            'playClip' : document.getElementById('btnPlayClip')
+            'playClip' : document.getElementById('btnPlayClip'),
+            'start': "00:00:00",
+            'end': "00:00:00"
         };
     };
  };

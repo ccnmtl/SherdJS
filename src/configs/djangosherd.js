@@ -491,7 +491,7 @@ window.DjangoSherd_Colors = new (function() {
 function DjangoSherd_NoteForm() {
     var self = this;
     Sherd.Base.DomObject.apply(this, arguments);// inherit
-    this.form_name = 'clip-form';
+    this.form_name = 'edit-annotation-form';
     this.f = function(field) {
         //returns field from form, but without keeping pointers around
         return document.forms[self.form_name].elements[field];
