@@ -198,13 +198,13 @@ function DjangoSherd_Storage() {
             delay = false;
         if (id) {
             if (_current_citation) {
-                jQuery(_current_citation).removeClass('active-annotation');
+                jQuery(_current_citation).removeClass('annotation-active');
                 _current_citation = null;
             }
             if (obj_type == 'annotations') {
                 _current_citation = jQuery('div.annotation'+id).get(0);
                 if (_current_citation != null)
-                    jQuery(_current_citation).addClass('active-annotation');
+                    jQuery(_current_citation).addClass('annotation-active');
             }
             if (id in _cache[obj_type] && !list_callback) {
                 ann_obj = _cache[obj_type][id];
@@ -231,6 +231,21 @@ function DjangoSherd_Storage() {
         }
         if (!delay && callback) {
             callback(ann_obj);
+        }
+    };
+    this.set = function(subject, json, active) {
+        var id = subject.id;
+        var obj_type = subject.type || 'annotations';
+        
+        if (obj_type == 'asset') {
+            _cache['asset'][id] = json;
+        } else if (obj_type == 'annotations') {
+            var ann = json;
+            _cache['annotations'][id] = ann;
+            
+            jQuery('.annotation-active').removeClass('annotation-active');
+            _current_citation = jQuery('div.annotation'+id).get(0);
+            jQuery(_current_citation).addClass('annotation-active');
         }
     };
     this.json_update = function(json) {
