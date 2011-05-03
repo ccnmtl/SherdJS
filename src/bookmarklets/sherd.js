@@ -172,6 +172,50 @@ SherdBookmarklet = {
             });
         }
     },
+    "blakearchive.org": {
+        find:function(callback) {
+            SherdBookmarklet.run_with_jquery(function(jQ) { 
+                var SB = SherdBookmarklet;
+                var obj = {'sources':{"title":document.title},'metadata':{}};
+                try {
+                    var opt_urls = document.forms['form'].elements['site'].options;
+                } catch(e) {
+                    return callback([]);
+                }
+                var abs = SB.absolute_url;
+                for (var i=0;i<opt_urls.length;i++) {
+                    var o = opt_urls[i];
+                    if (/Image/.test(o.text)) {
+                        obj.sources["image"] = abs(o.value,document);
+                    } else if (/Transcription/.test(o.text)) {
+                        obj.sources["transcript_url"] = abs(o.value,document);
+                        obj.metadata["Transcript"] = [abs(o.value,document)];
+                    }
+                }
+                if (obj.sources["image"]) {
+                    jQ('a').filter(function(){
+                        return /Copy\s+Information/.test(this.innerHTML)
+                    }).each(function(){
+                        obj.metadata["Metadata"] = [
+                            abs(String(this.href)
+                                .replace(/javascript:\w+\(\'/,'')
+                                .replace(/\'\)$/,''),
+                                document)
+                        ];
+                    })
+                    SB.getImageDimensions(
+                        obj.sources["image"],
+                        function onload(img,dims)
+                        {
+                            obj.sources["image-metadata"] = dims;
+                            callback([obj]);
+                        },function error(){
+                            callback([]);//perhaps overly extreme?
+                        });
+                }
+            });            
+        }
+    },
     "dropbox.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function(jQ) { 
@@ -396,7 +440,7 @@ SherdBookmarklet = {
                                         "url":document.location +'#'+ filename
                                     }
                                 };
-                                var img = document.createElement('img');
+                                var img = document.createElement("img");
                                 img.src = image_data.sources.image;
                                 image_data.sources['image-metadata']="w"+img.width+"h"+img.height
                                 rv.push(image_data);
@@ -878,7 +922,7 @@ SherdBookmarklet = {
                       ||/logo\W/.test(image.src) //web.mit.edu/shakespeare/asia/
                      ) continue;
                   /*recreate the <img> so we get the real width/height */
-                  var image_ind = document.createElement('img');
+                  var image_ind = document.createElement("img");
                   image_ind.src = image.src;
                   if (image_ind.width == 0) {
                       //for if it doesn't load immediately
@@ -932,10 +976,7 @@ SherdBookmarklet = {
                   }
               }
               for (var i=0;i<result.length;i++) {
-                  result[i].metadata = SherdBookmarklet.microdataSearch(result[i].html) || undefined;
-                  if (result[i].metadata && result[i].metadata.title) {
-                      result[i].sources["title"] = result[i].metadata.title.shift();
-                  }
+                  SherdBookmarklet.metadataSearch(result[i], context.document);
               }
               if (done==0) callback(result);
           }
@@ -1263,7 +1304,47 @@ SherdBookmarklet = {
   "hasBody":function(doc) {
           return (doc.body && 'body'==doc.body.tagName.toLowerCase());
   },
-  "microdataSearch":function(elem) {
+  "clean":function(str) {
+      return str.replace(/^\s+/,'').replace(/\s+$/,'').replace(/\s+/,' ');
+  },
+  "getImageDimensions":function(src,callback,onerror) {
+      var img = document.createElement("img");
+      img.onload = function() {
+          callback(img,"w"+img.width+"h"+img.height);
+      }
+      img.onerror = onerror;
+      img.src = src;
+      return img;
+  },
+  "mergeMetadata":function(result,metadata) {
+      if (!metadata) return;
+      if (!result.metadata) {
+          return result.metadata = metadata;
+      } else {
+          for (var a in metadata) {
+              if (result.metadata[a]) {
+                  result.metadata[a].push.apply(result.metadata[a], metadata[a]);
+              } else {
+                  result.metadata[a] = metadata[a]
+              }
+          }
+      }
+      return metadata;
+  },
+  "metadataSearch":function(result, doc) {
+      /*searches for neighboring metadata in microdata and some ad-hoc microformats */
+      var M = SherdBookmarklet;
+      if (!M.mergeMetadata(result,M.metadataTableSearch(result.html, doc))) {
+          M.mergeMetadata(result,M.microdataSearch(result.html, doc))
+      }
+      if (result.metadata) {
+          var t = result.metadata.title || result.metadata['Title'];
+          if (t) {
+              result.sources["title"] = t.shift();
+          }
+      }
+  },
+    "microdataSearch":function(elem, doc) {
       var item;
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
       jQ(elem).parents('*[itemscope=]').each(function(){ item = this; });
@@ -1278,11 +1359,34 @@ SherdBookmarklet = {
                   props[p] = props[p] || [];
                   switch(String(this.tagName).toLowerCase()) {
                   case "a":case "link":case "area":
-                      props[p].push(abs(this.href));
+                      props[p].push(abs(this.href, doc));
                   case "audio":case "embed":case "iframe":case "img":case "source":case "video":
-                      props[p].push(abs(this.src));
+                      props[p].push(abs(this.src, doc));
                   default:
                       props[p].push(jQ(this).text());
+                  }
+              });
+              return props;
+          }
+      }
+  },
+  "metadataTableSearch":function(elem) {
+      /*If asset is in a table and the next row has the word 'Metadata' */
+      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+      if ('td'===elem.parentNode.tagName.toLowerCase()) {
+          var trs = jQ(elem.parentNode.parentNode).nextAll();
+          if (trs.length && /metadata/i.test(jQ(trs[0]).text())) {
+              var props = {};
+              trs.each(function() {
+                  var tds = jQ('td',this);
+                  if (tds.length === 2) {
+                      var p = SherdBookmarklet.clean(jQ(tds[0]).text());
+                      if (p) {
+                          props[p] = props[p] || [];
+                          props[p].push(
+                              SherdBookmarklet.clean(jQ(tds[1]).text())
+                          )
+                      }
                   }
               });
               return props;
