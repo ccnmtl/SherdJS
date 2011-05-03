@@ -209,7 +209,7 @@ if (!Sherd.Image.OpenLayers) {
                                                                          });
                 this.name = name;
                 this._anns = {};
-		this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
+                this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
                 this.zIndex = (opts && opts.zIndex) || 200; //used to order layers
                 this.v.setZIndex(this.zIndex);
                 this.v.sherd_layername = name;

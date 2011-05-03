@@ -189,13 +189,15 @@ function DjangoSherd_Storage() {
         return recent_project;
     }
 
+    // Retrieve data from server & stash in the cache
     this.get = function(subject, callback, list_callback) {
         ///currently obj_type in [annotations, asset, project]
         /// that is used for the URL and a reference to the _cache{} section
-        var id = subject.id,
-            obj_type = subject.type || 'annotations',
-            ann_obj = null,
-            delay = false;
+        var id = subject.id;
+        var obj_type = subject.type || 'annotations';
+        var ann_obj = null;
+        var delay = false;
+        
         if (id) {
             if (_current_citation) {
                 jQuery(_current_citation).removeClass('annotation-active');
@@ -233,21 +235,31 @@ function DjangoSherd_Storage() {
             callback(ann_obj);
         }
     };
-    this.set = function(subject, json, active) {
+    
+    // Update server with data & then stash the resulting json in the cache.
+    this.set = function(subject, callback) {
         var id = subject.id;
         var obj_type = subject.type || 'annotations';
         
-        if (obj_type == 'asset') {
-            _cache['asset'][id] = json;
-        } else if (obj_type == 'annotations') {
-            var ann = json;
-            _cache['annotations'][id] = ann;
-            
-            jQuery('.annotation-active').removeClass('annotation-active');
-            _current_citation = jQuery('div.annotation'+id).get(0);
-            jQuery(_current_citation).addClass('annotation-active');
-        }
+        jQuery.ajax({
+            type: 'POST',
+            url: subject.url,
+            data: subject.data,
+            dataType: 'json',
+            success: function(data, textStatus, jqXHR) {
+                if (obj_type == 'asset') {
+                    _cache['asset'][id] = data;
+                } else if (obj_type == 'annotations') {
+                    var ann = data;
+                    _cache['annotations'][id] = ann;
+                }
+                
+                if (callback)
+                    callback(data);
+            }
+        });
     };
+    
     this.json_update = function(json) {
         var new_id = true;
         if (json.project) {
@@ -529,14 +541,7 @@ function DjangoSherd_NoteForm() {
             // top is the form
             self.f('annotation-range1').value = range1;
             self.f('annotation-range2').value = range2;
-
             self.f('annotation-annotation_data').value = JSON.stringify(obj);
-            ///TODO: eventually this whole DjangoSherd_NoteForm will
-            ///      BE part of AnnotationList -- or a wrapper
-            if (window.AnnotationList) {
-                ///TODO: make this updateAnnotation(null, obj)
-                AnnotationList.clearAnnotation();
-            }
         }
     };
 }

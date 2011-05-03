@@ -58,14 +58,14 @@ if (!Sherd.Video.Annotators.ClipForm) {
             var start;
             if (obj.startCode) {
                 start = obj.startCode;
-            } else if (obj.start) {
+            } else if (obj.start !== undefined) {
                 start = secondsToCode(obj.start);
             }
             
             var end;
             if (obj.endCode) {
                 end = obj.endCode;
-            } else if (obj.end) {
+            } else if (obj.end != undefined) {
                 end = secondsToCode(obj.end);
             } else if (start) {
                 end = start;
