@@ -1337,10 +1337,17 @@ SherdBookmarklet = {
       if (!M.mergeMetadata(result,M.metadataTableSearch(result.html, doc))) {
           M.mergeMetadata(result,M.microdataSearch(result.html, doc))
       }
-      if (result.metadata) {
-          var t = result.metadata.title || result.metadata['Title'];
-          if (t) {
-              result.sources["title"] = t.shift();
+      var meta = result.metadata;
+      if (meta) {
+          //move appopriate keys to result.sources
+          var s = {
+              "title":meta.title || meta['Title'],
+              "thumb":meta.thumb || meta['Thumb'] || meta['Thumbnail'] || meta['thumbnail']
+          }
+          for (var a in s) {
+              if (s[a]) {
+                  result.sources[a] = s[a].shift();
+              }
           }
       }
   },
@@ -1370,7 +1377,7 @@ SherdBookmarklet = {
           }
       }
   },
-  "metadataTableSearch":function(elem) {
+  "metadataTableSearch":function(elem, doc) {
       /*If asset is in a table and the next row has the word 'Metadata' */
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
       if ('td'===elem.parentNode.tagName.toLowerCase()) {
@@ -1383,9 +1390,12 @@ SherdBookmarklet = {
                       var p = SherdBookmarklet.clean(jQ(tds[0]).text());
                       if (p) {
                           props[p] = props[p] || [];
-                          props[p].push(
-                              SherdBookmarklet.clean(jQ(tds[1]).text())
-                          )
+                          var val = SherdBookmarklet.clean(jQ(tds[1]).text());
+                          //if there's an <a> tag, then use the URL -- use for thumbs
+                          jQ('a',tds[1]).slice(0,1).each(function() {
+                              val = SherdBookmarklet.absolute_url(this.href,doc);
+                          });
+                          props[p].push(val)
                       }
                   }
               });
