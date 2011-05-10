@@ -18,7 +18,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	    return {};
 	};
 
-	var mode = 'create';//||'browse'
+	var mode = 'create';//||'browse'||'edit'||'copy'
 	this.setState = function(obj){
 	    if (typeof obj=='object') {
 		//because only one annotation is allowed at once.
@@ -26,44 +26,58 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                 /// in an annotation rather than overwriting with the last one
                 /// but then we run into confusion where people think they're making
                 /// a lot of annotations, but really made one.
-		self.openlayers.editingtoolbar.deactivate();
+	        mode = obj.mode || 'browse';
+	        
+	        if (self.openlayers.editingtoolbar) {
+        	    if (!obj.mode || obj.mode == 'browse') {
+        	        self.openlayers.editingtoolbar.deactivate();
+        	    } else {
+        	        self.openlayers.editingtoolbar.activate();
+        	    }
+	        }
 
 		///show buttons
-		self.components.center.style.display = 'inline';
-        self.components.instructions.style.display = 'none';
-		mode = 'browse';
+	        if (self.components.center)
+	            self.components.center.style.display = 'inline';
+	        
+	        if (self.components.instructions)
+	            self.components.instructions.style.display = 'none';
+		
 	    }
 	};
 
 	this.initialize = function(create_obj) {
-	    self.openlayers.editingtoolbar = new self.openlayers.CustomEditingToolbar(
-		self.targetview.openlayers.vectorLayer.getLayer()
-	    );
-	    self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
-	    //Q: this doubles mousewheel listening, e.g. why did we need it?
-	    //A: needed for not showing toolbar until clicking on an annotation
-	    //self.openlayers.editingtoolbar.sherd.navigation.activate();
-	    //Solution: just send signals or whatever.
-	    OpenLayers.Control.prototype.activate.call(
-		self.openlayers.editingtoolbar.sherd.navigation
-	    );
-
-	    //on creation of an annotation
-	    self.openlayers.editingtoolbar.featureAdded = function(feature) {
+	    if (!self.openlayers.editingtoolbar) {
+	        self.openlayers.editingtoolbar = new self.openlayers.CustomEditingToolbar(
+	                self.targetview.openlayers.vectorLayer.getLayer()
+	        );
+	        self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
+    	    
+	        //Q: this doubles mousewheel listening, e.g. why did we need it?
+    	    //A: needed for not showing toolbar until clicking on an annotation
+    	    //self.openlayers.editingtoolbar.sherd.navigation.activate();
+    	    //Solution: just send signals or whatever.
+	        OpenLayers.Control.prototype.activate.call(
+	            self.openlayers.editingtoolbar.sherd.navigation
+	        );
+	    }
+	    
+        //on creation of an annotation
+        self.openlayers.editingtoolbar.featureAdded = function(feature) {
                 var current_state = self.targetview.getState();
                 var geojson = self.targetview.openlayers.feature2json(feature);
                 //copy feature properties to current_state
                 for (var a in geojson) { current_state[a] = geojson[a]; }
                 //use geojson object as annotation
                 geojson.preserveCurrentFocus = true;
-		self.targetview.setState(geojson);
-
-		self.storage.update(current_state);
-	    };
-	    ///# 3. button listeners
-	    self.events.connect(self.components.center,'click',function(evt) {
-	        self.targetview.setState({feature:self.targetview.currentfeature});
-	    });
+                self.targetview.setState(geojson);
+                self.storage.update(current_state);
+        };
+	    
+        /// button listeners
+        self.events.connect(self.components.center,'click',function(evt) {
+            self.targetview.setState({feature:self.targetview.currentfeature});
+        });
 	};
 	this.openlayers = {
 	    CustomEditingToolbar :OpenLayers.Class(
@@ -111,17 +125,17 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	};//end this.openlayers
 	    
 	this.storage = {
-	    'update':function(obj,just_downstream){
-		if (!just_downstream) {
-		    self.setState(obj);
-		}
-		for (var i=0;i<self.targetstorage.length;i++) {
-		    self.targetstorage[i].storage.update(obj);
-		}
-	    }
+	    'update':function(obj,just_downstream) {
+    	    if (!just_downstream) {
+    	        self.setState(obj);
+    	    } 
+    	    for (var i=0;i<self.targetstorage.length;i++) {
+    	        self.targetstorage[i].storage.update(obj);
+    	    }
+	}
 	};
 
-        this.microformat = {
+    this.microformat = {
 	    'create':function(){
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
