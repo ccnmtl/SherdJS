@@ -36,7 +36,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
         	    }
 	        }
 
-		///show buttons
+	        ///show buttons
 	        if (self.components.center)
 	            self.components.center.style.display = 'inline';
 	        
@@ -52,6 +52,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	                self.targetview.openlayers.vectorLayer.getLayer()
 	        );
 	        self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
+	        self.openlayers.editingtoolbar.deactivate();
     	    
 	        //Q: this doubles mousewheel listening, e.g. why did we need it?
     	    //A: needed for not showing toolbar until clicking on an annotation

@@ -267,27 +267,27 @@ function DjangoSherd_Storage() {
             new_id = json.project.id;
             recent_project = json.project;
         }
-        for (asset_key in json.assets) {
-            var a = json.assets[asset_key];
-            for (var j in a.sources) {
-                a[j] = a.sources[j].url;
-                
-                if (a.sources[j].width) {
-                    if (a.sources[j].primary) {
-                        a.width = a.sources[j].width;
-                        a.height = a.sources[j].height;
-                    }
-                    a[a.sources[j].label+'-metadata'] = {
-                        'width':Number(a.sources[j].width),
-                        'height':Number(a.sources[j].height)
-                    };
+        
+        var a = json.asset;
+        for (var j in a.sources) {
+            a[j] = a.sources[j].url;
+            
+            if (a.sources[j].width) {
+                if (a.sources[j].primary) {
+                    a.width = a.sources[j].width;
+                    a.height = a.sources[j].height;
                 }
+                a[a.sources[j].label+'-metadata'] = {
+                    'width':Number(a.sources[j].width),
+                    'height':Number(a.sources[j].height)
+                };
             }
-            DjangoSherd_adaptAsset(a); //in-place
         }
+        DjangoSherd_adaptAsset(a); //in-place
+
         for (var i=0;i<json.annotations.length;i++) {
             var ann = json.annotations[i];
-            ann.asset = json.assets[ann.asset_key];
+            ann.asset = json.asset;
             ann.annotations = [ann.annotation];
             _cache['annotations'][ann.id] = ann;
             if (json.type == 'asset' && i==0) {
