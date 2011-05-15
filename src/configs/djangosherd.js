@@ -236,30 +236,6 @@ function DjangoSherd_Storage() {
         }
     };
     
-    // Update server with data & then stash the resulting json in the cache.
-    this.set = function(subject, callback) {
-        var id = subject.id;
-        var obj_type = subject.type || 'annotations';
-        
-        jQuery.ajax({
-            type: 'POST',
-            url: subject.url,
-            data: subject.data,
-            dataType: 'json',
-            success: function(data, textStatus, jqXHR) {
-                if (obj_type == 'asset') {
-                    _cache['asset'][id] = data;
-                } else if (obj_type == 'annotations') {
-                    var ann = data;
-                    _cache['annotations'][id] = ann;
-                }
-                
-                if (callback)
-                    callback(data);
-            }
-        });
-    };
-    
     this.json_update = function(json) {
         var new_id = true;
         if (json.project) {
