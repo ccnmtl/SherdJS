@@ -53,35 +53,54 @@ if (!Sherd.Video.Annotators.ClipForm) {
         return obj;
     };
 
-    this.setState = function(obj) {
+    this.setState = function(obj, options) {
         if (typeof obj == 'object') {
-            var start;
-            if (obj.startCode) {
-                start = obj.startCode;
-            } else if (obj.start !== undefined) {
-                start = secondsToCode(obj.start);
-            }
-            
-            var end;
-            if (obj.endCode) {
-                end = obj.endCode;
-            } else if (obj.end != undefined) {
-                end = secondsToCode(obj.end);
-            } else if (start) {
-                end = start;
-            }
-            ///Used to communicate with the clipstrip
-            if (start !== undefined) {
-                if (self.components.startField)
-                    self.components.startField.value = start;
-                self.components.start = start;
-                self.events.signal(self.targetview, 'clipstart', { start: codeToSeconds(start) });    
-            }
-            if (end !== undefined) {
-                if (self.components.endField)  
-                    self.components.endField.value = end; 
-                self.components.end = end;
-                self.events.signal(self.targetview, 'clipend', { end: codeToSeconds(end) });
+            if (!options || !options.mode) {
+                self.hideForm();
+            } else {
+                self.showForm();
+                
+                var start;
+                if (obj.startCode) {
+                    start = obj.startCode;
+                } else if (obj.start !== undefined) {
+                    start = secondsToCode(obj.start);
+                }
+                
+                var end;
+                if (obj.endCode) {
+                    end = obj.endCode;
+                } else if (obj.end != undefined) {
+                    end = secondsToCode(obj.end);
+                } else if (start) {
+                    end = start;
+                }
+                ///Used to communicate with the clipstrip
+                if (start !== undefined) {
+                    if (self.components.startField)
+                        self.components.startField.value = start;
+                    self.components.start = start;
+                    self.events.signal(self.targetview, 'clipstart', { start: codeToSeconds(start) });    
+                }
+                if (end !== undefined) {
+                    if (self.components.endField)  
+                        self.components.endField.value = end; 
+                    self.components.end = end;
+                    self.events.signal(self.targetview, 'clipend', { end: codeToSeconds(end) });
+                }
+                
+                if (options.mode == "browse") {
+                    self.components.startField.disabled = true;
+                    self.components.endField.disabled = true;
+                    self.components.startButton.disabled = true;
+                    self.components.endButton.disabled = true;
+                } else {
+                    // create, copy, edit
+                    self.components.startField.disabled = false;
+                    self.components.endField.disabled = false;
+                    self.components.startButton.disabled = false;
+                    self.components.endButton.disabled = false;
+                }
             }
         }
     };
@@ -156,11 +175,21 @@ if (!Sherd.Video.Annotators.ClipForm) {
         });
     };
     
+    this.showForm = function() {
+        if (self.components.form)
+            self.components.form.style.display = "block";
+    };
+    
+    this.hideForm = function() {
+        if (self.components.form)
+            self.components.form.style.display = "none";
+    };
+    
     this.microformat.create = function(obj) {
         var htmlID = 'clipform';
         return {
             htmlID : htmlID,
-            text : '<div id="' + htmlID + '">'
+            text : '<div id="' + htmlID + '" style="display: none">'
                 +'<div id="clipcontrols" class="sherd-clipform">'
                 +   '<div class="cliptimeboxtable">'
                 +      '<table width="100%" >'
@@ -191,7 +220,6 @@ if (!Sherd.Video.Annotators.ClipForm) {
     
     this.microformat.components = function(html_dom, create_obj) 
     {
-        var inputs = html_dom.getElementsByTagName('input');
         return {
             'form' : html_dom,
             'startButton' : document.getElementById('btnClipStart'),

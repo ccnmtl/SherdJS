@@ -4,6 +4,7 @@ if (!Sherd.Image.Annotators) {Sherd.Image.Annotators= {};}
 if (!Sherd.Image.Annotators.OpenLayers) {
     Sherd.Image.Annotators.OpenLayers = function() {
 	var self = this;
+
 	Sherd.Base.AssetView.apply(this,arguments);//inherit
 
 	this.attachView = function(view) {
@@ -18,30 +19,32 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	    return {};
 	};
 
-	var mode = 'create';//||'browse'||'edit'||'copy'
-	this.setState = function(obj){
+	this.setState = function(obj, options){
 	    if (typeof obj=='object') {
 		//because only one annotation is allowed at once.
                 ///At the moment, we could do a better job of saving 'all' features
                 /// in an annotation rather than overwriting with the last one
                 /// but then we run into confusion where people think they're making
                 /// a lot of annotations, but really made one.
-	        mode = obj.mode || 'browse';
 	        
+	        // options.mode == null||'create'||'browse'||'edit'||'copy'
+
 	        if (self.openlayers.editingtoolbar) {
-	            if (!obj.mode) {
+	            if (!options || !options.mode) {
+	                // whole asset view. no anontations.
 	                self.openlayers.editingtoolbar.deactivate();
                     if (self.components.center)
                         self.components.center.style.display = 'none';
                     if (self.components.instructions)
                         self.components.instructions.style.display = 'none';
-	            } if (obj.mode == 'browse') {
+	            } else if (options.mode == 'browse') {
         	        self.openlayers.editingtoolbar.deactivate();
                     if (self.components.center)
                         self.components.center.style.display = 'inline';
                     if (self.components.instructions)
                         self.components.instructions.style.display = 'none';
         	    } else {
+        	        // create, edit, copy
         	        self.openlayers.editingtoolbar.activate();
         	        if (self.components.center)
                         self.components.center.style.display = 'inline';
