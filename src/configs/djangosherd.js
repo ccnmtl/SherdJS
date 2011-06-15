@@ -10,8 +10,8 @@ if (typeof djangosherd == 'undefined') {
 // media.time)
 
 function legacy_json(unparsed_json) {
-    //workaround a bug from MochiKit's serializeJSON() method
-    return unparsed_json.replace('"wh_ratio":NaN','"wh_ratio":null');
+    //workaround a bug introduced by MochiKit's serializeJSON() method
+    return unparsed_json.replace(/\"wh_ratio\":\sNaN/,'"wh_ratio":null');
 }
 
 function DjangoSherd_Asset_Config() {
@@ -217,6 +217,7 @@ function DjangoSherd_Storage() {
             } else {
                 jQuery.ajax({url:(subject.url || '/'+obj_type+'/json/'+id+'/'),
                              dataType:'json',
+                             dataFilter:legacy_json,
                              success:function(json) {
                                  var new_id = self.json_update(json, obj_type);
                                  if (callback) {
@@ -225,6 +226,11 @@ function DjangoSherd_Storage() {
                                  }
                                  if (typeof list_callback==='function') {
                                      list_callback(json);
+                                 }
+                             },
+                             error:function(xhr,textStatus,errorThrown) {
+                                 if (window.console) {
+                                     console.log(textStatus);
                                  }
                              }
                             });
