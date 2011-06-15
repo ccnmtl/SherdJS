@@ -65,13 +65,13 @@ if (!Sherd.Video.YouTube) {
                 text: '<div id="' + wrapperID + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' +
                         ' classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' + objectID + '>' + 
-                        '  <param name="movie" value="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
+                        '  <param name="movie" value="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&showinfo=0&probably_logged_in=0&modestbranding=1&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"/></param>' + 
                         '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="true"></param>' +
-                        '  <embed src="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"' + 
+                        '  <embed src="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&showinfo=0&probably_logged_in=0&modestbranding=1&enablejsapi=1&playerapiid=' + playerID + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
                         '    autoplay="' + autoplay + '"' + 
