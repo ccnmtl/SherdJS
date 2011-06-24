@@ -27,8 +27,8 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                 /// but then we run into confusion where people think they're making
                 /// a lot of annotations, but really made one.
 	        
+	        self.mode = null;
 	        // options.mode == null||'create'||'browse'||'edit'||'copy'
-
 	        if (self.openlayers.editingtoolbar) {
 	            if (!options || !options.mode) {
 	                // whole asset view. no annotations.
@@ -43,6 +43,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                         self.components.center.style.display = 'inline';
                     if (self.components.instructions)
                         self.components.instructions.style.display = 'none';
+                    self.mode = "browse";
         	    } else {
         	        // create, edit, copy
         	        self.openlayers.editingtoolbar.activate();
@@ -50,6 +51,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                         self.components.center.style.display = 'inline';
                     if (self.components.instructions)
                         self.components.instructions.style.display = 'block';
+                    self.mode = options.mode;
         	    }
 	        }
 	    }
@@ -137,7 +139,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	this.storage = {
 	    'update':function(obj,just_downstream) {
     	    if (!just_downstream) {
-    	        self.setState(obj);
+    	        self.setState(obj, { 'mode': self.mode });
     	    } 
     	    for (var i=0;i<self.targetstorage.length;i++) {
     	        self.targetstorage[i].storage.update(obj);
