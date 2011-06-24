@@ -32,6 +32,7 @@ function DjangoSherd_Asset_Config() {
             'storage' : ds.noteform,
 	    'targets':{clipstrip:'clipstrip-display'}
         });
+        
         ds.assetview.html.push(
             jQuery('div.asset-display').get(0), // id=videoclip
             {
@@ -44,8 +45,11 @@ function DjangoSherd_Asset_Config() {
             ds.assetview.clipform.html.push('clipform-display', {
                 asset : {}
             }); // write videoform
+        
         }
-
+        
+        /**         
+                
         var orig_annotation_data = $('original-annotation');// /***faux layer. Data stored in the DOM
         if (orig_annotation_data != null) {
             // Viewing an Annotation with stored data
@@ -58,10 +62,11 @@ function DjangoSherd_Asset_Config() {
                 if (ds.assetview.clipform)
                     ds.assetview.clipform.setState(obj);
 
-            } catch (e) {/* non-valid json? */
+            } catch (e) {// non-valid json?
                 Sherd.Base.log(e);
             }
         } else {
+           
             // Viewing the Original Asset, possibly with params from queryString
             var annotation_query = [];
             if (document.location.hash) {
@@ -80,6 +85,7 @@ function DjangoSherd_Asset_Config() {
                 ds.assetview.setState();
             }
         }
+        **/            
 }
 
 function DjangoSherd_Project_Config(options) {

@@ -31,7 +31,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 
 	        if (self.openlayers.editingtoolbar) {
 	            if (!options || !options.mode) {
-	                // whole asset view. no anontations.
+	                // whole asset view. no annotations.
 	                self.openlayers.editingtoolbar.deactivate();
                     if (self.components.center)
                         self.components.center.style.display = 'none';
