@@ -155,14 +155,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         this.microformat._getPlayerParams = function(obj) {
             var rc = {};
-            
             if (obj.mp4_rtmp) {
-                a = self.microformat._parseRtmpUrl(obj.mp4_rtmp);
+                var a = self.microformat._parseRtmpUrl(obj.mp4_rtmp);
                 rc.url = a.url;
                 rc.netConnectionUrl = a.netConnectionUrl;
                 rc.provider = 'rtmp';
             } else if (obj.flv_rtmp) {
-                a = self.microformat._parseRtmpUrl(obj.flv_rtmp);
+                var a = self.microformat._parseRtmpUrl(obj.flv_rtmp);
                 rc.url = a.url;
                 rc.netConnectionUrl = a.netConnectionUrl;
                 rc.provider = 'rtmp';
@@ -182,7 +181,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 rc.url = obj.video_pseudo;
                 rc.provider = 'pseudo';
             } else if (obj.video_rtmp) {
-                rc.url = obj.video_rtmp;
+                var a = self.microformat._parseRtmpUrl(obj.video_rtmp);
+                rc.url = a.url;
+                rc.netConnectionUrl = a.netConnectionUrl;
                 rc.provider = 'rtmp';
             } else if (obj.video) {
                 rc.url = obj.video;
