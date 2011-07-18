@@ -1666,7 +1666,7 @@ SherdBookmarklet = {
                       hasBody:SherdBookmarklet.hasBody(doc)
                   };
                   rv.all.push(context);
-                  var area = self.hasBody(doc) * this.offsetWidth * this.offsetHeight;
+                  var area = context.hasBody * this.offsetWidth * this.offsetHeight;
                   if (area > max) {
                       rv.best = context;
                   }
@@ -1814,7 +1814,7 @@ SherdBookmarklet = {
       };
 
       this.maybeShowInFrame = function(frame) {
-          if (!comp.window && frames.best) {
+          if (!comp.window && frame) {
               var target = o.target || frame.document.body;
               self.setupContent(target);
               self.showWindow();
