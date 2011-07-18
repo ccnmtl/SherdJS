@@ -589,6 +589,47 @@ SherdBookmarklet = {
                       return rv;
                   }
               },/*end youtube embeds*/
+              "jwplayer5":{
+                  match:function(obj) {
+                      return ((typeof obj.getPlaylist==='function'
+                               && typeof obj.sendEvent==='function')
+                              || null);
+                  },
+                  asset:function(obj,match,context) {
+                      var item, pl = obj.getPlaylist();
+                      switch (pl.length) {
+                      case 0: return {};
+                      case 1: item = pl[0]; break;
+                      default:
+                          //or should we just show all options?
+                          if (obj.jwGetPlaylistIndex) {
+                              item = pl[obj.jwGetPlaylistIndex()];
+                          } else {
+                              return {};
+                          }
+                      }
+                      var rv = {"html":obj,"primary_type":'video',"sources":{}},
+                          c = obj.getConfig(), 
+                          pcfg = obj.getPluginConfig('http');
+                      if (item.type == 'rtmp') {
+                          rv.sources["video_rtmp"] = item.streamer+'//'+item.file;
+                          rv.primary_type = "video_rtmp";
+                      } else {
+                          var url = item.streamer+item.file;
+                          if (pcfg.startparam) {
+                              rv.primary_type = "video_pseudo";
+                              url += '?'+pcfg.startparam+'={start}'
+                          }
+                          rv.sources[rv.primary_type] = url;
+                      }
+                      rv.sources[rv.primary_type+'-metadata'] = "w"+c.width+"h"+c.height;
+                      if (item.image) {
+                          rv.sources['thumb'] = SherdBookmarklet.absolute_url(item.image,
+                                                                              context.document);
+                      }
+                      return rv;
+                  }
+              },
               "flowplayer3":{
                   match:function(obj) {
                       if (obj.data) {
