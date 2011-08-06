@@ -19,10 +19,13 @@ if (!Sherd.Image.FSIViewer) {
             if (obj && obj.set && obj.top) {
                 var clip_string = self.obj2arr(obj).join(', ');
                 self.components.top.SetVariable('FSICMD','Goto:'+clip_string);
+            } else {
+                self.components.top.SetVariable('FSICMD', 'Reset');
             }
         };
 
         this.setState = function(obj) {
+            
             if (obj) for (var a in obj) {
                 self.current_state[a] = obj[a];
             }
@@ -62,44 +65,44 @@ if (!Sherd.Image.FSIViewer) {
             };
         };
 
-	this.presentations = {
-	    'thumb':{
-		height:function(){return '100px';},
-		width:function(){return '100px';},
-                extra:'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
-		initialize:function(obj,presenter){
-                    
-                }
-	    },
-	    'default':{
-		height:function(obj,presenter){return Sherd.winHeight()+'px';},
-		width:function(obj,presenter){return '100%';},
-                extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
-		initialize:function(obj,presenter){
+    this.presentations = {
+        'thumb':{
+            height:function(){return '100px';},
+            width:function(){return '100px';},
+            extra:'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
+            initialize:function(obj,presenter){
+            }
+        },
+        'default':{
+            height:function(obj,presenter){return Sherd.winHeight()+'px';},
+            width:function(obj,presenter){return '100%';},
+            extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
+            initialize:function(obj,presenter){
                     self.events.connect(window,'resize',function() {
-                        var top = presenter.components.top;
-			top.setAttribute('height',Sherd.winHeight()+'px');
-                        self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
-		    });
-                }
-	    },
-	    'small':{
-		height:function(){return '240px';},
-		width:function(){return '320px';},
-                extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=BL',
-		initialize:function(){/*noop*/}
-	    }
-	};
-        this.initialize = function(create_obj) {
-            ///copied from openlayers code:
-		var presentation;
-		switch (typeof create_obj.object.presentation) {
-		case 'string': presentation = self.presentations[create_obj.object.presentation]; break;
-		case 'object': presentation = create_obj.object.presentation; break;
-		case 'undefined': presentation = self.presentations['default']; break;
-		}
+                    var top = presenter.components.top;
+                    top.setAttribute('height',Sherd.winHeight()+'px');
+                    self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
+                });
+            }
+        },
+        'small':{
+            height:function(){return '240px';},
+            width:function(){return '320px';},
+            extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=BL',
+            initialize:function(){/*noop*/}
+        }
+    };
+        
+    this.initialize = function(create_obj) {
+        ///copied from openlayers code:
+        var presentation;
+        switch (typeof create_obj.object.presentation) {
+        case 'string': presentation = self.presentations[create_obj.object.presentation]; break;
+        case 'object': presentation = create_obj.object.presentation; break;
+        case 'undefined': presentation = self.presentations['default']; break;
+        }
             
-                presentation.initialize(create_obj.object, self);
+        presentation.initialize(create_obj.object, self);
 
             var top = self.components.top;
             self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
