@@ -646,8 +646,6 @@ SherdBookmarklet = {
                       /* TODO: 1. support audio
                                2. 
                        */
-                      var sources = {};
-                      var abs = SherdBookmarklet.absolute_url;
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var $f = (context.window.$f && context.window.$f(obj.parentNode));
 
@@ -657,7 +655,12 @@ SherdBookmarklet = {
                       //getClip() works if someone's already clicked Play
                       var clip = ($f && $f.getClip() ) || cfg.clip || cfg.playlist[0];
                       var time = ($f && $f.getTime() ) || 0;
+                      return this.queryasset(context,obj,cfg,clip,time, ($f && $f.id() || undefined) );
+                  },
+                  queryasset:function(context,obj,cfg,clip,time,ref_id) {
+                      var sources = {};
                       var type = 'video';
+                      var abs = SherdBookmarklet.absolute_url;
                       if (cfg.playlist && ( !clip.url || cfg.playlist.length > 1)) {
                           for (var i=0;i<cfg.playlist.length;i++) {
                               var p = cfg.playlist[i];
@@ -719,7 +722,7 @@ SherdBookmarklet = {
                           "label":"video",
                           "primary_type":primary_type,
                           "hash":"start="+Math.floor(time),
-                          "ref_id":($f && $f.id() || undefined) //used for merging
+                          "ref_id":ref_id //used for merging
                       };
                   }
               },/*end flowplayer3*/
@@ -937,14 +940,43 @@ SherdBookmarklet = {
       "audio": {
           find:function(callback,context) {
               if (/.mp3$/.test(document.location)) {
-                  callback({
+                  callback([{
                       "html":document.documentElement,
                       "primary_type":"mp3",
                       "sources": {
                           "mp3": String(document.location)
                       }
-                  });
+                  }]);
               }
+          }
+      },
+      "iframe.postMessage":{
+          find:function(callback,context) {
+              if (!window.postMessage) return callback([]);
+              var frms = context.document.getElementsByTagName("iframe");
+              var result = [];
+              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+              SherdBookmarklet.connect(context.window,'message',function(evt) {
+                  try {
+                      var id, d = jQ.parseJSON(evt.data);
+                      if ((id = String(d.id).match(/^sherd(\d+)/)) && d.info) {
+                          var i = d.info;
+                          switch(i.player) {
+                          case "flowplayer":
+                              var fp = (SherdBookmarklet.assethandler.objects_and_embeds.players
+                                        .flowplayer3.queryasset(context,frms[parseInt(id[1],10)],i.config, i.clip, i.time, i.id));
+                              return callback([fp]);
+                          default:
+                              return callback([]);
+                          }
+                      }
+                  } catch(e) {/*parse error*/}
+              });
+              for (var i=0;i<frms.length;i++) {
+                  try {
+                      frms[i].contentWindow.postMessage('{"event":"info","id":"sherd'+i+'"}','*');
+                  } catch(e) {/*pass: probably security error*/}
+              }              
           }
       },
       "image": {
@@ -1488,13 +1520,27 @@ SherdBookmarklet = {
   },
   "elt":function(doc,tag,className,style,children) {
       ///we use this to be even more careful than jquery for contexts like doc.contentType='video/m4v' in firefox
+      var setStyle = function(e,style) {
+          //BROKEN IN IE: http://www.peterbe.com/plog/setAttribute-style-IE
+          var css = style.split(';');
+          for (var i=0;i<css.length;i++) {
+              var kv = css[i].split(':');
+              if (kv[0] && kv.length===2) {
+                  e.style[kv[0].replace(/-([a-z])/,function(a,b){return b.toUpperCase()})] = kv[1];
+              }
+          }
+      };
       var t = doc.createElement(tag);
       t.setAttribute('class',className);
-      if (typeof style == 'string')
+      if (typeof style == 'string') {
           t.setAttribute('style',style);
-      else for (a in style) {
+          setStyle(t,style);
+      } else for (a in style) {
           t.setAttribute(a,style[a]);
           if (style[a] === null) t.removeAttribute(a);
+          if (a==='style') {
+              setStyle(t,style[a]);
+          }
       }
       if (children) {
           for (var i=0;i<children.length;i++) {
