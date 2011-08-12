@@ -19,7 +19,8 @@ if (!Sherd.Image.Annotators.FSIViewer) {
     };
 
     this.current_state = null;
-    
+
+    // Called by asset.js
     this.setState = function(obj, options){
         if (typeof obj=='object') {
             self.current_state = obj;
