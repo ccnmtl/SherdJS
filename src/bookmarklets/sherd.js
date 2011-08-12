@@ -992,6 +992,7 @@ SherdBookmarklet = {
                   if (/(footer|header)/.test(image.className)
                       ||/site_title/.test(image.parentNode.parentNode.className)//WGBH header
                       ||/logo/.test(image.id) //drupal logo
+                      ||/logo/.test(image.parentNode.id) //drupal7 logo
                       ||/logo\W/.test(image.src) //web.mit.edu/shakespeare/asia/
                      ) continue;
                   /*recreate the <img> so we get the real width/height */
