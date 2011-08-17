@@ -188,6 +188,7 @@ function DjangoSherd_Storage() {
             'asset':{},
             'project':{}
         };
+    this._cache = _cache;
     
     this.lastProject = function() {
         ///returns the last project info requested.
@@ -256,7 +257,7 @@ function DjangoSherd_Storage() {
             recent_project = json.project;
         }
         if (json.assets) {
-            for (var i=0;i<json.assets.length;i++) {
+            for (var i in json.assets) {
                 var a = json.assets[i];
                 for (var j in a.sources) {
                     a[j] = a.sources[j].url;
@@ -273,11 +274,12 @@ function DjangoSherd_Storage() {
                     }
                 }
                 DjangoSherd_adaptAsset(a); //in-place
+                _cache['asset'][a.id] = a;
             }
             if (json.annotations) {
                 for (var k=0;k<json.annotations.length;k++) {
                     var ann = json.annotations[k];
-                    ann.asset = json.asset;//TODO
+                    ann.asset = json.assets[ann.asset_key];
                     ann.annotations = [ann.annotation];
                     _cache['annotations'][ann.id] = ann;
                     if (json.type == 'asset' && k==0) {
