@@ -255,31 +255,35 @@ function DjangoSherd_Storage() {
             new_id = json.project.id;
             recent_project = json.project;
         }
-        
-        var a = json.asset;
-        for (var j in a.sources) {
-            a[j] = a.sources[j].url;
-            
-            if (a.sources[j].width) {
-                if (a.sources[j].primary) {
-                    a.width = a.sources[j].width;
-                    a.height = a.sources[j].height;
+        if (json.assets) {
+            for (var i=0;i<json.assets.length;i++) {
+                var a = json.assets[i];
+                for (var j in a.sources) {
+                    a[j] = a.sources[j].url;
+                    
+                    if (a.sources[j].width) {
+                        if (a.sources[j].primary) {
+                            a.width = a.sources[j].width;
+                            a.height = a.sources[j].height;
+                        }
+                        a[a.sources[j].label+'-metadata'] = {
+                            'width':Number(a.sources[j].width),
+                            'height':Number(a.sources[j].height)
+                        };
+                    }
                 }
-                a[a.sources[j].label+'-metadata'] = {
-                    'width':Number(a.sources[j].width),
-                    'height':Number(a.sources[j].height)
-                };
+                DjangoSherd_adaptAsset(a); //in-place
             }
-        }
-        DjangoSherd_adaptAsset(a); //in-place
-
-        for (var i=0;i<json.annotations.length;i++) {
-            var ann = json.annotations[i];
-            ann.asset = json.asset;
-            ann.annotations = [ann.annotation];
-            _cache['annotations'][ann.id] = ann;
-            if (json.type == 'asset' && i==0) {
-                _cache['asset'][ann.asset_id] = ann;
+            if (json.annotations) {
+                for (var k=0;k<json.annotations.length;k++) {
+                    var ann = json.annotations[k];
+                    ann.asset = json.asset;//TODO
+                    ann.annotations = [ann.annotation];
+                    _cache['annotations'][ann.id] = ann;
+                    if (json.type == 'asset' && k==0) {
+                        _cache['asset'][ann.asset_id] = ann;
+                    }
+                }
             }
         }
         return new_id;
