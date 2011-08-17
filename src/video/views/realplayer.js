@@ -221,8 +221,12 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
             } 
         };
         this.media.seekable = function() {
-            var s = self.components.player.GetPlayState();
-            return (self.media.ready() && s>1 && s<5);
+            try {
+                var s = self.components.player.GetPlayState();
+                return (self.media.ready() && s>1 && s<5);
+            } catch(e) {
+                return false;
+            }
         };
 
         var seek_last = 0;
