@@ -206,21 +206,8 @@ function DjangoSherd_Storage() {
         var delay = false;
         
         if (id) {
-            if (_current_citation) {
-                jQuery(_current_citation).removeClass('annotation-active');
-                _current_citation = null;
-            }
-            if (obj_type == 'annotations') {
-                _current_citation = jQuery('div.annotation'+id).get(0);
-                if (_current_citation != null)
-                    jQuery(_current_citation).addClass('annotation-active');
-            }
             if (id in _cache[obj_type] && !list_callback) {
                 ann_obj = _cache[obj_type][id];
-            } else if (_current_citation) {
-                ann_obj = djangosherd.annotationMicroformat.read( {
-                    html : _current_citation
-                });// /***faux layer
             } else {
                 jQuery.ajax({url:(subject.url || '/'+obj_type+'/json/'+id+'/'),
                              dataType:'json',
