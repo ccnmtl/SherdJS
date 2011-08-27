@@ -249,7 +249,7 @@ if (!Sherd.Image.OpenLayers) {
                     if (opts.color) {
                         if (opts.color in this.v.styleMap.styles) {
                             feature_fg.renderIntent = opts.color;
-                        } else {
+                        } else if (feature_fg.geometry) {
                             //unique to each feature, for graphicZIndex
                             var feature_style = feature_fg.id+':'+opts.color;
                             //feature_fg.geometry.getArea(); //alt zIndex measure

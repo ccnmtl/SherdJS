@@ -212,6 +212,15 @@ Sherd.Base = {
                             if (create_obj.text)
                                 dom_or_id.innerHTML = create_obj.text;
                             
+                            // options.extra_text = { 'instructions' : 'clipform-instructions' }
+                            for (div in options.extra) {
+                                if (div in create_obj) {
+                                    dom_or_id = document.getElementById(options.extra[div]);
+                                    if (dom_or_id)
+                                        dom_or_id.innerHTML = create_obj[div];
+                                }
+                            }
+                            
                             // Create microformat.components (self.components)
                             var top = document.getElementById(create_obj.htmlID);
                             self.html.put(top, create_obj);

@@ -28,32 +28,11 @@ if (!Sherd.Image.Annotators.FSIViewer) {
             self.mode = null;
         
             // options.mode == null||'create'||'browse'||'edit'||'copy'
-            if (!options || !options.mode) {
-                self.components.image.style.display = 'none';
-                self.components.center.style.display = 'none';
-                self.components.redo.style.display = 'none';
-                self.components.instructions.style.display = 'none';
-            } else if (options.mode == 'browse') {
-                self.components.image.style.display = 'block';
-                self.components.center.style.display = 'inline';
-                self.components.redo.style.display = 'none';
+            if (!options || !options.mode || options.mode == "browse") {
                 self.components.instructions.style.display = 'none';
             }  else {
                 // create, edit, copy
-                self.components.image.style.display = 'block';
-                self.components.center.style.display = 'inline';
-                self.components.redo.style.display = 'inline';
                 self.components.instructions.style.display = 'block';
-            }
-            
-            if (obj.imageUrl) {
-                var dim = {w:50,h:50};
-                if (obj.wh_ratio) {
-                    dim.w = dim.h * obj.wh_ratio;
-                }
-                var img_src = obj.imageUrl.replace('[width]',dim.w).replace('[height]',dim.h);
-                self.components.image.src = img_src;
-                self.components.image.style.display = 'block';
             }
         }    
     };
@@ -84,7 +63,8 @@ if (!Sherd.Image.Annotators.FSIViewer) {
             var id = Sherd.Base.newID('openlayers-annotator');
             return {
                 htmlID:id,
-                text:'<div id="'+id+'"><img class="sherd-image-preview" src="" style="float:right;max-height:50px;max-width:50px;" /><button style="display:none;" class="sherd-image-center">View Annotation</button> <button style="display:none;" class="sherd-image-redo">Capture View</button><br /><p style="display:none;" class="sherd-image-instructions">Zoom and Pan to the frame you want to save, and then click "Capture View"</p></div>'
+                text:'<div id="'+id+'"><p style="display:none;" id="instructions" class="sherd-instructions">Zoom and Pan to the frame you want to save, and then click Save</p></div>',
+                tools: '<input type="image" id="btnCenter" src="/site_media/img/selection_center.gif" />'
             };
         },
         'components':function(html_dom,create_obj) {
@@ -92,9 +72,8 @@ if (!Sherd.Image.Annotators.FSIViewer) {
             return {
                 'top':html_dom,
                 'image':html_dom.getElementsByTagName('img')[0],
-                'center':buttons[0],
-                'redo':buttons[1],
-                'instructions':html_dom.getElementsByTagName('p')[0]
+                'center': document.getElementById('btnCenter'),
+                'instructions': document.getElementById('instructions')
             };
         }
     };

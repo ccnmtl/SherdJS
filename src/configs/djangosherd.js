@@ -205,7 +205,7 @@ function DjangoSherd_Storage() {
         var ann_obj = null;
         var delay = false;
         
-        if (id) {
+        if (id || subject.url) {
             if (_current_citation) {
                 jQuery(_current_citation).removeClass('annotation-active');
                 _current_citation = null;
@@ -244,6 +244,7 @@ function DjangoSherd_Storage() {
                             delay = true;
             }
         }
+        
         if (!delay && callback) {
             callback(ann_obj);
         }

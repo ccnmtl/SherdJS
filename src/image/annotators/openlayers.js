@@ -30,25 +30,15 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	        self.mode = null;
 	        // options.mode == null||'create'||'browse'||'edit'||'copy'
 	        if (self.openlayers.editingtoolbar) {
-	            if (!options || !options.mode) {
-	                // whole asset view. no annotations.
+	            if (!options || !options.mode || options.mode == 'browse') {
+	                // whole asset view. no annotations. or, just browsing
 	                self.openlayers.editingtoolbar.deactivate();
-                    if (self.components.center)
-                        self.components.center.style.display = 'none';
-                    if (self.components.instructions)
-                        self.components.instructions.style.display = 'none';
-	            } else if (options.mode == 'browse') {
-        	        self.openlayers.editingtoolbar.deactivate();
-                    if (self.components.center)
-                        self.components.center.style.display = 'inline';
                     if (self.components.instructions)
                         self.components.instructions.style.display = 'none';
                     self.mode = "browse";
         	    } else {
         	        // create, edit, copy
         	        self.openlayers.editingtoolbar.activate();
-        	        if (self.components.center)
-                        self.components.center.style.display = 'inline';
                     if (self.components.instructions)
                         self.components.instructions.style.display = 'block';
                     self.mode = options.mode;
@@ -152,15 +142,19 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
 		    htmlID:id,
-		    text:'<div id="'+id+'" class="sherd-image-annotator"><button style="display:none;" class="sherd-image-center">Center Annotation</button> <p style="display:none;" class="sherd-image-instructions sherd-instructions">Choose a drawing tool. The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p></div>'
+		    text:'<div id="'+id+'">' +
+		         '   <p id="instructions" class="sherd-instructions">Choose a drawing tool, located on the upper, right-hand side of the image. ' +
+		         '   The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p>' +
+		         '</div>',
+		    tools: '<input type="image" id="btnCenter" src="/site_media/img/selection_center.gif" />'
 		};
 	    },
 	    'components':function(html_dom,create_obj) {
-		var buttons = html_dom.getElementsByTagName('button');
+		
 		return {
 		    'top':html_dom,
-		    'center':buttons[0],
-            'instructions':html_dom.getElementsByTagName('p')[0]
+		    'center': document.getElementById("btnCenter"),
+            'instructions': document.getElementById("instructions")
 		};
 	    }
 	};
