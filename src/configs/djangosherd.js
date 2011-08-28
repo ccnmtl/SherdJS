@@ -205,7 +205,7 @@ function DjangoSherd_Storage() {
         var ann_obj = null;
         var delay = false;
         
-        if (id) {
+        if (id || subject.url) {
             if (id in _cache[obj_type] && !list_callback) {
                 ann_obj = _cache[obj_type][id];
             } else {
