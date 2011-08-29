@@ -644,7 +644,6 @@ SherdBookmarklet = {
                   },
                   asset:function(obj,match,context) {
                       /* TODO: 1. support audio
-                               2. 
                        */
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var $f = (context.window.$f && context.window.$f(obj.parentNode));
@@ -698,12 +697,10 @@ SherdBookmarklet = {
                           return '';
                       }
                       var primary_type = type+get_provider(clip);
-                      sources[primary_type] = clip.originalUrl || clip.resolvedUrl || clip.url || clip;
+                      sources[primary_type] = clip.completeUrl || clip.originalUrl || clip.resolvedUrl || clip.url || clip;
                       if (provider && provider.netConnectionUrl) {
 			  sources[primary_type] = provider.netConnectionUrl+sources[primary_type]
-                      } else if (clip.baseUrl) {
-                          sources[primary_type] = clip.baseUrl+sources[primary_type]
-                      }
+                      } 
                       ///TODO:is context.document the right relative URL instead of the SWF?
 		      sources[primary_type] = abs(sources[primary_type],context.document);
                       if (/_pseudo/.test(primary_type)
