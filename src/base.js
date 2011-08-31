@@ -209,7 +209,7 @@ Sherd.Base = {
                         if (!updated) {
                             var create_obj = options.microformat.create(options.asset);
                             
-                            if (create_obj.text)
+                            if (create_obj.text && dom_or_id)
                                 dom_or_id.innerHTML = create_obj.text;
                             
                             // options.extra_text = { 'instructions' : 'clipform-instructions' }

@@ -98,24 +98,38 @@ if (!Sherd.Video.Annotators.ClipForm) {
             }
             
             if (options.mode == "browse") {
-                self.components.startField.disabled = true;
-                self.components.endField.disabled = true;
-                self.components.startButton.disabled = true;
-                self.components.endButton.disabled = true;
+                if (self.components.startField)
+                    self.components.startField.disabled = true;
+                if (self.components.endField)
+                    self.components.endField.disabled = true;
+                if (self.components.startButton)
+                    self.components.startButton.disabled = true;
+                if (self.components.endButton)
+                    self.components.endButton.disabled = true;
                 
-                self.components.clipcontrols.style.display = "none";
-                self.components.clipcontrols_readonly.style.display = "inline";
-                self.components.instructions.style.display = "none";
+                if (self.components.clipcontrols) {
+                    self.components.clipcontrols.style.display = "none";
+                    self.components.clipcontrols_readonly.style.display = "inline";
+                }
+                if (self.components.instructions)
+                    self.components.instructions.style.display = "none";
             } else {
                 // create, copy, edit
-                self.components.startField.disabled = false;
-                self.components.endField.disabled = false;
-                self.components.startButton.disabled = false;
-                self.components.endButton.disabled = false;
+                if (self.components.startField)
+                    self.components.startField.disabled = false;
+                if (self.components.endField)
+                    self.components.endField.disabled = false;
+                if (self.components.startButton)
+                    self.components.startButton.disabled = false;
+                if (self.components.endButton)
+                    self.components.endButton.disabled = false;
                 
-                self.components.clipcontrols.style.display = "block";
-                self.components.clipcontrols_readonly.style.display = "none";
-                self.components.instructions.style.display = "block";
+                if (self.components.clipcontrols) {
+                    self.components.clipcontrols.style.display = "block";
+                    self.components.clipcontrols_readonly.style.display = "none";
+                }
+                if (self.components.instructions)
+                    self.components.instructions.style.display = "block";
             }
         }
     };

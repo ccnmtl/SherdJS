@@ -29,10 +29,12 @@ if (!Sherd.Image.Annotators.FSIViewer) {
         
             // options.mode == null||'create'||'browse'||'edit'||'copy'
             if (!options || !options.mode || options.mode == "browse") {
-                self.components.instructions.style.display = 'none';
+                if (self.components.instructions)
+                    self.components.instructions.style.display = 'none';
             }  else {
                 // create, edit, copy
-                self.components.instructions.style.display = 'block';
+                if (self.components.instructions)
+                    self.components.instructions.style.display = 'block';
             }
         }    
     };
@@ -68,6 +70,9 @@ if (!Sherd.Image.Annotators.FSIViewer) {
             };
         },
         'components':function(html_dom,create_obj) {
+            if (!html_dom)
+                return {};
+                
             var buttons = html_dom.getElementsByTagName('button');
             return {
                 'top':html_dom,
