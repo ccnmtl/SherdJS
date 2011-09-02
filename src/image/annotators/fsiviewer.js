@@ -66,7 +66,7 @@ if (!Sherd.Image.Annotators.FSIViewer) {
             return {
                 htmlID:id,
                 text:'<div id="'+id+'"><p style="display:none;" id="instructions" class="sherd-instructions">Zoom and Pan to the frame you want to save, and then click Save</p></div>',
-                tools: '<input type="image" id="btnCenter" src="/site_media/img/selection_center.gif" />'
+                tools: '<input type="image" id="btnCenter" src="/site_media/img/selection_center.gif" title="Recenter Selection" />'
             };
         },
         'components':function(html_dom,create_obj) {

@@ -218,7 +218,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
         var htmlID = 'clipform';
         return {
             htmlID : htmlID,
-            tools: '<input type="image" id="btnPlayClip" src="/site_media/img/selection_play.gif" />',
+            tools: '<input type="image" id="btnPlayClip" src="/site_media/img/selection_play.gif" title="Play Selection" />',
             text : '<div id="' + htmlID + '" style="display: none">'
                 +'<div id="clipcontrols" class="sherd-clipform">'
                 +   '<p id="instructions" class="sherd-instructions">Create a selection by clicking Start Time and End Time buttons as the video plays or by manually typing in times in the associated edit boxes. Add title, tags and notes. Click Save when you are finished.</p><br />' 

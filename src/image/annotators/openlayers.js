@@ -146,7 +146,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		         '   <p id="instructions" class="sherd-instructions">Choose a drawing tool, located on the upper, right-hand side of the image. ' +
 		         '   The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p>' +
 		         '</div>',
-		    tools: '<input type="image" id="btnCenter" src="/site_media/img/selection_center.gif" />'
+		    tools: '<input type="image" id="btnCenter" src="/site_media/img/selection_center.gif" title="Recenter Selection" />'
 		};
 	    },
 	    'components':function(html_dom,create_obj) {
