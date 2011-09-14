@@ -16,11 +16,15 @@ if (!Sherd.Image.FSIViewer) {
         };
 
         this._setState = function(obj) {
-            if (obj && obj.set && obj.top) {
-                var clip_string = self.obj2arr(obj).join(', ');
-                self.components.top.SetVariable('FSICMD','Goto:'+clip_string);
-            } else {
-                self.components.top.SetVariable('FSICMD', 'Reset');
+            try {
+                if (obj && obj.set && obj.top) {
+                    var clip_string = self.obj2arr(obj).join(', ');
+                    self.components.top.SetVariable('FSICMD','Goto:'+clip_string);
+                } else {
+                    self.components.top.SetVariable('FSICMD', 'Reset');
+                }
+            }  catch(e) {
+                /* ignore for the moment */
             }
         };
 

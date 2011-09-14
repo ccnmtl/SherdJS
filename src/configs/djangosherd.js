@@ -197,7 +197,7 @@ function DjangoSherd_Storage() {
     }
 
     // Retrieve data from server & stash in the cache
-    this.get = function(subject, callback, list_callback) {
+    this.get = function(subject, callback, list_callback, error_callback) {
         ///currently obj_type in [annotations, asset, project]
         /// that is used for the URL and a reference to the _cache{} section
         var id = subject.id;
@@ -223,6 +223,9 @@ function DjangoSherd_Storage() {
                                  }
                              },
                              error:function(xhr,textStatus,errorThrown) {
+                                 if (error_callback)
+                                     error_callback(errorThrown);
+                                 
                                  if (window.console) {
                                      console.log(textStatus);
                                  }
@@ -566,16 +569,16 @@ function openCitation(url, no_autoplay_or_options) {
     var id = ann_url.pop();
     var return_value = {};
     djangosherd.storage.get({id:id,type:ann_url[1]}, function(ann_obj) {
-	var asset_target = ((options.targets && options.targets.asset) 
+        var asset_target = ((options.targets && options.targets.asset) 
 			    ? options.targets.asset
 			    : document.getElementById('videoclipbox'));
-	jQuery(asset_target).show();
+        jQuery(asset_target).show();
         var targets = {
             "top":asset_target,
             "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
             "asset":jQuery('div.asset-display',asset_target).get(0),
             "asset_title":jQuery('div.asset-title',asset_target).get(0),
-            "annotation_title":jQuery('div.annotation-title',asset_target).get(0)
+            "annotation_title":jQuery('div.annotation-title',asset_target).get(0),
         };
         if (targets.annotation_title) {
             targets.annotation_title.innerHTML = ((ann_obj.metadata
@@ -583,27 +586,33 @@ function openCitation(url, no_autoplay_or_options) {
                                                   ) ? '<h2>'+ann_obj.metadata.title+'</h2>'
                                                   : '');
         }
-        if (ann_obj.asset) {
-            ann_obj.asset.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
-            ann_obj.asset.presentation = options.presentation || 'small';
+            
+        asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
+        if (asset_obj) {
+            asset_obj.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
+            asset_obj.presentation = options.presentation || 'small';
 
             if (targets.asset_title) {
-                targets.asset_title.innerHTML = ((ann_obj.asset.title 
-                                                  && ann_obj.asset.local_url
-                   ) ? 'from <a href="'+ann_obj.asset.local_url+'">'+ann_obj.asset.title+'</a>'
+                targets.asset_title.innerHTML = ((asset_obj.title 
+                                                  && asset_obj.local_url
+                   ) ? 'from <a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a>'
                      : '');
-                if (ann_obj.asset.xmeml && window.is_staff ) {
+                if (asset_obj.xmeml && window.is_staff ) {
                     targets.asset_title.innerHTML += ' (<a href="/annotations/xmeml/'+id+'/">download FinalCut xml</a>)';
                 }
                 
             }
             djangosherd.assetview.html.push(targets.asset, {
-                asset : ann_obj.asset,
-		targets: {clipstrip:targets.clipstrip}
+                asset : asset_obj,
+                targets: {clipstrip:targets.clipstrip}
             });
         
-            var ann_data = ann_obj.annotations[0];// ***
-            djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});        
+            if (ann_obj.hasOwnProperty("annotations")) {
+                var ann_data = ann_obj.annotations[0];// ***
+                djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});
+            } else {
+                djangosherd.assetview.setState(null);
+            }
         } else {
             djangosherd.assetview.html.remove();
         }
@@ -624,6 +633,18 @@ function openCitation(url, no_autoplay_or_options) {
         if (djangosherd.onOpenCitation) {
             djangosherd.onOpenCitation(id,ann_obj,options,targets);
         }
+    },
+    null,
+    function(error) {
+        var asset_target = document.getElementById('videoclipbox');
+        jQuery(asset_target).show();
+    
+        var annotation_title = jQuery('div.annotation-title',asset_target).get(0);
+        var asset_title = jQuery('div.asset-title',asset_target).get(0);
+        if (asset_title)
+            asset_title.innerHTML = "This selection was deleted and cannot be viewed.";
+        if (annotation_title)
+            annotation_title.innerHTML = "<h2>Selection Deleted</h2>";
     });
     return return_value;
 }
