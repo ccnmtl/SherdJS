@@ -587,7 +587,7 @@ function openCitation(url, no_autoplay_or_options) {
                                                   : '');
         }
             
-        asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
+        var asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
         if (asset_obj) {
             asset_obj.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
             asset_obj.presentation = options.presentation || 'small';
@@ -611,7 +611,7 @@ function openCitation(url, no_autoplay_or_options) {
                 var ann_data = ann_obj.annotations[0];// ***
                 djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});
             } else {
-                djangosherd.assetview.setState(null);
+                djangosherd.assetview.setState({ start: 0 }, {autoplay:options.autoplay});
             }
         } else {
             djangosherd.assetview.html.remove();
