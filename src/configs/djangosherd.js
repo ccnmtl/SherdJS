@@ -568,7 +568,8 @@ function openCitation(url, no_autoplay_or_options) {
     var ann_url = url.match(/(asset|annotations)\/(\d+)\/$/);
     var id = ann_url.pop();
     var return_value = {};
-    djangosherd.storage.get({id:id,type:ann_url[1]}, function(ann_obj) {
+    var type = ann_url[1];
+    djangosherd.storage.get({id:id,type:type}, function(ann_obj) {
         var asset_target = ((options.targets && options.targets.asset) 
 			    ? options.targets.asset
 			    : document.getElementById('videoclipbox'));
@@ -607,7 +608,7 @@ function openCitation(url, no_autoplay_or_options) {
                 targets: {clipstrip:targets.clipstrip}
             });
         
-            if (ann_obj.hasOwnProperty("annotations")) {
+            if (type === "annotations") {
                 var ann_data = ann_obj.annotations[0];// ***
                 djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});
             } else {
@@ -636,15 +637,7 @@ function openCitation(url, no_autoplay_or_options) {
     },
     null,
     function(error) {
-        var asset_target = document.getElementById('videoclipbox');
-        jQuery(asset_target).show();
-    
-        var annotation_title = jQuery('div.annotation-title',asset_target).get(0);
-        var asset_title = jQuery('div.asset-title',asset_target).get(0);
-        if (asset_title)
-            asset_title.innerHTML = "This selection was deleted and cannot be viewed.";
-        if (annotation_title)
-            annotation_title.innerHTML = "<h2>Selection Deleted</h2>";
+        
     });
     return return_value;
 }
