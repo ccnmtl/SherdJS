@@ -568,8 +568,7 @@ function openCitation(url, no_autoplay_or_options) {
     var ann_url = url.match(/(asset|annotations)\/(\d+)\/$/);
     var id = ann_url.pop();
     var return_value = {};
-    var type = ann_url[1];
-    djangosherd.storage.get({id:id,type:type}, function(ann_obj) {
+    djangosherd.storage.get({id:id,type:ann_url[1]}, function(ann_obj) {
         var asset_target = ((options.targets && options.targets.asset) 
 			    ? options.targets.asset
 			    : document.getElementById('videoclipbox'));
@@ -608,7 +607,7 @@ function openCitation(url, no_autoplay_or_options) {
                 targets: {clipstrip:targets.clipstrip}
             });
         
-            if (type === "annotations") {
+            if (ann_obj.hasOwnProperty("annotations") && ann_obj.annotations.length > 0 && ann_obj.annotations[0] != null) {
                 var ann_data = ann_obj.annotations[0];// ***
                 djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});
             } else {
@@ -637,7 +636,7 @@ function openCitation(url, no_autoplay_or_options) {
     },
     null,
     function(error) {
-        
+
     });
     return return_value;
 }
