@@ -145,7 +145,7 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		    text:'<div id="'+id+'">' +
 		         '   <p id="instructions" class="sherd-instructions">Choose a drawing tool, located on the upper, right-hand side of the image. ' +
 		         '   The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p>' +
-		         '</div>',
+		         '</div>'
 		};
 	    },
 	    'components':function(html_dom,create_obj) {

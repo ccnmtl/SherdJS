@@ -65,7 +65,7 @@ if (!Sherd.Image.Annotators.FSIViewer) {
             var id = Sherd.Base.newID('openlayers-annotator');
             return {
                 htmlID:id,
-                text:'<div id="'+id+'"><p style="display:none;" id="instructions" class="sherd-instructions">Zoom and Pan to the frame you want to save, and then click Save</p></div>',
+                text:'<div id="'+id+'"><p style="display:none;" id="instructions" class="sherd-instructions">Zoom and Pan to the frame you want to save, and then click Save</p></div>'
             };
         },
         'components':function(html_dom,create_obj) {
