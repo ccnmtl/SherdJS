@@ -578,7 +578,7 @@ function openCitation(url, no_autoplay_or_options) {
             "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
             "asset":jQuery('div.asset-display',asset_target).get(0),
             "asset_title":jQuery('div.asset-title',asset_target).get(0),
-            "annotation_title":jQuery('div.annotation-title',asset_target).get(0),
+            "annotation_title":jQuery('div.annotation-title',asset_target).get(0)
         };
         if (targets.annotation_title) {
             targets.annotation_title.innerHTML = ((ann_obj.metadata
