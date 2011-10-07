@@ -90,16 +90,9 @@ if (!Sherd.Image.FSIViewer) {
             }
         },
         'medium':{
-            height:function(obj,presenter){return (Sherd.winHeight() - 75) +'px';},
-            width:function(obj,presenter){return '100%';},
-            extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
-            initialize:function(obj,presenter){
-                    self.events.connect(window,'resize',function() {
-                    var top = presenter.components.top;
-                    top.setAttribute('height',(Sherd.winHeight() - 75)+'px');
-                    self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
-                });
-            }
+            height:function(){return '383px';},
+            width:function(){return '100%';},
+            initialize:function(){/*noop*/}
         },        
         'small':{
             height:function(){return '240px';},
