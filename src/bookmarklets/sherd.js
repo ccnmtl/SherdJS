@@ -86,7 +86,7 @@ ARCHITECTURE:
                                 supports deeply embedded
                                 frames/iframes and the context might
                                 be different The .find method is
-                                resonsible for eventually calling
+                                responsible for eventually calling
                                 callback([array of assets]) with a
                                 blank array if none are found.
 

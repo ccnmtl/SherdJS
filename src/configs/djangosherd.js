@@ -103,33 +103,33 @@ function DjangoSherd_Project_Config(options) {
     if (options.project_json) {
         ds.storage.get({type:'project',id:'xxx',url:options.project_json});
     }
-
+    
     if (options.open_from_hash) {
         var annotation_to_open = String(document.location.hash).match(
                 /annotation=annotation(\d+)/);
         if (annotation_to_open != null) {
             jQuery(function() {
                 //TODO:no longer works in discussions, since the DIV doesn't exist yet
-                openCitation('/annotations/'+annotation_to_open[1] + '/', {autoplay:false});
+                openCitation('/annotations/'+annotation_to_open[1] + '/', { autoplay:false});
             });
         }
     }
     jQuery(function() {
+        var citationOptions = {};
+        if (options.presentation)
+            citationOptions.presentation = options.presentation;
+        
         // /In published view: decorate annotation links
-        DjangoSherd_decorate_citations(document);
-
-        ///now done in project.js when the asset_column loads from an ajax call
-        //DjangoSherd_createThumbs(jQuery('#materials').get(0));
-
+        DjangoSherd_decorate_citations(document, citationOptions);
     });
 }
 
 var current_citation = null;
-function DjangoSherd_decorate_citations(parent) {
+function DjangoSherd_decorate_citations(parent, options) {
     ///decorate LINKS to OPEN annotations
     jQuery('a.materialCitation',parent).click(function(evt) {
         try {
-            openCitation(this.href);
+            openCitation(this.href, options);
             if (current_citation) {
                 jQuery(current_citation).removeClass('active-annotation');
             }
@@ -145,6 +145,7 @@ function DjangoSherd_decorate_citations(parent) {
     });
 }
 
+// Called from project.js & slider.js
 function DjangoSherd_createThumbs(materials) {
     // /TODO: unHACK HACK HACK
     // /need to make this more abstracted--where should we test for 'can thumb'?
@@ -571,12 +572,17 @@ function displayCitation(ann_obj, id, options) {
         asset_obj.presentation = options.presentation || 'small';
 
         if (targets.asset_title) {
-            targets.asset_title.innerHTML = ((asset_obj.title 
-                                              && asset_obj.local_url
-               ) ? 'from <a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a>'
-                 : '');
-            if (asset_obj.xmeml && window.is_staff ) {
-                targets.asset_title.innerHTML += ' (<a href="/annotations/xmeml/'+id+'/">download FinalCut xml</a>)';
+            if (targets.annotation_title.innerHTML == "") {
+                targets.annotation_title.innerHTML = '<h2><a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a></h2>';
+                targets.asset_title.innerHTML = '';
+            } else {
+                targets.asset_title.innerHTML = ((asset_obj.title 
+                                                  && asset_obj.local_url
+                   ) ? 'from <a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a>'
+                     : '');
+                if (asset_obj.xmeml && window.is_staff ) {
+                    targets.asset_title.innerHTML += ' (<a href="/annotations/xmeml/'+id+'/">download FinalCut xml</a>)';
+                }
             }
         }
         djangosherd.assetview.html.push(targets.asset, {
