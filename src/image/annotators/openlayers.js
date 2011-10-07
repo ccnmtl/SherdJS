@@ -4,87 +4,83 @@ if (!Sherd.Image.Annotators) {Sherd.Image.Annotators= {};}
 if (!Sherd.Image.Annotators.OpenLayers) {
     Sherd.Image.Annotators.OpenLayers = function() {
 	var self = this;
+
 	Sherd.Base.AssetView.apply(this,arguments);//inherit
 
 	this.attachView = function(view) {
 	    self.targetview = view;
-	}
+	};
 	this.targetstorage = [];
 	this.addStorage = function(stor) {
 	    this.targetstorage.push(stor);
-	}
+	};
 
-	this.getState = function(){
+	this.getState = function() {
 	    return {};
-	}
+	};
 
-	var mode = 'create';//||'browse'
-	this.setState = function(obj){
+	this.setState = function(obj, options){
 	    if (typeof obj=='object') {
 		//because only one annotation is allowed at once.
                 ///At the moment, we could do a better job of saving 'all' features
                 /// in an annotation rather than overwriting with the last one
                 /// but then we run into confusion where people think they're making
                 /// a lot of annotations, but really made one.
-		self.openlayers.editingtoolbar.deactivate();
-
-		///show buttons
-		self.components.center.style.display = 'inline';
-		self.components.redo.style.display = 'inline';
-                self.components.instructions.style.display = 'none';
-		mode = 'browse';
+	        
+	        self.mode = null;
+	        // options.mode == null||'create'||'browse'||'edit'||'copy'
+	        if (self.openlayers.editingtoolbar) {
+	            if (!options || !options.mode || options.mode == 'browse') {
+	                // whole asset view. no annotations. or, just browsing
+	                self.openlayers.editingtoolbar.deactivate();
+                    if (self.components.instructions)
+                        self.components.instructions.style.display = 'none';
+                    self.mode = "browse";
+        	    } else {
+        	        // create, edit, copy
+        	        self.openlayers.editingtoolbar.activate();
+                    if (self.components.instructions)
+                        self.components.instructions.style.display = 'block';
+                    self.mode = options.mode;
+        	    }
+	        }
 	    }
 	};
 
 	this.initialize = function(create_obj) {
-	    self.openlayers.editingtoolbar = new self.openlayers.CustomEditingToolbar(
-		self.targetview.openlayers.vectors
-	    );
-	    self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
-	    //Q: this doubles mousewheel listening, e.g. why did we need it?
-	    //A: needed for not showing toolbar until clicking 'redo annotation' on an annotation
-	    //self.openlayers.editingtoolbar.sherd.navigation.activate();
-	    //Solution: just send signals or whatever.
-	    OpenLayers.Control.prototype.activate.call(
-		self.openlayers.editingtoolbar.sherd.navigation
-	    );
-
-	    //on creation of an annotation
-	    self.openlayers.editingtoolbar.featureAdded = function(feature) {
+	    if (!self.openlayers.editingtoolbar) {
+	        self.openlayers.editingtoolbar = new self.openlayers.CustomEditingToolbar(
+	                self.targetview.openlayers.vectorLayer.getLayer()
+	        );
+	        self.targetview.openlayers.map.addControl(self.openlayers.editingtoolbar);
+	        self.openlayers.editingtoolbar.deactivate();
+    	    
+	        //Q: this doubles mousewheel listening, e.g. why did we need it?
+    	    //A: needed for not showing toolbar until clicking on an annotation
+    	    //self.openlayers.editingtoolbar.sherd.navigation.activate();
+    	    //Solution: just send signals or whatever.
+	        OpenLayers.Control.prototype.activate.call(
+	            self.openlayers.editingtoolbar.sherd.navigation
+	        );
+	    }
+	    
+        //on creation of an annotation
+        self.openlayers.editingtoolbar.featureAdded = function(feature) {
                 var current_state = self.targetview.getState();
                 var geojson = self.targetview.openlayers.feature2json(feature);
-                for (a in geojson) {current_state[a] = geojson[a]};
-		///this should probably be through a signal?
-		self.targetview.setState({feature:feature,
-					  preserveCurrentFocus:true
-					 });
-		self.storage.update(current_state);
-	    }
-	    ///# 3. button listeners
-	    self.events.connect(self.components.center,'click',function(evt) {
-		self.targetview.setState({feature:self.targetview.currentfeature});
-	    });
-	    self.events.connect(self.components.redo,'click',function(evt) {
-		if (mode != 'create') {
-		    mode = 'create';
-		    self.openlayers.editingtoolbar.activate();
-                    self.openlayers.editingtoolbar.sherd.squareHandler.activate();
-		    ///visit current feature
-		    //self.targetview.setState({feature:self.targetview.currentfeature});
-
-		    //reset feature BAD BAD BAD (because we're not going through a function )
-		    self.targetview.currentfeature = false;
-		    //delete all (assumes only one annotation)
-		    self.targetview.openlayers.vectors.removeFeatures(
-			self.targetview.openlayers.vectors.features
-		    );
-                    self.components.instructions.style.display = 'inline';                    
-		    self.components.center.style.display = 'none';
-		    self.components.redo.style.display = 'none';
-		}
-	    });
-
-	}
+                //copy feature properties to current_state
+                for (var a in geojson) { current_state[a] = geojson[a]; }
+                //use geojson object as annotation
+                geojson.preserveCurrentFocus = true;
+                self.targetview.setState(geojson);
+                self.storage.update(current_state);
+        };
+	    
+        /// button listeners
+        self.events.connect(self.components.center,'click',function(evt) {
+            self.targetview.setState({feature:self.targetview.currentfeature});
+        });
+	};
 	this.openlayers = {
 	    CustomEditingToolbar :OpenLayers.Class(
 		OpenLayers.Control.EditingToolbar, {
@@ -131,35 +127,37 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 	};//end this.openlayers
 	    
 	this.storage = {
-	    'update':function(obj,just_downstream){
-		if (!just_downstream) {
-		    self.setState(obj);
-		}
-		for (var i=0;i<self.targetstorage.length;i++) {
-		    self.targetstorage[i].storage.update(obj);
-		}
-	    }
+	    'update':function(obj,just_downstream) {
+    	    if (!just_downstream) {
+    	        self.setState(obj, { 'mode': self.mode });
+    	    } 
+    	    for (var i=0;i<self.targetstorage.length;i++) {
+    	        self.targetstorage[i].storage.update(obj);
+    	    }
 	}
+	};
 
- 	this.microformat = {
+    this.microformat = {
 	    'create':function(){
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
 		    htmlID:id,
-		    text:'<div id="'+id+'" class="sherd-image-annotator"><button style="display:none;" class="sherd-image-center">Center Annotation</button> <button style="display:none;" class="sherd-image-redo">Redo Annotation</button><p class="sherd-image-instructions sherd-instructions">Choose a drawing tool.  The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p></div>'
+		    text:'<div id="'+id+'">' +
+		         '   <p id="instructions" class="sherd-instructions">Choose a drawing tool, located on the upper, right-hand side of the image. ' +
+		         '   The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p>' +
+		         '</div>'
 		};
 	    },
 	    'components':function(html_dom,create_obj) {
-		var buttons = html_dom.getElementsByTagName('button');
+		
 		return {
 		    'top':html_dom,
-		    'center':buttons[0],
-		    'redo':buttons[1],
-                    'instructions':html_dom.getElementsByTagName('p')[0]
-		}
+		    'center': document.getElementById("btnCenter"),
+            'instructions': document.getElementById("instructions")
+		};
 	    }
-	}
-    }//END Sherd.Image.Annotators.OpenLayers
+	};
+    };//END Sherd.Image.Annotators.OpenLayers
 }//END if (!Sherd.Image.Annotators.OpenLayers)
 
 

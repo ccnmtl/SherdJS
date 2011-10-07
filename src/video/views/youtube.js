@@ -12,11 +12,26 @@
 
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
-if (!Sherd.Video.YouTube && Sherd.Video.Base) {
+if (!Sherd.Video.YouTube) {
     Sherd.Video.YouTube = function() {
         var self = this;
         
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js -- base.js
+
+        this.presentations = {
+            'small':{
+                width:function(){return 310;},
+                height:function(){return 220;}
+            },
+            'medium': {
+                width:function(){return 540;},
+                height:function(){return 383;}
+            },
+            'default': {
+                width:function(){return 620;},
+                height:function(){return 440;}
+            }
+        };
         
         ////////////////////////////////////////////////////////////////////////
         // Microformat
@@ -31,9 +46,16 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
             
             if (!obj.options) 
             {
+                var presentation;
+                switch (typeof obj.presentation) {
+                case 'string': presentation = self.presentations[obj.presentation]; break;
+                case 'object': presentation = obj.presentation; break;
+                case 'undefined': presentation = self.presentations['default']; break;
+                }
+                
                 obj.options = {
-                    width: obj.presentation == 'small' ? 310 : 620, // youtube default
-                    height: obj.presentation == 'small' ? 220 : 440 // youtube default
+                    width: presentation.width(),
+                    height: presentation.height()
                 };
             }
             
@@ -65,13 +87,13 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                 text: '<div id="' + wrapperID + '" class="sherd-youtube-wrapper">' + 
                       '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' +
                         ' classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' + objectID + '>' + 
-                        '  <param name="movie" value="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
+                        '  <param name="movie" value="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&showinfo=0&probably_logged_in=0&modestbranding=1&enablejsapi=1&playerapiid=' + playerID + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"/></param>' + 
                         '  <param name="autoplay" value="' + autoplay + '"></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="true"></param>' +
-                        '  <embed src="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&enablejsapi=1&playerapiid=' + playerID + '"' + 
+                        '  <embed src="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&showinfo=0&probably_logged_in=0&modestbranding=1&enablejsapi=1&playerapiid=' + playerID + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
                         '    autoplay="' + autoplay + '"' + 
@@ -182,8 +204,10 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
                     self.events.signal(self, 'duration', { duration: duration });
                 }
                 break;
-            case 2:// stopped or ended
-            case 0:
+            case 2:// stopped
+                ///Do NOT clear timers here, because clicking 'play' cycles through a 2-state
+                break;
+            case 0://finished
                 self.events.clearTimers();                
                 break;
             }
@@ -233,7 +257,7 @@ if (!Sherd.Video.YouTube && Sherd.Video.Base) {
 
         this.media.seek = function(starttime, endtime, autoplay) {
             if (self.media.ready()) {
-                if (starttime != undefined) {
+                if (starttime !== undefined) {
                     if (autoplay || self.components.autoplay) {
                         self.components.player.seekTo(starttime, true);
                     } else {

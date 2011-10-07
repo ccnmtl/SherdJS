@@ -14,6 +14,7 @@
     <script type="text/javascript" src="../../../src/configs/djangosherd.js"></script>
     
     <script type="text/javascript">
+
     function testDefault(t) {
         view = _initializeView(t);
 
@@ -30,8 +31,8 @@
         // Connect start/end events for testing
         var start = 0;
         var end = 0;
-        view.events.connect(djangosherd, 'clipstart', function(obj) { start = obj.start });
-        view.events.connect(djangosherd, 'clipend', function(obj) { end = obj.end });
+        view.events.connect(view, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(view, 'clipend', function(obj) { end = obj.end });
 
         // Partial state set
         view.clipform.setState({ start: 10 });
@@ -67,8 +68,8 @@
 
         var start = 0;
         var end = 0;
-        view.events.connect(djangosherd, 'clipstart', function(obj) { start = obj.start });
-        view.events.connect(djangosherd, 'clipend', function(obj) { end = obj.end });
+        view.events.connect(view, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(view, 'clipend', function(obj) { end = obj.end });
 
         view.clipform.setState({ start: 10 });
 
@@ -111,8 +112,8 @@
 
         var start = 0;
         var end = 0;
-        view.events.connect(djangosherd, 'clipstart', function(obj) { start = obj.start });
-        view.events.connect(djangosherd, 'clipend', function(obj) { end = obj.end });
+        view.events.connect(view, 'clipstart', function(obj) { start = obj.start });
+        view.events.connect(view, 'clipend', function(obj) { end = obj.end });
 
         view.clipform.setState({ start: 10, end: 25 });
 
@@ -131,6 +132,8 @@
                          t.ok(state.end >=4, 'End time set to current running time: [' + state.end + ']');
                          t.eq(start, state.start, 'Clipstart called');
                          t.eq(end, state.end, 'Clipend called');
+
+                         view.media.play(); // start playing again
                      },
                      10,
                      function() {
@@ -197,7 +200,7 @@
         t.ok(btnPlaySegment, 'Clip Segment Instantiated');
 
         playclip = false;
-        view.events.connect(djangosherd, 'playclip', function(obj) { playclip = true });
+        view.events.connect(view, 'playclip', function(obj) { playclip = true });
         
         btnPlaySegment.click();
         t.eq(playclip, true, 'Play Clip was signalled');
@@ -207,7 +210,7 @@
         view = new Sherd.Video.YouTube();
         t.ok(view, "Verify view instantiated");
 
-        view.clipform = new DjangoSherd_ClipForm();
+        view.clipform = new Sherd.Video.Annotators.ClipForm();
         t.ok(view.clipform, 'Verify clipstrip instantiated');
         view.clipform.attachView(view);
 

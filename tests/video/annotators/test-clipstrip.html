@@ -6,6 +6,7 @@
 <html>
 <head>
     <script type="text/javascript" src="../../../lib/MochiKit.js"></script>
+    <script type="text/javascript" src="../../../lib/jquery.min.js"></script>
     <script type="text/javascript" src="../../../src/base.js"></script>
     <script type="text/javascript" src="../../../src/assets.js"></script>
     <script type="text/javascript" src="../../../src/video/views/video.js"></script>
@@ -20,20 +21,20 @@
     function testStartAndEndEventListeners(t) {
         var view = _initializeView(t);
         view.clipstrip.setState({ start: 11, end: 30, duration: 376 });
-        _testRangeWidth(t, 19, 20);
+        _testRangeWidth(t, 31, 32);
 
         // Mocking up events from the clipform
-        view.events.signal(djangosherd, 'clipstart', { start: 24 });
-        view.events.signal(djangosherd, 'clipend', { end: 75 });
+        view.events.signal(view, 'clipstart', { start: 24 });
+        view.events.signal(view, 'clipend', { end: 75 });
         
         state = view.clipstrip.getState();
         t.eq(state.starttime, 24, 'Start at 24');
         t.eq(state.endtime, 75, 'Endtime at 75');
 
         // Verify the markers have moved, just checking range as px can vary by browser
-        _testRangeWidth(t, 52, 53);
+        _testRangeWidth(t, 83, 84);
     }
-
+    
      // Default 
      // -- starttime:0, endtime:0, duration:0 
      // -- left/right markers appear together at the 0px position, left-side of player
@@ -53,7 +54,7 @@
          t.eq(document.getElementById('clipStripEnd').style.left, '0px', 'At left-side of player');
          t.eq(document.getElementById('clipStripRange').style.width, '0px', 'At left-side of player');
      }
-
+     
      // Start & Duration 
      // -- starttime:x, endtime:undefined, duration:y 
      // -- endtime defaults to starttime -- left/right markers appear together at the start position  
@@ -82,10 +83,9 @@
          t.eq(state.endtime, 30, 'Valid endtime');
          t.eq(state.duration, 376, 'Valid duration');
 
-         _testRangeWidth(t, 19, 20);
-
+         _testRangeWidth(t, 31, 32);
      }
-     
+          
     // Clipstrip's setDuration will be invoked when a player obtains a valid duration
     // The clipstrip should resize itself and display properly when the information is received
     // This test tests the player/clipstrip signal/connect setup as well as the setDuration logic.
@@ -110,17 +110,16 @@
                          t.eq(state.endtime, 30, 'End at 30');
                          t.ok(state.duration > 375, 'Duration Received. Endtime around 375.375 or greater. It varies');
 
-                         _testRangeWidth(t, 19, 20);
+                         _testRangeWidth(t, 31, 32);
 
                          view.media.pause();
                      });
     }
 
-
     function testSeekSignal(t) {
         var seekCalled = false;
         var view = _initializeView(t);
-        view.events.connect(djangosherd, 'seek', function() { seekCalled = true; });
+        view.events.connect(view, 'seek', function() { seekCalled = true; });
         
         var startMarker = document.getElementById("clipStripStart");
 
@@ -139,16 +138,99 @@
         t.ok(seekCalled, 'The clipstrip signalled seek properly');
     }
 
+    function testLayerInterface(t) {
+        var view = _initializeView(t);
+        var layerOne = new view.clipstrip.Layer();
+        var layerTwo = new view.clipstrip.Layer();
+        
+        var layer1 = layerOne.create('one', { title: "Layer One", color: "#FF0000", zIndex: 100 });
+        layer1.add({ start: 0, end: 0 }, { id: 1 });
+        layer1.add({ start: 0, end: 0 }, { id: 2 });
+        
+        var layer2 = layerTwo.create('two', { title: "Layer Two", color: "#00FF00", zIndex: 900 });
+        layer2.add({ start: 0, end: 0 }, { id: 3 });
+        layer2.add({ start: 0, end: 0 }, { id: 4 });
+
+        t.eq(layer1.title, 'Layer One');
+        t.eq(layer2.title, 'Layer Two');
+        
+        // verify all both clipStrip layers exist w/their annotations
+        t.ok(jQuery("#clipStripLayer_one").length > 0, 'Layer 1 exists');
+        t.ok(jQuery("#clipStripLayer_one").is(":visible"));
+        t.ok(jQuery("#one_annotation_1").length > 0, 'Layer 1 -- 1st annotation exists');
+        t.ok(jQuery("#one_annotation_2").length > 0, 'Layer 1 -- 2nd annotation exists');
+        t.ok(jQuery("#clipStripLayer_two").length > 0, 'Layer 2 exists');
+        t.ok(jQuery("#clipStripLayer_two").is(":visible"));
+        t.ok(jQuery("#two_annotation_3").length > 0, 'Layer 1 -- 3st annotation exists');
+        t.ok(jQuery("#two_annotation_4").length > 0, 'Layer 1 -- 4nd annotation exists');
+
+        layer1.hide();
+        t.ok(!jQuery("#clipStripLayer_one").is(":visible"));
+        layer1.show();
+        t.ok(jQuery("#clipStripLayer_one").is(":visible"));
+
+        layer1.remove(1);
+        t.ok(jQuery("#one_annotation_1").length < 1, 'Layer 1 -- 1st annotation no longer exists');
+        layer1.removeAll();
+        t.ok(jQuery("#one_annotation_2").length < 1, 'Layer 1 -- 2nd annotation no longer exists');
+        layer1.destroy();
+        t.ok(jQuery("#clipStripLayer_one").length < 1, 'Layer 1 no longer exists');
+
+        layer2.destroy();
+        t.ok(jQuery("#two_annotation_3").length < 1, 'Layer 2 -- 1st annotation no longer exists');
+        t.ok(jQuery("#two_annotation_4").length < 1, 'Layer 3 -- 2nd annotation no longer exists');
+        t.ok(jQuery("#clipStripLayer_two").length < 1, 'Layer 2 no longer exists');
+    }
+
+    function testLayerOrder(t) {
+        var view = _initializeView(t);
+
+        var layer = new view.clipstrip.Layer();
+        var layer4 = layer.create('four', {});
+
+        layer = new view.clipstrip.Layer();
+        var layer3 = layer.create('three', { zIndex: 100 });
+        
+        layer = new view.clipstrip.Layer();
+        var layer2 = layer.create('two', { zIndex: 900 });
+
+        layer = new view.clipstrip.Layer();
+        var layer1 = layer.create('one', { zIndex: 1000 });
+
+        layer = new view.clipstrip.Layer();
+        var layer5 = layer.create('five', {});
+
+        jQuery(".clipStripLayerContainer").each(function(index, value) {
+            if (index == 0) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_one');
+            } else if (index == 1) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_two');
+            } else if (index == 2) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_three');
+            } else if (index == 3) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_four');
+            } else if (index == 4) {
+                t.eq(jQuery(this).attr('id'), 'clipStripLayer_five');
+            }
+        });
+
+        layer1.destroy();
+        layer2.destroy();
+        layer3.destroy();
+        layer4.destroy();
+        layer5.destroy();
+    }
+
     function _initializeView(t) {
-        view = new Sherd.Video.YouTube();
+        var view = new Sherd.Video.YouTube();
         t.ok(view, "Verify view instantiated");
 
-        view.clipstrip = new DjangoSherd_ClipStrip();
+        view.clipstrip = new Sherd.Video.Annotators.ClipStrip();
         t.ok(view.clipstrip, 'Verify clipstrip instantiated');
         view.clipstrip.attachView(view);
 
         // load view into html
-        asset = { type: 'youtube',
+        var asset = { type: 'youtube',
                   presentation: 'large',
                   youtube: 'http://www.youtube.com/v/uOSuhxFo76o?enablejsapi=1&amp;fs=1'};
         var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');
@@ -176,7 +258,4 @@
 <div id='asset-display' class="asset-display"></div>
 <div id="clipstrip-display"></div>
 </body>
-</html>  
-        
-        
-    
+</html>

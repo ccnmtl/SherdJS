@@ -16,7 +16,7 @@ Sherd.Base = {
     'newID' : function(prefix) {
         prefix = prefix || 'autogen';
         var new_id = 1;
-        while (document.getElementById(prefix + new_id) != null) {
+        while (document.getElementById(prefix + new_id) !== null) {
             new_id = Math.floor(Math.random() * 10000);
         }
         return prefix + new_id;
@@ -69,19 +69,18 @@ Sherd.Base = {
         }
     };
     this.clearListeners = function() {
-        for (a in _named_listeners) {
+        for (var a in _named_listeners) {
             this.removeListener(a);
         }
-        for (a in _listeners) {
-            this.removeListener(a);
+        for (var b in _listeners) {
+            this.removeListener(b);
         }
     };
     this.events = {
         signal : Sherd.Base.Events.signal,
         connect : Sherd.Base.Events.connect
     };
-}// Observer
-,
+},// Observer
 'DomObject' : function() {
     // must override
     Sherd.Base.Observer.call(this);// inherit
@@ -136,8 +135,8 @@ Sherd.Base = {
             if (self.deinitialize)
                 self.deinitialize();
 
-            for (part in self.components) {
-                if (typeof self.components[part] == 'object'
+            for (var part in self.components) {
+                if (typeof self.components[part] === 'object'
                     && self.components[part].parentNode) {
                     self.components[part].parentNode
                     .removeChild(self.components[part]);
@@ -165,8 +164,7 @@ Sherd.Base = {
         }
     };//this.html
 
-}// DomObject
-,
+}, // DomObject
 'AssetView' : function() { 
     var self = this;
     Sherd.Base.DomObject.apply(this);
@@ -211,8 +209,17 @@ Sherd.Base = {
                         if (!updated) {
                             var create_obj = options.microformat.create(options.asset);
                             
-                            if (create_obj.text)
+                            if (create_obj.text && dom_or_id)
                                 dom_or_id.innerHTML = create_obj.text;
+                            
+                            // options.extra_text = { 'instructions' : 'clipform-instructions' }
+                            for (div in options.extra) {
+                                if (div in create_obj) {
+                                    dom_or_id = document.getElementById(options.extra[div]);
+                                    if (dom_or_id)
+                                        dom_or_id.innerHTML = create_obj[div];
+                                }
+                            }
                             
                             // Create microformat.components (self.components)
                             var top = document.getElementById(create_obj.htmlID);
@@ -222,8 +229,7 @@ Sherd.Base = {
                 }
             };
         }
-    }// AssetView
-    ,
+    },// AssetView
     'AssetManager' : function(config) {
         this.config = (config) ? config : {
             // defaults
@@ -233,8 +239,7 @@ Sherd.Base = {
             }
         };
 
-    }// AssetManager
-    ,
+    },// AssetManager
     'Storage' : function() {
         Sherd.Base.Observer.call(this);// inherit
 
@@ -311,8 +316,9 @@ else if (typeof MochiKit != 'undefined') {
     };
     Sherd.Base.Events = {
         'connect' : function(subject, event, func) {
-            if (typeof subject.nodeType != 'undefined' || subject == window
-                    || subject == document) {
+            if (typeof subject.nodeType !== 'undefined' 
+                || subject === window
+                || subject === document) {
                 event = 'on' + event;
             }
             var disc = MochiKit.Signal.connect(subject, event, func);

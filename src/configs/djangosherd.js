@@ -10,8 +10,8 @@ if (typeof djangosherd == 'undefined') {
 // media.time)
 
 function legacy_json(unparsed_json) {
-    //workaround a bug from MochiKit's serializeJSON() method
-    return unparsed_json.replace('"wh_ratio":NaN','"wh_ratio":null');
+    //workaround a bug introduced by MochiKit's serializeJSON() method
+    return unparsed_json.replace(/\"wh_ratio\":\sNaN/,'"wh_ratio":null');
 }
 
 function DjangoSherd_Asset_Config() {
@@ -19,8 +19,8 @@ function DjangoSherd_Asset_Config() {
     ds.assetMicroFormat = new DjangoSherd_AssetMicroFormat();
     ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
     ds.noteform = new DjangoSherd_NoteForm();// see below
+    ds.storage = new DjangoSherd_Storage();
 
-    jQuery(function() {
         // /# Find assets.
         ds.dom_assets = ds.assetMicroFormat.find();
         if (!ds.dom_assets.length)
@@ -32,22 +32,24 @@ function DjangoSherd_Asset_Config() {
             'storage' : ds.noteform,
 	    'targets':{clipstrip:'clipstrip-display'}
         });
+        
         ds.assetview.html.push(
             jQuery('div.asset-display').get(0), // id=videoclip
             {
                 asset : ds.assetMicroFormat.read(ds.dom_assets[0])
             });
 
-        // /# Editable? (i.e. note-form?)
-        ds.noteform.html.put($('clip-form'));
         // /# load asset into note-form
         var clipform = $('clipform-display');
         if (clipform) {
             ds.assetview.clipform.html.push('clipform-display', {
                 asset : {}
             }); // write videoform
+        
         }
-
+        
+        /**         
+                
         var orig_annotation_data = $('original-annotation');// /***faux layer. Data stored in the DOM
         if (orig_annotation_data != null) {
             // Viewing an Annotation with stored data
@@ -60,10 +62,11 @@ function DjangoSherd_Asset_Config() {
                 if (ds.assetview.clipform)
                     ds.assetview.clipform.setState(obj);
 
-            } catch (e) {/* non-valid json? */
+            } catch (e) {// non-valid json?
                 Sherd.Base.log(e);
             }
         } else {
+           
             // Viewing the Original Asset, possibly with params from queryString
             var annotation_query = [];
             if (document.location.hash) {
@@ -82,7 +85,7 @@ function DjangoSherd_Asset_Config() {
                 ds.assetview.setState();
             }
         }
-    });
+        **/            
 }
 
 function DjangoSherd_Project_Config(options) {
@@ -100,30 +103,38 @@ function DjangoSherd_Project_Config(options) {
     if (options.project_json) {
         ds.storage.get({type:'project',id:'xxx',url:options.project_json});
     }
-
+    
     if (options.open_from_hash) {
         var annotation_to_open = String(document.location.hash).match(
                 /annotation=annotation(\d+)/);
         if (annotation_to_open != null) {
-            addLoadEvent(function() {
-                openCitation(annotation_to_open[1] + '/', {autoplay:false});
+            jQuery(function() {
+                //TODO:no longer works in discussions, since the DIV doesn't exist yet
+                openCitation('/annotations/'+annotation_to_open[1] + '/', { autoplay:false});
             });
         }
     }
     jQuery(function() {
+        var citationOptions = {};
+        if (options.presentation)
+            citationOptions.presentation = options.presentation;
+        
         // /In published view: decorate annotation links
-        DjangoSherd_decorate_citations(document);
-
-        ///now done in project.js when the asset_column loads from an ajax call
-        //DjangoSherd_createThumbs(jQuery('#materials').get(0));
-
+        DjangoSherd_decorate_citations(document, citationOptions);
     });
 }
-function DjangoSherd_decorate_citations(parent) {
+
+var current_citation = null;
+function DjangoSherd_decorate_citations(parent, options) {
     ///decorate LINKS to OPEN annotations
     jQuery('a.materialCitation',parent).click(function(evt) {
         try {
-            openCitation(this.href);
+            openCitation(this.href, options);
+            if (current_citation) {
+                jQuery(current_citation).removeClass('active-annotation');
+            }
+            jQuery(this).addClass('active-annotation');
+            current_citation = this;
         } catch(e) {
             if (window.console) {
                 console.log('ERROR opening citation:'+e.message);
@@ -134,6 +145,7 @@ function DjangoSherd_decorate_citations(parent) {
     });
 }
 
+// Called from project.js & slider.js
 function DjangoSherd_createThumbs(materials) {
     // /TODO: unHACK HACK HACK
     // /need to make this more abstracted--where should we test for 'can thumb'?
@@ -177,6 +189,7 @@ function DjangoSherd_Storage() {
             'asset':{},
             'project':{}
         };
+    this._cache = _cache;
     
     this.lastProject = function() {
         ///returns the last project info requested.
@@ -184,32 +197,22 @@ function DjangoSherd_Storage() {
         return recent_project;
     }
 
-    this.get = function(subject, callback, list_callback) {
+    // Retrieve data from server & stash in the cache
+    this.get = function(subject, callback, list_callback, errorCallback) {
         ///currently obj_type in [annotations, asset, project]
         /// that is used for the URL and a reference to the _cache{} section
-        var id = subject.id,
-            obj_type = subject.type || 'annotations',
-            ann_obj = null,
-            delay = false;
-        if (id) {
-            if (_current_citation) {
-                jQuery(_current_citation).removeClass('active-annotation');
-                _current_citation = null;
-            }
-            if (obj_type == 'annotations') {
-                _current_citation = jQuery('div.annotation'+id).get(0);
-                if (_current_citation != null)
-                    jQuery(_current_citation).addClass('active-annotation');
-            }
-            if (id in _cache[obj_type]) {
+        var id = subject.id;
+        var obj_type = subject.type || 'annotations';
+        var ann_obj = null;
+        var delay = false;
+        
+        if (id || subject.url) {
+            if (id in _cache[obj_type] && !list_callback) {
                 ann_obj = _cache[obj_type][id];
-            } else if (_current_citation) {
-                ann_obj = djangosherd.annotationMicroformat.read( {
-                    html : _current_citation
-                });// /***faux layer
             } else {
                 jQuery.ajax({url:(subject.url || '/'+obj_type+'/json/'+id+'/'),
                              dataType:'json',
+                             dataFilter:legacy_json,
                              success:function(json) {
                                  var new_id = self.json_update(json, obj_type);
                                  if (callback) {
@@ -218,6 +221,13 @@ function DjangoSherd_Storage() {
                                  }
                                  if (typeof list_callback==='function') {
                                      list_callback(json);
+                                 }
+                             },
+                             error:function(xhr,textStatus,errorThrown) {
+                                 if (errorCallback)
+                                     errorCallback();
+                                 if (window.console) {
+                                     console.log(textStatus);
                                  }
                              }
                             });
@@ -228,6 +238,7 @@ function DjangoSherd_Storage() {
             callback(ann_obj);
         }
     };
+    
     this.json_update = function(json) {
         var new_id = true;
         if (json.project) {
@@ -235,31 +246,36 @@ function DjangoSherd_Storage() {
             new_id = json.project.id;
             recent_project = json.project;
         }
-        for (asset_key in json.assets) {
-            var a = json.assets[asset_key];
-            for (var j in a.sources) {
-                a[j] = a.sources[j].url;
-                
-                if (a.sources[j].width) {
-                    if (a.sources[j].primary) {
-                        a.width = a.sources[j].width;
-                        a.height = a.sources[j].height;
+        if (json.assets) {
+            for (var i in json.assets) {
+                var a = json.assets[i];
+                for (var j in a.sources) {
+                    a[j] = a.sources[j].url;
+                    
+                    if (a.sources[j].width) {
+                        if (a.sources[j].primary) {
+                            a.width = a.sources[j].width;
+                            a.height = a.sources[j].height;
+                        }
+                        a[a.sources[j].label+'-metadata'] = {
+                            'width':Number(a.sources[j].width),
+                            'height':Number(a.sources[j].height)
+                        };
                     }
-                    a[a.sources[j].label+'-metadata'] = {
-                        'width':a.sources[j].width,
-                        'height':a.sources[j].height
-                    };
                 }
+                DjangoSherd_adaptAsset(a); //in-place
+                _cache['asset'][a.id] = a;
             }
-            DjangoSherd_adaptAsset(a); //in-place
-        }
-        for (var i=0;i<json.annotations.length;i++) {
-            var ann = json.annotations[i];
-            ann.asset = json.assets[ann.asset_key];
-            ann.annotations = [ann.annotation];
-            _cache['annotations'][ann.id] = ann;
-            if (json.type == 'asset' && i==0) {
-                _cache['asset'][ann.asset_id] = ann;
+            if (json.annotations) {
+                for (var k=0;k<json.annotations.length;k++) {
+                    var ann = json.annotations[k];
+                    ann.asset = json.assets[ann.asset_key];
+                    ann.annotations = [ann.annotation];
+                    _cache['annotations'][ann.id] = ann;
+                    if (json.type == 'asset' && k==0) {
+                        _cache['asset'][ann.asset_id] = ann;
+                    }
+                }
             }
         }
         return new_id;
@@ -304,12 +320,12 @@ function DjangoSherd_AssetMicroFormat() {
                 if (metadata != null) {
                     var wh = metadata.match(/w(\d+)h(\d+)/);
                     rv[reg[1] + '-metadata'] = {
-                        width : wh[1],
-                        height : wh[2]
+                        width : Number(wh[1]),
+                        height : Number(wh[2])
                     };
                     if (jQuery(elt).hasClass('asset-primary')) {
-                        rv['width'] = wh[1];
-                        rv['height'] = wh[2];
+                        rv['width'] = Number(wh[1]);
+                        rv['height'] = Number(wh[2]);
                     }
                 }
             }
@@ -319,7 +335,7 @@ function DjangoSherd_AssetMicroFormat() {
 }
 
 function DjangoSherd_adaptAsset(asset) {
-    if (asset.flv || asset.flv_pseudo || asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp || asset.flv_rtmp || asset.video_pseudo || asset.video_rtmp || asset.video) {
+    if (asset.flv || asset.flv_pseudo || asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp || asset.flv_rtmp || asset.video_pseudo || asset.video_rtmp || asset.video || asset.mp3) {
         asset.type = 'flowplayer';
     } else if (asset.youtube) {
         asset.type = 'youtube';
@@ -421,27 +437,76 @@ function DjangoSherd_AnnotationMicroFormat() {
 function DjangoSherd_NoteList() {
 }
 
-function DjangSherd_ColorMapping() {
-  return [
-    '#ff9900',	/*orange*/	   
-    '#00ff33', /*light green*/
-    '#ffff00', /*yellow*/
-    '#ff66ff',	/*pink*/	   
-    '#3399ff', /*sky blue*/
-    '#cc99ff',	/*lavender*/
-    '#ff6666', /*salmon*/
-    '#00ffff', /*cyan*/   
-    '#cccccc', /*grey*/
-    '#990000', /*dark red*/
-    '#cccc33', /*dark yellow*/
-    '#0033ff', /*blue*/
-    '#ff0000', /*red*/
-  ];
-}
+window.DjangoSherd_Colors = new (function() {
+    this.get = function(str) {
+        return (this.current_colors[str]
+                || (this.current_colors[str] = this.mapping(++this.last_color)));
+    }
+    this.mapping = function(num) {
+        //would like to get purple = 270or280 in (green is currently over represented)
+        var hue = (num*45) % 240;
+        var sat = 100 - (parseInt(num*30 / 240)%3 * 40);
+        var lum = 55 + 5 * ((parseInt(num*30 / 240 / 3 ) % 5));
+        return this.hsl2rgb(hue,sat,lum);
+    }
+    this.hsl2rgb = function(h,s,l) {
+        var rgb = hsl2rgb(h,s,l);
+        return 'rgb('+parseInt(rgb.r)+','+parseInt(rgb.g)+','+parseInt(rgb.b)+')'
+        //return 'hsl('+h+','+s+'%,'+l+'%)'; //only for hsl() supported browsers: IE9+everyone else
+    }
+    this.reset = function() {
+        this.last_color = -1;
+        this.current_colors = {};
+    }
+    this.reset();
+
+    function HueToRgb(m1, m2, hue) {
+	var v;
+	if (hue < 0)
+		hue += 1;
+	else if (hue > 1)
+		hue -= 1;
+	if (6 * hue < 1)
+		v = m1 + (m2 - m1) * hue * 6;
+	else if (2 * hue < 1)
+		v = m2;
+	else if (3 * hue < 2)
+		v = m1 + (m2 - m1) * (2/3 - hue) * 6;
+	else
+		v = m1;
+	return 255 * v;
+    }
+    function hsl2rgb(h, s, l) {
+	var m1, m2, hue;
+	var r, g, b
+	s /=100;
+	l /= 100;
+	if (s == 0)
+		r = g = b = (l * 255);
+	else {
+		if (l <= 0.5)
+			m2 = l * (s + 1);
+		else
+			m2 = l + s - l * s;
+		m1 = l * 2 - m2;
+		hue = h / 360;
+		r = HueToRgb(m1, m2, hue + 1/3);
+		g = HueToRgb(m1, m2, hue);
+		b = HueToRgb(m1, m2, hue - 1/3);
+	}
+	return {r: r, g: g, b: b};
+    }
+
+})();
 
 function DjangoSherd_NoteForm() {
     var self = this;
     Sherd.Base.DomObject.apply(this, arguments);// inherit
+    this.form_name = 'edit-annotation-form';
+    this.f = function(field) {
+        //returns field from form, but without keeping pointers around
+        return document.forms[self.form_name].elements[field];
+    }
     this.storage = {
         update : function(obj) {
             var range1 = '0';
@@ -458,14 +523,11 @@ function DjangoSherd_NoteForm() {
                 range2 = numOrEmpty(obj.y);
             }
             // top is the form
-            self.components.top['annotation-range1'].value = range1;
-            self.components.top['annotation-range2'].value = range2;
-
-            self.components.top['annotation-annotation_data'].value = JSON.stringify(obj);
+            self.f('annotation-range1').value = range1;
+            self.f('annotation-range2').value = range2;
+            self.f('annotation-annotation_data').value = JSON.stringify(obj);
         }
     };
-    // TODO: less barebones
-    // 1. send signal for updates when replaced
 }
 
 /*******************************************************************************
@@ -477,6 +539,86 @@ function DjangoSherd_NoteForm() {
 function currentUID() {
     return true;
     // just returning true, will show the markers at 0, but hey, so what
+}
+
+function displayCitation(ann_obj, id, options) {
+    var asset_target = ((options.targets && options.targets.asset) 
+            ? options.targets.asset
+            : document.getElementById('videoclipbox'));
+    jQuery(asset_target).show();
+    var targets = {
+        "top":asset_target,
+        "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
+        "asset":jQuery('div.asset-display',asset_target).get(0),
+        "asset_title":jQuery('div.asset-title',asset_target).get(0),
+        "annotation_title":jQuery('div.annotation-title',asset_target).get(0)
+    };
+    
+    if (targets.annotation_title) {
+        if (options.deleted) {
+            targets.annotation_title.innerHTML = "<h2>Selection Deleted</h2>";
+        } else {
+            targets.annotation_title.innerHTML = ((ann_obj.metadata
+                                               && ann_obj.metadata.title
+                                              ) ? '<h2>'+ann_obj.metadata.title+'</h2>'
+                                              : '');
+        }
+    }
+    
+        
+    var asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
+    if (asset_obj) {
+        asset_obj.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
+        asset_obj.presentation = options.presentation || 'small';
+
+        if (targets.asset_title) {
+            if (targets.annotation_title.innerHTML == "") {
+                targets.annotation_title.innerHTML = '<h2><a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a></h2>';
+                targets.asset_title.innerHTML = '';
+            } else {
+                targets.asset_title.innerHTML = ((asset_obj.title 
+                                                  && asset_obj.local_url
+                   ) ? 'from <a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a>'
+                     : '');
+                if (asset_obj.xmeml && window.is_staff ) {
+                    targets.asset_title.innerHTML += ' (<a href="/annotations/xmeml/'+id+'/">download FinalCut xml</a>)';
+                }
+            }
+        }
+        djangosherd.assetview.html.push(targets.asset, {
+            asset : asset_obj,
+            targets: {clipstrip:targets.clipstrip}
+        });
+    
+        if (ann_obj.hasOwnProperty("annotations") && ann_obj.annotations.length > 0 && ann_obj.annotations[0] != null) {
+            var ann_data = ann_obj.annotations[0];// ***
+            djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});
+        } else {
+            djangosherd.assetview.setState({ start: 0 }, {autoplay:options.autoplay});
+        }
+    } else {
+        djangosherd.assetview.html.remove();
+        targets.asset_title.innerHTML = "";
+    }
+
+    var return_value = {};
+    return_value['onUnload'] = djangosherd.assetview.html.remove;
+    return_value['view'] = djangosherd.assetview;
+    return_value['object'] = ann_obj;
+    return_value['id'] = id;
+
+    if (!/WebKit/.test(navigator.userAgent)) {
+        //WebKit doesn't replace history correctly
+        document.location.replace('#annotation=annotation' + id);
+    }
+
+    if (typeof options.callback=='function') {
+        options.callback(return_value);
+    }
+    if (djangosherd.onOpenCitation) {
+        djangosherd.onOpenCitation(id,ann_obj,options,targets);
+    }
+    return return_value;
 }
 
 function openCitation(url, no_autoplay_or_options) {
@@ -507,64 +649,21 @@ function openCitation(url, no_autoplay_or_options) {
     var id = ann_url.pop();
     var return_value = {};
     djangosherd.storage.get({id:id,type:ann_url[1]}, function(ann_obj) {
-	var asset_target = ((options.targets && options.targets.asset) 
-			    ? options.targets.asset
-			    : document.getElementById('videoclipbox'));
-	jQuery(asset_target).show();
-        var targets = {
-            "top":asset_target,
-            "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
-            "asset":jQuery('div.asset-display',asset_target).get(0),
-            "asset_title":jQuery('div.asset-title',asset_target).get(0),
-            "annotation_title":jQuery('div.annotation-title',asset_target).get(0)
-        };
-        if (targets.annotation_title) {
-            targets.annotation_title.innerHTML = ((ann_obj.metadata
-                                                   && ann_obj.metadata.title
-                                                  ) ? '<h2>'+ann_obj.metadata.title+'</h2>'
-                                                  : '');
-        }
-        if (ann_obj.asset) {
-            ann_obj.asset.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
-            ann_obj.asset.presentation = options.presentation || 'small';
-
-            if (targets.asset_title) {
-                targets.asset_title.innerHTML = ((ann_obj.asset.title 
-                                                  && ann_obj.asset.local_url
-                   ) ? 'from <a href="'+ann_obj.asset.local_url+'">'+ann_obj.asset.title+'</a>'
-                     : '');
-                if (ann_obj.asset.xmeml && window.is_staff ) {
-                    targets.asset_title.innerHTML += ' (<a href="/annotations/xmeml/'+id+'/">download FinalCut xml</a>)';
-                }
-                
-            }
-            djangosherd.assetview.html.push(targets.asset, {
-                asset : ann_obj.asset,
-		targets: {clipstrip:targets.clipstrip}
-            });
-        
-            var ann_data = ann_obj.annotations[0];// ***
-            djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});        
-        } else {
-            djangosherd.assetview.html.remove();
-        }
-
-        return_value['onUnload'] = djangosherd.assetview.html.remove;
-        return_value['view'] = djangosherd.assetview;
-        return_value['object'] = ann_obj;
-        return_value['id'] = id;
-
-        if (!/WebKit/.test(navigator.userAgent)) {
-            //WebKit doesn't replace history correctly
-            document.location.replace('#annotation=annotation' + id);
-        }
-
-        if (typeof options.callback=='function') {
-            options.callback(return_value);
-        }
-        if (djangosherd.onOpenCitation) {
-            djangosherd.onOpenCitation(id,ann_obj,options,targets);
-        }
+        return_value = displayCitation(ann_obj, id, options);
+    },
+    null,
+    function(error) {
+        var asset_url = url.match(/(asset)\/(\d+)\//);
+        var id = asset_url.pop();
+        djangosherd.storage.get({id:id,type:asset_url[1]}, function(asset_obj) {
+            options.deleted = true;
+            return_value = displayCitation(asset_obj, id, options);
+        },
+        null,
+        function(error) {
+            var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
+            return_value = displayCitation(obj, null, options);
+        });
     });
     return return_value;
 }

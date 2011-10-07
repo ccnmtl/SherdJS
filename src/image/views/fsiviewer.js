@@ -16,14 +16,21 @@ if (!Sherd.Image.FSIViewer) {
         };
 
         this._setState = function(obj) {
-            if (obj && obj.set && obj.top) {
-                var clip_string = self.obj2arr(obj).join(', ');
-                self.components.top.SetVariable('FSICMD','Goto:'+clip_string);
+            try {
+                if (obj && obj.set && obj.top) {
+                    var clip_string = self.obj2arr(obj).join(', ');
+                    self.components.top.SetVariable('FSICMD','Goto:'+clip_string);
+                } else {
+                    self.components.top.SetVariable('FSICMD', 'Reset');
+                }
+            }  catch(e) {
+                /* ignore for the moment */
             }
         };
 
         this.setState = function(obj) {
-            if (obj) for (a in obj) {
+            
+            if (obj) for (var a in obj) {
                 self.current_state[a] = obj[a];
             }
             self.intended_states.push(obj);
@@ -62,44 +69,49 @@ if (!Sherd.Image.FSIViewer) {
             };
         };
 
-	this.presentations = {
-	    'thumb':{
-		height:function(){return '100px';},
-		width:function(){return '100px';},
-                extra:'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
-		initialize:function(obj,presenter){
-                    
-                }
-	    },
-	    'default':{
-		height:function(obj,presenter){return Sherd.winHeight()+'px';},
-		width:function(obj,presenter){return '100%';},
-                extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
-		initialize:function(obj,presenter){
+    this.presentations = {
+        'thumb':{
+            height:function(){return '100px';},
+            width:function(){return '100px';},
+            extra:'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
+            initialize:function(obj,presenter){
+            }
+        },
+        'default':{
+            height:function(obj,presenter){return Sherd.winHeight()+'px';},
+            width:function(obj,presenter){return '100%';},
+            extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
+            initialize:function(obj,presenter){
                     self.events.connect(window,'resize',function() {
-                        var top = presenter.components.top;
-			top.setAttribute('height',Sherd.winHeight()+'px');
-                        self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
-		    });
-                }
-	    },
-	    'small':{
-		height:function(){return '240px';},
-		width:function(){return '320px';},
-                extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=BL',
-		initialize:function(){/*noop*/}
-	    }
-	};
-        this.initialize = function(create_obj) {
-            ///copied from openlayers code:
-		var presentation;
-		switch (typeof create_obj.object.presentation) {
-		case 'string': presentation = self.presentations[create_obj.object.presentation]; break;
-		case 'object': presentation = create_obj.object.presentation; break;
-		case 'undefined': presentation = self.presentations['default']; break;
-		}
+                    var top = presenter.components.top;
+                    top.setAttribute('height',Sherd.winHeight()+'px');
+                    self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
+                });
+            }
+        },
+        'medium':{
+            height:function(){return '383px';},
+            width:function(){return '100%';},
+            initialize:function(){/*noop*/}
+        },        
+        'small':{
+            height:function(){return '240px';},
+            width:function(){return '320px';},
+            extra:'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=BL',
+            initialize:function(){/*noop*/}
+        }
+    };
+        
+    this.initialize = function(create_obj) {
+        ///copied from openlayers code:
+        var presentation;
+        switch (typeof create_obj.object.presentation) {
+        case 'string': presentation = self.presentations[create_obj.object.presentation]; break;
+        case 'object': presentation = create_obj.object.presentation; break;
+        case 'undefined': presentation = self.presentations['default']; break;
+        }
             
-                presentation.initialize(create_obj.object, self);
+        presentation.initialize(create_obj.object, self);
 
             var top = self.components.top;
             self.current_state.wh_ratio = ( top.offsetWidth / (top.offsetHeight-30) );
@@ -111,7 +123,7 @@ if (!Sherd.Image.FSIViewer) {
                 case 'View':
                     if (self.ready) {
                     var o = self.arr2obj(params.split(', '));
-                    for (a in o) {
+                    for (var a in o) {
                         self.current_state[a] = o[a];
                     }
                     }
@@ -149,7 +161,7 @@ if (!Sherd.Image.FSIViewer) {
                 script.setAttribute('type','text/javascript');
                 script.setAttribute('event','FSCommand(command,args)');
                 script.setAttribute('for',create_obj.htmlID);
-                script.text = create_obj.htmlID+'_DoFSCommand(command,args);'
+                script.text = create_obj.htmlID+'_DoFSCommand(command,args);';
                 
                 document.getElementsByTagName('head')[0].appendChild(script);
             }
@@ -174,11 +186,13 @@ if (!Sherd.Image.FSIViewer) {
 
             var html = '<object width="'+presentation.width()+'" height="'+presentation.height()+'" '
                 +'type="application/x-shockwave-flash" data="'+full_fpx_url+'" '
+                //MS IE SUX !!!  this might break Opera--that's what you get for falsifying browser strings
+                + ((/MSIE/.test(navigator.userAgent)) ? ' classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' : '')
                 +'id="'+fsi_object_id+'" name="'+fsi_object_id+'">'
                 +'<param name="wmode" value="opaque"/><param name="allowScriptAccess" value="always"/><param name="swliveconnect" value="true"/><param name="menu" value="false"/><param name="quality" value="high"/><param name="scale" value="noscale"/><param name="salign" value="LT"/><param name="bgcolor" value="FFFFFF"/>'
                 +'<param name="Movie" value="'+full_fpx_url+'" />' ///required for IE to display movie
-                +'</object>';
-            return {
+                +'</object>'; 
+           return {
                 object:obj,
                 htmlID:fsi_object_id,
                 text:html

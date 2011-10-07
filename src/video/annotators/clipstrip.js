@@ -29,7 +29,7 @@ if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.Annotators) {Sherd.Video.Annotators= {};}
 if (!Sherd.Video.Annotators.ClipStrip) {
- Sherd.Video.Annotators.ClipStrip = function() {
+Sherd.Video.Annotators.ClipStrip = function() {
     var self = this;
     var CLIP_MARKER_WIDTH = 7;
 
@@ -57,7 +57,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
     this.setState = function(obj) {
         if (typeof obj == 'object') {
             var c = self.components;
-            if (obj == null) {
+            if (obj === null) {
                 c.starttime = c.endtime = c.duration = 0;
             } else {
                 c.starttime = obj.start || 0;
@@ -105,7 +105,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
     // Event Listener: clipend - from clipform
     // Assumes self.components.duration has been initialized
     this.setClipEnd = function(obj) {
-        if (obj.end != undefined && self.components.duration) {
+        if (obj.end !== undefined && self.components.duration) {
             self.components.endtime = obj.end;
             self.microformat._resize();
         }
@@ -134,13 +134,13 @@ if (!Sherd.Video.Annotators.ClipStrip) {
         return {
             htmlID : htmlID,
             timestrip : timestrip,
-            text : '<div id="clipStrip" style="width: ' + timestrip.w + 'px">' + 
-                        '<div id="clipStripTrack"  style="width: ' + timestrip.trackWidth + 'px; left: ' + timestrip.trackX + 'px">' + 
-                            '<div id="clipStripStart" class="clipSlider" onmouseover="return escape(\'Go to note start time\')" style="display:none"></div>' + 
-                            '<div id="clipStripRange" class="clipStripRange" style="display:none"></div>' + 
-                            '<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>' + 
-                        '</div>' + 
-                    '</div>'
+            text : '<div id="clipStrip" style="width: ' + timestrip.w + 'px">'
+                +'<div id="clipStripTrack"  style="width: ' + timestrip.trackWidth + 'px; left: ' + timestrip.trackX + 'px">' 
+                +            '<div id="clipStripStart" class="clipSlider" onmouseover="return escape(\'Go to note start time\')" style="display:none"></div>'
+                +            '<div id="clipStripRange" class="clipStripRange" style="display:none"></div>' 
+                +            '<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>' 
+                +        '</div>'
+                +    '</div>'
         };
     };
     
@@ -155,7 +155,8 @@ if (!Sherd.Video.Annotators.ClipStrip) {
                 timestrip: create_obj.timestrip,
                 starttime: 0,
                 endtime: 0,
-                duration: 0
+                duration: 0,
+                layers: {}
             };
         } catch(e) {}
         return false;
@@ -175,16 +176,135 @@ if (!Sherd.Video.Annotators.ClipStrip) {
         self.components.clipStartMarker.style.display = 'block';
         self.components.clipRange.style.display = 'block';
         self.components.clipEndMarker.style.display = 'block';
+        
+        for (var layerName in self.components.layers) {
+            var layer = self.components.layers[layerName];
+            for (var annotationName in layer._anns) {
+                var annotation = layer._anns[annotationName];
+                
+                left = self.microformat._timeToPixels(annotation.starttime, self.components.duration, self.components.timestrip.trackWidth);
+                right = self.microformat._timeToPixels(annotation.endtime, self.components.duration, self.components.timestrip.trackWidth);
+                width = (right - left);
+                if (width < 0) width = 0;
+                
+                jQuery("#" + annotation.htmlID).css("left", left);
+                jQuery("#" + annotation.htmlID).css("width", width);
+            }
+        }
     };
     
     this.microformat._timeToPixels = function(seconds, duration, width) {
-       if (duration > 0) {
-           var ratio = width / duration;
-           return ratio * seconds;
-       } else {
-           return 0;
-       }
+        if (duration > 0) {
+            var ratio = width / duration;
+            return ratio * seconds;
+        } else {
+            return 0;
+        }
     };
- };
 
-}
+    this.Layer = function(){};
+    this.Layer.prototype = {
+        create:function(name, opts) {
+            // create a layer
+            this.name = name;
+            this.htmlID = 'clipStripLayer_' + name;
+            this.title = (opts && opts['title']) || this.name;
+            this._anns = {};
+            
+            var html = '<div class="clipStripLayerContainer" id="' + this.htmlID + '" style="z-index:' + opts.zIndex + '">'
+                       +    '<div class="clipStripLayerTitle" style="left: ' + (self.components.timestrip.trackX - 98) + 'px">' + this.title + '&nbsp;</div>' 
+                       +    '<div class="clipStripLayer"' 
+                       +        ' style="left: ' + self.components.timestrip.trackX + 'px; ' 
+                       +        ' width: ' + self.components.timestrip.trackWidth + 'px;">'
+                       +    '</div>' 
+                       +'</div>';
+            
+            
+            // z-index -- An element with greater stack order is always in front of an element with a lower stack order.
+            // For ClipStrip, the property is overloaded to mean top to bottom order. greater z-index == higher in the list
+            var inserted = false;
+            if (opts.zIndex !== undefined) {
+                jQuery(".clipStripLayerContainer").each(function(index, value) {
+                    var zindex = jQuery(this).css("z-index");
+                    if ((zindex && opts.zIndex > zindex) || (zindex === undefined || zindex === "auto")) {
+                        jQuery(this).before(html);
+                        inserted = true;
+                        return false;
+                    }
+                });
+            }
+                
+            if (!inserted) // insert at end
+                jQuery("#" + self.components.clipStrip.id).append(html);
+            
+            self.components.layers[name] = this;
+            
+            if (opts.onmouseenter)
+                self.onmouseenter = opts.onmouseenter;
+            if (opts.onmouseleave)
+                self.onmouseleave = opts.onmouseleave;
+            if (opts.onclick)
+                self.onclick = opts.onclick;
+            
+            return this;
+        },
+        destroy:function() {
+            this.removeAll();
+            jQuery("#" + this.htmlID).remove();
+            delete self.components.layers[name];
+        },
+        add:function(ann,opts) {
+            
+            if (ann.duration !== undefined && ann.duration > 1 && self.components.duration < 1)
+                self.components.duration = ann.duration;
+            
+            this._anns[opts.id] = { starttime: ann.start, endtime: ann.end, htmlID: this.name + '_annotation_' + opts.id, duration: ann.duration };
+            
+            jQuery("#" + this.htmlID).children(".clipStripLayer").append('<div class="annotationLayer" id="' + this._anns[opts.id].htmlID + '"></div>');
+            
+            if (opts.color)
+                jQuery("#" + this._anns[opts.id].htmlID).css("background-color", opts.color); 
+            
+            jQuery("#" + this._anns[opts.id].htmlID).hover(
+                function enter() {
+                    if (self.onmouseenter) {
+                        self.onmouseenter(opts.id, this.name);
+                    }
+                },
+                function leave() {
+                    if (self.onmouseleave) {
+                        self.onmouseleave(opts.id, this.name);
+                    }
+                }
+            );
+            
+            jQuery("#" + this._anns[opts.id].htmlID).click(function() {
+                if (self.onclick) {
+                    self.onclick(opts.id, this.name);
+                }
+            });
+            
+            self.microformat._resize();
+        },
+        remove:function(ann_id) {
+            if (ann_id in this._anns) {
+                jQuery("#" + this._anns[ann_id].htmlID).remove();
+                delete this._anns[ann_id];
+            }
+        },
+        removeAll:function() {
+            for (var ann_id in this._anns)  {
+                this.remove(ann_id);
+                delete this._anns[ann_id];
+            }
+        },
+        show:function() {
+            jQuery("#" + this.htmlID).show();
+        },
+        hide:function() {
+            jQuery("#" + this.htmlID).hide();
+        }
+    };
+ };/* function Sherd.Video.Annotators.ClipStrip() */
+
+}/*if !ClipStrip...*/

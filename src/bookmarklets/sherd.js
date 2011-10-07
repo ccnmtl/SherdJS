@@ -1,5 +1,171 @@
-/*RULES
-  1. NO single quote characters
+/* SherdJS Bookmarklet
+HOW IT IS RUN:
+  This is the main file for MediaThread bookmarklet code.  It is not
+  the actually bookmarklet that the user installs
+
+  -- this way, changes to this file will be run without users needing
+     to reinstall the bookmarklet.  In MediaThread, the actual
+     bookmarklet is here:
+     https://github.com/ccnmtl/mediathread/blob/master/templates/assetmgr/bookmarklet.js
+     And this file (through a symlink and urls.py redirection) becomes
+     available through /bookmarklets/analyze.js
+
+DEPENDENCIES:
+  Large parts of this file now depend on jQuery.  This must be
+  embedded by the actual bookmarklet, preferably before this file, but
+  if not, it can be loaded, and then call
+  SherdBookmarklet.onJQuery(jQuery)
+
+ARCHITECTURE:
+  Everything lives within two namespaces: window.SherdBookmarklet and
+  window.SherdBookmarkletOptions.
+
+  SherdBookmarkletOptions is a dictionary which can (and must to work
+    as a bookmarklet) be created before this file is loaded.  This
+    way, if required, this file could also be used as a library.  In
+    this scenario, if a site wanted an 'AnalyzeThis' button to work
+    without a user needing to install a bookmarklet, then this file
+    would be loaded, and the button would call into
+    SherdBookmarklet.runners['jump'] (or .decorate).
+
+  A typical SherdBookmarkletOptions set of values would be 
+     {'action':'jump', 'host_url':'http://mediathread.example.com/save/?', 'flickr_apikey':'foobar123456789'}
+
+  The 'action' mostly services the bookmarklet, but in theory, this
+     separates the initialization code along with what the
+     bookmarklet's action would be -- to immediatley jump into
+     mediathread or to display the options list (which is more often
+     the default).
+
+  Basic parts:
+     .hosthandler.* : This dictionary is a list of all special-cased
+                      hosts.  When these keys match anywhere (so
+                      university proxies will work) in
+                      document.location, then this code will be
+                      preferred rather than searching over the normal
+                      media types.  This should be a method of last
+                      resort -- supporting generic media-types is much
+                      better, but this can be especially useful when
+                      looking for metadata.
+
+         find:function(callback) = this is the function, which fill find assets and then run
+              callback([array of assets -- see below for datastructure]) 
+                       -- async allows you to make ajax calls, or whatever else you need
+
+         allow_save_all = if true, there will be an interface on the
+                          bottom to save all assets at once.  This is
+                          somewhat experimental -- used to load a
+                          whole course from VITAL into MediaThread
+
+         also_find_general = if true, then the normal media type
+                             queries will be run.  This is a good way
+                             to implement custom metadata searches,
+                             without rewriting support for media.
+                             Also, see the youtube.com example for a
+                             way to call into the general media types
+                             to search for a particular kind of media,
+                             without duplicating code.
+
+
+     .assethandler.* : This is where all the methods are that look for
+                       media or metadata on the page.  Each key:value
+                       is run with the bookmarklet for a chance to
+                       find its kind of assets, and, if found, query
+                       for more data.
+
+                       Besides finding media, an assethandler can also find metadata,
+                       and if the metadata can only be pinned to 'something on the page'
+                       then you should set "page_resource":true in the assethandler dict.
+
+                       Each .find method is called as
+                       find.apply(assethandler,callback,{window:window,document:document})
+
+                          note: use the context passed into the method
+                                rather than global window/document
+                                objects, since the bookmarklet
+                                supports deeply embedded
+                                frames/iframes and the context might
+                                be different The .find method is
+                                responsible for eventually calling
+                                callback([array of assets]) with a
+                                blank array if none are found.
+
+
+                          The asset objects passed back should have the following structure:
+                                 {html:<dom object of media>,
+                                  primary_type:<string of the sources key 
+                                                most important for this media.  e.g. 'video' >,
+                                  sources:{
+                                     title:<title string.  if omitted, it will 
+                                            be discerned from the primary_type's filename>,
+
+                                     url: <only use if you want to
+                                          override the url that is
+                                          displayed to the user as a
+                                          link to get back to the
+                                          archive's page for the
+                                          asset.  mostly this is just
+                                          document.location>
+
+                                     <key:values of urls that will be
+                                                 stored in the asset's Source
+                                                 objects in MediaThread>
+
+                                     <key>-metadata: <metadata for the source 
+                                             key in the form of "w<width>h<height>" >
+                                  },
+
+                                  metadata:{ <key, value pairs for metadata.  
+                                             Values should always be an array of strings> 
+                                           }
+
+                                 }
+          .assethandler.objects_and_embeds.*
+                Since a large subset of assethandlers look for an
+                object or embed tag, and dancing between duplicate
+                versions often appear in sites, the general code is
+                handled as a big assethandler with sub-handlers for checking object and embed tags.  It's important to look at examples for good practices on how to go through these elements.  These have two main functions:
+                 
+                 .match(embed_or_object) = this function should ===null if the embed/object tag does not match, and can return anything else, if it does match.
+                 .asset(embed_or_object,match_rv,context,index,optional_callback)
+                       @match_rv = whatever .match returned
+                       @optional_callback = you can just return the asset_object directly 
+                                but if you need to do ajax, or callback-based apis to get all the
+                                info/metadata, then you can return an asset object with with a
+                                "wait":true key, and then call 
+                                  optional_callback(@index, asset_object) where @index is the
+                                    index argument passed to .asset.
+          
+                          
+     runners : as described above, runners are alternate 'setups' that mediathread can be run in.
+               'jump' generally means if one asset is found on the page jump right into mediathread
+               'decorate' means bring up the Bookmarklet.Interface and let the user take another
+                   action.  This is probably the best one going forward.
+
+     HELP FUNCTIONS:
+         connect: quick cross-browser event-listener
+         hasClass(elem,cls), 
+         hasBody(doc) -- does it have a doc.body value?  <frameset> pages do NOT
+         clean(str), getImageDimensions(), mergeMetadata(),
+         xml2dom(str,xhr), absolute_url(),
+         elt() for creating new html in a way that is frame/browser friendly
+
+     Finder() : This object is the main thing that walks through the document's media through
+                any sub-frames and merges the results into a list.
+
+     Interface() : This is the object that creates and manages the bookmarklet interface
+                   (The gray widget that appears, listing the assets, and presenting the
+                     analyze buttons, etc.)
+
+                   This interface calls Finder() and displays the results
+     
+     FOOTER:
+       At the bottom of this file is the init/bootstrap code which runs the rigth part of
+       SherdBookmarklet.* (generally a runner) after inspecting SherdBookmarkletOptions
+
+       Chrome bookmarklet case is for when this same code is used as a library in the chrome
+         bookmarklet.  See: src/bookmarklets/browser_extensions/google_chrome in this repo.
+     
 */
 SherdBookmarklet = {
   "user_status": {/* updated by /accounts/logged_in.js */
@@ -32,6 +198,73 @@ SherdBookmarklet = {
   },
   "hosthandler": {
     /*Try to keep them ALPHABETICAL by 'brand' */
+    "alexanderstreet.com": {
+        find:function(callback) {
+            SherdBookmarklet.run_with_jquery(function _find(jQuery) {
+                var token = document.documentElement.innerHTML.match(/token=([^&\"\']+)/);
+                if (! token) {
+                    return callback([]);
+                }
+                jQuery
+                .ajax({url:"http://"+location.hostname+"/video/meta/"+token[1],
+                       dataType:'json',
+                       dataFilter: function(data,type) {
+                           ///removes 'json=' prefix and unescapes content
+                           return unescape(String(data).substr(5));
+                       },
+                       success:function(json,textStatus) {
+                           var rv = [];
+                           function deplus(str,arr) {
+                             if (str) {
+                               return ((arr)?[str.replace(/\+/g,' ')]:str.replace(/\+/g,' '))
+                             }
+                           }
+                           if (json) {
+                               if (json.tracks && json.tracks.length > 0
+                                   && json.tracks[0].chunks.length > 0) {
+                                   var t = json.tracks[0];
+                                   var i = 0; //ASSUME: all chunks refer to same video file?
+                                   var asp_vid = {
+                                       "primary_type":"video_rtmp",
+                                       "sources":{
+                                           'title':deplus(t.title),
+                                           'video_rtmp':t.chunks[i].high.split('?')[0],
+                                           'video_rtmp_low':t.chunks[i].low.split('?')[0]
+                                       },
+                                       "metadata":{},
+                                       "_jsondump":json
+                                   };
+                                   for (var a in t.metadata) {
+                                       if (t.metadata[a] && ! /id$/.test(a)) {
+                                           asp_vid.metadata[a] = [ deplus(t.metadata[a])];
+                                       }
+                                   }
+                                   rv.push(asp_vid);
+                               } else if (json.video && json.video.length > 0) {
+                                   var v = json.video[0];
+                                   rv.push({
+                                       "primary_type":"video_rtmp",
+                                       "sources":{
+                                           'title':deplus(v.title),
+                                           'video_rtmp':v.high.split('?')[0],
+                                           'video_rtmp_low':v.low.split('?')[0]
+                                       },
+                                       "metadata":{
+                                           'Copyright':deplus(v.copyright,1)||undefined,
+                                           'Publication Year':deplus(v.publicationyear,1)||undefined,
+                                           'Publisher':deplus(v.publisher,1)||undefined
+                                       },
+                                       "_jsondump":json
+                                   });
+                               }
+                           }
+                           return callback(rv);
+                       },
+                       error:function() { callback([]); }
+                      });
+            });
+        }
+    },
     "artstor.org": {
         find:function(callback) {
             /*must have floating pane open to find image*/
@@ -105,20 +338,64 @@ SherdBookmarklet = {
             });
         }
     },
+    "blakearchive.org": {
+        find:function(callback) {
+            SherdBookmarklet.run_with_jquery(function(jQ) { 
+                var SB = SherdBookmarklet;
+                var obj = {'sources':{"title":document.title},'metadata':{}};
+                try {
+                    var opt_urls = document.forms['form'].elements['site'].options;
+                } catch(e) {
+                    return callback([]);
+                }
+                var abs = SB.absolute_url;
+                for (var i=0;i<opt_urls.length;i++) {
+                    var o = opt_urls[i];
+                    if (/Image/.test(o.text)) {
+                        obj.sources["image"] = abs(o.value,document);
+                    } else if (/Transcription/.test(o.text)) {
+                        obj.sources["transcript_url"] = abs(o.value,document);
+                        obj.metadata["Transcript"] = [abs(o.value,document)];
+                    }
+                }
+                if (obj.sources["image"]) {
+                    jQ('a').filter(function(){
+                        return /Copy\s+Information/.test(this.innerHTML)
+                    }).each(function(){
+                        obj.metadata["Metadata"] = [
+                            abs(String(this.href)
+                                .replace(/javascript:\w+\(\'/,'')
+                                .replace(/\'\)$/,''),
+                                document)
+                        ];
+                    })
+                    SB.getImageDimensions(
+                        obj.sources["image"],
+                        function onload(img,dims)
+                        {
+                            obj.sources["image-metadata"] = dims;
+                            callback([obj]);
+                        },function error(){
+                            callback([]);//perhaps overly extreme?
+                        });
+                }
+            });            
+        }
+    },
     "dropbox.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function(jQ) { 
-            var save_link = document.getElementById('gallery_save');
-            if (save_link && window.token && token.user_id
-                && token.path == '/Public') {
-                var regex = String(save_link.href).match(/dropbox.com\/s\/[^\/]+(\/[^?]+)/);
+            var save_link = document.getElementById('gallery_full_size');
+            if (save_link) {
+                var regex = String(save_link.href).match(/dropbox.com\/s\/[^\/]+\/([^?]+)/);
                 if (regex) {
                     var img = document.createElement("img");
-                    img.src = 'http://dl.dropbox.com/u/'+token.user_id+regex[1];
+                    img.src = save_link
                     jQ(img).bind('load',function() {
                         callback([{
                             primary_type:'image',
                             sources:{
+                                'title':regex[1],
                                 'image':img.src,
                                 'url':String(document.location),
                                 'image-metadata':"w"+img.width+"h"+img.height
@@ -194,6 +471,68 @@ SherdBookmarklet = {
         decorate:function(objs) {
         }
     },
+    "vital.ccnmtl.columbia.edu": {
+        allow_save_all:true,
+        find:function(callback) {
+            if (! /materialsLib/.test(document.location.pathname)) {
+                callback([],'Go to the Course Library page and run the bookmarklet again');
+            }
+            SherdBookmarklet.run_with_jquery(function(jQuery) { 
+                var found_videos = [];
+                var course_library = jQuery('a.thumbnail');
+                var done = course_library.length;
+                var obj_final = function() {
+                    return callback(found_videos);
+                }
+                course_library.each(function() {
+                    var asset = {
+                        "html":this,
+                        "vitalId":String(this.href).match(/\&id=(\d+)/)[1],
+                        "sources":{'quicktime-metadata':"w320h240"},
+                        "metadata":{},"primary_type":"quicktime"
+                    };
+                    jQuery.ajax({
+                        url:'basicAdmin.smvc?action=display&entity=material&id='+asset.vitalId,
+                        dataType:'text',
+                        success:function(edit_html) {
+                            var split_html = edit_html.split('Video Categories:');
+                            ///Basic URLs and Title
+                            split_html[0].replace(
+                                new RegExp('<input[^>]+name="(\\w+)" value="([^"]+)"','mg'),
+                                function(full,name,val) {
+                                    switch(name) {
+                                    case "title": asset.sources['title'] = val;break;
+                                    case "url": asset.sources['quicktime'] = val;break;
+                                    case "thumbUrl": asset.sources['thumb'] = val;break;
+                                    }
+                                });
+                            ///don't procede if we didn't get the quicktime url
+                            if (asset.sources.quicktime) {
+                                ///TODO: VITAL Metadata
+                                   //Topics = assignments
+                                ///Extra Metadata
+                                if (split_html.length > 1 ) {
+                                    split_html[1].replace(
+                                        new RegExp('<b>([^<]+):</b>[\\s\\S]*?value="([^"]+)"[\\s\\S]*?value="([^"]+)"','mg'),
+                                        function(full,name,value_id,val) {
+                                            asset.metadata[name] = [val];
+                                        });
+                                }
+                                ///PUSH
+                                found_videos.push(asset);
+                            }
+                            if (--done==0) obj_final(); 
+                        },
+                        error:function() {
+                            if (--done==0) obj_final(); 
+                        }
+                    });
+                        
+                    
+                });
+            });            
+        }
+    },
     "learn.columbia.edu": {
     /*and www.mcah.columbia.edu */
         find:function(callback) {
@@ -267,7 +606,7 @@ SherdBookmarklet = {
                                         "url":document.location +'#'+ filename
                                     }
                                 };
-                                var img = document.createElement('img');
+                                var img = document.createElement("img");
                                 img.src = image_data.sources.image;
                                 image_data.sources['image-metadata']="w"+img.width+"h"+img.height
                                 rv.push(image_data);
@@ -281,138 +620,6 @@ SherdBookmarklet = {
                 }
                 if (done) return callback(rv);
             })
-        }
-    },
-    "thlib.org": {
-        /*e.g. those on http://www.thlib.org/places/monasteries/meru-nyingpa/murals/ */
-        also_find_general:true,
-        find:function(callback) {
-            if (window.frames["gallery"]) {
-                var myloc = window.frames["gallery"].location.href; 
-                var matches =  myloc.match(/(.*)\/([^\/]+)\/([^\/]+)\/([^\/]+)$/);/*split last 3 "/" */
-                if(typeof(myloc) == "string" && matches[4] != "gallery.html") { 
-                    var img_key = matches[3];
-                    var img_root = matches[1];
-                    var tile_root = img_root+"/source/"+img_key+"/"+img_key;
-                    var thumb = img_root+"/preview/"+img_key.toLowerCase()+".jpg";
-                    var img = document.createElement("img");
-                    img.src = tile_root+"/TileGroup0/0-0-0.jpg";
-                    var sources = {
-                        "title":img_key,
-                        "archive":String(document.location),
-                        /*must be unique, but no good return link :-(*/
-                        "url":tile_root+".htm", 
-                        "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
-                        "image-metadata":"w"+img.width+"h"+img.height,
-                        "thumb":thumb,
-                        "image":img.src /*nothing bigger available*/
-                    };
-                    /*could do a query to see what the full dimensions are of the tiles
-                      but instead of this hack what about using 
-                      img_root+"/source/"+img_key+"/"+img_key+"/ImageProperties.xml"
-                     */
-                    jQuery.get(tile_root+"/ImageProperties.xml",null,function(dir) {
-                        /*was for url = tile_root+"/TileGroup0/" parsing:
-                          var zooms = dir.split("\">").reverse()[3].match(/\d+/);
-                          var exp = Math.pow(2,zooms);
-                          sources["xyztile-metadata"] = "w"+(img.width*exp)+"h"+(img.height*exp);
-                         */
-                        var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
-                        sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
-                        callback( [{"html": window.frames["gallery"].document["Zoomify Dynamic Flash"], 
-                                    "sources": sources,
-                                    "primary_type": 'image'
-                                   } ]);
-                    },"text");
-                    return; //found something
-                }
-            } 
-            return callback([]);
-        },
-        decorate:function(objs) {
-        }
-    }, /*end thlib.org */
-    "vietnamwararchive.ccnmtl.columbia.edu": {
-        single:function() {
-            return (document.location.pathname.search("/record/display") == 0);
-        },
-        find:function(callback) {
-            var rv = [];
-            if (this.single()) 
-                rv = [ this.update() ];
-            callback(rv);
-        },
-        decorate:function(objs) {
-        },
-        update:function(obj) {
-            var hash = false;
-            var embs = document.getElementsByTagName("embed");
-            if (embs.length) {
-                var e = embs[0];
-                if (e && e.Stop) {
-                    try{
-                        e.Stop();
-                        hash = "start="+Math.floor(e.GetTime()/e.GetTimeScale());
-                    } finally{}
-                }
-            }
-            var thumb;
-            if (SHARETHIS 
-                && typeof SHARETHIS.shareables == "object"
-                && SHARETHIS.shareables.length
-               ) {
-                thumb = SHARETHIS.shareables[0].properties.icon;
-            }
-            return {"html":$(".media").get(0),
-                    "hash": hash||undefined,
-                    "primary_type": 'quicktime',
-                    "sources":{
-                        "title":document.title,
-                        "quicktime":$(".media").media("api").options.src,
-                        "poster":$(".media img").get(0).src,
-                        "thumb": thumb
-                    }
-                   };
-        }
-    },
-    "vimeo.com": {
-        find:function(callback) {
-            SherdBookmarklet.run_with_jquery(function(jQuery) { 
-                var bits = document.location.pathname.split("/"); //expected: http://vimeo.com/<videoid>/
-                var videoId = bits[1];
-
-                if (video.length < 1)
-                    return callback([]);
-
-                /* http://vimeo.com/api/docs/simple-api */
-                var url = "http://vimeo.com/api/v2/video/" + videoId + ".json?callback=?";
-                jQuery.getJSON(url,function(getInfoData) {
-                    if (getInfoData.length < 1) {
-                        return callback([]);
-                    }
-                    var sources = {
-                        "url": getInfoData.url,
-                        "id": getInfoData.id,
-                        "title": getInfoData.title,
-                        "thumb": getInfoData.thumbnail_medium,
-                        "archive": getInfoData.url,
-                        "metadata-owner":getInfoData.user_name ||undefined,
-                        "width": getInfoData.width,
-                        "height": getInfoData.height,
-                    };
-                    
-                    return {
-                        "html":emb,
-                        "primary_type": "swf",
-                        "hash": hash||undefined,
-                        "sources": sources,
-                    };
-
-                    return callback( [{html:img, primary_type:"image", sources:sources}] );
-                });/*end jQuery.ajax*/
-            });/*end run_with_jquery*/
-        },
-        decorate:function(objs) {
         }
     },
     "youtube.com": {
@@ -548,6 +755,47 @@ SherdBookmarklet = {
                       return rv;
                   }
               },/*end youtube embeds*/
+              "jwplayer5":{
+                  match:function(obj) {
+                      return ((typeof obj.getPlaylist==='function'
+                               && typeof obj.sendEvent==='function')
+                              || null);
+                  },
+                  asset:function(obj,match,context) {
+                      var item, pl = obj.getPlaylist();
+                      switch (pl.length) {
+                      case 0: return {};
+                      case 1: item = pl[0]; break;
+                      default:
+                          //or should we just show all options?
+                          if (obj.jwGetPlaylistIndex) {
+                              item = pl[obj.jwGetPlaylistIndex()];
+                          } else {
+                              return {};
+                          }
+                      }
+                      var rv = {"html":obj,"primary_type":'video',"sources":{}},
+                          c = obj.getConfig(), 
+                          pcfg = obj.getPluginConfig('http');
+                      if (item.type == 'rtmp') {
+                          rv.sources["video_rtmp"] = item.streamer+'//'+item.file;
+                          rv.primary_type = "video_rtmp";
+                      } else {
+                          var url = item.streamer+item.file;
+                          if (pcfg.startparam) {
+                              rv.primary_type = "video_pseudo";
+                              url += '?'+pcfg.startparam+'={start}'
+                          }
+                          rv.sources[rv.primary_type] = url;
+                      }
+                      rv.sources[rv.primary_type+'-metadata'] = "w"+c.width+"h"+c.height;
+                      if (item.image) {
+                          rv.sources['thumb'] = SherdBookmarklet.absolute_url(item.image,
+                                                                              context.document);
+                      }
+                      return rv;
+                  }
+              },
               "flowplayer3":{
                   match:function(obj) {
                       if (obj.data) {
@@ -562,10 +810,7 @@ SherdBookmarklet = {
                   },
                   asset:function(obj,match,context) {
                       /* TODO: 1. support audio
-                               2. 
                        */
-                      var sources = {};
-                      var abs = SherdBookmarklet.absolute_url;
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var $f = (context.window.$f && context.window.$f(obj.parentNode));
 
@@ -575,11 +820,17 @@ SherdBookmarklet = {
                       //getClip() works if someone's already clicked Play
                       var clip = ($f && $f.getClip() ) || cfg.clip || cfg.playlist[0];
                       var time = ($f && $f.getTime() ) || 0;
+                      return this.queryasset(context,obj,cfg,clip,time, ($f && $f.id() || undefined) );
+                  },
+                  queryasset:function(context,obj,cfg,clip,time,ref_id) {
+                      var sources = {};
                       var type = 'video';
+                      var abs = SherdBookmarklet.absolute_url;
                       if (cfg.playlist && ( !clip.url || cfg.playlist.length > 1)) {
                           for (var i=0;i<cfg.playlist.length;i++) {
                               var p = cfg.playlist[i];
-                              var url =  abs((typeof p=='string') ? p : p.url,context.document);
+                              var url =  abs( ((typeof p=='string') ? p : p.url),
+                                  context.document,p.baseUrl);
                               if (/\.(jpg|jpeg|png|gif)/.test(url)) {
                                   //redundant urls wasteful, but useful
                                   sources.thumb = url;
@@ -612,10 +863,10 @@ SherdBookmarklet = {
                           return '';
                       }
                       var primary_type = type+get_provider(clip);
-                      sources[primary_type] = clip.originalUrl || clip.resolvedUrl || clip.url || clip;
-                      if (provider && provider.netConnectionUrl)
+                      sources[primary_type] = clip.completeUrl || clip.originalUrl || clip.resolvedUrl || clip.url || clip;
+                      if (provider && provider.netConnectionUrl) {
 			  sources[primary_type] = provider.netConnectionUrl+sources[primary_type]
-
+                      } 
                       ///TODO:is context.document the right relative URL instead of the SWF?
 		      sources[primary_type] = abs(sources[primary_type],context.document);
                       if (/_pseudo/.test(primary_type)
@@ -634,7 +885,7 @@ SherdBookmarklet = {
                           "label":"video",
                           "primary_type":primary_type,
                           "hash":"start="+Math.floor(time),
-                          "ref_id":($f && $f.id() || undefined) //used for merging
+                          "ref_id":ref_id //used for merging
                       };
                   }
               },/*end flowplayer3*/
@@ -686,6 +937,94 @@ SherdBookmarklet = {
                           return {};
                       }
                   }                  
+              },
+              "zoomify":{
+                  match:function(objemb) {
+                      return (String(objemb.innerHTML).match(/zoomifyImagePath=([^&\"\']*)/)
+                              || String(objemb.flashvars).match(/zoomifyImagePath=([^&\"\']*)/));
+                  },
+                  asset:function(objemb,match,context,index,optional_callback) {
+                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                      var tile_root = SherdBookmarklet.absolute_url(match[1],context.document);
+                      tile_root = tile_root.replace(/\/$/,'');//chomp trailing /
+                      var img = document.createElement("img");
+                      img.src = tile_root+"/TileGroup0/0-0-0.jpg";
+                      var rv_zoomify = {
+                          "html":objemb,
+                          "primary_type":"image",
+                          "label":"Zoomify",
+                          "sources": {
+                              "title":tile_root.split('/').pop(),//better guess than 0-0-0.jpg
+                              "xyztile":tile_root + "/TileGroup0/${z}-${x}-${y}.jpg",
+                              "thumb":img.src,
+                              "image":img.src, /*nothing bigger available*/
+                              "image-metadata":"w"+img.width+"h"+img.height
+                          },
+                          wait:true
+                      };
+                      var hard_way = function(error) {
+                          //security error?  
+                          //Let's try it the hard way!
+                          var dim = {z:0,x:0,y:0,tilegrp:0};
+                          function walktiles(mode) {
+                              var tile = document.createElement("img");
+                              tile.onload = function() {
+                                  switch(mode) {
+                                  case 'z': ++dim.z;
+                                      dim.width = tile.width;
+                                      dim.height = tile.height;
+                                      break;
+                                  case 'x': ++dim.x; break;
+                                  case 'y': ++dim.y; break;
+                                  case 'tilegrp': ++dim.tilegrp; break;
+                                  }
+                                  walktiles(mode);
+                              }
+                              tile.onerror = function() {
+                                  switch(mode) {
+                                  case 'z': --dim.z; dim.mode = 'x'; return walktiles('x');
+                                  case 'x': --dim.x; dim.mode = 'y'; return walktiles('y');
+                                  case 'y': 
+                                      if (dim.mode!='tilegrp'){
+                                          ++dim.tilegrp; dim.mode='y'; return walktiles('tilegrp');
+                                      } else {
+                                          --dim.y; 
+                                          rv_zoomify.sources["xyztile-metadata"] = (
+                                              "w"+(dim.width*dim.x)+"h"+(dim.height*dim.y));
+                                          rv_zoomify._data_collection = 'Hackish tile walk';
+                                          return optional_callback(index,rv_zoomify);
+                                      }
+                                  case 'tilegrp': --dim.tilegrp;
+                                      var m = dim.mode; dim.mode = 'tilegrp'; 
+                                      return walktiles(m);
+                                  }
+                              }
+                              tile.src = tile_root+'/TileGroup'+dim.tilegrp+'/'+dim.z+'-'+dim.x+'-'+dim.y+'.jpg';
+                          }
+                          walktiles('z');
+                      };
+                      try {
+                          jQuery.ajax({
+                              url:tile_root+"/ImageProperties.xml",
+                              dataType:'text',
+                              success:function(dir) {
+                                  /*was for url = tile_root+"/TileGroup0/" parsing:
+                                 var zooms = dir.split("\">").reverse()[3].match(/\d+/);
+                                 var exp = Math.pow(2,zooms);
+                                 sources["xyztile-metadata"] = "w"+(img.width*exp)+"h"+(img.height*exp);
+                                */
+                                  var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
+                                  rv_zoomify.sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2])
+                                  rv_zoomify._data_collection = 'ImageProperties.xml';
+                                  optional_callback(index,rv_zoomify);
+                              },
+                              error:hard_way
+                          });
+                      } catch(ie_security_error) {
+                          hard_way();
+                      }
+                      return rv_zoomify;
+                  }
               }
           },
           find:function(callback,context) {
@@ -716,7 +1055,6 @@ SherdBookmarklet = {
                   matchNsniff(embs[i]);
               for (var i=0;i<objs.length;i++) 
                   matchNsniff(objs[i]);
-
               if (waiting==0)
                   callback(result);
           }
@@ -762,6 +1100,48 @@ SherdBookmarklet = {
               callback(result);
           }
       },/* end image assethandler */
+      "audio": {
+          find:function(callback,context) {
+              if (/.mp3$/.test(document.location)) {
+                  callback([{
+                      "html":document.documentElement,
+                      "primary_type":"mp3",
+                      "sources": {
+                          "mp3": String(document.location)
+                      }
+                  }]);
+              }
+          }
+      },
+      "iframe.postMessage":{
+          find:function(callback,context) {
+              if (!window.postMessage) return callback([]);
+              var frms = context.document.getElementsByTagName("iframe");
+              var result = [];
+              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+              SherdBookmarklet.connect(context.window,'message',function(evt) {
+                  try {
+                      var id, d = jQ.parseJSON(evt.data);
+                      if ((id = String(d.id).match(/^sherd(\d+)/)) && d.info) {
+                          var i = d.info;
+                          switch(i.player) {
+                          case "flowplayer":
+                              var fp = (SherdBookmarklet.assethandler.objects_and_embeds.players
+                                        .flowplayer3.queryasset(context,frms[parseInt(id[1],10)],i.config, i.clip, i.time, i.id));
+                              return callback([fp]);
+                          default:
+                              return callback([]);
+                          }
+                      }
+                  } catch(e) {/*parse error*/}
+              });
+              for (var i=0;i<frms.length;i++) {
+                  try {
+                      frms[i].contentWindow.postMessage('{"event":"info","id":"sherd'+i+'"}','*');
+                  } catch(e) {/*pass: probably security error*/}
+              }              
+          }
+      },
       "image": {
           find:function(callback,context) {
               var imgs = context.document.getElementsByTagName("img");
@@ -775,11 +1155,17 @@ SherdBookmarklet = {
                   if (/(footer|header)/.test(image.className)
                       ||/site_title/.test(image.parentNode.parentNode.className)//WGBH header
                       ||/logo/.test(image.id) //drupal logo
+                      ||/logo/.test(image.parentNode.id) //drupal7 logo
                       ||/logo\W/.test(image.src) //web.mit.edu/shakespeare/asia/
                      ) continue;
                   /*recreate the <img> so we get the real width/height */
-                  var image_ind = document.createElement('img');
+                  var image_ind = document.createElement("img");
                   image_ind.src = image.src;
+                  if (image_ind.width == 0) {
+                      //for if it doesn't load immediately
+                      //cheating: TODO - jQ(image_ind).bind('load',function() { /*see dropbox.com above*/ });
+                      image_ind = image;
+                  }
                   if (image_ind.width >= 400 || image_ind.height >= 400) {
                       result.push({
                           "html":image,
@@ -827,10 +1213,7 @@ SherdBookmarklet = {
                   }
               }
               for (var i=0;i<result.length;i++) {
-                  result[i].metadata = SherdBookmarklet.microdataSearch(result[i].html) || undefined;
-                  if (result[i].metadata && result[i].metadata.title) {
-                      result[i].sources["title"] = result[i].metadata.title.shift();
-                  }
+                  SherdBookmarklet.metadataSearch(result[i], context.document);
               }
               if (done==0) callback(result);
           }
@@ -1009,9 +1392,9 @@ SherdBookmarklet = {
   },/*end assethandler*/
   "gethosthandler":function() {
       var hosthandler = SherdBookmarklet.hosthandler;
-      hosthandler['mcah.columbia.edu'] = hosthandler['learn.columbia.edu'] 
+      hosthandler['mcah.columbia.edu'] = hosthandler['learn.columbia.edu'];
       for (host in hosthandler) {
-          if (new RegExp(host+'$').test(location.hostname)) 
+          if (new RegExp(host+'$').test(location.hostname.replace('.ezproxy.cul.columbia.edu',''))) 
               return hosthandler[host];
       }
   },/*gethosthandler*/
@@ -1122,11 +1505,8 @@ SherdBookmarklet = {
                 }
                 break;
             default:
-                M.g = new M.Interface(host_url);
+                M.g = new M.Interface(host_url, {'allow_save_all': handler.allow_save_all});
                 M.g.showAssets(assets);
-            }
-            if (window.console) {/*if we get here, we're debugging*/
-                window.console.log(assets);
             }
         };/*end jump_with_first_asset*/
         handler.find.call(handler, jump_with_first_asset);
@@ -1161,7 +1541,55 @@ SherdBookmarklet = {
   "hasBody":function(doc) {
           return (doc.body && 'body'==doc.body.tagName.toLowerCase());
   },
-  "microdataSearch":function(elem) {
+  "clean":function(str) {
+      return str.replace(/^\s+/,'').replace(/\s+$/,'').replace(/\s+/,' ');
+  },
+  "getImageDimensions":function(src,callback,onerror) {
+      //
+      var img = document.createElement("img");
+      img.onload = function() {
+          callback(img,"w"+img.width+"h"+img.height);
+      }
+      img.onerror = onerror;
+      img.src = src;
+      return img;
+  },
+  "mergeMetadata":function(result,metadata) {
+      if (!metadata) return;
+      if (!result.metadata) {
+          return result.metadata = metadata;
+      } else {
+          for (var a in metadata) {
+              if (result.metadata[a]) {
+                  result.metadata[a].push.apply(result.metadata[a], metadata[a]);
+              } else {
+                  result.metadata[a] = metadata[a]
+              }
+          }
+      }
+      return metadata;
+  },
+  "metadataSearch":function(result, doc) {
+      /*searches for neighboring metadata in microdata and some ad-hoc microformats */
+      var M = SherdBookmarklet;
+      if (!M.mergeMetadata(result,M.metadataTableSearch(result.html, doc))) {
+          M.mergeMetadata(result,M.microdataSearch(result.html, doc))
+      }
+      var meta = result.metadata;
+      if (meta) {
+          //move appopriate keys to result.sources
+          var s = {
+              "title":meta.title || meta['Title'],
+              "thumb":meta.thumb || meta['Thumb'] || meta['Thumbnail'] || meta['thumbnail']
+          }
+          for (var a in s) {
+              if (s[a]) {
+                  result.sources[a] = s[a].shift();
+              }
+          }
+      }
+  },
+    "microdataSearch":function(elem, doc) {
       var item;
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
       jQ(elem).parents('*[itemscope=]').each(function(){ item = this; });
@@ -1176,11 +1604,37 @@ SherdBookmarklet = {
                   props[p] = props[p] || [];
                   switch(String(this.tagName).toLowerCase()) {
                   case "a":case "link":case "area":
-                      props[p].push(abs(this.href));
+                      props[p].push(abs(this.href, doc));
                   case "audio":case "embed":case "iframe":case "img":case "source":case "video":
-                      props[p].push(abs(this.src));
+                      props[p].push(abs(this.src, doc));
                   default:
                       props[p].push(jQ(this).text());
+                  }
+              });
+              return props;
+          }
+      }
+  },
+  "metadataTableSearch":function(elem, doc) {
+      /*If asset is in a table and the next row has the word 'Metadata' */
+      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+      if ('td'===elem.parentNode.tagName.toLowerCase()) {
+          var trs = jQ(elem.parentNode.parentNode).nextAll();
+          if (trs.length && /metadata/i.test(jQ(trs[0]).text())) {
+              var props = {};
+              trs.each(function() {
+                  var tds = jQ('td',this);
+                  if (tds.length === 2) {
+                      var p = SherdBookmarklet.clean(jQ(tds[0]).text());
+                      if (p) {
+                          props[p] = props[p] || [];
+                          var val = SherdBookmarklet.clean(jQ(tds[1]).text());
+                          //if there's an <a> tag, then use the URL -- use for thumbs
+                          jQ('a',tds[1]).slice(0,1).each(function() {
+                              val = SherdBookmarklet.absolute_url(this.href,doc);
+                          });
+                          props[p].push(val)
+                      }
                   }
               });
               return props;
@@ -1210,7 +1664,8 @@ SherdBookmarklet = {
           return jq(tag+'['+attr+'='+val+']',par)
       }
   },
-  "absolute_url":function (maybe_local_url, doc) {
+  "absolute_url":function (maybe_local_url, doc, maybe_suffix) {
+      maybe_local_url = (maybe_suffix || '') + maybe_local_url;
       if (/:\/\//.test(maybe_local_url)) {
           return maybe_local_url;
       } else {
@@ -1230,13 +1685,27 @@ SherdBookmarklet = {
   },
   "elt":function(doc,tag,className,style,children) {
       ///we use this to be even more careful than jquery for contexts like doc.contentType='video/m4v' in firefox
+      var setStyle = function(e,style) {
+          //BROKEN IN IE: http://www.peterbe.com/plog/setAttribute-style-IE
+          var css = style.split(';');
+          for (var i=0;i<css.length;i++) {
+              var kv = css[i].split(':');
+              if (kv[0] && kv.length===2) {
+                  e.style[kv[0].replace(/-([a-z])/,function(a,b){return b.toUpperCase()})] = kv[1];
+              }
+          }
+      };
       var t = doc.createElement(tag);
       t.setAttribute('class',className);
-      if (typeof style == 'string')
+      if (typeof style == 'string') {
           t.setAttribute('style',style);
-      else for (a in style) {
+          setStyle(t,style);
+      } else for (a in style) {
           t.setAttribute(a,style[a]);
           if (style[a] === null) t.removeAttribute(a);
+          if (a==='style') {
+              setStyle(t,style[a]);
+          }
       }
       if (children) {
           for (var i=0;i<children.length;i++) {
@@ -1380,6 +1849,9 @@ SherdBookmarklet = {
               if (after_merge) {
                   after_merge.html_id = self.assetHtmlID(after_merge); 
                   self.ASYNC.display(after_merge, /*index*/assets.length-1); 
+                  if (window.console) {
+                      window.console.log(assets);
+                  }
               }
           }
           ++self.handler_count;
@@ -1402,10 +1874,10 @@ SherdBookmarklet = {
                   var context = {
                       frame:this,document:doc,
                       window:this.contentWindow,
-                      hasBody:self.hasBody(doc)
+                      hasBody:SherdBookmarklet.hasBody(doc)
                   };
                   rv.all.push(context);
-                  var area = self.hasBody(doc) * this.offsetWidth * this.offsetHeight;
+                  var area = context.hasBody * this.offsetWidth * this.offsetHeight;
                   if (area > max) {
                       rv.best = context;
                   }
@@ -1455,7 +1927,7 @@ SherdBookmarklet = {
               comp.tab.style.display = "none";
               jQ(comp.ul).empty();
               if (!SherdBookmarklet.user_ready()) {
-                  comp.h2.innerHTML = 'Login required';
+                  jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Login required'));
                   o.login_url = o.login_url || host_url.split("/",3).join("/");
                   jQ(comp.message).empty().append(
                       self.elt(null,'span','',{},
@@ -1553,7 +2025,7 @@ SherdBookmarklet = {
       };
 
       this.maybeShowInFrame = function(frame) {
-          if (!comp.window && frames.best) {
+          if (!comp.window && frame) {
               var target = o.target || frame.document.body;
               self.setupContent(target);
               self.showWindow();
@@ -1588,7 +2060,8 @@ SherdBookmarklet = {
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
           } else if (SherdBookmarklet.user_ready()){
-              jQ(form.lastChild).empty().append(self.elt(null,'input','',{type:'submit',style:'display:block;padding:4px;margin:4px;',value:'analyze'}));
+              form.submitButton = self.elt(null,'input','',{type:'submit',style:'display:block;padding:4px;margin:4px;',value:'analyze'});
+              jQ(form.lastChild).empty().append(form.submitButton);
           }
 
           if (comp.ul) {
@@ -1605,7 +2078,7 @@ SherdBookmarklet = {
               if (!results.found) {
                   jQ(comp.h2).text(o.message_no_assets_short);
                   jQ(comp.ul).html(self.elt(comp.ul.ownerDocument,'li','','',[o.message_no_assets]));
-              }
+              } 
           }
       };
       this.showAssets = function(assets) {
@@ -1614,7 +2087,94 @@ SherdBookmarklet = {
           for (var i=0;assets.length>i;i++) {
               self.displayAsset(assets[i]);
           }
+          if (assets.length > 1 && o.allow_save_all) {
+              self.addSaveAllButton(assets.length);
+          }
       };
+      this.addSaveAllButton = function(count) {
+          var save_all = document.createElement('li');
+          comp.ul.appendChild(save_all);
+          ///TODO: cheating without possible dom weirdness
+          save_all.innerHTML = '<button onclick="SherdBookmarklet.g.saveAll()">Save All '+count+' Items</button>';
+          comp.saveAll = save_all;
+          comp.saveAllButton = save_all.firstChild;
+      }
+      this.saveAll = function() {
+          ///TODO: cheating without possible dom weirdness (e.g. assuming same document)
+          if (!confirm('Are you sure?  This could take some time....')) {
+              return;
+          }
+          comp.saveAllButton.disabled = true;
+          comp.saveAllButton.innerHTML = 'Saving...';
+
+          var all_forms = jQ('form', comp.ul);
+          var done = 0, 
+              frmids = 0,
+              todo = all_forms.length,
+              form_dict = {},
+              updateForm = function(frm, new_href) {
+                  if (frm) {
+                      frm.disabled = true;
+                      jQ(frm.submitButton).remove();
+                      if (new_href) {
+                          jQ(frm).append(self.elt(null,'span','',{},[
+                              self.elt(null,'a','',{href:new_href},['Link in MediaThread'])
+                          ]));
+                      } else {
+                          jQ(frm).append(self.elt(null,'span','',{},[' Saved! ']));
+                      }
+                  }
+              };
+          if (window.postMessage) {
+              jQ(window).bind('message',function(jevt) {
+                  //eh, let's not use this after all
+                  var evt = jevt.originalEvent;
+                  if (host_url.indexOf(evt.origin) === -1 ) 
+                      return;
+                  var parsed = evt.data.split('|');
+                  updateForm(form_dict[ parsed[1] ], parsed[0]);
+              })
+          }
+          all_forms.each(function() {
+              var iframe = document.createElement('iframe');
+                  iframe.height = iframe.width = 1;
+                  iframe.id = this.id + '-iframesubmit';
+              comp.window.appendChild(iframe);
+              var target = iframe.contentDocument||iframe.contentWindow.document;
+
+
+              var new_frm = target.createElement('form');
+                  new_frm.action = this.action;
+                  new_frm.method = 'POST';
+                  new_frm.innerHTML = this.innerHTML;
+              target.body.appendChild(new_frm);
+
+              var noui = target.createElement('input');
+                  noui.name = 'noui';
+                  noui.value = 'postMessage'+ (++frmids);
+                  noui.type = 'hidden';
+              new_frm.appendChild(noui);
+
+              //save value so we can get to it later
+              this.id = 'sherdbookmarklet-form-'+ (noui.value);
+              form_dict[noui.value] = this;
+
+              //special since it was set by DOM (or changed) above
+              new_frm.elements['title'].value = this.elements['title'].value
+              
+              jQ(iframe).load(function(evt) {
+                  ++done;
+                  comp.saveAllButton.innerHTML = 'Saved '+done+' of '+todo+'...';
+
+                  var frmid = String(this.id).slice(0,-('-iframesubmit'.length));
+                  updateForm(document.getElementById(frmid), false);
+                  
+              });
+              new_frm.submit();
+              
+          });
+          //TODO: this will be a huge pain, since it needs to be cross-domain.
+      }
 
   }/*Interface*/
 };/*SherdBookmarklet (root)*/

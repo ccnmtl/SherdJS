@@ -18,11 +18,26 @@ http://developer.apple.com/safari/library/documentation/QuickTime/Conceptual/QTS
  */
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
-if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
+if (!Sherd.Video.QuickTime) {
     Sherd.Video.QuickTime = function() {
         var self = this;
         self._played = false; // See this.media.seek
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
+        
+        this.presentations = {
+                'small':{
+                    width:function(){return 310;},
+                    height:function(){return 220;}
+                },
+                'medium': {
+                    width:function(){return 540;},
+                    height:function(){return 383;}
+                },
+                'default': {
+                    width:function(){return 620;},
+                    height:function(){return 440;}
+                }
+            };
         
         ////////////////////////////////////////////////////////////////////////
         // Microformat
@@ -46,25 +61,26 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 loadingposter:false,
                 extra:''
             };
-            for (a in opt) {
+            for (var a in opt) {
                 if (obj[a]) opt[a] = obj[a];
             }
+
             if (!obj.presentation_width) {
-                obj.presentation_width = Number(opt.width);
-                obj.presentation_height = Number(opt.height);
+                var presentation;
+                switch (typeof obj.presentation) {
+                case 'string': presentation = self.presentations[obj.presentation]; break;
+                case 'object': presentation = obj.presentation; break;
+                case 'undefined': presentation = self.presentations['default']; break;
+                }
+                
+                obj.presentation_width = presentation.width();
+                obj.presentation_height = presentation.height();
             }
-            var ratio = opt.height/opt.width;
-            if (obj.presentation == 'small') {
-                obj.presentation_width = 320;
-                obj.presentation_height = parseInt(320 * ratio,10);
-            } else if (obj.presentation_width > 620) {
-                obj.presentation_width = 620;
-                obj.presentation_height = parseInt(620 * ratio,10);
-            }
+            
             var full_height = obj.presentation_height + Number(opt.controller_height);
             opt.href= '';//for poster support
             opt.autohref= '';//for poster support
-            if (!(/Macintosh.*[3-9][.0-9]+ Safari/.test(navigator.userAgent)
+            if (!(/Macintosh.*Version\/[3-9][.0-9]+ Safari/.test(navigator.userAgent)
                     || /Linux/.test(navigator.userAgent)
             )) {
                 opt.mimetype = 'image/x-quicktime';
@@ -222,11 +238,10 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 } catch(e) { }
             }
             return false;
-        }
+        };
         
         this.microformat._startUpdateDisplayTimer = function(create_obj) {
             self.media._duration = 0;
-            //console.log(create_obj);
             self.events.queue('quicktime duration watcher & tick count',
                               [{test: function() {
                                   // Update the duration
@@ -251,7 +266,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                               }, 
                                 poll:500}
                               ]);
-        }
+        };
         
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
@@ -262,10 +277,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             // kickoff some timers
             self.events.queue('quicktime ready to seek',
                               [{test: function() {
-                                  // Is the duration valid yet?
-                                  var adjustedDuration = self.media.duration();
                                   ready = (self.media.ready() 
-                                           && adjustedDuration > 0
+                                           && self.media.duration() > 0 // Is the duration valid yet?
                                            && (self.components.player.GetMaxTimeLoaded()/self.media.timescale()) > self.components.starttime);
                                   
                                   return ready; 
@@ -273,9 +286,12 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                                 poll:500
                                },
                                {call: function() {
-                                   self.setState({"start":self.components.starttime, 
-                                                  "end":self.components.endtime});
-                                }
+                                   //we wait here for the situation of suckage:
+                                   //Mac Chrome: auto-seeking from poster-frame needs some time to 'really' load the video
+                                   setTimeout(function() {
+                                       self.setState({"start":self.components.starttime, 
+                                                      "end":self.components.endtime});
+                                   },400); }
                                }]);
 
             self.microformat._startUpdateDisplayTimer(create_obj);
@@ -287,6 +303,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 self.setState(obj);
                 
                 // give it a second
+                ///TODO: should just use self.setState(obj, {autoplay:true});
                 window.setTimeout(function() { self.media.play(); }, 200);
             });
 
@@ -328,19 +345,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         
         this.media.play = function() {
             if (self.media.ready()) {
-                var p = self.components.player;
-                ///WARNING: mimetype doesn't change after HREF advancement
-                ///         so we need to test if we're already advanced
-                var mimetype = p.GetMIMEType();
-                var href = p.GetHREF();
-                if (href && !self._played && /image/.test(mimetype)) {
-                    // Setting the URL in this manner is only needed the first time through
-                    // In order to facilitate fast seeking and update, keep track of the first time
-                    // via the _played class variable, then default to a regular play event
-                    p.SetURL(href);
-                    p.SetHREF('');
-                    self._played = true;
-                } else {
+                if (!self.media.swapPoster() ) {
                     self.components.player.Play();
                 }       
             } else {
@@ -351,6 +356,28 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             }
         };
         
+        this.media.swapPoster = function() {
+            var p = self.components.player;
+            ///WARNING: mimetype doesn't change after HREF advancement
+            ///         so we need to test if we're already advanced
+            var mimetype ='';
+            try {//Safari SUX: dies on GetMIMEType for no reason.
+                mimetype = p.GetMIMEType();
+            } catch(e) {/*pass*/}
+            var href = p.GetHREF();
+            if (href && !self._played && /image/.test(mimetype)) {
+                // Setting the URL in this manner is only needed the first time through
+                // In order to facilitate fast seeking and update, keep track of the first time
+                // via the _played class variable, then default to a regular play event
+                p.SetURL(href);
+                p.SetHREF('');
+                self._played = true;
+                return true;
+            } else {
+                return false;
+            }
+        };
+
         // Used by tests
         this.media.isPlaying = function() {
             var playing = false;
@@ -379,14 +406,14 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         this.media.seek = function(starttime, endtime, autoplay) {
             if (self.media.ready()) {
                 var p = self.components.player;
-                if (starttime != undefined) {
+                if (starttime !== undefined) {
                     playRate = p.GetRate();
                     if (playRate > 0)
                         p.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
                     try {
                         p.SetTime(starttime * self.media.timescale());
                     } catch(e) {}
-                    if (autoplay || self.components.autoplay || playRate != 0) {
+                    if (autoplay || self.components.autoplay || playRate !== 0) {
                         p.Play();
                     }
                 }
@@ -399,7 +426,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
             // store the values away for when the player is ready
             self.components.starttime = starttime;
             self.components.endtime = endtime;
-        }
+        };
         
         this.media.time = function() {
             var time = 0;
@@ -407,7 +434,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 time = self.components.player.GetTime()/self.media.timescale();
             } catch(e) {}
             return time;
-        }
+        };
         
         this.media.timescale = function() {
             var timescale = 1;
@@ -415,7 +442,7 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 timescale = self.components.player.GetTimeScale();
             } catch(e) {}
             return timescale;
-        }
+        };
         
         this.media.timestrip = function() {
             var w = self.components.player.width;
@@ -423,8 +450,8 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 trackX: 40,
                 trackWidth: w-92,
                 visible:true
-            }
-        }
+            };
+        };
         
         //returns true, if we're sure it is. Not currently used
         this.media.isStreaming = function() {
@@ -436,14 +463,14 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
         // Used by tests.
         this.media.url = function() {
             return self.components.player.GetURL();
-        }
+        };
         
         this.media._updateTickCount = function() {
             if (typeof self.components.player.GetRate != 'undefined'
                 && self.components.player.GetRate() > 0) { 
                 self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
             } 
-        }
+        };
         this.media.resize = function(w,h, obj) {
             if (!self.debug) return;//RETURN
 
@@ -460,15 +487,15 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
                 p.SetRectangle("0,0,"+w+","+h);
                 
             }
-        }
-    } //Sherd.AssetViews.QuickTime
+        };
+    }; //Sherd.AssetViews.QuickTime
 
 
     ////ARCHIVED FROM VITAL CODE
     /*this was trying to solve a harder problem 
       when we don't know the proportions, but what if we know them?
      */
-    function conformProportions(mymovie, w, h) {
+    var conformProportions = function(mymovie, w, h) {
     /*
       This function still doesn't work when QT loads the movie
       in the mini-window that comes up before it auto-sizes.
@@ -479,23 +506,23 @@ if (!Sherd.Video.QuickTime && Sherd.Video.Base) {
       Ideally we would stop it from loading in that stupid little window
       to begin with.
     */
-    return;
-    //ASSUME width is always greater than height
-    //    alert(theMovie.GetPluginStatus()+mymovie.GetRectangle()+mymovie.GetMatrix());
+        if (true) return;
+        //ASSUME width is always greater than height
+        //    alert(theMovie.GetPluginStatus()+mymovie.GetRectangle()+mymovie.GetMatrix());
 
-    var cur_wh = mymovie.GetRectangle().split(',');
-    
-    oldW = parseInt(cur_wh[2],10) - parseInt(cur_wh[0],10);
-    oldH = parseInt(cur_wh[3],10) - parseInt(cur_wh[1],10);
-    var newH = w*oldH/oldW;
-    mymovie.SetRectangle("0,0,"+w+","+newH);
-
-    matrix = mymovie.GetMatrix().split(',');
-    //    alert(mymovie.GetMatrix());
-    matrix[5] = Math.round(h-newH);
-    mymovie.SetMatrix(matrix.join(','));
-    //    alert('w'+w+' newH:'+newH+' '+theMovie.GetPluginStatus()+"-- "+matrix.join(','));
-    }
+        var cur_wh = mymovie.GetRectangle().split(',');
+        
+        oldW = parseInt(cur_wh[2],10) - parseInt(cur_wh[0],10);
+        oldH = parseInt(cur_wh[3],10) - parseInt(cur_wh[1],10);
+        var newH = w*oldH/oldW;
+        mymovie.SetRectangle("0,0,"+w+","+newH);
+        
+        matrix = mymovie.GetMatrix().split(',');
+        //    alert(mymovie.GetMatrix());
+        matrix[5] = Math.round(h-newH);
+        mymovie.SetMatrix(matrix.join(','));
+        //    alert('w'+w+' newH:'+newH+' '+theMovie.GetPluginStatus()+"-- "+matrix.join(','));
+    };
 
 }
 

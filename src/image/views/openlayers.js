@@ -1,3 +1,34 @@
+/****
+An annotation looks like this:
+///1
+{"type":"Feature", 
+ "id":"OpenLayers.Feature.Vector_92", 
+ "properties":{}, 
+ "geometry":{"type":"Polygon", 
+             "coordinates":[[ [-37.8125, 17.1875], 
+                              [-37.5, -2.5], 
+                              [-2.8125, 11.25], 
+                              [-37.8125, 17.1875]
+                           ]]
+            }, 
+ "crs":{"type":"OGC", 
+        "properties":{"urn":"urn:ogc:def:crs:OGC:1.3:CRS84"}}
+}
+
+///2
+{"type":"Feature", 
+ "id":"OpenLayers.Feature.Vector_78", 
+ "properties":{},  
+ "geometry":{"type":"Point", 
+             "coordinates":[0.3125, -2.96875]
+            }, 
+ "crs":{"type":"OGC", 
+        "properties":{"urn":"urn:ogc:def:crs:OGC:1.3:CRS84"}}
+}
+
+
+***/
+
 if (!Math.log2) {
     var div = Math.log(2);
     Math.log2 = function(x) {
@@ -28,6 +59,53 @@ if (!Sherd.Image.OpenLayers) {
 		    )};
 		}
 	    },
+            'features2svg':function() {
+                throw Error('not implemented correctly');
+                ///This gets it from the vectorLayer, which is
+                /// abandoned for a Rootcontainer object, which will be different
+                /// also the svg will be relative to the MapContainer div's pos-style
+                var x = new OpenLayers.Format.XML();
+                return x.write(self.openlayers.vectorLayer.v.renderer.rendererRoot);
+            },
+            'frag2feature':function(obj,map) {
+                var extent = self.openlayers.map.getMaxExtent().toArray(); //left,?bottom,right,top
+                var geow = extent[2]-extent[0],
+                    geoh = extent[3]-extent[1];
+
+                if (self.current_obj.type === 'xyztile') {
+                    ///bottom extent is not reliable, so we use 1000px = 90deg
+                    geoh = self.current_obj.dim.height * 90/1000;
+                }
+                switch(obj.xywh.units) {
+                case 'pixel':
+                    geow /= self.current_obj.dim.width;
+                    geoh /= self.current_obj.dim.height;
+                    break;
+                case 'percent':
+                    geow /= 100;
+                    geoh /= 100;
+                    break;
+                default:return false //unsupported type
+                }
+                var topleft = [
+                    extent[0] + obj.xywh.x*geow,
+                    extent[3] - obj.xywh.y*geoh
+                ];
+                var geometry = {type:'Polygon',coordinates:[]};
+                if (obj.xywh.w ===0 && obj.xywh.h===0) {
+                    geometry.type = 'Point';
+                    geometry.coordinates = topleft;
+                } else {
+                    var right = topleft[0]+geow*obj.xywh.w;
+                    var bottom = topleft[1]-geoh*obj.xywh.h;
+                    geometry.coordinates.push([topleft,
+                                               [right,topleft[1]], //topright
+                                               [right,bottom], //bottomright
+                                               [topleft[0],bottom], //bottomleft
+                                               topleft]); //return to topleft
+                }
+                return self.openlayers.GeoJSON.parseFeature({geometry:geometry});
+            },
 	    'object_proportioned':function(object) {
 		var dim = {w:180,h:90};
 		var w = object.width||180;//76.23;//
@@ -55,56 +133,168 @@ if (!Sherd.Image.OpenLayers) {
 
         this.Layer = function(){};
         this.Layer.prototype = {
-            _anns:{},
-            create:function(name) {
-                this.v = new OpenLayers.Layer.Vector(name||"Annotations",{projection:'Flatland:1'});
-		this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
-                self.openlayers.map.addLayers([this.v]);
+            all_layers:[],
+            root:{hover:false, click:false, layers:{} },
+            _adoptIntoRootContainer:function(new_layer,opts) {
+                /* In order to get mouse events through layers, they need to
+                   all exist within the same SVG object.  In OpenLayers, this is done 
+                   with OpenLayers/Layer/Vector/RootContainer.js which can only
+                   be instantiated through SelectFeature (which we use anyway)
+
+                   This means each added layer, we need to recreate a global SelectFeature
+                   so it can consolidate all of the layers.
+                 */
+                layerSelf = this;
+                if (this.root.globalMouseListener
+                    && this.root.globalMouseListener.map) {
+                    this.root.globalMouseListener.destroy();
+                }
+                var listeners = this.root.layers[new_layer.v.id] = {me:new_layer};
+
+                this.all_layers.push(new_layer.v);
+                this.all_layers.sort(function(a,b) {
+                    return a.sherd_layerapi.zIndex - b.sherd_layerapi.zIndex;
+                });
+                //setting the setLayerIndex reorders the map array, so we respect opts.zIndex
+                //setting the .index allows clinical removal in .remove();
+                for (var i=0,l=this.all_layers.length;i<l;i++) {
+                    var layer = this.all_layers[i];
+                    this.root.layers[layer.id].index = i;
+                    layer.map.setLayerIndex(layer,i+1);//+1 for the baseLayer
+                }
+                if (opts.onmouseenter) { 
+                    this.root.hover = true;
+                    listeners.onmouseenter = opts.onmouseenter;
+                }
+                if (opts.onmouseleave) {
+                    this.root.hover = true;
+                    listeners.onmouseleave = opts.onmouseleave;
+                }
+                if (opts.onclick) {
+                    this.root.click = true;
+                    listeners.onclick = opts.onclick;
+                }
+
+                this.root.globalMouseListener = new OpenLayers.Control.SelectFeature(this.all_layers,{
+                    'hover':this.root.hover,
+                    overFeature:function(feature){
+                        var lay = layerSelf.root.layers[feature.layer.id];
+                        if (lay.onmouseenter) {
+                            lay.onmouseenter(feature.sherd_id, feature.layer.sherd_layername);
+                        }
+                    },
+                    clickFeature:function(feature){
+                        var lay = layerSelf.root.layers[feature.layer.id];
+                        if (lay.onclick) {
+                            lay.onclick(feature.sherd_id, feature.layer.sherd_layername);
+                        }
+                    },
+                    outFeature:function(feature){
+                        var lay = layerSelf.root.layers[feature.layer.id];
+                        if (lay.onmouseleave) {
+                            lay.onmouseleave(feature.sherd_id, feature.layer.sherd_layername);
+                        }
+                    },
+                    highlightOnly:true, renderIntent:"temporary"
+                });
+                self.openlayers.map.addControl(this.root.globalMouseListener);
+                this.root.globalMouseListener.activate();
+                
+            },
+            create:function(name, opts) {
+                /* opts = {title, onclick(ann_id, layer_name), onhover(ann_id, layer_name), }
+                */
+                this.v = new OpenLayers.Layer.Vector(name||"Annotations",{projection:'Flatland:1',
+                                                                          rendererOptions:{zIndexing:true}
+                                                                         });
+                this.name = name;
+                this._anns = {};
+                this.v.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
+                this.zIndex = (opts && opts.zIndex) || 200; //used to order layers
+                this.v.setZIndex(this.zIndex);
+                this.v.sherd_layername = name;
+                this.v.sherd_layerapi = this;
+
+                self.openlayers.map.addLayer(this.v);
+                this._adoptIntoRootContainer(this, opts);
+
                 return this;
             },
             destroy:function() {
+                //remove from mouselistener obj
+                this.all_layers.splice(this.root.layers[this.v.id].index,1);
+                delete this.root.layers[this.v.id];
+                //destroy layer -- openlayers does the rest
                 this.v.destroy();
-                for (ann_id in this._anns) 
+                //delete ann pointers
+                for (var ann_id in this._anns) 
                     delete this._anns[ann_id];
             },
             add:function(ann, opts) {
+                if (!this.v) 
+                    throw Error('layer not created yet');
                 var feature_bg = self.openlayers.GeoJSON.parseFeature(ann);
                 var feature_fg = feature_bg.clone();
                 var features = [feature_bg, feature_fg];
-                feature_bg.renderIntent = 'black';
-                feature_fg.renderIntent = 'defaultx';
+                feature_bg.renderIntent = 'blackbg';
+                feature_fg.renderIntent = 'defaulta';
                 
                 if (opts) {
-                    if (opts.id)
-                        this._anns[opts.id] = features;
+                    if (opts.id) {
+                        this._anns[opts.id] = {'f':features,
+                                               'opts':opts};
+                        feature_fg.sherd_id = opts.id;
+                        feature_bg.sherd_id = opts.id;
+                    }
                     if (opts.color) {
-                        if (! opts.color in this.v.styleMap.styles) {
-                            this.v.styleMap.styles[opts.color] = new
-                            OpenLayers.Style({fillOpacity:0,strokeWidth:2,strokeColor:opts.color});
+                        if (opts.color in this.v.styleMap.styles) {
+                            feature_fg.renderIntent = opts.color;
+                        } else if (feature_fg.geometry) {
+                            //unique to each feature, for graphicZIndex
+                            var feature_style = feature_fg.id+':'+opts.color;
+                            //feature_fg.geometry.getArea(); //alt zIndex measure
+                            this.v.styleMap.styles[feature_style] = new OpenLayers.Style(
+                                {fillOpacity:0,
+                                 strokeWidth:1,
+                                 strokeColor:opts.color,
+                                 pointerEvents:(opts.pointerEvents),
+                                 graphicZIndex:(opts.zIndex || 300 -parseInt(feature_fg.geometry.getBounds().top,10))
+                                });
+                            feature_fg.renderIntent = feature_style;
                         }
-                        feature_fg.renderIntent = opts.color;
+                    }
+                    if (opts.bgcolor) {//cheating--ASSUME color already exists
+                        feature_bg.renderIntent = opts.bgcolor;
                     }
                 }
                 this.v.addFeatures(features);
             },
             remove:function(ann_id) {
-                if (ann_id in this._anns) {
-                    this.v.removeFeatures(this._anns[ann_id]);
+                //returns the opts that were used to add it
+                if (this.v && ann_id in this._anns) {
+                    this.v.removeFeatures(this._anns[ann_id].f);
+                    var o = this._anns[ann_id].opts;
                     delete this._anns[ann_id];
+                    return o;
                 }
             },
             removeAll:function() {
+                if (!this.v) return;
                 this.v.removeAllFeatures();
-                for (ann_id in this._anns) 
+                for (var ann_id in this._anns) 
                     delete this._anns[ann_id];
             },
             show:function() {
-                this.v.display(true);
+                this.v.setVisibility(true);
             },
             hide:function() {
-                this.v.display(false);
+                this.v.setVisibility(false);
+            },
+            //extension for internal openlayers stuff
+            getLayer:function() {
+                return this.v;
             }
-        }
+        };
 
 	this.presentations = {
 	    'thumb':{
@@ -119,24 +309,31 @@ if (!Sherd.Image.OpenLayers) {
 		}
 	    },
 	    'default':{
-		height:function(obj,presenter){return Sherd.winHeight()+'px';},
-		width:function(obj,presenter){return '100%';},
-		initialize:function(obj,presenter){
-		    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
-		    self.events.connect(window,'resize',function() {
-			presenter.components.top.style.height = Sherd.winHeight()+'px';
-		    });
-		}
+    		height:function(obj,presenter) {
+	            return Sherd.winHeight()+'px';
+	        },
+    		width:function(obj,presenter){return '100%';},
+    		initialize:function(obj,presenter){
+    		    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
+    		    self.events.connect(window,'resize',function() {
+    			presenter.components.top.style.height = Sherd.winHeight()+'px';
+    		    });
+    		}
+	    },
+	    'medium':{
+            height:function(){return '383px';},
+            width:function(){return '100%';},
+            initialize:function(){/*noop*/}
 	    },
 	    'small':{
-		height:function(){return '240px';},
-		width:function(){return '320px';},
-		initialize:function(){/*noop*/}
+	        height:function(){return '240px';},
+	        width:function(){return '320px';},
+	        initialize:function(){/*noop*/}
 	    }
 	};
 
 	this.currentfeature = false;
-
+        this.current_obj = false;
 	this.getState = function() {
 	    var geojson = {};
 	    if (self.currentfeature) {
@@ -145,7 +342,7 @@ if (!Sherd.Image.OpenLayers) {
 	    var m = self.openlayers.map;
 	    if (m) {
 		var center = m.getCenter();
-		geojson['default'] = (!geojson.geometry && center.lon==0 && center.lat==0);
+		geojson['default'] = (!geojson.geometry && center.lon===0 && center.lat===0);
 		geojson['x']=center.lon; 
 		geojson['y']=center.lat;
 		geojson['zoom']=m.getZoom();
@@ -164,13 +361,15 @@ if (!Sherd.Image.OpenLayers) {
 		//x:-135,y:45,
 		'zoom':2
 	    };
-            if (obj==null) obj = {};
+            if (obj===null) obj = {};
 
-	    if (typeof obj=='object' && obj!=null) {
+	    if (typeof obj==='object' && obj!==null) {
 		if (obj.feature) {
 		    self.currentfeature = obj.feature;
 		} else if (obj.geometry) {//obj is a json feature
 		    self.currentfeature = self.openlayers.GeoJSON.parseFeature(obj);
+		} else if (obj.xywh) {//obj is a mediafragment box
+                    self.currentfeature = self.openlayers.frag2feature(obj,self.openlayers.map);
 		} else {
 		    if (obj.x) state.x = obj.x;
 		    if (obj.y) state.y = obj.y;
@@ -178,17 +377,16 @@ if (!Sherd.Image.OpenLayers) {
 		    self.currentfeature = false;
 		}
 	    }
+            self.openlayers.vectorLayer.removeAll();
 	    if (self.currentfeature) {
-		var style = self.openlayers.vectors.styleMap.styles.select;
+                self.openlayers.vectorLayer.add(self.openlayers.feature2json(self.currentfeature),
+                                                {color:'grey',
+                                                 bgcolor:'white',
+                                                 //pointerEvents:'none',
+                                                 zIndex:850//lower than the highlight layer in assets.js
+                                                });
+                
 		var bounds = self.currentfeature.geometry.getBounds();
-		self.openlayers.features = [self.currentfeature, self.currentfeature.clone()];
-
-		//self.currentfeature.style = self.openlayers.vectors.styleMap.styles['sky'];
-		self.openlayers.features[1].renderIntent = 'defaultx';
-		self.currentfeature.renderIntent = 'black';
-		//self.openlayers.features[1].style = self.openlayers.vectors.styleMap.styles['sky'];
-
-		self.openlayers.vectors.addFeatures( self.openlayers.features );
                 if (!obj.preserveCurrentFocus) {
                     if (obj.zoom &&
                         obj.zoom < self.openlayers.map.getZoomForExtent(bounds)
@@ -235,13 +433,23 @@ if (!Sherd.Image.OpenLayers) {
 	this.microformat.update = function(obj,html_dom) {
 	    ///1. test if something exists in components now (else return false)
 	    ///2. assert( obj ~= from_obj) (else return false)
-
-	    ///TODO (replace map (as a new layer--hide/show?)
+            //map is destroyed during .deinitialize(), so we don't need to 
 	    
 	};
+	this.deinitialize = function() {
+            if (this.openlayers.map) {
+                var lays = this.Layer.prototype.root.layers;
+                for (var a in lays) {
+                    if (lays[a].name != 'annotating')
+                        lays[a].me.destroy();
+                }
+
+                this.openlayers.map.destroy();
+            }
+        };
 	this.initialize = function(create_obj) {
 	    if (create_obj) {
-	    var top = document.getElementById(create_obj.htmlID);
+	        var top = document.getElementById(create_obj.htmlID);
 	    
 		var presentation;
 		switch (typeof create_obj.object.presentation) {
@@ -257,8 +465,8 @@ if (!Sherd.Image.OpenLayers) {
 		if (create_obj.object.xyztile) {
 		    ///DOC: Tile x0,y0 upper left starts at (-180,80)
 		    ///DOC: whereas single images start at (-180,90)
+		    var md = create_obj.object['xyztile-metadata'];
 		    if (create_obj.object['xyztile-metadata']) {
-			var md = create_obj.object['xyztile-metadata'];
 			objopt.numZoomLevels = Math.ceil(
 			    Math.log2(Math.max(md.height,md.width))-7);
 			var dim = self.openlayers.object_proportioned(md);
@@ -289,18 +497,25 @@ if (!Sherd.Image.OpenLayers) {
 			//"http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Portland/ESRI_LandBase_WebMercator/MapServer/tile/${z}/${y}/${x}",
 			objopt
 		    );
+                    self.openlayers.map.maxExtent = objopt.maxExtent;
 		    ///HACK: to make the tiler work for partial tiles (e.g. not exactly 256x256)
 		    self.openlayers.graphic.getImageSize = function(){return null;};
 		    self.openlayers.graphic.zoomToMaxExtent=function(){
+                        
 			self.openlayers.map.setCenter(this.maxExtent.getCenterLonLat());
 		    };
+                    self.current_obj = {create_obj:create_obj,
+                                        dim:md,
+                                        type:'xyztile'
+                                       };
                     ///HACK: to support Zoomify XYZ tiling as seen at thlib.org
                     /* Zoomify groups tiles into directories each with a maximum of
                        256 tiles.  This code changes the 'TileGroup' based on x,y,z
                        tile coordinates.
                      */
+
                     if (/TileGroup\d/.test(create_obj.object.xyztile)) {
-                        var md = create_obj.object['xyztile-metadata'];
+                        self.current_obj.zoomify = true;
                         var tiles_x = Math.ceil(md.width/256)*2;
                         var tiles_y = Math.ceil(md.height/256)*2;
                         var tiles = [];
@@ -321,7 +536,6 @@ if (!Sherd.Image.OpenLayers) {
                             var y = Math.round((this.maxExtent.top - bounds.top) 
                                                / (res * this.tileSize.h));
                             var z = this.map.getZoom();
-                            var limit = Math.pow(2, z);
                             var url = this.url;
                             ///BEGIN different from XYZ.js
                             var tile_sum = tiles[z].x * y + x;
@@ -341,7 +555,7 @@ if (!Sherd.Image.OpenLayers) {
 		    var o2b = self.openlayers.object2bounds;
 		    var bounds = o2b(create_obj.object);
 		    ///TODO: if no create_obj.object.width, test with createElement('img')
-		    var dim = self.openlayers.object_proportioned(create_obj.object);
+		    var odim = self.openlayers.object_proportioned(create_obj.object);
 
 		    objopt.maxExtent = o2b(create_obj.object);
 		    self.openlayers.graphic = new OpenLayers.Layer.Image(
@@ -350,32 +564,64 @@ if (!Sherd.Image.OpenLayers) {
 			bounds,
 			//just proportional size: probably much smaller than the actual image
 			///this allows us to 'zoom out' to smaller than actual image size
-			new OpenLayers.Size(dim.w, dim.h),
+			new OpenLayers.Size(odim.w, odim.h),
 			objopt
 		    );
+                    self.current_obj = {
+                        create_obj: create_obj,
+                        dim:create_obj.object['image-metadata'],
+                        type:'image'
+                        
+                    };
 		}
 
 		var projection = 'Flatland:1';//also 'EPSG:4326' and Spherical Mercator='EPSG:900913'
-		self.openlayers.vectors = new OpenLayers.Layer.Vector("Vector Layer",
-								      {projection:projection}
-								     );
 		self.openlayers.styles  = {
-		    'black':new OpenLayers.Style({fillOpacity:0,
+		    'highlight':new OpenLayers.Style({fillOpacity:0,
+						strokeWidth:6,
+						  strokeColor:'#ffffff',
+                                                  pointerEvents:'none',
+                                                  labelSelect:false,
+                                                graphicZIndex:1
+					       }),
+		    'grey':new OpenLayers.Style({fillOpacity:0,
+						strokeWidth:2,
+						strokeColor:'#905050',
+                                                 pointerEvents:'none',
+                                                graphicZIndex:5
+					       }),
+		    'blackbg':new OpenLayers.Style({fillOpacity:0,
+						strokeWidth:3,
+						strokeColor:'#000000',
+                                                pointerEvents:'none',
+                                                graphicZIndex:0
+					       }),
+		    'defaulta':new OpenLayers.Style({fillOpacity:0,
+						 strokeWidth:2,
+                                                graphicZIndex:0
+						    }),
+                    /*pointerEvents is 'none', so the event can be captured by a Layer underneath */
+		    'white':new OpenLayers.Style({fillOpacity:0,
 						strokeWidth:4,
-						strokeColor:'#000000'
+						  strokeColor:'#ffffff',
+                                                  pointerEvents:'none',
+                                                  labelSelect:false,
+                                                graphicZIndex:0
 					       }),
 		    'defaultx':new OpenLayers.Style({fillOpacity:0,
-						 strokeWidth:2
-						})
+						 strokeWidth:2,
+                                                  pointerEvents:'none',
+                                                  labelSelect:false,
+                                                graphicZIndex:0
+						    })
 		};
-		self.openlayers.vectors.styleMap = new OpenLayers.StyleMap(self.openlayers.styles);
 
 		self.openlayers.map.addControl(new OpenLayers.Control.MousePosition());
 
                 /* /// Issues with overview window:
                    /// 1. loads slowly
                    /// 2. positioning is too zoomed in and not synced with map (xy coords)
-
+                   /// TODO: investigate further 
                 self.openlayers.graphicOverview = self.openlayers.graphic.clone();		    
 
                 self.openlayers.graphicOverview.getImageSize = function(){return null;};
@@ -391,12 +637,12 @@ if (!Sherd.Image.OpenLayers) {
                     
                   })
                 })
-  	        self.openlayers.map.addControl(self.openlayers.ovwin);
+                self.openlayers.map.addControl(self.openlayers.ovwin);
                 */
-
-	        self.openlayers.map.addLayers([self.openlayers.graphic, self.openlayers.vectors]);
-
-                self.multiple = new this.Layer().create()
+	        self.openlayers.map.addLayers([self.openlayers.graphic]);
+                self.openlayers.vectorLayer = new self.Layer().create('annotating',{
+                    zIndex:1000
+                });
 
 		self.openlayers.GeoJSON = new OpenLayers.Format.GeoJSON(
 		    {'internalProjection': self.openlayers.map.baseLayer.projection,
@@ -412,9 +658,20 @@ if (!Sherd.Image.OpenLayers) {
 
 	this.queryformat = {
 	    find:function(str) {
+                var xywh = String(str).match(/xywh=((\w+):)?([.\d]+),([.\d]+),([.\d]+),([.\d]+)/);
+                if (xywh !== null) {
+                    var ann = {
+                        xywh:{
+                            x:Number(xywh[3]),
+                            y:Number(xywh[4]),
+                            w:Number(xywh[5]),
+                            h:Number(xywh[6]),
+                            units:xywh[2]||'pixel'
+                        }
+                    }
+                    return [ann];
+                }
 		return [];
-	    },
-	    read:function(found_obj) {
 	    }
 	};
 
@@ -422,36 +679,3 @@ if (!Sherd.Image.OpenLayers) {
     };//END Sherd.Image.OpenLayers
 
 }//END if (!Sherd.Image.OpenLayers)
-
-
-/****
-An annotation looks like this:
-///1
-{"type":"Feature", 
- "id":"OpenLayers.Feature.Vector_92", 
- "properties":{}, 
- "geometry":{"type":"Polygon", 
-             "coordinates":[[ [-37.8125, 17.1875], 
-                              [-37.5, -2.5], 
-                              [-2.8125, 11.25], 
-                              [-37.8125, 17.1875]
-                           ]]
-            }, 
- "crs":{"type":"OGC", 
-        "properties":{"urn":"urn:ogc:def:crs:OGC:1.3:CRS84"}}
-}
-
-
-///2
-{"type":"Feature", 
- "id":"OpenLayers.Feature.Vector_78", 
- "properties":{},  
- "geometry":{"type":"Point", 
-             "coordinates":[0.3125, -2.96875]
-            }, 
- "crs":{"type":"OGC", 
-        "properties":{"urn":"urn:ogc:def:crs:OGC:1.3:CRS84"}}
-}
-
-
-***/

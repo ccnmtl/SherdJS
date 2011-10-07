@@ -19,7 +19,7 @@ Documentation:
  */
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
-if (!Sherd.Video.Videotag && Sherd.Video.Base) {
+if (!Sherd.Video.Videotag) {
     Sherd.Video.Videotag = function() {
         var self = this;
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
@@ -53,7 +53,7 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                         + '</video>'
                         + '</div>',
                     provider: supported.provdier
-                }
+                };
                 return create_obj;
             }
         };
@@ -62,10 +62,10 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                 ogg:'video/ogg; codecs="theora, vorbis"',
                 webm:'video/webm; codecs="vp8, vorbis"',
                 mp4:'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
-            }
+            };
             var vid = document.createElement('video');
             var browser_supported = [];
-            for (a in types) {
+            for (var a in types) {
                 switch(vid.canPlayType(types[a])) {
                 case 'probably': browser_supported.unshift(a);break;
                 case 'maybe': browser_supported.push(a);break;
@@ -77,7 +77,7 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                         'provider':browser_supported[i],
                         'url':obj[browser_supported[i]],
                         'mimetype':types[browser_supported[i]]
-                    }
+                    };
                 }
             }
         };
@@ -101,8 +101,8 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         // Works in conjunction with read
         this.microformat.find = function(html_dom) {
             throw Error("unimplemented");
-            var found = [];
-            return found;
+            //var found = [];
+            //return found;
         };
     
         // Return asset object description (parameters) in a serialized JSON format.
@@ -110,8 +110,8 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         // works in conjunction with find
         this.microformat.read = function(found_obj) {
             throw Error("unimplemented");
-            var obj = {};
-            return obj;
+            //var obj = {};
+            //return obj;
         };
 
         this.microformat.type = function() { return 'videotag'; };
@@ -128,7 +128,7 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                 } catch(e) { }
             }
             return false;
-        }
+        };
     
         
         ////////////////////////////////////////////////////////////////////////
@@ -141,11 +141,11 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                     self.media.play();
                 });
             if (self.components.player) {
-                function signal_duration() {
+                var signal_duration = function() {
                     self.events.signal(self, 'duration', { duration: self.media.duration() });
-                }
+                };
                 if (self.media.duration() > 0) 
-                    signal_duration()
+                    signal_duration();
                 else
                     self.events.connect(self.components.player, 'loadedmetadata', signal_duration);
             }
@@ -162,19 +162,19 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         };
         
         this.media.pause = function() {
-            (self.components.player 
-             && self.components.player.pause())
+            if (self.components.player)
+                self.components.player.pause();
         };
         
         this.media.play = function() {
-            (self.components.player 
-             && self.components.player.play())
+            if (self.components.player)
+                self.components.player.play();
         };
         
         // Used by tests
         this.media.isPlaying = function() {
             return (self.components.player 
-                    && !self.components.player.paused)
+                    && !self.components.player.paused);
         };
     
         this.media.ready = function() {
@@ -186,21 +186,21 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         this.media.seek = function(starttime, endtime, autoplay) {
             if (self.components.player) {
                 var c,d = {}; //event listeners
-                function _seek(evt) {
-                    if (starttime != undefined) {
+                var _seek = function(evt) {
+                    if (starttime !== undefined) {
                         try {
                             self.components.player.currentTime = starttime;
                             if (d.disconnect) d.disconnect();
                         } catch(e) {
-                            return {error:true}
+                            return {error:true};
                         }
                     }
                     if (endtime)
                         self.media.pauseAt(endtime);
                     if (autoplay || self.components.autoplay)
                         self.media.play();
-                    return {}
-                }
+                    return {};
+                };
                 if (_seek().error) {
                     var progress_triggers = 0;
                     d = self.events.connect(self.components.player,'progress', function(evt) {
@@ -212,22 +212,22 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                         if (progress_triggers == 1) {
                             c.disconnect();
                         } else {
-                            if (!progress_triggers--) d.disconnect();
+                            if (!(progress_triggers--)) d.disconnect();
                             d = c;
                             _seek(evt);
                         }
                     });
                 }
             }
-        }
+        };
 
         this.media.time = function() {
             return (!self.components.player || self.components.player.currentTime);
-        }
+        };
         
         this.media.timescale = function() {
             return 1;
-        }
+        };
         
         this.media.timestrip = function() {
             var w = self.components.player.width;
@@ -235,8 +235,8 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
                 trackX: 40,
                 trackWidth: w-140,
                 visible:true
-            }
-        }
+            };
+        };
         
         //returns true, if we're sure it is. Not currently used
         this.media.isStreaming = function() {
@@ -246,8 +246,8 @@ if (!Sherd.Video.Videotag && Sherd.Video.Base) {
         // Used by tests.
         this.media.url = function() {
             return self.components.mediaUrl;
-        }
+        };
    
-    } //Sherd.Video.Videotag
+    }; //Sherd.Video.Videotag
 
 }

@@ -31,6 +31,21 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
 
         Sherd.Video.Base.apply(this,arguments); // inherit -- video.js -- base.js
         
+        this.presentations = {
+                'small':{
+                    width:function(){return 310;},
+                    height:function(){return 220;}
+                },
+                'medium': {
+                    width:function(){return 540;},
+                    height:function(){return 383;}
+                },
+                'default': {
+                    width:function(){return 620;},
+                    height:function(){return 440;}
+                }
+        };
+        
         ////////////////////////////////////////////////////////////////////////
         // Microformat
         
@@ -42,9 +57,16 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var params = self.microformat._getPlayerParams(obj);
 
             if (!obj.options) {
+                var presentation;
+                switch (typeof obj.presentation) {
+                case 'string': presentation = self.presentations[obj.presentation]; break;
+                case 'object': presentation = obj.presentation; break;
+                case 'undefined': presentation = self.presentations['default']; break;
+                }
+                
                 obj.options = {
-                    width: (obj.presentation == 'small' ? 310 : (obj.width||480)), 
-                    height: (obj.presentation == 'small' ? 220 : (obj.height||360)) 
+                    width: presentation.width(),
+                    height: presentation.height()
                 };
             }
             
@@ -155,14 +177,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         this.microformat._getPlayerParams = function(obj) {
             var rc = {};
-            
             if (obj.mp4_rtmp) {
-                a = self.microformat._parseRtmpUrl(obj.mp4_rtmp);
+                var a = self.microformat._parseRtmpUrl(obj.mp4_rtmp);
                 rc.url = a.url;
                 rc.netConnectionUrl = a.netConnectionUrl;
                 rc.provider = 'rtmp';
             } else if (obj.flv_rtmp) {
-                a = self.microformat._parseRtmpUrl(obj.flv_rtmp);
+                var a = self.microformat._parseRtmpUrl(obj.flv_rtmp);
                 rc.url = a.url;
                 rc.netConnectionUrl = a.netConnectionUrl;
                 rc.provider = 'rtmp';
@@ -182,11 +203,15 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 rc.url = obj.video_pseudo;
                 rc.provider = 'pseudo';
             } else if (obj.video_rtmp) {
-                rc.url = obj.video_rtmp;
+                var a = self.microformat._parseRtmpUrl(obj.video_rtmp);
+                rc.url = a.url;
+                rc.netConnectionUrl = a.netConnectionUrl;
                 rc.provider = 'rtmp';
             } else if (obj.video) {
                 rc.url = obj.video;
                 rc.provider = '';
+            } else if (obj.mp3) {
+                rc.url = obj.mp3;
             }
             if (rc.provider == 'pseudo' && /\{start\}/.test(rc.url)) {
                 var pieces = rc.url.split('?');
@@ -212,10 +237,22 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             self.events.queue('flowplayer ready to seek',[
                  {test: function() {
                      // Is the player ready yet?
+                     if (self.media.state() > 2) {
+                         if (self.media.duration() > 0) {
+                             return true;
+                         } else if (self.media.isPlaying() && self.components.player.getClip().type === 'audio') {
+                             ///SUPER HACKY: MP3's don't load duration until a pause event
+                             ///http://flowplayer.org/forum/8/37767
+                             ///so we really quickly pause/play for MP3's
+                             self.components.player.pause();
+                             self.components.player.play();
+                         }
+                     }
                      return (self.media.state() > 2
                              && self.media.duration() > 0 );
                  }, poll:500},
                  {call: function() {
+                     
                      self.events.signal(self/*==view*/, 'duration', { duration: self.media.duration() });
                      self.setState({ start: self.state.starttime, end: self.state.endtime});
                  }
@@ -384,7 +421,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 self.state.starttime = starttime;
                 self.state.endtime = endtime;   
             } else {
-                if (starttime != undefined) {
+                if (starttime !== undefined) {
                     self.components.player.seek(starttime);
                 }
                 
@@ -439,7 +476,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             5   ended
         **/
         this.media.state = function() {
-            return self.components.player.getState(); 
+            return ((self.components.player) ? self.components.player.getState() : -1); 
+
         };
 
     };
