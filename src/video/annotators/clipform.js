@@ -97,7 +97,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 self.events.signal(self.targetview, 'clipend', { end: codeToSeconds(end) });
             }
             
-            if (options.mode == "browse") {
+            if (options && options.mode == "browse") {
                 if (self.components.startField)
                     self.components.startField.disabled = true;
                 if (self.components.endField)

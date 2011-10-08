@@ -58,6 +58,14 @@ if (!Sherd.GenericAssetView) {
                 var videotag = this.settings.videotag = {'view':new Sherd.Video.Videotag() };
                 decorateVideo(options,videotag);
             }
+            if (Sherd.Video.Vimeo) {
+                var player = this.settings.vimeo = {'view':new Sherd.Video.Vimeo() };
+                decorateVideo(options,player);
+            }
+            if (Sherd.Video.Kaltura) {
+                var player = this.settings.kaltura = {'view':new Sherd.Video.Kaltura() };
+                decorateVideo(options,player);
+            }
         } /*end Video*/
         if (Sherd.Image && Sherd.Image.OpenLayers) {
             var image = {

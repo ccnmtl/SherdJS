@@ -3,43 +3,77 @@
 <head>
     <meta charset="utf-8">
     <title>Vimeo Javascript oEmbed Example</title>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  
     <script>
+        var player;
 
-        // This is the URL of the video you want to load
-        var videoUrl = 'http://www.vimeo.com/7100569';
-
-        // This is the oEmbed endpoint for Vimeo (we're using JSON)
-        // (Vimeo also supports oEmbed discovery. See the PHP example.)
-        var endpoint = 'http://www.vimeo.com/api/oembed.json';
-
-        // Tell Vimeo what function to call
-        var callback = 'embedVideo';
-
-        // Put together the URL
-        var url = endpoint + '?url=' + encodeURIComponent(videoUrl) + '&callback=' + callback + '&width=640';
-
-        // This function puts the video on the page
-        function embedVideo(video) {
-            document.getElementById('embed').innerHTML = unescape(video.html);
+        window.vimeo_player_loaded = function(playerID) {
+            player = document.getElementById("vimeo_controller");
         }
+        
+        
+        function initialize() {
+            var params = { 
+               url: 'http://www.vimeo.com/7100569',
+               width: 310,
+               height: 220,
+               autoplay: false,
+               api: true,
+               iframe: false
+            }
+            
+            jQuery.getJSON("http://www.vimeo.com/api/oembed.json?callback=?", params, function(json) {
+                var wrapper = document.getElementById("vimeo_player");
+                wrapper.innerHTML = unescape(json.html);
 
-        // This function loads the data from Vimeo
-        function init() {
-            var js = document.createElement('script');
-            js.setAttribute('type', 'text/javascript');
-            js.setAttribute('src', url);
-            document.getElementsByTagName('head').item(0).appendChild(js);
-        }
-
+                var swfobj = wrapper.childNodes[0];
+                
+                // For IE, the id needs to be placed in the object.
+                // For FF, the id needs to be placed in the embed.
+                if (window.navigator.userAgent.indexOf("MSIE") > -1) {
+                    swfobj.id = "vimeo_controller";
+                } else {
+                    for (var i = 0; i < swfobj.childNodes.length; i++) {
+                        if (swfobj.childNodes[i].nodeName == "EMBED") {
+                            swfobj.childNodes[i].id = "vimeo_controller";
+                        }
+                     }
+                }
+            });
+        };
         // Call our init function when the page loads
-        window.onload = init;
+        window.onload = initialize;
+
+        function getData() {
+            var url = "http://vimeo.com/api/v2/video/" + 7100569 + ".json/?callback=?";
+
+            jQuery.getJSON(url, function(foobar){
+                console.log(foobar);
+            });
+        }
+
+        function seek() {
+            player.api_seekTo(30);
+        }
+
+        function play() {
+            player.api_play();
+        }
 
     </script>
 </head>
 <body>
 
     <h1>Vimeo Javascript oEmbed Example</h1>
-    <div id="embed">Loading video...</div>
+    <div id="vimeo_player">Loading video...</div>
+
+    <a href="#" onclick="return getData();">Get Data</a>
+    <br />
+    <a href="#" onclick="return seek();">Seek</a>
+    <br />
+    <a href="#" onclick="return play();">Play</a>
+    <br/ ></br>
 
 </body>
 </html>

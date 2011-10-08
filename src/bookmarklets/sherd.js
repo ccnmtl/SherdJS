@@ -622,6 +622,51 @@ SherdBookmarklet = {
             })
         }
     },
+    "vimeo.com": {
+        find:function(callback) {
+            SherdBookmarklet.run_with_jquery(function(jQuery) { 
+                var videoId;
+                var bits = document.location.pathname.split("/"); //expected: http://vimeo.com/<videoid>/
+                if (bits.length > 0)
+                    videoId = bits[bits.length-1];
+
+                if (videoId.length < 1)
+                    return callback([]);
+                
+                var html;
+                jQuery('object').each(function() {
+                    if (RegExp("player"+videoId).test(this.attr("name"))) {
+                        html = this;
+                    }
+                });
+                
+                if (!html)
+                    return callback([]);
+
+                /* http://vimeo.com/api/docs/simple-api */
+                var url = "http://www.vimeo.com/api/v2/video/" + videoId + ".json?callback=?";
+                jQuery.getJSON(url, function(json) {
+                    if (json.length < 1) {
+                        return callback([]);
+                    }
+                    var info = json[0];
+                    var sources = {
+                        "vimeo": info.url,
+                        "title": info.title,
+                        "thumb": info.thumbnail_medium,
+                        "archive": info.url,
+                        "metadata-owner":info.user_name ||undefined,
+                        "width": info.width,
+                        "height": info.height,
+                    };
+                    
+                    return callback( [{html:html, primary_type:"vimeo", sources:sources}] );
+                });/*end jQuery.ajax*/
+            });/*end run_with_jquery*/
+        },
+        decorate:function(objs) {
+        }
+    },
     "youtube.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {

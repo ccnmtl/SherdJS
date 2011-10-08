@@ -339,6 +339,10 @@ function DjangoSherd_adaptAsset(asset) {
         asset.type = 'flowplayer';
     } else if (asset.youtube) {
         asset.type = 'youtube';
+    } else if (asset.vimeo) {
+        asset.type = 'vimeo';
+    } else if (asset.kaltura) {
+        asset.type = 'kaltura';
     } else if (asset.quicktime) {
         asset.type = 'quicktime';
         ///Quicktime really needs a poster or loadingposter, or things fail

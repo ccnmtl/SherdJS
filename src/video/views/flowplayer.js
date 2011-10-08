@@ -32,18 +32,18 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         Sherd.Video.Base.apply(this,arguments); // inherit -- video.js -- base.js
         
         this.presentations = {
-                'small':{
-                    width:function(){return 310;},
-                    height:function(){return 220;}
-                },
-                'medium': {
-                    width:function(){return 540;},
-                    height:function(){return 383;}
-                },
-                'default': {
-                    width:function(){return 620;},
-                    height:function(){return 440;}
-                }
+            'small':{
+                width:function(){return 310;},
+                height:function(){return 220;}
+            },
+            'medium': {
+                width:function(){return 540;},
+                height:function(){return 383;}
+            },
+            'default': {
+                width:function(){return 620;},
+                height:function(){return 440;}
+            }
         };
         
         ////////////////////////////////////////////////////////////////////////
