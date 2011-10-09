@@ -624,44 +624,21 @@ SherdBookmarklet = {
     },
     "vimeo.com": {
         find:function(callback) {
-            SherdBookmarklet.run_with_jquery(function(jQuery) { 
-                var videoId;
-                var bits = document.location.pathname.split("/"); //expected: http://vimeo.com/<videoid>/
-                if (bits.length > 0)
-                    videoId = bits[bits.length-1];
-
-                if (videoId.length < 1)
-                    return callback([]);
-                
-                var html;
+            SherdBookmarklet.run_with_jquery(function(jQuery) {
+                var match = 0;
                 jQuery('object').each(function() {
-                    if (RegExp("player"+videoId).test(this.attr("name"))) {
-                        html = this;
+                    if (SherdBookmarklet.assethandler.objects_and_embeds.players.moogaloop.match(this)) {
+                        match++;
+                        SherdBookmarklet.assethandler.objects_and_embeds.players
+                        .moogaloop.asset(this, 
+                                         null,
+                                         {'window':window,'document':document},match,
+                                         function(ind,rv){ callback([rv]); });
                     }
                 });
                 
-                if (!html)
-                    return callback([]);
-
-                /* http://vimeo.com/api/docs/simple-api */
-                var url = "http://www.vimeo.com/api/v2/video/" + videoId + ".json?callback=?";
-                jQuery.getJSON(url, function(json) {
-                    if (json.length < 1) {
-                        return callback([]);
-                    }
-                    var info = json[0];
-                    var sources = {
-                        "vimeo": info.url,
-                        "title": info.title,
-                        "thumb": info.thumbnail_medium,
-                        "archive": info.url,
-                        "metadata-owner":info.user_name ||undefined,
-                        "width": info.width,
-                        "height": info.height,
-                    };
-                    
-                    return callback( [{html:html, primary_type:"vimeo", sources:sources}] );
-                });/*end jQuery.ajax*/
+                if (!match) return callback([]);
+                
             });/*end run_with_jquery*/
         },
         decorate:function(objs) {
@@ -910,10 +887,10 @@ SherdBookmarklet = {
                       var primary_type = type+get_provider(clip);
                       sources[primary_type] = clip.completeUrl || clip.originalUrl || clip.resolvedUrl || clip.url || clip;
                       if (provider && provider.netConnectionUrl) {
-			  sources[primary_type] = provider.netConnectionUrl+sources[primary_type]
+                          sources[primary_type] = provider.netConnectionUrl+sources[primary_type]
                       } 
                       ///TODO:is context.document the right relative URL instead of the SWF?
-		      sources[primary_type] = abs(sources[primary_type],context.document);
+                      sources[primary_type] = abs(sources[primary_type],context.document);
                       if (/_pseudo/.test(primary_type)
                           && cfg.plugins[clip.provider].queryString
                          ) {
@@ -982,6 +959,58 @@ SherdBookmarklet = {
                           return {};
                       }
                   }                  
+              },
+              "moogaloop": {
+                  match:function(objemb) {
+                      return String(objemb.type).search('x-shockwave-flash') > -1 && 
+                          String(objemb.data).search('moogaloop.swf') > -1;
+                  },
+                  asset:function(objemb,match_rv,context,index,optional_callback) {
+                      var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
+                      var flashvars = jQ('param[name=flashvars],param[name=FLASHVARS]', objemb);
+                      if (!flashvars.val()) {
+                          return {};
+                      }
+                      var matches = flashvars.val().match(/clip_id=([\d]*)/);
+                      if (!matches || matches.length < 1) {
+                          return {}
+                      } else {
+                          var rv = {
+                              html:objemb,
+                              wait:true,
+                              primary_type:"vimeo",
+                              label:"vimeo video",
+                              sources: {
+                                  "vimeo":"http://www.vimeo.com/" + matches[1],
+                              }};
+                          
+                          var vm_callback = 'sherd_vimeo_callback_'+ index;
+                          window[vm_callback] = function(vm_data) {
+                              if (vm_data.length > 0) {
+                                  var info = vm_data[0];
+                                  rv.sources["title"] = info.title;
+                                  rv.sources["thumb"] = info.thumbnail_medium;
+                                  rv.sources["archive"] = info.url;
+                                  rv.sources["metadata-owner"] = info.user_name ||undefined;
+                                  rv.sources["width"] = info.width;
+                                  rv.sources["height"] = info.height;
+                              }
+                              optional_callback(index,rv);
+                          }
+                          var ajax_options = {
+                              url: "http://www.vimeo.com/api/v2/video/" + matches[1] + ".json?callback=" + vm_callback,
+                              dataType: 'script',
+                              error:function(){optional_callback(index);}
+                          }
+                          if (SherdBookmarklet.options.cross_origin) {
+                              ajax_options['dataType'] = 'json';
+                              ajax_options['success'] = window[vm_callback];
+                              ajax_options['url'] = "http://www.vimeo.com/api/v2/video/" + matches[1] + ".json";
+                          }
+                          jQ.ajax(ajax_options);
+                          return rv;
+                      }
+                  }                     
               },
               "zoomify":{
                   match:function(objemb) {
