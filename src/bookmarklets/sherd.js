@@ -622,28 +622,6 @@ SherdBookmarklet = {
             })
         }
     },
-    "vimeo.com": {
-        find:function(callback) {
-            SherdBookmarklet.run_with_jquery(function(jQuery) {
-                var match = 0;
-                jQuery('object').each(function() {
-                    if (SherdBookmarklet.assethandler.objects_and_embeds.players.moogaloop.match(this)) {
-                        match++;
-                        SherdBookmarklet.assethandler.objects_and_embeds.players
-                        .moogaloop.asset(this, 
-                                         null,
-                                         {'window':window,'document':document},match,
-                                         function(ind,rv){ callback([rv]); });
-                    }
-                });
-                
-                if (!match) return callback([]);
-                
-            });/*end run_with_jquery*/
-        },
-        decorate:function(objs) {
-        }
-    },
     "youtube.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
@@ -963,7 +941,7 @@ SherdBookmarklet = {
               "moogaloop": {
                   match:function(objemb) {
                       return String(objemb.type).search('x-shockwave-flash') > -1 && 
-                          String(objemb.data).search('moogaloop.swf') > -1;
+                             String(objemb.data).search('moogaloop.swf') > -1;
                   },
                   asset:function(objemb,match_rv,context,index,optional_callback) {
                       var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
