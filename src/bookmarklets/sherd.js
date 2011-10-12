@@ -1487,9 +1487,19 @@ SherdBookmarklet = {
         span.className = 'sherdjs-source-title';
         form.appendChild(span);
       }
+      M.addField('mode','y',form,doc);      
+      M.addField('ftitle',(obj.sources.title||'base_annotation'),form,doc);      
+      M.addField('editor1','<p></p>',form,doc);      
       M.addField('htmls[0]',obj.sources["url"],form,doc);
       M.addField('urls[0]',obj.sources[obj.primary_type],form,doc);
-      M.addField('jsons[0]',JSON.stringify(obj),form,doc);
+      M.addField('jsons[0]',
+                 JSON.stringify(obj,
+                                function(key,value){
+                                  if (typeof value=='object' && value.tagName) {
+                                    return '';
+                                  } else return value;
+                                }),
+                 form,doc);
     }/*imagemat_form*/
   },
   "runners": {
