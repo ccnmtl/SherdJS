@@ -89,6 +89,11 @@ if (!Sherd.Image.FSIViewer) {
                 });
             }
         },
+        'medium':{
+            height:function(){return '383px';},
+            width:function(){return '100%';},
+            initialize:function(){/*noop*/}
+        },        
         'small':{
             height:function(){return '240px';},
             width:function(){return '320px';},

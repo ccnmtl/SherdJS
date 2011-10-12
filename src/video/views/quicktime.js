@@ -24,6 +24,21 @@ if (!Sherd.Video.QuickTime) {
         self._played = false; // See this.media.seek
         Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
         
+        this.presentations = {
+                'small':{
+                    width:function(){return 310;},
+                    height:function(){return 220;}
+                },
+                'medium': {
+                    width:function(){return 540;},
+                    height:function(){return 383;}
+                },
+                'default': {
+                    width:function(){return 620;},
+                    height:function(){return 440;}
+                }
+            };
+        
         ////////////////////////////////////////////////////////////////////////
         // Microformat
         
@@ -49,18 +64,19 @@ if (!Sherd.Video.QuickTime) {
             for (var a in opt) {
                 if (obj[a]) opt[a] = obj[a];
             }
+
             if (!obj.presentation_width) {
-                obj.presentation_width = Number(opt.width);
-                obj.presentation_height = Number(opt.height);
+                var presentation;
+                switch (typeof obj.presentation) {
+                case 'string': presentation = self.presentations[obj.presentation]; break;
+                case 'object': presentation = obj.presentation; break;
+                case 'undefined': presentation = self.presentations['default']; break;
+                }
+                
+                obj.presentation_width = presentation.width();
+                obj.presentation_height = presentation.height();
             }
-            var ratio = opt.height/opt.width;
-            if (obj.presentation == 'small') {
-                obj.presentation_width = 320;
-                obj.presentation_height = parseInt(320 * ratio,10);
-            } else if (obj.presentation_width > 620) {
-                obj.presentation_width = 620;
-                obj.presentation_height = parseInt(620 * ratio,10);
-            }
+            
             var full_height = obj.presentation_height + Number(opt.controller_height);
             opt.href= '';//for poster support
             opt.autohref= '';//for poster support

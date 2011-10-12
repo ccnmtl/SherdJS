@@ -31,6 +31,21 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
 
         Sherd.Video.Base.apply(this,arguments); // inherit -- video.js -- base.js
         
+        this.presentations = {
+                'small':{
+                    width:function(){return 310;},
+                    height:function(){return 220;}
+                },
+                'medium': {
+                    width:function(){return 540;},
+                    height:function(){return 383;}
+                },
+                'default': {
+                    width:function(){return 620;},
+                    height:function(){return 440;}
+                }
+        };
+        
         ////////////////////////////////////////////////////////////////////////
         // Microformat
         
@@ -42,9 +57,16 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var params = self.microformat._getPlayerParams(obj);
 
             if (!obj.options) {
+                var presentation;
+                switch (typeof obj.presentation) {
+                case 'string': presentation = self.presentations[obj.presentation]; break;
+                case 'object': presentation = obj.presentation; break;
+                case 'undefined': presentation = self.presentations['default']; break;
+                }
+                
                 obj.options = {
-                    width: (obj.presentation == 'small' ? 310 : (obj.width||480)), 
-                    height: (obj.presentation == 'small' ? 220 : (obj.height||360)) 
+                    width: presentation.width(),
+                    height: presentation.height()
                 };
             }
             
