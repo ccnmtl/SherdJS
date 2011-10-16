@@ -158,7 +158,6 @@ if (!Sherd.Video.Vimeo && Sherd.Video.Base) {
         
         this.initialize = function(create_obj) {
             var params = { 
-               url: create_obj.mediaUrl,
                width: create_obj.options.width,
                height: create_obj.options.height,
                autoplay: create_obj.autoplay,
@@ -168,7 +167,8 @@ if (!Sherd.Video.Vimeo && Sherd.Video.Base) {
                iframe: false
             }
 
-            jQuery.getJSON('http://www.vimeo.com/api/oembed.json?callback=?', params, function(json) {
+            var url = 'http://www.vimeo.com/api/oembed.json?callback=?&url=' + create_obj.mediaUrl;
+            jQuery.getJSON(url, params, function(json) {
                 var wrapper = document.getElementById(create_obj.htmlID); 
                 wrapper.innerHTML = unescape(json.html);
                 var swfobj = wrapper.childNodes[0];
