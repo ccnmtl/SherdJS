@@ -58,14 +58,14 @@ if (!Sherd.GenericAssetView) {
                 var videotag = this.settings.videotag = {'view':new Sherd.Video.Videotag() };
                 decorateVideo(options,videotag);
             }
-            if (Sherd.Video.Vimeo) {
-                var player = this.settings.vimeo = {'view':new Sherd.Video.Vimeo() };
-                decorateVideo(options,player);
-            }
             if (Sherd.Video.Kaltura) {
                 var player = this.settings.kaltura = {'view':new Sherd.Video.Kaltura() };
                 decorateVideo(options,player);
             }
+            if (Sherd.Video.Vimeo) {
+                var player = this.settings.vimeo = {'view':new Sherd.Video.Vimeo() };
+                decorateVideo(options,player);
+            }            
         } /*end Video*/
         if (Sherd.Image && Sherd.Image.OpenLayers) {
             var image = {
@@ -140,13 +140,13 @@ if (!Sherd.GenericAssetView) {
                         self.clipform = cur.clipform;
                     }
                     if (cur.clipstrip) {
-			var target = 'clipstrip-display';//default
-			if (options.targets && options.targets.clipstrip) {
-			    target = options.targets.clipstrip;
-			} else if (self.options.targets 
-				   && self.options.targets.clipstrip) {
-			    target = self.options.targets.clipstrip;
-			}
+            			var target = 'clipstrip-display';//default
+            			if (options.targets && options.targets.clipstrip) {
+            			    target = options.targets.clipstrip;
+            			} else if (self.options.targets 
+            				   && self.options.targets.clipstrip) {
+            			    target = self.options.targets.clipstrip;
+            			}
                         cur.clipstrip.html.push(target, {
                             asset : {}
                         });

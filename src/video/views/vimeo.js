@@ -12,7 +12,7 @@
 
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
-if (!Sherd.Video.Vimeo && Sherd.Video.Base) {
+if (!Sherd.Video.Vimeo) {
     Sherd.Video.Vimeo = function() {
         var self = this;
         
@@ -22,7 +22,7 @@ if (!Sherd.Video.Vimeo && Sherd.Video.Base) {
                 starttime:0,
                 endtime:0,
                 seeking: false
-            };
+        };
         
         this.presentations = {
             'small':{
@@ -38,7 +38,7 @@ if (!Sherd.Video.Vimeo && Sherd.Video.Base) {
                 height:function(){return 440;}
             }
         };
-        
+                
         ////////////////////////////////////////////////////////////////////////
         // Microformat
         
