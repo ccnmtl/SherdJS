@@ -62,6 +62,34 @@ if (!Sherd.Video.Vimeo) {
                     height: presentation.height()
                 };
             }
+            
+            // For IE, the id needs to be placed in the object.
+            // For FF, the id needs to be placed in the embed.
+            var objectID = '';
+            var embedID = '';
+            if (window.navigator.userAgent.indexOf("MSIE") > -1) {
+                objectID = 'id="' + playerID + '"';
+            } else {
+                embedID = 'id="' + playerID + '"';
+            }
+            
+            var bits = obj.vimeo.split('/');
+            var clipId = bits[bits.length-1]
+            
+            var embedCode = '<div id="' + wrapperID + '" class="sherd-vimeo-wrapper">' + 
+              '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' +
+              '          classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' + objectID + '>' + 
+              '  <param name="movie" value="http://vimeo.com/moogaloop.swf"></param>' + 
+              '  <param name="allowscriptaccess" value="always"/></param>' + 
+              '  <param name="autoplay" value="' + autoplay + '"></param>' + 
+              '  <param name="width" value="' + obj.options.width + '"></param>' + 
+              '  <param name="height" value="' + obj.options.height + '"></param>' + 
+              '  <param name="allowfullscreen" value="true"></param>' +
+              '  <param name="flashvars" value="autoplay=0&amp;loop=0&amp;clip_id=' + clipId + '&amp;color=0&amp;fullscreen=1&amp;server=vimeo.com&amp;show_byline=1&amp;show_portrait=1&amp;show_title=1&amp;js_api=1">' +
+              '  <embed ' + embedID + ' width="' + obj.options.width + '" height="' + obj.options.height + '" type="application/x-shockwave-flash"' +
+              '     src="http://vimeo.com/moogaloop.swf" allowscriptaccess="always" allowfullscreen="true" flashvars="autoplay=' + autoplay + '&amp;loop=0&amp;clip_id=' + clipId + '&amp;color=0&amp;fullscreen=1&amp;server=vimeo.com&amp;show_byline=1&amp;show_portrait=1&amp;show_title=1&amp;js_api=1">' + 
+              '  </embed>'
+              '</object></div>'; 
 
             return {
                 options: obj.options,
@@ -69,7 +97,7 @@ if (!Sherd.Video.Vimeo) {
                 playerID: playerID,
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 mediaUrl: obj.vimeo, // Used by _seek seeking behavior
-                text: '<div id="' + wrapperID + '" class="sherd-vimeo-wrapper"></div>' 
+                text: embedCode 
             };
         };
         
@@ -155,37 +183,6 @@ if (!Sherd.Video.Vimeo) {
             if (self.state.starttime != undefined)
                 setTimeout(function() { self.media.seek(self.state.starttime, self.state.endtime, self.state.autoplay ); }, 100);
         }
-        
-        this.initialize = function(create_obj) {
-            var params = { 
-               width: create_obj.options.width,
-               height: create_obj.options.height,
-               autoplay: create_obj.autoplay,
-               api: 1,
-               player_id: create_obj.playerID,
-               iframe: false
-            }
-
-            var url = 'http://www.vimeo.com/api/oembed.json?callback=?&url=' + create_obj.mediaUrl;
-            jQuery.getJSON(url, params, function(json) {
-                var wrapper = document.getElementById(create_obj.htmlID); 
-                wrapper.innerHTML = unescape(json.html);
-                var swfobj = wrapper.childNodes[0];
-                
-                // For IE, the id needs to be placed in the object.
-                // For FF, the id needs to be placed in the embed.
-                if (window.navigator.userAgent.indexOf("MSIE") > -1) {
-                    swfobj.id = create_obj.playerID;
-                    swfobj.classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000";
-                } else {
-                    for (var i = 0; i < swfobj.childNodes.length; i++) {
-                        if (swfobj.childNodes[i].nodeName == "EMBED") {
-                            swfobj.childNodes[i].id = create_obj.playerID;
-                        }
-                     }
-                }
-            });
-        };
         
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
