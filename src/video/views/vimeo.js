@@ -88,7 +88,7 @@ if (!Sherd.Video.Vimeo) {
               '  <param name="flashvars" value="autoplay=0&amp;loop=0&amp;clip_id=' + clipId + '&amp;color=0&amp;fullscreen=1&amp;server=vimeo.com&amp;show_byline=1&amp;show_portrait=1&amp;show_title=1&amp;js_api=1">' +
               '  <embed ' + embedID + ' width="' + obj.options.width + '" height="' + obj.options.height + '" type="application/x-shockwave-flash"' +
               '     src="http://vimeo.com/moogaloop.swf" allowscriptaccess="always" allowfullscreen="true" flashvars="autoplay=' + autoplay + '&amp;loop=0&amp;clip_id=' + clipId + '&amp;color=0&amp;fullscreen=1&amp;server=vimeo.com&amp;show_byline=1&amp;show_portrait=1&amp;show_title=1&amp;js_api=1">' + 
-              '  </embed>'
+              '  </embed>' +
               '</object></div>'; 
 
             return {
