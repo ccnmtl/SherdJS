@@ -962,6 +962,13 @@ SherdBookmarklet = {
                                   "vimeo":"http://www.vimeo.com/" + matches[1],
                               }};
                           
+                          if (objemb.api_getCurrentTime) {
+                              console.log("current time: " + objemb.api_getCurrentTime());
+                              if (objemb.api_getCurrentTime() > 0) {
+                                  rv["hash"]="start="+ objemb.api_getCurrentTime();
+                              }
+                          }
+                          
                           var vm_callback = 'sherd_vimeo_callback_'+ index;
                           window[vm_callback] = function(vm_data) {
                               if (vm_data.length > 0) {
