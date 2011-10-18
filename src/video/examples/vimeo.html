@@ -7,23 +7,25 @@
   
     <script>
         var player;
+        var player_ie;
 
         window.vimeo_player_loaded = function(playerID) {
+            alert('loaded');
+            alert(playerID);
             player = document.getElementById("vimeo_controller");
         }
         
-        
         function initialize() {
             var params = { 
-               url: 'http://www.vimeo.com/7100569',
                width: 310,
                height: 220,
                autoplay: false,
                api: true,
                iframe: false
             }
-            
-            jQuery.getJSON("http://www.vimeo.com/api/oembed.json?callback=?", params, function(json) {
+
+            var url = "http://www.vimeo.com/api/oembed.json?callback=?&url=" + 'http://www.vimeo.com/7100569';
+            jQuery.getJSON(url, params, function(json) {
                 var wrapper = document.getElementById("vimeo_player");
                 wrapper.innerHTML = unescape(json.html);
 
@@ -33,6 +35,7 @@
                 // For FF, the id needs to be placed in the embed.
                 if (window.navigator.userAgent.indexOf("MSIE") > -1) {
                     swfobj.id = "vimeo_controller";
+                    swfobj.classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000";
                 } else {
                     for (var i = 0; i < swfobj.childNodes.length; i++) {
                         if (swfobj.childNodes[i].nodeName == "EMBED") {
@@ -66,6 +69,22 @@
 <body>
 
     <h1>Vimeo Javascript oEmbed Example</h1>
+    
+    <h2>Hardcoded</h2>
+    <div id="vimeo_player_ie">
+    <object name="player30507832_1531057770" width="100%" height="100%" class="" id="player30507832_1531057770" 
+        classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" 
+        style="visibility: visible;">
+        
+        <PARAM NAME="_cx" VALUE="16933">
+        <PARAM NAME="_cy" VALUE="9525">
+        <PARAM NAME="FlashVars" VALUE="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=http%3A%2F%2Fvimeo.com%2F&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop_local&amp;js_api=1&amp;js_getConfig=player30507832_1531057770.getConfig&amp;js_setConfig=player30507832_1531057770.setConfig&amp;clip_id=30507832&amp;fullscreen=1&amp;js_onLoad=player30507832_1531057770.player.moogaloopLoaded&amp;js_onThumbLoaded=player30507832_1531057770.player.moogaloopThumbLoaded"><PARAM NAME="Movie" VALUE="http://a.vimeocdn.com/p/flash/moogaloop/5.1.33/moogaloop.swf?v=1.0.0&amp;time=1318940417394"><PARAM NAME="Src" VALUE="http://a.vimeocdn.com/p/flash/moogaloop/5.1.33/moogaloop.swf?v=1.0.0&amp;time=1318940417394"><PARAM NAME="WMode" VALUE="Opaque"><PARAM NAME="Play" VALUE="0"><PARAM NAME="Loop" VALUE="-1"><PARAM NAME="Quality" VALUE="High"><PARAM NAME="SAlign" VALUE="LT"><PARAM NAME="Menu" VALUE="-1"><PARAM NAME="Base" VALUE=""><PARAM NAME="AllowScriptAccess" VALUE="always"><PARAM NAME="Scale" VALUE="NoScale"><PARAM NAME="DeviceFont" VALUE="0"><PARAM NAME="EmbedMovie" VALUE="0"><PARAM NAME="BGColor" VALUE="000000"><PARAM NAME="SWRemote" VALUE=""><PARAM NAME="MovieData" VALUE=""><PARAM NAME="SeamlessTabbing" VALUE="1"><PARAM NAME="Profile" VALUE="0">
+        <PARAM NAME="ProfileAddress" VALUE=""><PARAM NAME="ProfilePort" VALUE="0">
+        <PARAM NAME="AllowNetworking" VALUE="all">
+        <PARAM NAME="AllowFullScreen" VALUE="true"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=http%3A%2F%2Fvimeo.com%2F&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop_local&amp;js_api=1&amp;js_getConfig=player30507832_1531057770.getConfig&amp;js_setConfig=player30507832_1531057770.setConfig&amp;clip_id=30507832&amp;fullscreen=1&amp;js_onLoad=player30507832_1531057770.player.moogaloopLoaded&amp;js_onThumbLoaded=player30507832_1531057770.player.moogaloopThumbLoaded"><param name="movie" value="http://a.vimeocdn.com/p/flash/moogaloop/5.1.33/moogaloop.swf?v=1.0.0&amp;time=1318940417394">
+        </object>
+    </div>
+    
     <div id="vimeo_player">Loading video...</div>
 
     <a href="#" onclick="return getData();">Get Data</a>

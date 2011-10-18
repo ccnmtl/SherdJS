@@ -162,7 +162,6 @@ if (!Sherd.Video.Vimeo) {
                height: create_obj.options.height,
                autoplay: create_obj.autoplay,
                api: 1,
-               js_api: 1,
                player_id: create_obj.playerID,
                iframe: false
             }
@@ -177,6 +176,7 @@ if (!Sherd.Video.Vimeo) {
                 // For FF, the id needs to be placed in the embed.
                 if (window.navigator.userAgent.indexOf("MSIE") > -1) {
                     swfobj.id = create_obj.playerID;
+                    swfobj.classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000";
                 } else {
                     for (var i = 0; i < swfobj.childNodes.length; i++) {
                         if (swfobj.childNodes[i].nodeName == "EMBED") {
