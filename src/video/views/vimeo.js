@@ -74,7 +74,7 @@ if (!Sherd.Video.Vimeo) {
             }
             
             var bits = obj.vimeo.split('/');
-            var clipId = bits[bits.length-1]
+            var clipId = bits[bits.length-1];
             
             var embedCode = '<div id="' + wrapperID + '" class="sherd-vimeo-wrapper">' + 
               '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' +
