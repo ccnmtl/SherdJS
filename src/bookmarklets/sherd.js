@@ -974,7 +974,6 @@ SherdBookmarklet = {
                                   var info = vm_data[0];
                                   rv.sources["title"] = info.title;
                                   rv.sources["thumb"] = info.thumbnail_medium;
-                                  rv.sources["archive"] = info.url;
                                   rv.sources["metadata-owner"] = info.user_name ||undefined;
                                   rv.sources["width"] = info.width;
                                   rv.sources["height"] = info.height;
