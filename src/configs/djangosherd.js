@@ -21,71 +21,32 @@ function DjangoSherd_Asset_Config() {
     ds.noteform = new DjangoSherd_NoteForm();// see below
     ds.storage = new DjangoSherd_Storage();
 
-        // /# Find assets.
-        ds.dom_assets = ds.assetMicroFormat.find();
-        if (!ds.dom_assets.length)
-            return;// no assets!
-        // GenericAssetView is a wrapper in ../assets.js.
-        ds.assetview = new Sherd.GenericAssetView( {
-            'clipform' : true,
-            'clipstrip' : true,
-            'storage' : ds.noteform,
-	    'targets':{clipstrip:'clipstrip-display'}
+    // /# Find assets.
+    ds.dom_assets = ds.assetMicroFormat.find();
+    if (!ds.dom_assets.length)
+        return;// no assets!
+    // GenericAssetView is a wrapper in ../assets.js.
+    ds.assetview = new Sherd.GenericAssetView( {
+        'clipform' : true,
+        'clipstrip' : true,
+        'storage' : ds.noteform,
+    'targets':{clipstrip:'clipstrip-display'}
+    });
+    
+    ds.assetview.html.push(
+        jQuery('div.asset-display').get(0), // id=videoclip
+        {
+            asset : ds.assetMicroFormat.read(ds.dom_assets[0])
         });
-        
-        ds.assetview.html.push(
-            jQuery('div.asset-display').get(0), // id=videoclip
-            {
-                asset : ds.assetMicroFormat.read(ds.dom_assets[0])
-            });
 
-        // /# load asset into note-form
-        var clipform = $('clipform-display');
-        if (clipform) {
-            ds.assetview.clipform.html.push('clipform-display', {
-                asset : {}
-            }); // write videoform
-        
-        }
-        
-        /**         
-                
-        var orig_annotation_data = $('original-annotation');// /***faux layer. Data stored in the DOM
-        if (orig_annotation_data != null) {
-            // Viewing an Annotation with stored data
-            var obj = false;
-            try {
-                // /#initialize for editing
-                obj = JSON.parse(legacy_json(
-                    orig_annotation_data.getAttribute('data-annotation')));
-                ds.assetview.setState(obj);
-                if (ds.assetview.clipform)
-                    ds.assetview.clipform.setState(obj);
-
-            } catch (e) {// non-valid json?
-                Sherd.Base.log(e);
-            }
-        } else {
-           
-            // Viewing the Original Asset, possibly with params from queryString
-            var annotation_query = [];
-            if (document.location.hash) {
-                annotation_query = ds.assetview.queryformat.find(document.location.hash);
-            }
-            if (annotation_query.length) {
-                // /#initialize view from hash
-                ds.assetview.setState(annotation_query[0]);
-                
-                if (ds.assetview.clipform)
-                    ds.assetview.clipform.setState(annotation_query[0]);
-
-            } else {
-                // /#default initialization for an annotation
-                // don't need to set state on clipstrip/form as there is no state
-                ds.assetview.setState();
-            }
-        }
-        **/            
+    // /# load asset into note-form
+    var clipform = $('clipform-display');
+    if (clipform) {
+        ds.assetview.clipform.html.push('clipform-display', {
+            asset : {}
+        }); // write videoform
+    
+    }       
 }
 
 function DjangoSherd_Project_Config(options) {
@@ -101,27 +62,27 @@ function DjangoSherd_Project_Config(options) {
     ds.assetview = new Sherd.GenericAssetView({ clipform:false, clipstrip: true});
 
     if (options.project_json) {
-        ds.storage.get({type:'project',id:'xxx',url:options.project_json});
+        ds.storage.get({type:'project',id:'xxx',url:options.project_json},
+                false,
+                function(data) {
+                    if (options.open_from_hash) {
+                        var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
+                        if (annotation_to_open != null) {
+                            //TODO:no longer works in discussions, since the DIV doesn't exist yet
+                            openCitation('/annotations/'+annotation_to_open[1] + '/', { autoplay:false});
+                        }
+                    }
+                    
+                    var citationOptions = {};
+                    if (options.presentation)
+                        citationOptions.presentation = options.presentation;
+                    
+                    // /In published view: decorate annotation links
+                    DjangoSherd_decorate_citations(document, citationOptions);
+                    
+                    if (options.callback) options.callback();
+        });
     }
-    
-    if (options.open_from_hash) {
-        var annotation_to_open = String(document.location.hash).match(
-                /annotation=annotation(\d+)/);
-        if (annotation_to_open != null) {
-            jQuery(function() {
-                //TODO:no longer works in discussions, since the DIV doesn't exist yet
-                openCitation('/annotations/'+annotation_to_open[1] + '/', { autoplay:false});
-            });
-        }
-    }
-    jQuery(function() {
-        var citationOptions = {};
-        if (options.presentation)
-            citationOptions.presentation = options.presentation;
-        
-        // /In published view: decorate annotation links
-        DjangoSherd_decorate_citations(document, citationOptions);
-    });
 }
 
 var current_citation = null;
