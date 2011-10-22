@@ -941,15 +941,19 @@ SherdBookmarklet = {
               "moogaloop": {
                   match:function(objemb) {
                       return String(objemb.type).search('x-shockwave-flash') > -1 && 
-                             String(objemb.data).search('moogaloop.swf') > -1;
+                             (String(objemb.data).search('moogaloop.swf') > -1 || String(objemb.src).search('moogaloop.swf') > -1);
                   },
                   asset:function(objemb,match_rv,context,index,optional_callback) {
                       var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
-                      var flashvars = jQ('param[name=flashvars],param[name=FLASHVARS]', objemb);
-                      if (!flashvars.val()) {
-                          return {};
+                      
+                      var matches = objemb.src && objemb.src.match(/clip_id=([\d]*)/);
+                      if (!matches || matches.length < 1) {
+                          var flashvars = jQ('param[name=flashvars],param[name=FLASHVARS]', objemb);
+                          if (!flashvars.val()) {
+                              return {};
+                          }
+                          matches = flashvars.val().match(/clip_id=([\d]*)/);
                       }
-                      var matches = flashvars.val().match(/clip_id=([\d]*)/);
                       if (!matches || matches.length < 1) {
                           return {}
                       } else {
