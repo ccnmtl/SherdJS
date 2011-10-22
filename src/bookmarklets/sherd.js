@@ -716,7 +716,7 @@ SherdBookmarklet = {
                               "gdata":'http://gdata.youtube.com/feeds/api/videos/'+VIDEO_ID
                           }};
                       if (emb.getCurrentTime) {
-                          if (emb.getCurrentTime() == emb.getDuration()) 
+                          if (emb.getCurrentTime() > 0 && emb.getCurrentTime() < emb.getDuration()) 
                               rv["hash"]="start="+emb.getCurrentTime();
                       }
                       var yt_callback = 'sherd_youtube_callback_'+index;
@@ -963,7 +963,6 @@ SherdBookmarklet = {
                               }};
                           
                           if (objemb.api_getCurrentTime) {
-                              console.log("current time: " + objemb.api_getCurrentTime());
                               if (objemb.api_getCurrentTime() > 0) {
                                   rv["hash"]="start="+ objemb.api_getCurrentTime();
                               }
