@@ -49,6 +49,26 @@ function DjangoSherd_Asset_Config() {
     }       
 }
 
+
+function DjangoSherd_Project_ConfigEx(options) {
+    if (options.open_from_hash) {
+        var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
+        if (annotation_to_open != null) {
+            //TODO:no longer works in discussions, since the DIV doesn't exist yet
+            openCitation('/annotations/'+annotation_to_open[1] + '/', { autoplay:false});
+        }
+    }
+    
+    var citationOptions = {};
+    if (options.presentation)
+        citationOptions.presentation = options.presentation;
+    
+    // /In published view: decorate annotation links
+    DjangoSherd_decorate_citations(document, citationOptions);
+    
+    if (options.callback) options.callback();
+}
+
 function DjangoSherd_Project_Config(options) {
     // /# load viewers
     // /# load assetfinders
@@ -65,23 +85,10 @@ function DjangoSherd_Project_Config(options) {
         ds.storage.get({type:'project',id:'xxx',url:options.project_json},
                 false,
                 function(data) {
-                    if (options.open_from_hash) {
-                        var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
-                        if (annotation_to_open != null) {
-                            //TODO:no longer works in discussions, since the DIV doesn't exist yet
-                            openCitation('/annotations/'+annotation_to_open[1] + '/', { autoplay:false});
-                        }
-                    }
-                    
-                    var citationOptions = {};
-                    if (options.presentation)
-                        citationOptions.presentation = options.presentation;
-                    
-                    // /In published view: decorate annotation links
-                    DjangoSherd_decorate_citations(document, citationOptions);
-                    
-                    if (options.callback) options.callback();
-        });
+                    DjangoSherd_Project_ConfigEx(options);
+                });
+    } else {
+        DjangoSherd_Project_ConfigEx(options);
     }
 }
 
