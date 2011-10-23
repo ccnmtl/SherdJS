@@ -181,6 +181,7 @@ function DjangoSherd_Storage() {
                 jQuery.ajax({url:(subject.url || '/'+obj_type+'/json/'+id+'/'),
                              dataType:'json',
                              dataFilter:legacy_json,
+                             cache: false, // Internet Explorer has aggressive caching policies.
                              success:function(json) {
                                  var new_id = self.json_update(json, obj_type);
                                  if (callback) {
