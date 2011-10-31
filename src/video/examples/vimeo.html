@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vimeo Javascript oEmbed Example</title>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  
+    <script>
+       window.vimeo_player_loaded = function(playerID) {
+           alert('loaded: ' + playerID);
+       } 
+        function seek() {
+            var player = document.getElementById("vimeo_controller");
+            player.api_seekTo(30);
+        }
+
+        function play() {
+            var player = document.getElementById("vimeo_controller");
+            player.api_play();
+        }
+
+    </script>
+</head>
+<body>
+
+    <h1>Vimeo Javascript oEmbed Example</h1>
+    
+    <div id="vimeo_player">
+        <object width="310" height="220" id="vimeo_controller" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000">
+        <PARAM NAME="_cx" VALUE="8202">
+        <PARAM NAME="_cy" VALUE="5820">
+        <PARAM NAME="FlashVars" VALUE="autoplay=0&amp;loop=0&amp;clip_id=7100569&amp;color=0&amp;fullscreen=1&amp;server=vimeo.com&amp;show_byline=1&amp;show_portrait=1&amp;show_title=1&amp;js_api=1">
+        <PARAM NAME="Movie" VALUE="http://vimeo.com/moogaloop.swf">
+        <PARAM NAME="Src" VALUE="http://vimeo.com/moogaloop.swf">
+        <PARAM NAME="WMode" VALUE="Window">
+        <PARAM NAME="Play" VALUE="0">
+        <PARAM NAME="Loop" VALUE="-1">
+        <PARAM NAME="Quality" VALUE="High">
+        <PARAM NAME="SAlign" VALUE="LT">
+        <PARAM NAME="Menu" VALUE="-1">
+        <PARAM NAME="Base" VALUE="">
+        <PARAM NAME="AllowScriptAccess" VALUE="always">
+        <PARAM NAME="Scale" VALUE="NoScale">
+        <PARAM NAME="DeviceFont" VALUE="0">
+        <PARAM NAME="EmbedMovie" VALUE="0">
+        <PARAM NAME="BGColor" VALUE="">
+        <PARAM NAME="SWRemote" VALUE="">
+        <PARAM NAME="MovieData" VALUE="">
+        <PARAM NAME="SeamlessTabbing" VALUE="1">
+        <PARAM NAME="Profile" VALUE="0">
+        <PARAM NAME="ProfileAddress" VALUE="">
+        <PARAM NAME="ProfilePort" VALUE="0">
+        <PARAM NAME="AllowNetworking" VALUE="all">
+        <PARAM NAME="AllowFullScreen" VALUE="true">
+        <param name="allowscriptaccess" value="always">
+        <param name="allowfullscreen" value="true">
+        <param name="movie" value="http://vimeo.com/moogaloop.swf">
+        <param name="flashvars" value="autoplay=0&amp;loop=0&amp;clip_id=7100569&amp;color=0&amp;fullscreen=1&amp;server=vimeo.com&amp;show_byline=1&amp;show_portrait=1&amp;show_title=1&amp;js_api=1">
+        <embed height="220" type="application/x-shockwave-flash" width="310" src="http://vimeo.com/moogaloop.swf" allowscriptaccess="always" allowfullscreen="true" flashvars="autoplay=0&amp;loop=0&amp;clip_id=7100569&amp;color=0&amp;fullscreen=1&amp;server=vimeo.com&amp;show_byline=1&amp;show_portrait=1&amp;show_title=1&amp;js_api=1">
+        </embed>
+        </object>
+    </div>
+
+    <a href="#" onclick="return getData();">Get Data</a>
+    <br />
+    <a href="#" onclick="return seek();">Seek</a>
+    <br />
+    <a href="#" onclick="return play();">Play</a>
+    <br/ ></br>
+
+</body>
+</html>

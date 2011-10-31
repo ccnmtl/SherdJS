@@ -716,7 +716,7 @@ SherdBookmarklet = {
                               "gdata":'http://gdata.youtube.com/feeds/api/videos/'+VIDEO_ID
                           }};
                       if (emb.getCurrentTime) {
-                          if (emb.getCurrentTime() == emb.getDuration()) 
+                          if (emb.getCurrentTime() > 0 && emb.getCurrentTime() < emb.getDuration()) 
                               rv["hash"]="start="+emb.getCurrentTime();
                       }
                       var yt_callback = 'sherd_youtube_callback_'+index;
@@ -865,10 +865,10 @@ SherdBookmarklet = {
                       var primary_type = type+get_provider(clip);
                       sources[primary_type] = clip.completeUrl || clip.originalUrl || clip.resolvedUrl || clip.url || clip;
                       if (provider && provider.netConnectionUrl) {
-			  sources[primary_type] = provider.netConnectionUrl+sources[primary_type]
+                          sources[primary_type] = provider.netConnectionUrl+sources[primary_type]
                       } 
                       ///TODO:is context.document the right relative URL instead of the SWF?
-		      sources[primary_type] = abs(sources[primary_type],context.document);
+                      sources[primary_type] = abs(sources[primary_type],context.document);
                       if (/_pseudo/.test(primary_type)
                           && cfg.plugins[clip.provider].queryString
                          ) {
@@ -937,6 +937,67 @@ SherdBookmarklet = {
                           return {};
                       }
                   }                  
+              },
+              "moogaloop": {
+                  match:function(objemb) {
+                      return String(objemb.type).search('x-shockwave-flash') > -1 && 
+                             (String(objemb.data).search('moogaloop.swf') > -1 || String(objemb.src).search('moogaloop.swf') > -1);
+                  },
+                  asset:function(objemb,match_rv,context,index,optional_callback) {
+                      var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
+                      
+                      var matches = objemb.src && objemb.src.match(/clip_id=([\d]*)/);
+                      if (!matches || matches.length < 1) {
+                          var flashvars = jQ('param[name=flashvars],param[name=FLASHVARS]', objemb);
+                          if (!flashvars.val()) {
+                              return {};
+                          }
+                          matches = flashvars.val().match(/clip_id=([\d]*)/);
+                      }
+                      if (!matches || matches.length < 1) {
+                          return {}
+                      } else {
+                          var rv = {
+                              html:objemb,
+                              wait:true,
+                              primary_type:"vimeo",
+                              label:"vimeo video",
+                              sources: {
+                                  "vimeo":"http://www.vimeo.com/" + matches[1],
+                              }};
+                          
+                          if (objemb.api_getCurrentTime) {
+                              if (objemb.api_getCurrentTime() > 0) {
+                                  rv["hash"]="start="+ objemb.api_getCurrentTime();
+                              }
+                          }
+                          
+                          var vm_callback = 'sherd_vimeo_callback_'+ index;
+                          window[vm_callback] = function(vm_data) {
+                              if (vm_data.length > 0) {
+                                  var info = vm_data[0];
+                                  rv.sources["title"] = info.title;
+                                  rv.sources["thumb"] = info.thumbnail_medium;
+                                  rv.sources["metadata-owner"] = info.user_name ||undefined;
+                                  rv.sources["width"] = info.width;
+                                  rv.sources["height"] = info.height;
+                              }
+                              optional_callback(index,rv);
+                          }
+                          var ajax_options = {
+                              url: "http://www.vimeo.com/api/v2/video/" + matches[1] + ".json?callback=" + vm_callback,
+                              dataType: 'script',
+                              error:function(){optional_callback(index);}
+                          }
+                          if (SherdBookmarklet.options.cross_origin) {
+                              ajax_options['dataType'] = 'json';
+                              ajax_options['success'] = window[vm_callback];
+                              ajax_options['url'] = "http://www.vimeo.com/api/v2/video/" + matches[1] + ".json";
+                          }
+                          jQ.ajax(ajax_options);
+                          return rv;
+                      }
+                  }                     
               },
               "zoomify":{
                   match:function(objemb) {

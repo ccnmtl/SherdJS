@@ -152,7 +152,6 @@ if (!Sherd.Video.Base) {
                         },
                         {call: function() { self.media.pause(); }}
                     ]);
-
                 }
             }
             ,
