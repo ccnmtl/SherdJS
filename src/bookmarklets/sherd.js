@@ -382,6 +382,42 @@ SherdBookmarklet = {
             });            
         }
     },
+    // first version of this added by Eddie 10/28/11:
+    "classpop.ccnmtl.columbia.edu": {
+        find:function(callback) {           
+            SherdBookmarklet.run_with_jquery(function _find(jQuery) {                
+                if (jQuery ('#currently_playing').length > 0) {
+                    
+                    // the YouTube id is passed up via a postMessage
+                    // from the inner iframe and displayed in
+                    // a special "currently playing" div
+                    var tmp = jQuery ('#currently_playing').html();
+                    var v_match =  ["video_id=" + tmp,  tmp]
+                    
+                    // not sure we need this as of right now: to start out with.
+                    // i'm just using an empty div.
+                    var video_dom_object = jQuery ("<div></div>");
+                    
+                    SherdBookmarklet.assethandler.objects_and_embeds.players
+                    .youtube.asset(
+                       video_dom_object, 
+                       v_match,
+                       {
+                           'window':window,
+                           'document':document
+                       },
+                       0,
+                       function(ind,rv){ callback([rv]); }
+                   );
+                }
+                else {
+                    callback([]);
+                }
+            });//end run_with_jquery for classpop.ccnmtl.columbia.edu
+        },
+        decorate:function(objs) {
+        }
+     },    
     "dropbox.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function(jQ) { 
