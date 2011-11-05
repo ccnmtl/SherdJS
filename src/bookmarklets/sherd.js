@@ -160,7 +160,7 @@ ARCHITECTURE:
                    This interface calls Finder() and displays the results
      
      FOOTER:
-       At the bottom of this file is the init/bootstrap code which runs the rigth part of
+       At the bottom of this file is the init/bootstrap code which runs the right part of
        SherdBookmarklet.* (generally a runner) after inspecting SherdBookmarkletOptions
 
        Chrome bookmarklet case is for when this same code is used as a library in the chrome
@@ -1565,6 +1565,7 @@ SherdBookmarklet = {
               }
           }
       }
+      form.appendChild(addField("asset-source", "bookmarklet"));
       form.appendChild(doc.createElement("span"));
       return form;
   },/*obj2url*/
