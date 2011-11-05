@@ -1528,47 +1528,76 @@ SherdBookmarklet = {
       form.target = target;
       var ready = M.user_ready();
       form.method = (ready) ? 'POST' : 'GET'; 
+
+      var form_api = M.options.form_api || 'mediathread';
+      M.forms[form_api](obj,form,ready,doc);
+
+      form.appendChild(doc.createElement("span"));
+      return form;
+  },/*obj2form*/
+  "addField": function(name,value,form,doc) {
+    var span = doc.createElement("span");
+    var item = doc.createElement("input");
+    if (name=="title") {
+      item.type = "text";
+      //IE7 doesn't allow setAttribute here, mysteriously
+      item.style.display = "block";
+      item.style.width = "90%";
+      item.className = "sherd-form-title";
+    } else {
+      item.type = "hidden";
+    }
+    item.name = name;
+    ///Ffox bug: this must go after item.type=hidden or not set correctly
+    item.value = value;
+    form.appendChild(span);
+    form.appendChild(item);
+    return item;
+  },/*addField*/
+  "forms": {
+    "mediathread": function(obj,form,ready,doc) {
+      var M = window.SherdBookmarklet;
       /* just auto-save immediately
        * this also allows us to send larger amounts of metadata
        */
-      function addField(name,value) {
-          var span = doc.createElement("span");
-          var item = doc.createElement("input");
-          if (name=="title") {
-              item.type = "text";
-              //IE7 doesn't allow setAttribute here, mysteriously
-              item.style.display = "block";
-              item.style.width = "90%";
-              item.className = "sherd-form-title";
-          } else {
-              item.type = "hidden";
-          }
-          item.name = name;
-          ///Ffox bug: this must go after item.type=hidden or not set correctly
-          item.value = value;
-          form.appendChild(span);
-          form.appendChild(item);
-          return item;
-      }
       for (a in obj.sources) {
           if (typeof obj.sources[a] =="undefined") continue;
-          var item = addField(a, obj.sources[a]);
+          M.addField(a, obj.sources[a],form,doc);
       }
       if (!obj.sources.title) {
           //guess title as file-name
-          addField('title', obj.sources[obj.primary_type].split('/').pop().split('?').shift() );
+          M.addField('title', obj.sources[obj.primary_type].split('/').pop().split('?').shift(),form,doc);
       }
       if (ready && obj.metadata) {
           for (a in obj.metadata) {
               for (var i=0;i<obj.metadata[a].length;i++) {
-                  addField("metadata-"+a, obj.metadata[a][i]);
+                  M.addField("metadata-"+a, obj.metadata[a][i],form,doc);
               }
           }
       }
-      form.appendChild(addField("asset-source", "bookmarklet"));
-      form.appendChild(doc.createElement("span"));
-      return form;
-  },/*obj2url*/
+      M.addField("asset-source", "bookmarklet",form,doc);
+    },/*mediathread_form*/
+    "imagemat":function(obj,form,ready,doc) {
+      var M = window.SherdBookmarklet;
+      if (obj.sources.title) {
+        var span = doc.createElement('span');
+        span.innerHTML = obj.sources.title;
+        span.className = 'sherdjs-source-title';
+        form.appendChild(span);
+        M.addField('ftitle',obj.sources.title,form,doc);      
+      }
+      M.addField('htmls[0]',obj.sources["url"],form,doc);
+      M.addField('urls[0]',obj.sources[obj.primary_type],form,doc);
+      M.addField('jsons[0]',
+                 JSON.stringify(obj,
+                                function(key,value){
+                                  if (typeof value=='object' && value.tagName) {
+                                    return '';
+                                  } else return value;
+                                }),
+                 form,doc);
+    }/*imagemat_form*/
+  },
   "runners": {
     jump: function(host_url,jump_now) {
         var final_url = host_url;
@@ -1992,7 +2021,11 @@ SherdBookmarklet = {
   "Interface" : function (host_url, options) {
       var M = SherdBookmarklet;
       this.options = {
+          login_url:null,
           tab_label:"Analyze in Mediathread",
+          not_logged_in_message:"You are not logged in to MediaThread.",
+          login_to_course_message:"login to your MediaThread course",
+          link_text_for_existing_asset:"Link in MediaThread",
           target:((M.hasBody(document))? document.body : null),
           postTarget:'_top',
           top:100,
@@ -2003,6 +2036,8 @@ SherdBookmarklet = {
           message_disabled_asset:'This item cannot be embedded on external sites.',
           widget_name:'the bookmarklet'
       }; if (options) for (a in options) {this.options[a]=options[a]};
+      //bring in options from SherdBookmarkletOptions
+      for (b in this.options) {if (M.options[b]) this.options[b]=M.options[b]};
       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
 
       var o = this.options;
@@ -2029,14 +2064,14 @@ SherdBookmarklet = {
                   o.login_url = o.login_url || host_url.split("/",3).join("/");
                   jQ(comp.message).empty().append(
                       self.elt(null,'span','',{},
-                               ['You are not logged in to MediaThread.',
+                               [o.not_logged_in_message,
                                 self.elt(null,'br','',{}),
                                 'Please ',
                                 self.elt(null,'a','',{
                                     href:o.login_url,
                                     target:'_blank',
                                     style:'color:#8C3B2E;'
-                                },['login to your MediaThread course']),
+                                },[o.login_to_course_message]),
                                 ', and then click the '+o.widget_name+' again to import items.'
                                ])
                   );
@@ -2216,7 +2251,7 @@ SherdBookmarklet = {
                       jQ(frm.submitButton).remove();
                       if (new_href) {
                           jQ(frm).append(self.elt(null,'span','',{},[
-                              self.elt(null,'a','',{href:new_href},['Link in MediaThread'])
+                              self.elt(null,'a','',{href:new_href},[o.link_text_for_existing_asset])
                           ]));
                       } else {
                           jQ(frm).append(self.elt(null,'span','',{},[' Saved! ']));
