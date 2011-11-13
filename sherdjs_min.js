@@ -286,69 +286,28 @@ return time;};this.media.timestrip=function(){var w=self.components.player.width
 if(!Sherd){Sherd={};}
 if(!Sherd.Video){Sherd.Video={};}
 if(!Sherd.Video.Annotators){Sherd.Video.Annotators={};}
-if(!Sherd.Video.Annotators.ClipForm){Sherd.Video.Annotators.ClipForm=function(){var secondsToCode=Sherd.Video.secondsToCode;var codeToSeconds=Sherd.Video.codeToSeconds;var self=this;Sherd.Base.AssetView.apply(this,arguments);this.attachView=function(view){this.targetview=view;};this.targetstorage=[];this.addStorage=function(stor){this.targetstorage.push(stor);};this.getState=function(){var duration=self.targetview.media.duration();var timeScale=self.targetview.media.timescale();var obj={'startCode':self.components.startField.value,'endCode':self.components.endField.value,'duration':duration,'timeScale':timeScale,'start':codeToSeconds(self.components.startField.value),'end':codeToSeconds(self.components.endField.value)};return obj;};this.setState=function(obj,options){if(typeof obj=='object'){if(obj==null){obj={};obj.start=0;obj.end=0;}
-self.showForm();var start;if(obj.startCode){start=obj.startCode;}else if(obj.start!==undefined){start=secondsToCode(obj.start);}
-var end;if(obj.endCode){end=obj.endCode;}else if(obj.end!=undefined){end=secondsToCode(obj.end);}else if(start){end=start;}
-if(start!==undefined){if(self.components.startField)
-self.components.startField.value=start;if(self.components.startFieldDisplay)
-self.components.startFieldDisplay.innerHTML=start;self.components.start=start;self.events.signal(self.targetview,'clipstart',{start:codeToSeconds(start)});}
-if(end!==undefined){if(self.components.endField)
-self.components.endField.value=end;if(self.components.endFieldDisplay)
-self.components.endFieldDisplay.innerHTML=end;self.components.end=end;self.events.signal(self.targetview,'clipend',{end:codeToSeconds(end)});}
-if(options.mode=="browse"){if(self.components.startField)
-self.components.startField.disabled=true;if(self.components.endField)
-self.components.endField.disabled=true;if(self.components.startButton)
-self.components.startButton.disabled=true;if(self.components.endButton)
-self.components.endButton.disabled=true;if(self.components.clipcontrols){self.components.clipcontrols.style.display="none";self.components.clipcontrols_readonly.style.display="inline";}
-if(self.components.instructions)
-self.components.instructions.style.display="none";}else{if(self.components.startField)
-self.components.startField.disabled=false;if(self.components.endField)
-self.components.endField.disabled=false;if(self.components.startButton)
-self.components.startButton.disabled=false;if(self.components.endButton)
-self.components.endButton.disabled=false;if(self.components.clipcontrols){self.components.clipcontrols.style.display="inline";self.components.clipcontrols_readonly.style.display="none";}
-if(self.components.instructions)
-self.components.instructions.style.display="block";}}};this.storage={update:function(obj,just_downstream){if(!just_downstream){self.setState(obj);}
-if(self.targetstorage){for(var i=0;i<self.targetstorage.length;i++){self.targetstorage[i].storage.update(obj);}}}};this.initialize=function(create_obj){self.events.connect(self.components.startButton,'click',function(evt){var movieTime=self.targetview.media.time();var movieTimeCode=secondsToCode(movieTime);self.components.startField.value=movieTimeCode;if(movieTime>codeToSeconds(self.components.endField.value)){self.components.endField.value=movieTimeCode;}
-self.storage.update(self.getState(),false);});self.events.connect(self.components.endButton,'click',function(evt){if(self.targetview.media.pause){self.targetview.media.pause();}
-var movieTime=self.targetview.media.time();var movieTimeCode=secondsToCode(movieTime);self.components.endField.value=movieTimeCode;if(movieTime<codeToSeconds(self.components.startField.value))
-self.components.startField.value=movieTimeCode;self.storage.update(self.getState(),false);});self.events.connect(self.components.startField,'change',function(evt){var obj=self.getState();if(obj.end<obj.start){obj.end=obj.start;obj.endCode=obj.startCode;self.components.endField.value=obj.startCode;}
-self.storage.update(obj,false);});self.events.connect(self.components.endField,'change',function(evt){var obj=self.getState();if(obj.end<obj.start){obj.start=obj.end;obj.startCode=obj.endCode;self.components.startField.value=obj.endCode;}
-self.storage.update(obj,false);});self.events.connect(self.components.playClip,'click',function(evt){var obj=self.getState();self.events.signal(self.targetview,'playclip',{start:obj.start,end:obj.end});});self.events.connect(self.components.playClip2,'click',function(evt){var obj=self.getState();self.events.signal(self.targetview,'playclip',{start:obj.start,end:obj.end});});};this.showForm=function(){if(self.components.form)
-self.components.form.style.display="inline";};this.hideForm=function(){if(self.components.form)
-self.components.form.style.display="none";};this.microformat.create=function(obj){var htmlID='clipform';return{htmlID:htmlID,text:'<div id="'+htmlID+'" style="display: none">'
-+'<div id="clipcontrols" class="sherd-clipform">'
-+'<p id="instructions" class="sherd-instructions">Create a selection by clicking Start Time and End Time buttons as the video plays or by manually typing in times in the associated edit boxes. Add title, tags and notes. Click Save when you are finished.</p><br />'
-+'<div class="cliptimeboxtable">'
-+'<table>'
-+'<tr class="sherd-clipform-editing">'
-+'<td>'
-+'<input type="button" class="regButton" value="start time" id="btnClipStart"/> '
-+'</td>'
-+'<td width="10px">&nbsp;</td>'
-+'<td>'
-+'<input type="button" class="regButton" value="end time" id="btnClipEnd"/> '
-+'</td>'
-+'<td>&nbsp;</td>'
-+'</tr>'
-+'<tr class="sherd-clipform-editing">'
-+'<td>'
-+'<input type="text" class="timecode" id="clipStart" value="'+self.components.start+'" />'
-+'</td>'
-+'<td width="10px">-</td>'
-+'<td>'
-+'<input type="text" class="timecode" id="clipEnd" value="'+self.components.end+'" />'
-+'</td>'
-+'<td class="sherd-clipform-play"><input type="button" class="regButton videoplay" value="Play Selection" id="btnPlayClip"/></td>'
-+'</tr>'
-+'</table>'
+if(!Sherd.Video.Annotators.ClipStrip){Sherd.Video.Annotators.ClipStrip=function(){var self=this;var CLIP_MARKER_WIDTH=7;Sherd.Video.Base.apply(this,arguments);this.attachView=function(view){this.targetview=view;self.events.connect(view,'duration',self.setClipDuration);self.events.connect(view,'clipstart',self.setClipStart);self.events.connect(view,'clipend',self.setClipEnd);};this.getState=function(){var obj={};obj.starttime=self.components.starttime;obj.endtime=self.components.endtime;obj.duration=self.components.duration;obj.timestrip=self.components.timestrip;return obj;};this.setState=function(obj){if(typeof obj=='object'){var c=self.components;if(obj===null){c.starttime=c.endtime=c.duration=0;}else{c.starttime=obj.start||0;c.endtime=obj.end||c.starttime;if(obj.duration>1){c.duration=obj.duration;self.microformat._resize();}else{self.events.queue('quicktime has duration',[{test:function(){return self.targetview.media.duration();},poll:500},{call:function(){c.duration=self.targetview.media.duration();self.microformat._resize();}}]);}}
+return true;}};this.setClipDuration=function(obj){if(obj.duration>1){self.components.duration=obj.duration;self.microformat._resize();}};this.setClipStart=function(obj){if(typeof obj.start!='undefined'&&self.components.duration){self.components.starttime=obj.start;self.microformat._resize();}};this.setClipEnd=function(obj){if(obj.end!==undefined&&self.components.duration){self.components.endtime=obj.end;self.microformat._resize();}};this.initialize=function(create_obj){self.events.connect(self.components.clipStartMarker,'click',function(evt){self.events.signal(self.targetview,'seek',self.components.starttime);});self.events.connect(self.components.clipEndMarker,'click',function(evt){self.events.signal(self.targetview,'seek',self.components.endtime);});self.events.connect(self.components.clipRange,'click',function(evt){var obj=self.getState();self.events.signal(self.targetview,'playclip',{start:obj.starttime,end:obj.endtime});});self.microformat._resize();};this.microformat.create=function(obj){var htmlID='clipStrip';timestrip=self.targetview.media.timestrip();return{htmlID:htmlID,timestrip:timestrip,text:'<div id="clipStrip" style="width: '+timestrip.w+'px">'
++'<div id="clipStripTrack"  style="width: '+timestrip.trackWidth+'px; left: '+timestrip.trackX+'px">'
++'<div id="clipStripStart" class="clipSlider" onmouseover="return escape(\'Go to note start time\')" style="display:none"></div>'
++'<div id="clipStripRange" class="clipStripRange" style="display:none"></div>'
++'<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>'
 +'</div>'
++'</div>'};};this.microformat.components=function(html_dom,create_obj){try{return{clipStrip:document.getElementById('clipStrip'),clipStartMarker:document.getElementById('clipStripStart'),clipRange:document.getElementById('clipStripRange'),clipEndMarker:document.getElementById('clipStripEnd'),timestrip:create_obj.timestrip,starttime:0,endtime:0,duration:0,layers:{}};}catch(e){}
+return false;};this.microformat._resize=function(){left=self.microformat._timeToPixels(self.components.starttime,self.components.duration,self.components.timestrip.trackWidth);right=self.microformat._timeToPixels(self.components.endtime,self.components.duration,self.components.timestrip.trackWidth);width=right-left;if(width<0)width=0;self.components.clipStartMarker.style.left=(left-CLIP_MARKER_WIDTH)+'px';self.components.clipEndMarker.style.left=right+'px';self.components.clipRange.style.left=left+"px";self.components.clipRange.style.width=width+'px';self.components.clipStartMarker.style.display='block';self.components.clipRange.style.display='block';self.components.clipEndMarker.style.display='block';for(var layerName in self.components.layers){var layer=self.components.layers[layerName];for(var annotationName in layer._anns){var annotation=layer._anns[annotationName];left=self.microformat._timeToPixels(annotation.starttime,self.components.duration,self.components.timestrip.trackWidth);right=self.microformat._timeToPixels(annotation.endtime,self.components.duration,self.components.timestrip.trackWidth);width=(right-left);if(width<0)width=0;jQuery("#"+annotation.htmlID).css("left",left);jQuery("#"+annotation.htmlID).css("width",width);}}};this.microformat._timeToPixels=function(seconds,duration,width){if(duration>0){var ratio=width/duration;return ratio*seconds;}else{return 0;}};this.Layer=function(){};this.Layer.prototype={create:function(name,opts){this.name=name;this.htmlID='clipStripLayer_'+name;this.title=(opts&&opts['title'])||this.name;this._anns={};var html='<div class="clipStripLayerContainer" id="'+this.htmlID+'" style="z-index:'+opts.zIndex+'">'
++'<div class="clipStripLayerTitle" style="left: '+(self.components.timestrip.trackX-98)+'px">'+this.title+'&nbsp;</div>'
++'<div class="clipStripLayer"'
++' style="left: '+self.components.timestrip.trackX+'px; '
++' width: '+self.components.timestrip.trackWidth+'px;">'
 +'</div>'
-+'<div id="clipcontrols_readonly" class="sherd-clipform">'
-+'<span id="clipStartDisplay">'+self.components.start+'</span> - <span id="clipEndDisplay">'+self.components.end+'</span>&nbsp;&nbsp;&nbsp;<input type="button" class="regButton videoplay" value="Play Selection" id="btnPlayClip2"/>'
-+'</div>'
-+''
-+'</div>'};};this.microformat.components=function(html_dom,create_obj)
-{return{'form':html_dom,'startButton':document.getElementById('btnClipStart'),'endButton':document.getElementById('btnClipEnd'),'startField':document.getElementById('clipStart'),'endField':document.getElementById('clipEnd'),'startFieldDisplay':document.getElementById('clipStartDisplay'),'endFieldDisplay':document.getElementById('clipEndDisplay'),'playClip':document.getElementById('btnPlayClip'),'playClip2':document.getElementById('btnPlayClip2'),'clipcontrols':document.getElementById('clipcontrols'),'clipcontrols_readonly':document.getElementById('clipcontrols_readonly'),'instructions':document.getElementById('instructions'),'start':"00:00:00",'end':"00:00:00"};};};}
++'</div>';var inserted=false;if(opts.zIndex!==undefined){jQuery(".clipStripLayerContainer").each(function(index,value){var zindex=jQuery(this).css("z-index");if((zindex&&opts.zIndex>zindex)||(zindex===undefined||zindex==="auto")){jQuery(this).before(html);inserted=true;return false;}});}
+if(!inserted)
+jQuery("#"+self.components.clipStrip.id).append(html);self.components.layers[name]=this;if(opts.onmouseenter)
+self.onmouseenter=opts.onmouseenter;if(opts.onmouseleave)
+self.onmouseleave=opts.onmouseleave;if(opts.onclick)
+self.onclick=opts.onclick;return this;},destroy:function(){this.removeAll();jQuery("#"+this.htmlID).remove();delete self.components.layers[name];},add:function(ann,opts){if(ann.duration!==undefined&&ann.duration>1&&self.components.duration<1)
+self.components.duration=ann.duration;this._anns[opts.id]={starttime:ann.start,endtime:ann.end,htmlID:this.name+'_annotation_'+opts.id,duration:ann.duration};jQuery("#"+this.htmlID).children(".clipStripLayer").append('<div class="annotationLayer" id="'+this._anns[opts.id].htmlID+'"></div>');if(opts.color)
+jQuery("#"+this._anns[opts.id].htmlID).css("background-color",opts.color);jQuery("#"+this._anns[opts.id].htmlID).hover(function enter(){if(self.onmouseenter){self.onmouseenter(opts.id,this.name);}},function leave(){if(self.onmouseleave){self.onmouseleave(opts.id,this.name);}});jQuery("#"+this._anns[opts.id].htmlID).click(function(){if(self.onclick){self.onclick(opts.id,this.name);}});self.microformat._resize();},remove:function(ann_id){if(ann_id in this._anns){jQuery("#"+this._anns[ann_id].htmlID).remove();delete this._anns[ann_id];}},removeAll:function(){for(var ann_id in this._anns){this.remove(ann_id);delete this._anns[ann_id];}},show:function(){jQuery("#"+this.htmlID).show();},hide:function(){jQuery("#"+this.htmlID).hide();}};};}
 if(!Sherd){Sherd={};}
 if(!Sherd.Video){Sherd.Video={};}
 if(!Sherd.Video.Videotag){Sherd.Video.Videotag=function(){var self=this;Sherd.Video.Base.apply(this,arguments);this.microformat.create=function(obj,doc){var wrapperID=Sherd.Base.newID('videotag-wrapper-');var playerID=Sherd.Base.newID('videotag-player-');var controllerID=Sherd.Base.newID('videotag-controller-');var supported=self.microformat._getPlayerParams(obj);if(supported){if(!obj.options){obj.options={width:(obj.presentation=='small'?320:(obj.width||480)),height:(obj.presentation=='small'?240:(obj.height||360))};}
@@ -415,31 +374,6 @@ return playing;};this.media.ready=function(){var status;try{var p=self.component
 if(endtime){self.media.pauseAt(endtime);}}else{self.events.queue('realplayer ready to seek',[{poll:500,test:self.media.seekable},{test:function(){return(seek_last==my_seek);}},{call:function(){self.media.seek(starttime,endtime,play);}}]);}
 self.components.starttime=starttime;self.components.endtime=endtime;};this.media.time=function(){var time=0;try{time=self.components.player.GetPosition()/1000;}catch(e){}
 return time;};this.media.timescale=function(){return 1;};this.media.timestrip=function(){var w=self.components.player.width;return{w:w,trackX:110,trackWidth:w-220,visible:true};};this.media.isStreaming=function(){return true;};this.media.url=function(){throw Error("unimplemented function media.url");};};}
-if(!Sherd){Sherd={};}
-if(!Sherd.Video){Sherd.Video={};}
-if(!Sherd.Video.Annotators){Sherd.Video.Annotators={};}
-if(!Sherd.Video.Annotators.ClipStrip){Sherd.Video.Annotators.ClipStrip=function(){var self=this;var CLIP_MARKER_WIDTH=7;Sherd.Video.Base.apply(this,arguments);this.attachView=function(view){this.targetview=view;self.events.connect(view,'duration',self.setClipDuration);self.events.connect(view,'clipstart',self.setClipStart);self.events.connect(view,'clipend',self.setClipEnd);};this.getState=function(){var obj={};obj.starttime=self.components.starttime;obj.endtime=self.components.endtime;obj.duration=self.components.duration;obj.timestrip=self.components.timestrip;return obj;};this.setState=function(obj){if(typeof obj=='object'){var c=self.components;if(obj===null){c.starttime=c.endtime=c.duration=0;}else{c.starttime=obj.start||0;c.endtime=obj.end||c.starttime;if(obj.duration>1){c.duration=obj.duration;self.microformat._resize();}else{self.events.queue('quicktime has duration',[{test:function(){return self.targetview.media.duration();},poll:500},{call:function(){c.duration=self.targetview.media.duration();self.microformat._resize();}}]);}}
-return true;}};this.setClipDuration=function(obj){if(obj.duration>1){self.components.duration=obj.duration;self.microformat._resize();}};this.setClipStart=function(obj){if(typeof obj.start!='undefined'&&self.components.duration){self.components.starttime=obj.start;self.microformat._resize();}};this.setClipEnd=function(obj){if(obj.end!==undefined&&self.components.duration){self.components.endtime=obj.end;self.microformat._resize();}};this.initialize=function(create_obj){self.events.connect(self.components.clipStartMarker,'click',function(evt){self.events.signal(self.targetview,'seek',self.components.starttime);});self.events.connect(self.components.clipEndMarker,'click',function(evt){self.events.signal(self.targetview,'seek',self.components.endtime);});self.events.connect(self.components.clipRange,'click',function(evt){var obj=self.getState();self.events.signal(self.targetview,'playclip',{start:obj.starttime,end:obj.endtime});});self.microformat._resize();};this.microformat.create=function(obj){var htmlID='clipStrip';timestrip=self.targetview.media.timestrip();return{htmlID:htmlID,timestrip:timestrip,text:'<div id="clipStrip" style="width: '+timestrip.w+'px">'
-+'<div id="clipStripTrack"  style="width: '+timestrip.trackWidth+'px; left: '+timestrip.trackX+'px">'
-+'<div id="clipStripStart" class="clipSlider" onmouseover="return escape(\'Go to note start time\')" style="display:none"></div>'
-+'<div id="clipStripRange" class="clipStripRange" style="display:none"></div>'
-+'<div id="clipStripEnd" class="noteStripEnd" onmouseover="return escape(\'Go to note end time\')" style="display:none"></div>'
-+'</div>'
-+'</div>'};};this.microformat.components=function(html_dom,create_obj){try{return{clipStrip:document.getElementById('clipStrip'),clipStartMarker:document.getElementById('clipStripStart'),clipRange:document.getElementById('clipStripRange'),clipEndMarker:document.getElementById('clipStripEnd'),timestrip:create_obj.timestrip,starttime:0,endtime:0,duration:0,layers:{}};}catch(e){}
-return false;};this.microformat._resize=function(){left=self.microformat._timeToPixels(self.components.starttime,self.components.duration,self.components.timestrip.trackWidth);right=self.microformat._timeToPixels(self.components.endtime,self.components.duration,self.components.timestrip.trackWidth);width=right-left;if(width<0)width=0;self.components.clipStartMarker.style.left=(left-CLIP_MARKER_WIDTH)+'px';self.components.clipEndMarker.style.left=right+'px';self.components.clipRange.style.left=left+"px";self.components.clipRange.style.width=width+'px';self.components.clipStartMarker.style.display='block';self.components.clipRange.style.display='block';self.components.clipEndMarker.style.display='block';for(var layerName in self.components.layers){var layer=self.components.layers[layerName];for(var annotationName in layer._anns){var annotation=layer._anns[annotationName];left=self.microformat._timeToPixels(annotation.starttime,self.components.duration,self.components.timestrip.trackWidth);right=self.microformat._timeToPixels(annotation.endtime,self.components.duration,self.components.timestrip.trackWidth);width=(right-left);if(width<0)width=0;jQuery("#"+annotation.htmlID).css("left",left);jQuery("#"+annotation.htmlID).css("width",width);}}};this.microformat._timeToPixels=function(seconds,duration,width){if(duration>0){var ratio=width/duration;return ratio*seconds;}else{return 0;}};this.Layer=function(){};this.Layer.prototype={create:function(name,opts){this.name=name;this.htmlID='clipStripLayer_'+name;this.title=(opts&&opts['title'])||this.name;this._anns={};var html='<div class="clipStripLayerContainer" id="'+this.htmlID+'" style="z-index:'+opts.zIndex+'">'
-+'<div class="clipStripLayerTitle" style="left: '+(self.components.timestrip.trackX-98)+'px">'+this.title+'&nbsp;</div>'
-+'<div class="clipStripLayer"'
-+' style="left: '+self.components.timestrip.trackX+'px; '
-+' width: '+self.components.timestrip.trackWidth+'px;">'
-+'</div>'
-+'</div>';var inserted=false;if(opts.zIndex!==undefined){jQuery(".clipStripLayerContainer").each(function(index,value){var zindex=jQuery(this).css("z-index");if((zindex&&opts.zIndex>zindex)||(zindex===undefined||zindex==="auto")){jQuery(this).before(html);inserted=true;return false;}});}
-if(!inserted)
-jQuery("#"+self.components.clipStrip.id).append(html);self.components.layers[name]=this;if(opts.onmouseenter)
-self.onmouseenter=opts.onmouseenter;if(opts.onmouseleave)
-self.onmouseleave=opts.onmouseleave;if(opts.onclick)
-self.onclick=opts.onclick;return this;},destroy:function(){this.removeAll();jQuery("#"+this.htmlID).remove();delete self.components.layers[name];},add:function(ann,opts){if(ann.duration!==undefined&&ann.duration>1&&self.components.duration<1)
-self.components.duration=ann.duration;this._anns[opts.id]={starttime:ann.start,endtime:ann.end,htmlID:this.name+'_annotation_'+opts.id,duration:ann.duration};jQuery("#"+this.htmlID).children(".clipStripLayer").append('<div class="annotationLayer" id="'+this._anns[opts.id].htmlID+'"></div>');if(opts.color)
-jQuery("#"+this._anns[opts.id].htmlID).css("background-color",opts.color);jQuery("#"+this._anns[opts.id].htmlID).hover(function enter(){if(self.onmouseenter){self.onmouseenter(opts.id,this.name);}},function leave(){if(self.onmouseleave){self.onmouseleave(opts.id,this.name);}});jQuery("#"+this._anns[opts.id].htmlID).click(function(){if(self.onclick){self.onclick(opts.id,this.name);}});self.microformat._resize();},remove:function(ann_id){if(ann_id in this._anns){jQuery("#"+this._anns[ann_id].htmlID).remove();delete this._anns[ann_id];}},removeAll:function(){for(var ann_id in this._anns){this.remove(ann_id);delete this._anns[ann_id];}},show:function(){jQuery("#"+this.htmlID).show();},hide:function(){jQuery("#"+this.htmlID).hide();}};};}
 if(!Sherd){Sherd={};}
 if(!Sherd.Image){Sherd.Image={};}
 if(!Sherd.Image.Annotators){Sherd.Image.Annotators={};}
