@@ -87,7 +87,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="true"></param>' +
-                        '  <param name="flashVars" value="autoPlay=false&streamerType=rtmp"/>' + 
+                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=rtmp"/>' + 
                         '  <embed src="' + url + playerID + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
@@ -138,18 +138,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
-            if (obj.kaltura && document.getElementById(self.components.playerID) && self.media.ready()) {
-                try {
-                    if (obj.kaltura != self.components.mediaUrl) {
-                        // Replacing the 'url' by cue'ing the video with the new url
-                        self.components.mediaUrl = obj.kaltura;
-                        self.components.player.cueVideoByUrl(self.components.mediaUrl, 0);
-                    }
-                    return true;
-                }
-                catch (e) {}
-            }
-            return false;
+           return obj.kaltura == self.components.mediaUrl && document.getElementById(self.components.playerID) && self.media.ready();
         };
         
         ////////////////////////////////////////////////////////////////////////
@@ -160,8 +149,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             self.events.connect(self, 'seek', self.media.playAt);
             
             self.events.connect(self, 'playclip', function(obj) {
-                obj.autoplay = true;
-                self.setState(obj);
+                self.setState(obj, { 'autoplay': true });
             });
         };
         
@@ -179,11 +167,6 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             self.media._ready = true;
             self.media.video_duration = data.duration;
             self.events.signal(self, 'duration', { duration: data.duration });
-            
-            console.log('entryReadyHandler');
-            
-            if (self.components.startime)
-                self.setState({ start: self.state.starttime, end: self.state.endtime});
         }
         
         window.durationChangeHandler = function(data, id) {
@@ -196,20 +179,22 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         }
         
         window.playerStateChangeHandler = function(data, id) {
-            console.log('playerStateChangeHandler: ' + data);
             self.media.current_state = data;
             
-            if (self.state.seeking == true && self.media.isPlaying()) {
+            if (self.state.starttime != undefined && self.media.isPlaying()) {
                 self.media.seek(self.state.starttime, self.state.endtime, self.state.autoplay);
             }
         }
 
         this.media.duration = function() {
-            var duration = 0;
-            if (self.components.player && self.media.video_duration) {
-                duration = self.media.video_duration;
+            if (self.media.video_duration != undefined) {
+                return self.media.video_duration;
+            } else if (self.components.player && self.media.ready()) {
+                self.media.video_duration = self.components.player.evaluate('{mediaProxy.entry.duration}');
+                return self.media.video_duration;
+            } else {
+                return 0;
             }
-            return duration;
         };
         
         this.media.pause = function() {
@@ -237,39 +222,34 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         };
 
         this.media.seek = function(starttime, endtime, autoplay) {
-            // this might need to be a timer to determine "when" the media player is ready
-            // it's working differently from initial load to the update method
+            // Kaltura player needs to be fully buffered before seeking
+            // the buffering can only be accomplished by actually playing the video.
             if (!self.media.ready()) {
-                // executes on player state change
                 self.state.starttime = starttime;
-                self.state.endtime = endtime;   
-                self.state.autoplay = autoplay;
-                self.state.seeking = true;
+                self.state.endtime = endtime; 
+                self.state.autoplay = autoplay; 
             } else if (autoplay && !self.media.isPlaying()) {
-                // executes on player state change. player must be playing!
                 self.state.starttime = starttime;
                 self.state.endtime = endtime;
                 self.state.autoplay = autoplay;
-                self.state.seeking = true;
                 
-                if (!self.media.isPlaying())
-                    self.components.player.sendNotification('doPlay');
+                self.media.play(); 
             } else {
-                // executes immediately
-                if (starttime != undefined) {
+                if (starttime !== undefined) {
                     self.components.player.sendNotification('doSeek', starttime);
                 }
                 
                 if (endtime != undefined) {
-                    setTimeout(function() {
-                        self.media.pauseAt(endtime);
-                    }, 200);
+                    self.media.current_time = self.state.starttime;
+                    
+                    // wait until the video seek/play catches up before queuing the end timer
+                    self.media.pauseAt(endtime);
                 }
                 
+                // clear any saved values if they exist
                 delete self.state.starttime;
                 delete self.state.endtime;
                 delete self.state.autoplay;
-                self.state.seeking = false;
             }
         };
         
@@ -285,8 +265,8 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             var w = self.components.player.width;
             return {
                 w: w,
-                trackX: 3,
-                trackWidth: w-2,
+                trackX: 36,
+                trackWidth: w-178,
                 visible:true
             };
         };

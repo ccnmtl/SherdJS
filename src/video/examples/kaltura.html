@@ -74,8 +74,6 @@
                                  'freePreviewEnd'];
          
          function jsCallbackReady () {
-             alert('jsCallbackReady');
-
              var player = document.getElementById('kdp3');
              
              player.addJsListener("volumeChanged", "volumeChangedHandler");
@@ -108,13 +106,15 @@
              player.sendNotification('doPlay');
          }
 
-         function isPlaying() {
+         function seek() {
              var player = document.getElementById('kdp3');
-             var rv = player.evaluate('{mediaProxy.entry.name}'); 
-             console.log('IsPlaying: ' + rv);
+             player.sendNotification('doSeek', 100);
          }
 
-         
+         function isPlaying() {
+             var player = document.getElementById('kdp3');
+             var rv = player.evaluate('{mediaProxy.entry.duration}'); 
+         }
      
 
     </script>
@@ -132,12 +132,14 @@ data="http://www.kaltura.com/index.php/kwidget/wid/_203822/uiconf_id/1898102/ent
 <param name="allowFullScreen" value="true" />
 <param name="bgcolor" value="#000000" />
 <param name="movie" value="http://www.kaltura.com/index.php/kwidget/wid/_203822/uiconf_id/1898102/entry_id/1_45quhn2m/"/>
-<param name="flashVars" value="autoPlay=false&streamerType=rtmp"/>
+<param name="flashVars" value="autoPlay=true&streamerType=rtmp"/>
 </object>
 
 <a href="#" onclick="isPlaying()">Is Playing</a>
 <br /><br />
 <a href="#" onclick="play()">Play</a>
+<br /><br />
+<a href="#" onclick="seek()">Seek</a>
 <br /><br />
 Duration: <span id="videoduration"></span><br /><br />
 Time: <span id="videotime"></span>
