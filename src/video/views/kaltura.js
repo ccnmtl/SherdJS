@@ -87,7 +87,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="true"></param>' +
-                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=rtmp"/>' + 
+                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=rtmp&kml=local&kmlPath=/site_media/js/sherdjs/lib/kaltura/config.xml"/>' + 
                         '  <embed src="' + url + playerID + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
@@ -265,8 +265,8 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             var w = self.components.player.width;
             return {
                 w: w,
-                trackX: 36,
-                trackWidth: w-308,
+                trackX: 50,
+                trackWidth: w-124,
                 visible:true
             };
         };
