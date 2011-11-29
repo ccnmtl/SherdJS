@@ -266,7 +266,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             return {
                 w: w,
                 trackX: 36,
-                trackWidth: w-178,
+                trackWidth: w-308,
                 visible:true
             };
         };
