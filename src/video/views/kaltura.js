@@ -81,7 +81,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 mediaUrl: url, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperID + '" class="sherd-kaltura-wrapper">' + 
-                      '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' + objectID + ' type="application/x-shockwave-flash">' + 
+                      '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' + objectID + ' type="application/x-shockwave-flash" data="' + url + '" >' + 
                         '  <param name="movie" value="' + url + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"/></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
