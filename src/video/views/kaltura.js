@@ -69,7 +69,9 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             var objectID = '';
             var embedID = '';
             var classID = '';
-            if (window.navigator.userAgent.indexOf("MSIE") > -1) {
+            if (window.navigator.userAgent.indexOf("Firefox") > -1) {
+                objectID = 'id="' + playerID + '"';
+            } else if (window.navigator.userAgent.indexOf("MSIE") > -1) {
                 objectID = 'id="' + playerID + '"';
                 classID='classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"';
             } else {
