@@ -68,8 +68,10 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             // For FF, the id needs to be placed in the embed.
             var objectID = '';
             var embedID = '';
+            var classID = '';
             if (window.navigator.userAgent.indexOf("MSIE") > -1) {
                 objectID = 'id="' + playerID + '"';
+                classID='classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"';
             } else {
                 embedID = 'id="' + playerID + '"';
             }
@@ -81,7 +83,8 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 mediaUrl: url, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperID + '" class="sherd-kaltura-wrapper">' + 
-                      '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' + objectID + ' type="application/x-shockwave-flash" data="' + url + '" >' + 
+                      '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' + objectID + 
+                          ' type="application/x-shockwave-flash" data="' + url + '" ' + classID + '>' + 
                         '  <param name="movie" value="' + url + '"></param>' + 
                         '  <param name="allowscriptaccess" value="always"/></param>' + 
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
