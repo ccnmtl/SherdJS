@@ -814,6 +814,20 @@ SherdBookmarklet = {
                           c = obj.getConfig(), 
                           pcfg = obj.getPluginConfig('http');
                       if (item.type == 'rtmp') {
+                      	 // ensure that mp4 rtmp files contain the
+                         // needed mp4: prefix so that they will play
+                         // properly in flowplayer;
+                         // JW Player allows you to omit this prefix,
+                         // but Flowplayer does not
+                         //
+                         // if item.file ends with mp4,
+                         // and item.file does not already begin with mp4:,
+                         // then append mp4: to item.file
+                         if ( (/mp4$/.test(item.file)) &&
+                              !(/^mp4:/.test(item.file)) ) {
+                            item.file = 'mp4:' + item.file;
+                         }
+
                           rv.sources["video_rtmp"] = item.streamer+'//'+item.file;
                           rv.primary_type = "video_rtmp";
                       } else {
