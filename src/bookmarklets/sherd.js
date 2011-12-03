@@ -948,6 +948,44 @@ SherdBookmarklet = {
                       return {};
                   }
               },/*end flvplayer_progressive*/
+              "kaltura": {
+                  match:function(objemb) {
+                  return String(objemb.type).search('x-shockwave-flash') > -1 && 
+                         (String(objemb.data).search('kaltura') > -1 || 
+                          String(objemb.src).search('kaltura') > -1 ||
+                          String(objemb.resource).search('kaltura') > -1);
+                  },
+                  asset:function(objemb,match_rv,context,index,optional_callback) {
+                      var stream = objemb.data || objemb.src;
+                      if (!stream)
+                          return {};
+    
+                      var rv = {
+                          html:objemb,
+                          primary_type:"kaltura",
+                          label:"kaltura video",
+                          sources: {
+                              "kaltura": stream
+                          }};
+                      
+                      
+                      if (objemb.evaluate) {
+                          var currentTime = objemb.evaluate("{video.player.currentTime}");
+                          if (currentTime != undefined && currentTime > 0)
+                              rv["hash"]="start="+ currentTime; 
+                          
+                          var entry = objemb.evaluate('{mediaProxy.entry}');
+                          rv.sources["title"] = entry.name;
+                          rv.sources["thumb"] = entry.thumbnailUrl;
+                          rv.sources["metadata-owner"] = entry.userId || undefined;
+                          rv.sources["width"] = entry.width;
+                          rv.sources["height"] = entry.height;
+                          rv.sources["downloadUrl"] = entry.downloadUrl;
+                      }
+                      
+                      return rv;
+                  }                     
+              },
               "quicktime":{
                   match:function(objemb) {
                       return (objemb.classid=="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" 

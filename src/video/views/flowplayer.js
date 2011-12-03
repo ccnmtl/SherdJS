@@ -151,26 +151,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     // If the url is the same as the previous, just seek to the right spot.
                     // This works just fine.
                     rc = true;
-                } /**
-                    else {
-                    
-                     * If a new url is requested --
-                     * The clip switches properly. But, it will not seek properly
-                     * Ditching this until I have some more time to screw around with it
-                        if (self.media.state() == 3)
-                            self.components.player.pause();
-    
-                        log('setClip to newUrl: ' + newUrl + ' ' + self.components.autoplay);
-                        var clip = { 
-                                    url: newUrl, 
-                                    autoPlay: self.components.autoplay, 
-                                    autoBuffering: true
-                                };
-                        self.components.player.setClip(clip);
-                        
-                        self.microformat._queueReadyToSeekEvent();
                 }
-                    **/
             }
             return rc;
         };
