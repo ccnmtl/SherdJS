@@ -1,4 +1,4 @@
-<layout id="full" skinPath="http://kang.ccnmtl.columbia.edu:13086/site_media/js/sherdjs/lib/kaltura/skin.swf">
+<layout id="full" skinPath="http://mediathread.ccnmtl.columbia.edu/site_media/js/sherdjs/lib/kaltura/skin.swf">
 	<HBox id="topLevel" width="100%" height="100%">
 		<VBox id="player" width="100%" height="100%" styleName="black">
 			<Plugin id="statistics" width="0%" height="0%" includeInLayout="false" statsDis="{media.vo.isLive}"/>
