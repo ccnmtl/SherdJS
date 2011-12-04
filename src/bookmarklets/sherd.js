@@ -951,9 +951,9 @@ SherdBookmarklet = {
               "kaltura": {
                   match:function(objemb) {
                   return String(objemb.type).search('x-shockwave-flash') > -1 && 
-                         (String(objemb.data).search('kaltura') > -1 || 
-                          String(objemb.src).search('kaltura') > -1 ||
-                          String(objemb.resource).search('kaltura') > -1);
+                         ((objemb.data && String(objemb.data).search('kaltura') > -1) || 
+                          (objemb.src && String(objemb.src).search('kaltura') > -1) ||
+                          (objemb.resource && String(objemb.resource).search('kaltura') > -1));
                   },
                   asset:function(objemb,match_rv,context,index,optional_callback) {
                       var stream = objemb.data || objemb.src;
