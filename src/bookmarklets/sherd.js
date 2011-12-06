@@ -1028,7 +1028,7 @@ SherdBookmarklet = {
                           }
                           matches = flashvars.val().match(/clip_id=([\d]*)/);
                       }
-                      if (!matches || matches.length < 1) {
+                      if (!matches || matches.length < 2) {
                           return {}
                       } else {
                           var rv = {
@@ -1037,7 +1037,7 @@ SherdBookmarklet = {
                               primary_type:"vimeo",
                               label:"vimeo video",
                               sources: {
-                                  "vimeo":"http://www.vimeo.com/" + matches[1],
+                                  "vimeo":"http://www.vimeo.com/" + matches[1]
                               }};
                           
                           if (objemb.api_getCurrentTime) {
@@ -1048,7 +1048,7 @@ SherdBookmarklet = {
                           
                           var vm_callback = 'sherd_vimeo_callback_'+ index;
                           window[vm_callback] = function(vm_data) {
-                              if (vm_data.length > 0) {
+                              if (vm_data && vm_data.length > 0) {
                                   var info = vm_data[0];
                                   rv.sources["title"] = info.title;
                                   rv.sources["thumb"] = info.thumbnail_medium;
