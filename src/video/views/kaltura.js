@@ -92,7 +92,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="true"></param>' +
-                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=rtmp&kml=local&kmlPath=/site_media/js/sherdjs/lib/kaltura/config.xml"/>' + 
+                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=rtmp&kml=local&kmlPath=http://mediathread.ccnmtl.columbia.edu/site_media/js/sherdjs/lib/kaltura/config.xml"/>' + 
                         '  <embed src="' + url + playerID + '"' + 
                         '    type="application/x-shockwave-flash"' + 
                         '    allowScriptAccess="always"' + 
