@@ -11,6 +11,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js -- base.js
         
+        console.log("testing pre-commit hook to minify");
         this.presentations = {
                 'small':{
                     width:function(){return 310;},
