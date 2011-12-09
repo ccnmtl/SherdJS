@@ -950,17 +950,28 @@ SherdBookmarklet = {
               },/*end flvplayer_progressive*/
               "kaltura": {
                   match:function(objemb) {
-                  return String(objemb.type).search('x-shockwave-flash') > -1 && 
-                         ((objemb.data && String(objemb.data).search('kaltura') > -1) || 
-                          (objemb.src && String(objemb.src).search('kaltura') > -1) ||
-                          (objemb.resource && String(objemb.resource).search('kaltura') > -1));
+                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                      var movie = jQ(objemb).children('param[name=movie],param[name=MOVIE]');
+    
+                      // kaltura & vimeo use the same classid, apparently vimeo was built off kaltura?
+                      return ((objemb.classid=="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" && movie.val().search('kaltura') > -1)||
+                              (String(objemb.type).search('x-shockwave-flash') > -1 &&
+                               ((objemb.data && String(objemb.data).search('kaltura') > -1) ||
+                                (objemb.src && String(objemb.src).search('kaltura') > -1) ||
+                                (objemb.resource && String(objemb.resource).search('kaltura') > -1)))) || null;
                   },
                   asset:function(objemb,match_rv,context,index,optional_callback) {
                       var stream = objemb.data || objemb.src;
-                      if (!stream)
-                          return {};
+                      if (!stream) {
+                          var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+                          var movie = jQ(objemb).children('param[name=movie],param[name=MOVIE]');
+                          stream = movie.val();
+                       }
+
+                       if (!stream)
+                          return {}
     
-                      var rv = {
+                       var rv = {
                           html:objemb,
                           primary_type:"kaltura",
                           label:"kaltura video",
@@ -996,7 +1007,7 @@ SherdBookmarklet = {
                   asset:function(objemb,match,context) {
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
                       var abs = SherdBookmarklet.absolute_url;
-                      var src = objemb.src || jQ('param[name=src],param[name=SRC]',objemb);
+                      var src = objemb.src || jQ(objemb).children('param[name=src],param[name=SRC]');
                       if (src.length) {
                           src = (src.get) ? src.get(0).value : src;
                           return {
@@ -1014,21 +1025,26 @@ SherdBookmarklet = {
               },
               "moogaloop": {
                   match:function(objemb) {
-                      return String(objemb.type).search('x-shockwave-flash') > -1 && 
-                             (String(objemb.data).search('moogaloop.swf') > -1 || String(objemb.src).search('moogaloop.swf') > -1);
+                      var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
+                      var movie = jQ(objemb).children('param[name=movie],param[name=MOVIE]');
+
+                      return ((objemb.classid=="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" && movie.val().search('moogaloop') > -1) ||
+                              (String(objemb.type).search('x-shockwave-flash') > -1 && 
+                               ((objemb.data && String(objemb.data).search('moogaloop.swf')) > -1 || 
+                                (objemb.src && String(objemb.src).search('moogaloop.swf') > -1)))) || null;
                   },
                   asset:function(objemb,match_rv,context,index,optional_callback) {
                       var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
                       
                       var matches = objemb.src && objemb.src.match(/clip_id=([\d]*)/);
                       if (!matches || matches.length < 1) {
-                          var flashvars = jQ('param[name=flashvars],param[name=FLASHVARS]', objemb);
+                          var flashvars = jQ(objemb).children('param[name=flashvars],param[name=FLASHVARS]');
                           if (!flashvars.val()) {
                               return {};
                           }
                           matches = flashvars.val().match(/clip_id=([\d]*)/);
                       }
-                      if (!matches || matches.length < 1) {
+                      if (!matches || matches.length < 2) {
                           return {}
                       } else {
                           var rv = {
@@ -1037,7 +1053,8 @@ SherdBookmarklet = {
                               primary_type:"vimeo",
                               label:"vimeo video",
                               sources: {
-                                  "vimeo":"http://www.vimeo.com/" + matches[1],
+                                  "url": "http://www.vimeo.com/" + matches[1],
+                                  "vimeo":"http://www.vimeo.com/" + matches[1]
                               }};
                           
                           if (objemb.api_getCurrentTime) {
@@ -1048,7 +1065,7 @@ SherdBookmarklet = {
                           
                           var vm_callback = 'sherd_vimeo_callback_'+ index;
                           window[vm_callback] = function(vm_data) {
-                              if (vm_data.length > 0) {
+                              if (vm_data && vm_data.length > 0) {
                                   var info = vm_data[0];
                                   rv.sources["title"] = info.title;
                                   rv.sources["thumb"] = info.thumbnail_medium;
