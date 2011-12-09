@@ -1053,6 +1053,7 @@ SherdBookmarklet = {
                               primary_type:"vimeo",
                               label:"vimeo video",
                               sources: {
+                                  "url": "http://www.vimeo.com/" + matches[1],
                                   "vimeo":"http://www.vimeo.com/" + matches[1]
                               }};
                           
