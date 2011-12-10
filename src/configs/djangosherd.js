@@ -76,7 +76,7 @@ function DjangoSherd_Project_Config(options) {
     // /# openCitation(annotation)
     var ds = djangosherd;
     ds.thumbs = [];
-    ds.annotationMicroformat = new DjangoSherd_AnnotationMicroFormat();
+    
     ds.storage = new DjangoSherd_Storage();
     // GenericAssetView is a wrapper in ../assets.js
     ds.assetview = new Sherd.GenericAssetView({ clipform:false, clipstrip: true});
@@ -97,7 +97,9 @@ function DjangoSherd_decorate_citations(parent, options) {
     ///decorate LINKS to OPEN annotations
     jQuery('a.materialCitation',parent).click(function(evt) {
         try {
-            options.position = jQuery(this).position();
+            if (!options) options = {};
+            
+            options.position = jQuery(this).offset();
             options.position.top += jQuery(this).height();
             openCitation(this.href, options);
             if (current_citation) {
@@ -107,9 +109,8 @@ function DjangoSherd_decorate_citations(parent, options) {
             current_citation = this;
         } catch(e) {
             if (window.console) {
-                console.log('ERROR opening citation:'+e.message);
+                console.log('ERROR opening citation:' + e.message);
             } 
-            //if (!window.debug) return;
         }
         evt.preventDefault();
     });
@@ -475,13 +476,6 @@ function DjangoSherd_NoteForm() {
 /*******************************************************************************
  * 'temp' VITAL adaption (instead of using sherd
  ******************************************************************************/
-
-// carryover from vital--should return whether a clip should be visible
-// used for clipstrip setting (see initClipStrip() )
-function currentUID() {
-    return true;
-    // just returning true, will show the markers at 0, but hey, so what
-}
 
 function displayCitation(ann_obj, id, options) {
     var asset_target = ((options.targets && options.targets.asset) 
