@@ -30,7 +30,7 @@ function DjangoSherd_Asset_Config() {
         'clipform' : true,
         'clipstrip' : true,
         'storage' : ds.noteform,
-    'targets':{clipstrip:'clipstrip-display'}
+        'targets':{clipstrip:'clipstrip-display'}
     });
     
     ds.assetview.html.push(
@@ -97,6 +97,8 @@ function DjangoSherd_decorate_citations(parent, options) {
     ///decorate LINKS to OPEN annotations
     jQuery('a.materialCitation',parent).click(function(evt) {
         try {
+            options.position = jQuery(this).position();
+            options.position.top += jQuery(this).height();
             openCitation(this.href, options);
             if (current_citation) {
                 jQuery(current_citation).removeClass('active-annotation');
@@ -110,39 +112,6 @@ function DjangoSherd_decorate_citations(parent, options) {
             //if (!window.debug) return;
         }
         evt.preventDefault();
-    });
-}
-
-// Called from project.js & slider.js
-function DjangoSherd_createThumbs(materials) {
-    // /TODO: unHACK HACK HACK
-    // /need to make this more abstracted--where should we test for 'can thumb'?
-    var ds = djangosherd;
-    jQuery(ds.annotationMicroformat.find(materials))
-    .each(function(index) {
-        var found_obj = this;
-        var ann_obj = ds.annotationMicroformat.read(found_obj);
-        if (ann_obj.asset.thumbable) {// CAN THUMB?
-            var view;
-            switch(ann_obj.asset.type) {
-            case 'image':
-                view = new Sherd.Image.OpenLayers();
-                break;
-            case 'fsiviewer':
-                view = new Sherd.Image.FSIViewer();
-                break;
-            }
-            ds.thumbs.push(view);
-            var obj_div = document.createElement('div');
-            obj_div.setAttribute('class','thumb');
-
-            found_obj.html.parentNode.appendChild(obj_div);
-            // should probably be in .view
-            ann_obj.asset.presentation = 'thumb';
-            // .asset is the only thing used right now
-            view.html.push(obj_div, ann_obj);
-            view.setState(ann_obj.annotations[0]);
-        }
     });
 }
 
@@ -518,6 +487,12 @@ function displayCitation(ann_obj, id, options) {
     var asset_target = ((options.targets && options.targets.asset) 
             ? options.targets.asset
             : document.getElementById('videoclipbox'));
+    
+    if (options.position) {
+        asset_target.style.left = options.position.left + "px";
+        asset_target.style.top = options.position.top + "px";
+    }
+    
     jQuery(asset_target).show();
     var targets = {
         "top":asset_target,
