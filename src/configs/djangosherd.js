@@ -515,7 +515,8 @@ function displayCitation(ann_obj, id, options) {
         asset_obj.presentation = options.presentation || 'small';
 
         if (targets.asset_title) {
-            targets.create_selection.innerHTML='<a href="'+asset_obj.local_url+'">Create Selection</a>';
+            if (targets.create_selection)
+                targets.create_selection.innerHTML='<a href="'+asset_obj.local_url+'">Create Selection</a>';
             
             if (targets.annotation_title.innerHTML == "") {
                 targets.annotation_title.innerHTML = '<h2><a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a></h2>';
