@@ -493,7 +493,8 @@ function displayCitation(ann_obj, id, options) {
         "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
         "asset":jQuery('div.asset-display',asset_target).get(0),
         "asset_title":jQuery('div.asset-title',asset_target).get(0),
-        "annotation_title":jQuery('div.annotation-title',asset_target).get(0)
+        "annotation_title":jQuery('div.annotation-title',asset_target).get(0),
+        "create_selection":jQuery('div.create-selection',asset_target).get(0)
     };
     
     if (targets.annotation_title) {
@@ -514,6 +515,8 @@ function displayCitation(ann_obj, id, options) {
         asset_obj.presentation = options.presentation || 'small';
 
         if (targets.asset_title) {
+            targets.create_selection.innerHTML='<a href="'+asset_obj.local_url+'">Create Selection</a>';
+            
             if (targets.annotation_title.innerHTML == "") {
                 targets.annotation_title.innerHTML = '<h2><a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a></h2>';
                 targets.asset_title.innerHTML = '';
