@@ -49,50 +49,6 @@ function DjangoSherd_Asset_Config() {
     }       
 }
 
-
-function DjangoSherd_Project_ConfigEx(options) {
-    if (options.open_from_hash) {
-        var annotation_to_open = String(document.location.hash).match(/annotation=annotation(\d+)/);
-        if (annotation_to_open != null) {
-            //TODO:no longer works in discussions, since the DIV doesn't exist yet
-            openCitation('/annotations/'+annotation_to_open[1] + '/', { autoplay:false});
-        }
-    }
-    
-    var citationOptions = {};
-    if (options.presentation)
-        citationOptions.presentation = options.presentation;
-    
-    // /In published view: decorate annotation links
-    DjangoSherd_decorate_citations(document, citationOptions);
-    
-    if (options.callback) options.callback();
-}
-
-function DjangoSherd_Project_Config(options) {
-    // /# load viewers
-    // /# load assetfinders
-    // /# if (no_open_from_hash and hash)
-    // /# openCitation(annotation)
-    var ds = djangosherd;
-    ds.thumbs = [];
-    
-    ds.storage = new DjangoSherd_Storage();
-    // GenericAssetView is a wrapper in ../assets.js
-    ds.assetview = new Sherd.GenericAssetView({ clipform:false, clipstrip: true});
-
-    if (options.project_json) {
-        ds.storage.get({type:'project',id:'xxx',url:options.project_json},
-                false,
-                function(data) {
-                    DjangoSherd_Project_ConfigEx(options);
-                });
-    } else {
-        DjangoSherd_Project_ConfigEx(options);
-    }
-}
-
-var current_citation = null;
 function DjangoSherd_decorate_citations(parent, options) {
     ///decorate LINKS to OPEN annotations
     jQuery('a.materialCitation',parent).click(function(evt) {
@@ -102,11 +58,9 @@ function DjangoSherd_decorate_citations(parent, options) {
             options.position = jQuery(this).offset();
             options.position.top += jQuery(this).height();
             openCitation(this.href, options);
-            if (current_citation) {
-                jQuery(current_citation).removeClass('active-annotation');
-            }
+            
+            jQuery('.active-annotation').removeClass('active-annotation');
             jQuery(this).addClass('active-annotation');
-            current_citation = this;
         } catch(e) {
             if (window.console) {
                 console.log('ERROR opening citation:' + e.message);
@@ -120,21 +74,13 @@ function DjangoSherd_Storage() {
     /* read-only storage repo for annotation objects from MediaThread
      */
     var self = this,
-        _current_citation = false,
-        recent_project = false,
-        _cache = {
+         _cache = {
             'annotations':{},
             'asset':{},
             'project':{}
         };
     this._cache = _cache;
     
-    this.lastProject = function() {
-        ///returns the last project info requested.
-        ///used in /media/js/project/project.js of MediaThread
-        return recent_project;
-    }
-
     // Retrieve data from server & stash in the cache
     this.get = function(subject, callback, list_callback, errorCallback) {
         ///currently obj_type in [annotations, asset, project]
@@ -182,8 +128,7 @@ function DjangoSherd_Storage() {
         var new_id = true;
         if (json.project) {
             _cache['project'][json.project.id] = json.project;
-            new_id = json.project.id;
-            recent_project = json.project;
+            new_id = json.project.id;            
         }
         if (json.assets) {
             for (var i in json.assets) {
@@ -566,6 +511,7 @@ function displayCitation(ann_obj, id, options) {
     }
     return return_value;
 }
+
 
 function openCitation(url, no_autoplay_or_options) {
     // /# where is my destination?
