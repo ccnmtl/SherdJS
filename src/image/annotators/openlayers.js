@@ -142,8 +142,8 @@ if (!Sherd.Image.Annotators.OpenLayers) {
 		var id = Sherd.Base.newID('openlayers-annotator');
 		return {
 		    htmlID:id,
-		    text:'<div id="'+id+'" class="helpblock">' +
-		         '   <p>Choose a drawing tool, located on the upper, right-hand side of the image. ' +
+		    text:'<div id="'+id+'">' +
+		         '   <p class="sherd-instructions">Choose a drawing tool, located on the upper, right-hand side of the image. ' +
 		         '   The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p>' +
 		         '</div>'
 		};
