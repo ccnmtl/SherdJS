@@ -34,8 +34,8 @@ if (!Sherd.Video.QuickTime) {
                     height:function(){return 383;}
                 },
                 'default': {
-                    width:function(){return 620;},
-                    height:function(){return 440;}
+                    width:function(){return 540;},
+                    height:function(){return 383;}
                 }
             };
         
@@ -447,8 +447,8 @@ if (!Sherd.Video.QuickTime) {
         this.media.timestrip = function() {
             var w = self.components.player.width;
             return {w: w,
-                trackX: 40,
-                trackWidth: w-92,
+                trackX: 152,
+                trackWidth: w-310,
                 visible:true
             };
         };
