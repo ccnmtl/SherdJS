@@ -461,7 +461,7 @@ function displayCitation(ann_obj, id, options) {
 
         if (targets.asset_title) {
             if (targets.create_selection)
-                targets.create_selection.innerHTML='<a href="'+asset_obj.local_url+'">Create Selection</a>';
+                targets.create_selection.innerHTML='<a href="'+asset_obj.local_url+'?edit_state=new">Create Selection</a>';
             
             if (targets.annotation_title.innerHTML == "") {
                 targets.annotation_title.innerHTML = '<h2><a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a></h2>';
