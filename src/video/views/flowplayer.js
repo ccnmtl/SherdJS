@@ -143,6 +143,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function(obj,html_dom) {
+            return false;
+            
+            // tons of quirkiness with flowplayer and this update approach. let's just not do this for the moment.
+            /**
             rc = false;
             newUrl = self.microformat._getPlayerParams(obj);
             if (newUrl.url && document.getElementById(self.components.playerID) && self.media.state() > 0) {
@@ -154,6 +158,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 }
             }
             return rc;
+            **/
         };
         
         this.microformat._getPlayerParams = function(obj) {
@@ -457,7 +462,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             5   ended
         **/
         this.media.state = function() {
-            return ((self.components.player) ? self.components.player.getState() : -1); 
+            try {
+                return ((self.components.player) ? self.components.player.getState() : -1);
+            } catch (e) {
+                return -1;
+            }
 
         };
 
