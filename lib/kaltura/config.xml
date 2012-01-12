@@ -44,6 +44,7 @@
 					color1="0xCCCCCC"
 					color2="0xCCCCCC"					
 				 />
+                 <Button id="fullScreenBtnControllerScreen" command="fullScreen" buttonType="iconButton" height="22" styleName="controllerScreen" icon="openFullScreenIcon" selectedUpIcon="closeFullScreenIcon" selectedOverIcon="closeFullScreenIcon" selectedDownIcon="closeFullScreenIcon" selectedDisabledIcon="closeFullScreenIcon" focusRectPadding="0" k_buttonType="buttonIconControllerArea" upTooltip="open fullscreen" selectedTooltip="close fullscreen" color1="11184810" color2="16777215" color3="16777215" color4="11184810" color5="0" font="Arial"/>
 			</HBox>
 				<Spacer width="12" />	
 				<Button 
