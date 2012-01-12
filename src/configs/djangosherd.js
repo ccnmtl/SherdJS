@@ -429,7 +429,17 @@ function displayCitation(ann_obj, id, options) {
     
     if (options.position) {
         asset_target.style.left = options.position.left + "px";
-        asset_target.style.top = options.position.top + "px";
+
+        var linkHeight = 20;
+        
+        var above_position = options.position.top - linkHeight - jQuery(asset_target).height();
+        var show_above = (options.position.top + jQuery(asset_target).height()) > jQuery("body").height();
+
+        if (show_above && above_position >= 0) {
+            asset_target.style.top = above_position + "px";
+        } else {
+            asset_target.style.top = options.position.top + "px";
+        }
     }
     
     jQuery(asset_target).show();
