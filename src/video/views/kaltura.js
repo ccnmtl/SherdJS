@@ -270,8 +270,8 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             var w = self.components.player.width;
             return {
                 w: w,
-                trackX: 50,
-                trackWidth: w-124,
+                trackX: 53,
+                trackWidth: w-150,
                 visible:true
             };
         };
