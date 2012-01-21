@@ -843,6 +843,9 @@ SherdBookmarklet = {
                           rv.sources['thumb'] = SherdBookmarklet.absolute_url(item.image,
                                                                               context.document);
                       }
+                      if (item.title) {
+                          rv.sources["title"] = item.title;
+                      } else rv.sources["title"] = document.title;
                       return rv;
                   }
               },
