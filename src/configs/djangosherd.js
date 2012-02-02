@@ -221,6 +221,7 @@ CitationView.prototype.displayCitation = function(anchor, ann_obj, id) {
     return_value['view'] = djangosherd.assetview;
     return_value['object'] = ann_obj;
     return_value['id'] = id;
+    return_value['target'] = asset_target;
 
     if (!/WebKit/.test(navigator.userAgent)) {
         //WebKit doesn't replace history correctly
