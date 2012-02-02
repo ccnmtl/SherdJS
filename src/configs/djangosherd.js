@@ -49,15 +49,34 @@ function DjangoSherd_Asset_Config() {
     }       
 }
 
-function DjangoSherd_decorate_citations(parent, options) {
-    ///decorate LINKS to OPEN annotations
-    jQuery('a.materialCitation',parent).click(function(evt) {
+var CitationView = function () {
+    var self = this;
+    self.citation_link = 'a.materialCitation';
+    self.options = {  autoplay:true, presentation:'small', targets: {} };   
+};
+
+CitationView.prototype.init = function(options) {
+    var self = this;
+    
+    if (options) { 
+        // copy in options so default are not overwritten
+        for (a in options) {
+            self.options[a] = options[a];
+        }
+    }
+    
+    if (self.options.default_target)
+        self.options.targets.asset = document.getElementById(self.options.default_target);
+}
+      
+CitationView.prototype.decorateLinks = function(parent) {
+    var self = this;
+    
+    ///decorate LINKS to OPEN annotations within a specified div or the whole document
+    var element = parent ? document.getElementById(parent) : document;
+    jQuery(element).find(self.citation_link).click(function(evt) {
         try {
-            if (!options) options = {};
-            
-            options.position = jQuery(this).offset();
-            options.position.top += jQuery(this).height();
-            openCitation(this.href, options);
+            self.openCitation(this);
             
             jQuery('.active-annotation').removeClass('active-annotation');
             jQuery(this).addClass('active-annotation');
@@ -68,6 +87,155 @@ function DjangoSherd_decorate_citations(parent, options) {
         }
         evt.preventDefault();
     });
+};
+
+CitationView.prototype.openCitation = function(anchor) {
+    var self = this;
+    
+    self.unload();
+    
+    // /# where is my destination?
+    // /# is there an annotation/asset already there?
+    // /# if same: leave alone
+    // /# else:
+    // /# unload oldasset,
+    // /# load asset
+    // /# else: load asset
+    // /# is annotation not-present?
+    // /# load annotation (with options (e.g. autoplay)
+    // /# update local views
+    // /# e.g. location.hash
+    var url = anchor.href;
+    var ann_url = url.match(/(asset|annotations)\/(\d+)\/$/);
+    var id = ann_url.pop();
+    var return_value = {};
+    djangosherd.storage.get({id:id,type:ann_url[1]}, 
+            function(ann_obj) {
+                return_value = self.displayCitation(anchor, ann_obj, id);
+            },
+            null,
+            function(error) {
+                var asset_url = url.match(/(asset)\/(\d+)\//);
+                var id = asset_url.pop();
+                djangosherd.storage.get({id:id,type:asset_url[1]}, function(asset_obj) {
+                    self.options.deleted = true;
+                    return_value = self.displayCitation(anchor, asset_obj, id);
+                },
+                null,
+                function(error) {
+                    var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
+                    return_value = self.displayCitation(anchor, obj, null);
+                });
+            });
+     return return_value;
+};
+
+CitationView.prototype.displayCitation = function(anchor, ann_obj, id) {
+    var self = this;
+    var asset_target = ((self.options.targets && self.options.targets.asset) 
+            ? self.options.targets.asset
+            : document.getElementById("videoclipbox"));
+    
+    if (!self.options.default_target) {
+        var display_position = self.options.position || null;
+        if (!display_position) {
+            display_position = jQuery(anchor).offset();
+            display_position.top += jQuery(anchor).height();
+        }
+        asset_target.style.left = display_position.left + "px";
+
+        var linkHeight = 20;
+    
+        var above_position = display_position.top - linkHeight - jQuery(asset_target).height();
+        var show_above = (display_position.top + jQuery(asset_target).height()) > jQuery("body").height();
+
+        if (show_above && above_position >= 0) {
+            asset_target.style.top = above_position + "px";
+        } else {
+            asset_target.style.top = display_position.top + "px";
+        }
+    }
+    
+    jQuery(asset_target).show();
+    var targets = {
+        "top":asset_target,
+        "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
+        "asset":jQuery('div.asset-display',asset_target).get(0),
+        "asset_title":jQuery('div.asset-title',asset_target).get(0),
+        "annotation_title":jQuery('div.annotation-title',asset_target).get(0),
+        "create_selection":jQuery('div.create-selection',asset_target).get(0)
+    };
+    
+    if (targets.annotation_title) {
+        if (self.options.deleted) {
+            targets.annotation_title.innerHTML = "<h2>Selection Deleted</h2>";
+        } else {
+            targets.annotation_title.innerHTML = ((ann_obj.metadata
+                                               && ann_obj.metadata.title
+                                              ) ? '<h2>'+ann_obj.metadata.title+'</h2>'
+                                              : '');
+        }
+    }
+    
+        
+    var asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
+    if (asset_obj) {
+        asset_obj.autoplay = (self.options.autoplay) ? 'true' : 'false';
+        asset_obj.presentation = self.options.presentation || 'small';
+
+        if (targets.asset_title) {
+            if (targets.create_selection)
+                targets.create_selection.innerHTML='<a href="'+asset_obj.local_url+'?edit_state=new">Create Selection</a>';
+            
+            if (targets.annotation_title.innerHTML == "") {
+                targets.annotation_title.innerHTML = '<h2><a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a></h2>';
+                targets.asset_title.innerHTML = '';
+            } else {
+                targets.asset_title.innerHTML = ((asset_obj.title 
+                                                  && asset_obj.local_url
+                   ) ? 'from <a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a>'
+                     : '');
+                if (asset_obj.xmeml && window.is_staff ) {
+                    targets.asset_title.innerHTML += ' (<a href="/annotations/xmeml/'+id+'/">download FinalCut xml</a>)';
+                }
+            }
+        }
+        djangosherd.assetview.html.push(targets.asset, {
+            asset : asset_obj,
+            targets: {clipstrip:targets.clipstrip}
+        });
+    
+        if (ann_obj.hasOwnProperty("annotations") && ann_obj.annotations.length > 0 && ann_obj.annotations[0] != null) {
+            var ann_data = ann_obj.annotations[0];// ***
+            djangosherd.assetview.setState(ann_data, {autoplay:self.options.autoplay});
+        } else {
+            djangosherd.assetview.setState({ start: 0 }, {autoplay:self.options.autoplay});
+        }
+    } else {
+        djangosherd.assetview.html.remove();
+        targets.asset_title.innerHTML = "";
+    }
+
+    var return_value = {};
+    return_value['onUnload'] = self.unload;
+    return_value['view'] = djangosherd.assetview;
+    return_value['object'] = ann_obj;
+    return_value['id'] = id;
+
+    if (!/WebKit/.test(navigator.userAgent)) {
+        //WebKit doesn't replace history correctly
+        document.location.replace('#annotation=annotation' + id);
+    }
+
+    if (typeof self.options.callback=='function') {
+        self.options.callback(return_value);
+    }
+    return return_value;
+};
+
+CitationView.prototype.unload = function() {
+    if (djangosherd.assetview)
+        djangosherd.assetview.html.remove();
 }
 
 function DjangoSherd_Storage() {
@@ -418,181 +586,3 @@ function DjangoSherd_NoteForm() {
     };
 }
 
-/*******************************************************************************
- * 'temp' VITAL adaption (instead of using sherd
- ******************************************************************************/
-
-function displayCitation(ann_obj, id, options) {
-    var asset_target = ((options.targets && options.targets.asset) 
-            ? options.targets.asset
-            : document.getElementById('videoclipbox'));
-    
-    if (options.position) {
-        asset_target.style.left = options.position.left + "px";
-
-        var linkHeight = 20;
-        
-        var above_position = options.position.top - linkHeight - jQuery(asset_target).height();
-        var show_above = (options.position.top + jQuery(asset_target).height()) > jQuery("body").height();
-
-        if (show_above && above_position >= 0) {
-            asset_target.style.top = above_position + "px";
-        } else {
-            asset_target.style.top = options.position.top + "px";
-        }
-    }
-    
-    jQuery(asset_target).show();
-    var targets = {
-        "top":asset_target,
-        "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
-        "asset":jQuery('div.asset-display',asset_target).get(0),
-        "asset_title":jQuery('div.asset-title',asset_target).get(0),
-        "annotation_title":jQuery('div.annotation-title',asset_target).get(0),
-        "create_selection":jQuery('div.create-selection',asset_target).get(0)
-    };
-    
-    if (targets.annotation_title) {
-        if (options.deleted) {
-            targets.annotation_title.innerHTML = "<h2>Selection Deleted</h2>";
-        } else {
-            targets.annotation_title.innerHTML = ((ann_obj.metadata
-                                               && ann_obj.metadata.title
-                                              ) ? '<h2>'+ann_obj.metadata.title+'</h2>'
-                                              : '');
-        }
-    }
-    
-        
-    var asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
-    if (asset_obj) {
-        asset_obj.autoplay = (options.autoplay) ? 'true' : 'false'; // ***
-        asset_obj.presentation = options.presentation || 'small';
-
-        if (targets.asset_title) {
-            if (targets.create_selection)
-                targets.create_selection.innerHTML='<a href="'+asset_obj.local_url+'?edit_state=new">Create Selection</a>';
-            
-            if (targets.annotation_title.innerHTML == "") {
-                targets.annotation_title.innerHTML = '<h2><a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a></h2>';
-                targets.asset_title.innerHTML = '';
-            } else {
-                targets.asset_title.innerHTML = ((asset_obj.title 
-                                                  && asset_obj.local_url
-                   ) ? 'from <a href="'+asset_obj.local_url+'">'+asset_obj.title+'</a>'
-                     : '');
-                if (asset_obj.xmeml && window.is_staff ) {
-                    targets.asset_title.innerHTML += ' (<a href="/annotations/xmeml/'+id+'/">download FinalCut xml</a>)';
-                }
-            }
-        }
-        djangosherd.assetview.html.push(targets.asset, {
-            asset : asset_obj,
-            targets: {clipstrip:targets.clipstrip}
-        });
-    
-        if (ann_obj.hasOwnProperty("annotations") && ann_obj.annotations.length > 0 && ann_obj.annotations[0] != null) {
-            var ann_data = ann_obj.annotations[0];// ***
-            djangosherd.assetview.setState(ann_data, {autoplay:options.autoplay});
-        } else {
-            djangosherd.assetview.setState({ start: 0 }, {autoplay:options.autoplay});
-        }
-    } else {
-        djangosherd.assetview.html.remove();
-        targets.asset_title.innerHTML = "";
-    }
-
-    var return_value = {};
-    return_value['onUnload'] = djangosherd.assetview.html.remove;
-    return_value['view'] = djangosherd.assetview;
-    return_value['object'] = ann_obj;
-    return_value['id'] = id;
-
-    if (!/WebKit/.test(navigator.userAgent)) {
-        //WebKit doesn't replace history correctly
-        document.location.replace('#annotation=annotation' + id);
-    }
-
-    if (typeof options.callback=='function') {
-        options.callback(return_value);
-    }
-    if (djangosherd.onOpenCitation) {
-        djangosherd.onOpenCitation(id,ann_obj,options,targets);
-    }
-    return return_value;
-}
-
-
-function openCitation(url, no_autoplay_or_options) {
-    // /# where is my destination?
-    // /# is there an annotation/asset already there?
-    // /# if same: leave alone
-    // /# else:
-    // /# unload oldasset,
-    // /# load asset
-    // /# else: load asset
-    // /# is annotation not-present?
-    // /# load annotation (with options (e.g. autoplay)
-    // /# update local views
-    // /# e.g. location.hash
-    var options = {///defaults
-        autoplay:true,
-        presentation:'small'
-    };
-    ///legacy support: no_autoplay used to be a boolean, but now its options dict
-    if (typeof no_autoplay_or_options == 'boolean') {
-        options.autoplay = !no_autoplay_or_options;
-    } else {
-        for (a in no_autoplay_or_options) {
-            options[a] = no_autoplay_or_options[a];
-        }
-    }
-    var ann_url = url.match(/(asset|annotations)\/(\d+)\/$/);
-    var id = ann_url.pop();
-    var return_value = {};
-    djangosherd.storage.get({id:id,type:ann_url[1]}, function(ann_obj) {
-        return_value = displayCitation(ann_obj, id, options);
-    },
-    null,
-    function(error) {
-        var asset_url = url.match(/(asset)\/(\d+)\//);
-        var id = asset_url.pop();
-        djangosherd.storage.get({id:id,type:asset_url[1]}, function(asset_obj) {
-            options.deleted = true;
-            return_value = displayCitation(asset_obj, id, options);
-        },
-        null,
-        function(error) {
-            var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
-            return_value = displayCitation(obj, null, options);
-        });
-    });
-    return return_value;
-}
-
-/**
- * **random thoughts what is in the user's control context (C)? 0. asset layers -
- * announce they want focus (but need instantiation) -- arguments are asset, and
- * layers object --in place? the presenter decides 1. an asset presenter (in
- * focus) (V) - some assets can announce that they've gained focus - e.g. when
- * someone clicks play or starts panning/zooming, etc. 2. an annotator
- * (decorated on the presenter?) (C) - (edit/create mode): has state about how
- * the user is entering info - connected (deeply) to the asset-type 3.
- * annotation layers (V): - has a storage/collection source -signals
- * selection,editing TO controller -receives signal to update (from storage),
- * possibly with args (to narrow what should be updated) (only for
- * creating/editing mode) 3. a collection (i.e. storage) of annotations (M) -
- * for default 'save' target
- * 
- * STORIES: when an asset changes in the presenter (?what happens to the layers,
- * etc) (?annotators) when a layer wants focus of an asset that's not in view
- * -or two assets at once? --maybe one 'annotation layer' is two presenters
- * within it? --what would this do to 'focus' wrt replacement? (just because
- * focus went somewhere doesn't mean it should be the destination of other asset
- * loads)
- * 
- * IMMEDIATE USE CASES 1. form targets a layer (which is auto-generated) 2. all
- * clips from class (navigation, only) (all annotations - with colors) 3. all
- * clips (read-only) from a certain person (navigation)
- * 
- */

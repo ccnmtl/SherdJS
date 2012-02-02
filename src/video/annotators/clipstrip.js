@@ -127,6 +127,10 @@ Sherd.Video.Annotators.ClipStrip = function() {
         // setup the clip markers in the default position
         self.microformat._resize();
     };
+    
+    this.deinitialize = function() {
+        self.events.clearTimers();
+    }
 
     this.microformat.create = function(obj) {
         var htmlID = 'clipStrip';
