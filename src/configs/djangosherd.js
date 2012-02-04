@@ -74,19 +74,25 @@ CitationView.prototype.decorateLinks = function(parent) {
     
     ///decorate LINKS to OPEN annotations within a specified div or the whole document
     var element = parent ? document.getElementById(parent) : document;
-    jQuery(element).find(self.citation_link).click(function(evt) {
-        try {
-            self.openCitation(this);
-            
-            jQuery('.active-annotation').removeClass('active-annotation');
-            jQuery(this).addClass('active-annotation');
-        } catch(e) {
-            if (window.console) {
-                console.log('ERROR opening citation:' + e.message);
-            } 
+    var links = jQuery(element).find(self.citation_link);
+    for (var i = 0; i < links.length; i++) {
+        var link = links[i];
+        if (jQuery(link).data().events === undefined || jQuery(link).data().events.click === undefined) {
+            jQuery(link).click(function(evt) {
+                try {
+                    self.openCitation(this);
+                    
+                    jQuery('.active-annotation').removeClass('active-annotation');
+                    jQuery(this).addClass('active-annotation');
+                } catch(e) {
+                    if (window.console) {
+                        console.log('ERROR opening citation:' + e.message);
+                    } 
+                }
+                evt.preventDefault();
+            });
         }
-        evt.preventDefault();
-    });
+    }
 };
 
 CitationView.prototype.openCitation = function(anchor) {
