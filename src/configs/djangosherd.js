@@ -138,9 +138,14 @@ CitationView.prototype.openCitation = function(anchor) {
 
 CitationView.prototype.displayCitation = function(anchor, ann_obj, id) {
     var self = this;
+    
     var asset_target = ((self.options.targets && self.options.targets.asset) 
             ? self.options.targets.asset
             : document.getElementById("videoclipbox"));
+    
+    if (typeof self.options.onPrepareCitation=='function') {
+        self.options.onPrepareCitation(asset_target);
+    }
     
     if (!self.options.default_target) {
         var display_position = self.options.position || null;
@@ -232,10 +237,6 @@ CitationView.prototype.displayCitation = function(anchor, ann_obj, id) {
     if (!/WebKit/.test(navigator.userAgent)) {
         //WebKit doesn't replace history correctly
         document.location.replace('#annotation=annotation' + id);
-    }
-
-    if (typeof self.options.callback=='function') {
-        self.options.callback(return_value);
     }
     return return_value;
 };
