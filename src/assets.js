@@ -116,6 +116,7 @@ if (!Sherd.GenericAssetView) {
                     self.settings[current_type].view.html.remove();
                     if (self.clipstrip) {
                         self.clipstrip.html.remove();
+                        self.clipstrip = null;
                     }
                     current_type = false;
                 }
