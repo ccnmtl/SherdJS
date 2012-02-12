@@ -321,7 +321,7 @@ if (!Sherd.Image.OpenLayers) {
     		}
 	    },
 	    'medium':{
-            height:function(){return '383px';},
+            height:function(){return '340px';},
             width:function(){return '100%';},
             initialize:function(){/*noop*/}
 	    },

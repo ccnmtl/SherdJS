@@ -30,8 +30,8 @@ if (!Sherd.Video.QuickTime) {
                     height:function(){return 220;}
                 },
                 'medium': {
-                    width:function(){return 540;},
-                    height:function(){return 383;}
+                    width:function(){return 480;},
+                    height:function(){return 340;}
                 },
                 'default': {
                     width:function(){return 540;},
