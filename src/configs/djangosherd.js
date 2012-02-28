@@ -170,11 +170,11 @@ CitationView.prototype.displayCitation = function(anchor, ann_obj, id) {
     jQuery(asset_target).show();
     var targets = {
         "top":asset_target,
-        "clipstrip":jQuery('div.clipstrip-display',asset_target).get(0),
-        "asset":jQuery('div.asset-display',asset_target).get(0),
-        "asset_title":jQuery('div.asset-title',asset_target).get(0),
-        "annotation_title":jQuery('div.annotation-title',asset_target).get(0),
-        "create_selection":jQuery('div.create-selection',asset_target).get(0)
+        "clipstrip":jQuery(asset_target).find('div.clipstrip-display').get(0),
+        "asset":jQuery(asset_target).find('div.asset-display').get(0),
+        "asset_title":jQuery(asset_target).find('div.asset-title').get(0),
+        "annotation_title":jQuery(asset_target).find('div.annotation-title').get(0),
+        "create_selection":jQuery(asset_target).find('div.create-selection',asset_target).get(0)
     };
     
     if (targets.annotation_title) {
