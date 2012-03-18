@@ -66,16 +66,10 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             
             // For IE, the id needs to be placed in the object.
             // For FF, the id needs to be placed in the embed.
-            var objectID = '';
-            var embedID = '';
+            var objectID = 'id="' + playerID + '"';
             var classID = '';
-            if (window.navigator.userAgent.indexOf("Firefox") > -1) {
-                objectID = 'id="' + playerID + '"';
-            } else if (window.navigator.userAgent.indexOf("MSIE") > -1) {
-                objectID = 'id="' + playerID + '"';
+            if (window.navigator.userAgent.indexOf("MSIE") > -1) {
                 classID='classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"';
-            } else {
-                embedID = 'id="' + playerID + '"';
             }
             
             return {
@@ -94,7 +88,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="true"></param>' +
-                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=hdnetwork&akamaiHD.loadingPolicy=preInitialize&akamaiHD.asyncInit=true&kml=local&kmlPath=http://mediathread.ccnmtl.columbia.edu/site_media/js/sherdjs/lib/kaltura/config.xml"/>' + 
+                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=hdnetwork&akamaiHD.loadingPolicy=preInitialize&akamaiHD.asyncInit=true&kml=local&kmlPath=http://mediathread.ccnmtl.columbia.edu/site_media/js/sherdjs/lib/kaltura/config.xml"/>' +
                         '</object>' + 
                       '</div>'
             };
