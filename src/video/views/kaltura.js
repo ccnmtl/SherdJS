@@ -171,14 +171,14 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         
         window.timeChangeHandler = function(data, id) {
             self.media.current_time = data;
+            
+            if (self.state.starttime !== undefined && self.media.isPlaying() && self.media.current_time !== undefined) {
+                self.media.seek(self.state.starttime, self.state.endtime, self.state.autoplay);
+            }
         };
         
         window.playerStateChangeHandler = function(data, id) {
             self.media.current_state = data;
-            
-            if (self.state.starttime !== undefined && self.media.isPlaying()) {
-                self.media.seek(self.state.starttime, self.state.endtime, self.state.autoplay);
-            }
         };
 
         this.media.duration = function() {
