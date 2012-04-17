@@ -66,20 +66,16 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             
             // For IE, the id needs to be placed in the object.
             // For FF, the id needs to be placed in the embed.
-            var objectID = '';
-            var embedID = '';
+            var objectID = 'id="' + playerID + '"';
             var classID = '';
-            if (window.navigator.userAgent.indexOf("Firefox") > -1) {
-                objectID = 'id="' + playerID + '"';
-            } else if (window.navigator.userAgent.indexOf("MSIE") > -1) {
-                objectID = 'id="' + playerID + '"';
+            if (window.navigator.userAgent.indexOf("MSIE") > -1) {
                 classID='classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"';
-            } else {
-                embedID = 'id="' + playerID + '"';
             }
-
+            
             return {
                 object: obj,
+                width: obj.options.width,
+                height: obj.options.height,
                 htmlID: wrapperID,
                 playerID: playerID, // Used by microformat.components initialization
                 autoplay: autoplay, // Used later by _seek seeking behavior
@@ -92,14 +88,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                         '  <param name="width" value="' + obj.options.width + '"></param>' + 
                         '  <param name="height" value="' + obj.options.height + '"></param>' + 
                         '  <param name="allowfullscreen" value="true"></param>' +
-                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=rtmp&kml=local&kmlPath=http://mediathread.ccnmtl.columbia.edu/site_media/js/sherdjs/lib/kaltura/config.xml"/>' + 
-                        '  <embed src="' + url + playerID + '"' + 
-                        '    type="application/x-shockwave-flash"' + 
-                        '    allowScriptAccess="always"' + 
-                        '    autoPlay="' + autoplay + '"' + 
-                        '    width="' + obj.options.width + '" height="' + obj.options.height + '"' + 
-                        '    allowfullscreen="true" ' + embedID +  
-                        '  </embed>' + 
+                        '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=hdnetwork&akamaiHD.loadingPolicy=preInitialize&akamaiHD.asyncInit=true&kml=local&kmlPath=http://mediathread.ccnmtl.columbia.edu/site_media/js/sherdjs/lib/kaltura/config.xml"/>' +
                         '</object>' + 
                       '</div>'
             };
@@ -119,7 +108,8 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                     rv.autoplay = create_obj.autoplay;
                     rv.mediaUrl = create_obj.mediaUrl;
                     rv.playerID = create_obj.playerID;
-                    rv.presentation = create_obj.object.presentation;
+                    rv.width = create_obj.width;
+                    rv.height = create_obj.height;
                 }
                 return rv;
             } catch(e) {}
@@ -166,33 +156,33 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             self.components.player.addJsListener("durationChange", "durationChangeHandler");
             self.components.player.addJsListener("entryReady", "entryReadyHandler");
             self.components.player.addJsListener("playerUpdatePlayhead", "timeChangeHandler");
-        }
+        };
         
         window.entryReadyHandler = function(data, id) {
             self.media._ready = true;
             self.media.video_duration = data.duration;
             self.events.signal(self, 'duration', { duration: data.duration });
-        }
+        };
         
         window.durationChangeHandler = function(data, id) {
             self.media.video_duration = data.duration;
             self.events.signal(self, 'duration', { duration: data.duration });
-        }
+        };
         
         window.timeChangeHandler = function(data, id) {
             self.media.current_time = data;
-        }
+            
+            if (self.state.starttime !== undefined && self.media.isPlaying() && self.media.current_time !== undefined) {
+                self.media.seek(self.state.starttime, self.state.endtime, self.state.autoplay);
+            }
+        };
         
         window.playerStateChangeHandler = function(data, id) {
             self.media.current_state = data;
-            
-            if (self.state.starttime != undefined && self.media.isPlaying()) {
-                self.media.seek(self.state.starttime, self.state.endtime, self.state.autoplay);
-            }
-        }
+        };
 
         this.media.duration = function() {
-            if (self.media.video_duration != undefined) {
+            if (self.media.video_duration !== undefined) {
                 return self.media.video_duration;
             } else if (self.components.player && self.media.ready()) {
                 self.media.video_duration = self.components.player.evaluate('{mediaProxy.entry.duration}');
@@ -244,7 +234,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                     self.components.player.sendNotification('doSeek', starttime);
                 }
                 
-                if (endtime != undefined) {
+                if (endtime !== undefined) {
                     self.media.current_time = self.state.starttime;
                     
                     // wait until the video seek/play catches up before queuing the end timer
@@ -267,7 +257,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         };
         
         this.media.timestrip = function() {
-            var w = self.components.player.width;
+            var w = self.components.width;
             return {
                 w: w,
                 trackX: 53,
