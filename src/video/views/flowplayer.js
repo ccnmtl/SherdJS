@@ -268,16 +268,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         }
                     },
                     plugins: {
-                        pseudo: { url: 'flowplayer.pseudostreaming-3.2.2.swf' },
-                        rtmp: { url: 'flowplayer.rtmp-3.2.1.swf' },
-                        /*
-                        captions:{ url: 'flowplayer.captions-3.2.1.swf',
-                                   captionTarget:'content'
-                                 },
-                        content:{ url: 'flowplayer.content-3.2.0.swf',
-                                  bottom:45,height:45,backgroundColor:"transparent",backgroundGradient:"none",border:0,textDecoration:"outline",style:{body:{fontSize:14,fontFamily:"Helvetica,Arial",textAlign:"center",color:"#ffffff"}}
-                                },
-                        */
+                        pseudo: { url: 'flowplayer.pseudostreaming-3.2.9.swf' },
+                        rtmp: { url: 'flowplayer.rtmp-3.2.9.swf' },
+                        audio: { url: 'flowplayer.audio-3.2.8.swf' },
                         controls:{
                             autoHide:false,
                             volume:true,
@@ -286,7 +279,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                             fastForward:false,
                             fullscreen:true
                         }
-
                     },
                     playlist: [ 
                         { 
