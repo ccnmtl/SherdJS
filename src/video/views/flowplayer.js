@@ -198,6 +198,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 rc.provider = '';
             } else if (obj.mp3) {
                 rc.url = obj.mp3;
+                rc.provider = 'audio'
             }
             if (rc.provider == 'pseudo' && /\{start\}/.test(rc.url)) {
                 var pieces = rc.url.split('?');
@@ -290,8 +291,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 };
                 if (create_obj.playerParams.provider) {
                     options.playlist[0].provider = create_obj.playerParams.provider;
+                } 
+                
+                if (create_obj.object.poster) {
+                    options.clip.coverImage = { url: create_obj.object.poster, scaling: 'orig' };
                 }
-            
+                
                 if (create_obj.playerParams.provider == 'pseudo') {
                     autoBuffering = true;
                     ///TODO: when we can do update() we'll need to make each clip
@@ -437,8 +442,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             ///TODO: ugh, flowplayer changes scrubber length based on duration timecode
             var w = self.components.width;
             return {w: w,
-                    trackX: 43,
-                    trackWidth: w-150,
+                    trackX: 50,
+                    trackWidth: w-162,
                     visible:true
                    };
         };
