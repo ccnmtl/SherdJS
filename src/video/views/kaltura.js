@@ -6,24 +6,24 @@
 if (!Sherd) {Sherd = {};}
 if (!Sherd.Video) {Sherd.Video = {};}
 if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
-    Sherd.Video.Kaltura = function() {
+    Sherd.Video.Kaltura = function () {
         var self = this;
         
         Sherd.Video.Base.apply(this,arguments); //inherit -- video.js -- base.js
         
         this.presentations = {
-                'small':{
-                    width:function(){return 310;},
-                    height:function(){return 220;}
-                },
-                'medium': {
-                    width:function(){return 480;},
-                    height:function(){return 340;}
-                },
-                'default': {
-                    width:function(){return 620;},
-                    height:function(){return 440;}
-                }
+            'small':{
+                width:function (){return 310;},
+                height:function (){return 220;}
+            },
+            'medium': {
+                width:function (){return 480;},
+                height:function (){return 340;}
+            },
+            'default': {
+                width:function (){return 620;},
+                height:function (){return 440;}
+            }
         };
         
         this.state = {
@@ -36,8 +36,8 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         ////////////////////////////////////////////////////////////////////////
         // Microformat
         
-        // create == asset->{html+information to make it}
-        this.microformat.create = function(obj) {
+        // create === asset->{html+information to make it}
+        this.microformat.create = function (obj) {
             var wrapperID = Sherd.Base.newID('kaltura-wrapper-');
             ///playerID MUST only have [\w] chars or IE7 will fail
             var playerID = Sherd.Base.newID('kaltura_player_');
@@ -95,7 +95,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         };
         
         // self.components -- Access to the internal player and any options needed at runtime
-        this.microformat.components = function(html_dom,create_obj) {
+        this.microformat.components = function (html_dom,create_obj) {
             try {
                 var rv = {};
                 if (html_dom) {
@@ -118,7 +118,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
 
         // Return asset object description (parameters) in a serialized JSON format.
         // NOTE: Not currently in use. Will be used for things like printing, or spitting out a description.
-        this.microformat.read = function(found_obj) {
+        this.microformat.read = function (found_obj) {
             var obj = {};
             var params = found_obj.html.getElementsByTagName('param');
             for (var i=0;i<params.length;i++) {
@@ -129,21 +129,21 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         };
         
         // Note: not currently in use
-        this.microformat.type = function() { return 'Kaltura'; };
+        this.microformat.type = function () { return 'Kaltura'; };
         
         // Replace the video identifier within the rendered .html
-        this.microformat.update = function(obj,html_dom) {
-           return obj.kaltura == self.components.mediaUrl && document.getElementById(self.components.playerID) && self.media.ready();
+        this.microformat.update = function (obj,html_dom) {
+           return obj.kaltura === self.components.mediaUrl && document.getElementById(self.components.playerID) && self.media.ready();
         };
         
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
         
-        this.initialize = function(create_obj) {
+        this.initialize = function (create_obj) {
             // register for notifications from clipstrip to seek to various times in the video
             self.events.connect(self, 'seek', self.media.playAt);
             
-            self.events.connect(self, 'playclip', function(obj) {
+            self.events.connect(self, 'playclip', function (obj) {
                 self.setState(obj, { 'autoplay': true });
             });
         };
@@ -151,25 +151,25 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
         
-        window.jsCallbackReady = function() {
+        window.jsCallbackReady = function () {
             self.components.player.addJsListener("playerStateChange", "playerStateChangeHandler");
             self.components.player.addJsListener("durationChange", "durationChangeHandler");
             self.components.player.addJsListener("entryReady", "entryReadyHandler");
             self.components.player.addJsListener("playerUpdatePlayhead", "timeChangeHandler");
         };
         
-        window.entryReadyHandler = function(data, id) {
+        window.entryReadyHandler = function (data, id) {
             self.media._ready = true;
             self.media.video_duration = data.duration;
             self.events.signal(self, 'duration', { duration: data.duration });
         };
         
-        window.durationChangeHandler = function(data, id) {
+        window.durationChangeHandler = function (data, id) {
             self.media.video_duration = data.duration;
             self.events.signal(self, 'duration', { duration: data.duration });
         };
         
-        window.timeChangeHandler = function(data, id) {
+        window.timeChangeHandler = function (data, id) {
             self.media.current_time = data;
             
             if (self.state.starttime !== undefined && self.media.isPlaying() && self.media.current_time !== undefined) {
@@ -177,11 +177,11 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             }
         };
         
-        window.playerStateChangeHandler = function(data, id) {
+        window.playerStateChangeHandler = function (data, id) {
             self.media.current_state = data;
         };
 
-        this.media.duration = function() {
+        this.media.duration = function () {
             if (self.media.video_duration !== undefined) {
                 return self.media.video_duration;
             } else if (self.components.player && self.media.ready()) {
@@ -192,7 +192,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             }
         };
         
-        this.media.pause = function() {
+        this.media.pause = function () {
             if (self.components.player) { 
                 try {
                     self.components.player.sendNotification('doPause');
@@ -200,7 +200,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             }
         };
         
-        this.media.play = function() {
+        this.media.play = function () {
             if (self.components.player) {
                 try {
                     self.components.player.sendNotification('doPlay');
@@ -208,15 +208,15 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             }
         };
         
-        this.media.ready = function() {
+        this.media.ready = function () {
             return self.media._ready;
         };
         
-        this.media.isPlaying = function() {
-            return self.components.player && self.media.current_state && self.media.current_state == "playing";
+        this.media.isPlaying = function () {
+            return self.components.player && self.media.current_state && self.media.current_state === "playing";
         };
 
-        this.media.seek = function(starttime, endtime, autoplay) {
+        this.media.seek = function (starttime, endtime, autoplay) {
             // Kaltura player needs to be fully buffered before seeking
             // the buffering can only be accomplished by actually playing the video.
             if (!self.media.ready()) {
@@ -248,7 +248,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             }
         };
         
-        this.media.time = function() {
+        this.media.time = function () {
             var time = 0;
             if (self.components.player && self.media.current_time) {
                 return self.media.current_time;
@@ -256,7 +256,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             return time;
         };
         
-        this.media.timestrip = function() {
+        this.media.timestrip = function () {
             var w = self.components.width;
             return {
                 w: w,
