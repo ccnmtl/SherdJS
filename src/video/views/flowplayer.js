@@ -285,7 +285,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         controls: {
                             autoHide: false,
                             volume: true,
-                            mute: false,
+                            mute: true,
                             time: false,
                             fastForward: false,
                             fullscreen: true
@@ -462,7 +462,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var w = self.components.width;
             return {w: w,
                     trackX: 50,
-                    trackWidth: w - 162,
+                    trackWidth: w - 187,
                     visible: true
                    };
         };
