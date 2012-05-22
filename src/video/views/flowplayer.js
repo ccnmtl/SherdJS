@@ -37,8 +37,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 height: function () { return 220; }
             },
             'medium': {
-                width: function () { return 480; },
-                height: function () { return 340; }
+                width: function () { return 400; },
+                height: function () { return 283; }
             },
             'default': {
                 width: function () { return 620; },
@@ -84,7 +84,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 currentTimeID: 'currtime' + playerID,
                 durationID: 'totalcliplength' + playerID,
                 playerParams: params,
-                text: '<div id="timedisplay' + playerID + '" style="visibility:hidden;"><span id="currtime' + playerID + '">00:00:00</span>/<span id="totalcliplength' + playerID + '">00:00:00</span></div><div id="' + wrapperID + '" class="sherd-flowplayer-wrapper sherd-video-wrapper">' +
+                text: '<div class="flowplayer-timedisplay" id="timedisplay' + playerID + '" style="visibility:hidden;"><span id="currtime' + playerID + '">00:00:00</span>/<span id="totalcliplength' + playerID + '">00:00:00</span></div><div id="' + wrapperID + '" class="sherd-flowplayer-wrapper sherd-video-wrapper">' +
                       '<div class="sherd-flowplayer"' +
                            'style="display:block; width:' + obj.options.width + 'px;' +
                            'height:' + obj.options.height + 'px;" id="' + playerID + '">' +

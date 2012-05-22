@@ -35,8 +35,8 @@ if (!Sherd.Video.Videotag) {
             if (supported) {
                 if (!obj.options) {
                     obj.options = {
-                            width: (obj.presentation === 'small' ? 320 : (obj.width||480)), 
-                            height: (obj.presentation === 'small' ? 240 : (obj.height||360)) 
+                            width: (obj.presentation === 'small' ? 320 : (obj.width||400)), 
+                            height: (obj.presentation === 'small' ? 240 : (obj.height||283)) 
                     };
                 }
                 var create_obj = {

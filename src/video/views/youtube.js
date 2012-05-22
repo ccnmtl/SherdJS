@@ -24,8 +24,8 @@ if (!Sherd.Video.YouTube) {
                 height: function () { return 220; }
             },
             'medium': {
-                width: function () { return 480; },
-                height: function () { return 340; }
+                width: function () { return 400; },
+                height: function () { return 283; }
             },
             'default': {
                 width: function () { return 620; },

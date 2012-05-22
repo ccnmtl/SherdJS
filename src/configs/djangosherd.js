@@ -124,13 +124,15 @@ function DjangoSherd_AnnotationMicroFormat() {
         var wrapperID = Sherd.Base.newID('djangoannotation');
         var return_text = '';
         if (obj.title) {
-            return_text += '<div class="annotation-title"><h2>' + obj.title + '</h2></div>';
+            return_text += '<div class="annotation-title">' + obj.title + '</div>';
         }
-        return_text += '<div class="asset-title">';
+        
         if (obj.asset && obj.asset.title) {
+            return_text += '<div class="asset-title">';
             return_text += '<span class="asset-title-prefix">from </span><a href="' + obj.asset.local_url + '">' + obj.asset.title + '</a>';
+            return_text += '</div>';
         }
-        return_text += '</div>';
+        
         return {
             object: obj,
             htmlID: wrapperID,
@@ -382,7 +384,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         } else {
             targets.annotation_title.innerHTML =
                 ((ann_obj.metadata && ann_obj.metadata.title) ?
-                        '<h2>' + ann_obj.metadata.title + '</h2>'
+                        '' + ann_obj.metadata.title + ''
                         : '');
         }
     }
@@ -399,7 +401,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
             }
             
             if (targets.annotation_title.innerHTML === "") {
-                targets.annotation_title.innerHTML = '<h2><a href="' + asset_obj.local_url + '">' + asset_obj.title + '</a></h2>';
+                targets.annotation_title.innerHTML = '<a href="' + asset_obj.local_url + '">' + asset_obj.title + '</a>';
                 targets.asset_title.innerHTML = '';
             } else {
                 targets.asset_title.innerHTML =
