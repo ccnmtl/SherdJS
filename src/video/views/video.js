@@ -171,7 +171,7 @@ if (!Sherd.Video.Base) {
         this.getState = function () {
             var state = {};
             state.start = self.media.time();
-            state.default = (!state.start);
+            state['default'] = (!state.start);
             state.duration = self.media.duration();
             state.timeScale = self.media.timescale();
             return state;
