@@ -96,7 +96,7 @@ if (!Sherd.Image.FSIViewer) {
                 }
             },
             'medium': {
-                height: function () { return '283px'; },
+                height: function () { return '336px'; },
                 width: function () { return '100%'; },
                 initialize: function () { /*noop*/ }
             },

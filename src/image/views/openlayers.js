@@ -335,7 +335,7 @@ if (!Sherd.Image.OpenLayers) {
                 }
             },
             'medium': {
-                height: function () { return '283px'; },
+                height: function () { return '336px'; },
                 width: function () { return '100%'; },
                 initialize: function () {/*noop*/}
             },
