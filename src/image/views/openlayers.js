@@ -356,7 +356,7 @@ if (!Sherd.Image.OpenLayers) {
             var m = self.openlayers.map;
             if (m) {
                 var center = m.getCenter();
-                geojson.default = (!geojson.geometry && center.lon === 0 && center.lat === 0);
+                geojson['default'] = (!geojson.geometry && center.lon === 0 && center.lat === 0);
                 geojson.x = center.lon;
                 geojson.y = center.lat;
                 geojson.zoom = m.getZoom();
