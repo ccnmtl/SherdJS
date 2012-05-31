@@ -184,7 +184,7 @@ SherdBookmarklet = {
   },
   update_user_status:function(user_status) {
       var uninit = (! window.SherdBookmarklet.user_status.ready);
-      for (a in user_status) {
+      for (var a in user_status) {
           window.SherdBookmarklet.user_status[a] = user_status[a];
       }
       if (window.console) {
@@ -216,12 +216,11 @@ SherdBookmarklet = {
                            var rv = [];
                            function deplus(str,arr) {
                              if (str) {
-                               return ((arr)?[str.replace(/\+/g,' ')]:str.replace(/\+/g,' '))
+                               return ((arr)?[str.replace(/\+/g,' ')]:str.replace(/\+/g,' '));
                              }
                            }
                            if (json) {
-                               if (json.tracks && json.tracks.length > 0
-                                   && json.tracks[0].chunks.length > 0) {
+                               if (json.tracks && json.tracks.length > 0 && json.tracks[0].chunks.length > 0) {
                                    var t = json.tracks[0];
                                    var i = 0; //ASSUME: all chunks refer to same video file?
                                    var asp_vid = {
@@ -662,7 +661,7 @@ SherdBookmarklet = {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
                 var video = document.getElementById("movie_player");
-                if (video && video != null) {
+                if (video && video !== null) {
                     var v_match = video.getAttribute('flashvars');
                     if (v_match) {
                         v_match = v_match.match(/video_id=([^&]*)/);
@@ -674,7 +673,18 @@ SherdBookmarklet = {
                                    v_match,
                                    {'window':window,'document':document},0,
                                    function(ind,rv){ callback([rv]); });
-                } else callback([]);
+                } else if (document.getElementsByTagName("video").length > 0) {
+                    video = document.getElementsByTagName("video")[0];
+                    var videoId = jQuery(video).attr("data-youtube-id");
+                    var faux_match = [null, videoId];
+                    SherdBookmarklet.assethandler.objects_and_embeds.players
+                    .youtube.asset(video, 
+                                   faux_match,
+                                   {'window':window,'document':document},0,
+                                   function(ind,rv){ callback([rv]); });
+                } else {
+                    callback([]);
+                }
             });//end run_with_jquery for youtube.com
         },
         decorate:function(objs) {
@@ -1252,7 +1262,7 @@ SherdBookmarklet = {
               for (var i=0;i<videos.length;i++) {
                   var rv = {
                       "html":videos[i],
-		      "label": "video",
+                      "label": "video",
                       "primary_type":"video",
                       "sources": {}
                   }
