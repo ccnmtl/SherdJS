@@ -3,32 +3,32 @@
   http://Kaltura.com/api/docs/oembed
  */
 
-if (!Sherd) {Sherd = {};}
-if (!Sherd.Video) {Sherd.Video = {};}
+if (!Sherd) { Sherd = {}; }
+if (!Sherd.Video) { Sherd.Video = {}; }
 if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
     Sherd.Video.Kaltura = function () {
         var self = this;
         
-        Sherd.Video.Base.apply(this,arguments); //inherit -- video.js -- base.js
+        Sherd.Video.Base.apply(this, arguments); //inherit -- video.js -- base.js
         
         this.presentations = {
-            'small':{
-                width:function (){return 310;},
-                height:function (){return 220;}
+            'small': {
+                width: function () { return 310; },
+                height: function () { return 220; }
             },
             'medium': {
                 width: function () { return 475; },
                 height: function () { return 336; }
             },
             'default': {
-                width:function (){return 620;},
-                height:function (){return 440;}
+                width: function () { return 620; },
+                height: function () { return 440; }
             }
         };
         
         this.state = {
-            starttime:0,
-            endtime:0,
+            starttime: 0,
+            endtime: 0,
             seeking: false,
             autoplay: false
         };
@@ -44,15 +44,19 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             var autoplay = obj.autoplay ? "true" : "false";
             self.media._ready = false;
             self.media.current_state = "stopped";
-
             
-            if (!obj.options) 
-            {
+            if (!obj.options) {
                 var presentation;
                 switch (typeof obj.presentation) {
-                case 'string': presentation = self.presentations[obj.presentation]; break;
-                case 'object': presentation = obj.presentation; break;
-                case 'undefined': presentation = self.presentations['default']; break;
+                case 'string':
+                    presentation = self.presentations[obj.presentation];
+                    break;
+                case 'object':
+                    presentation = obj.presentation;
+                    break;
+                case 'undefined':
+                    presentation = self.presentations['default'];
+                    break;
                 }
                 
                 obj.options = {
@@ -69,7 +73,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             var objectID = 'id="' + playerID + '"';
             var classID = '';
             if (window.navigator.userAgent.indexOf("MSIE") > -1) {
-                classID='classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"';
+                classID = 'classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"';
             }
             
             return {
@@ -80,22 +84,22 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                 playerID: playerID, // Used by microformat.components initialization
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 mediaUrl: url, // Used by _seek seeking behavior
-                text: '<div id="' + wrapperID + '" class="sherd-kaltura-wrapper">' + 
-                      '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' + objectID + 
-                          ' type="application/x-shockwave-flash" data="' + url + '" ' + classID + '>' + 
-                        '  <param name="movie" value="' + url + '"></param>' + 
-                        '  <param name="allowscriptaccess" value="always"/></param>' + 
-                        '  <param name="width" value="' + obj.options.width + '"></param>' + 
-                        '  <param name="height" value="' + obj.options.height + '"></param>' + 
+                text: '<div id="' + wrapperID + '" class="sherd-kaltura-wrapper">' +
+                      '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' + objectID +
+                          ' type="application/x-shockwave-flash" data="' + url + '" ' + classID + '>' +
+                        '  <param name="movie" value="' + url + '"></param>' +
+                        '  <param name="allowscriptaccess" value="always"/></param>' +
+                        '  <param name="width" value="' + obj.options.width + '"></param>' +
+                        '  <param name="height" value="' + obj.options.height + '"></param>' +
                         '  <param name="allowfullscreen" value="true"></param>' +
                         '  <param name="flashVars" value="autoPlay=' + autoplay + '&streamerType=hdnetwork&akamaiHD.loadingPolicy=preInitialize&akamaiHD.asyncInit=true&kml=local&kmlPath=http://mediathread.ccnmtl.columbia.edu/site_media/js/sherdjs/lib/kaltura/config.xml"/>' +
-                        '</object>' + 
+                        '</object>' +
                       '</div>'
             };
         };
         
         // self.components -- Access to the internal player and any options needed at runtime
-        this.microformat.components = function (html_dom,create_obj) {
+        this.microformat.components = function (html_dom, create_obj) {
             try {
                 var rv = {};
                 if (html_dom) {
@@ -112,7 +116,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                     rv.height = create_obj.height;
                 }
                 return rv;
-            } catch(e) {}
+            } catch (e) {}
             return false;
         };
 
@@ -121,7 +125,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         this.microformat.read = function (found_obj) {
             var obj = {};
             var params = found_obj.html.getElementsByTagName('param');
-            for (var i=0;i<params.length;i++) {
+            for (var i = 0; i < params.length; i++) {
                 obj[params[i].getAttribute('name')] = params[i].getAttribute('value');
             }
             obj.mediaUrl = obj.movie;
@@ -132,8 +136,10 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         this.microformat.type = function () { return 'Kaltura'; };
         
         // Replace the video identifier within the rendered .html
-        this.microformat.update = function (obj,html_dom) {
-           return obj.kaltura === self.components.mediaUrl && document.getElementById(self.components.playerID) && self.media.ready();
+        this.microformat.update = function (obj, html_dom) {
+            return obj.kaltura === self.components.mediaUrl &&
+                   document.getElementById(self.components.playerID) &&
+                   self.media.ready();
         };
         
         ////////////////////////////////////////////////////////////////////////
@@ -193,7 +199,7 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
         };
         
         this.media.pause = function () {
-            if (self.components.player) { 
+            if (self.components.player) {
                 try {
                     self.components.player.sendNotification('doPause');
                 } catch (e) {}
@@ -221,14 +227,14 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             // the buffering can only be accomplished by actually playing the video.
             if (!self.media.ready()) {
                 self.state.starttime = starttime;
-                self.state.endtime = endtime; 
-                self.state.autoplay = autoplay; 
+                self.state.endtime = endtime;
+                self.state.autoplay = autoplay;
             } else if (autoplay && !self.media.isPlaying()) {
                 self.state.starttime = starttime;
                 self.state.endtime = endtime;
                 self.state.autoplay = autoplay;
                 
-                self.media.play(); 
+                self.media.play();
             } else {
                 if (starttime !== undefined) {
                     self.components.player.sendNotification('doSeek', starttime);
@@ -261,8 +267,8 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             return {
                 w: w,
                 trackX: 53,
-                trackWidth: w-150,
-                visible:true
+                trackWidth: w - 150,
+                visible: true
             };
         };
     };

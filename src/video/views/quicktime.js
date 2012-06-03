@@ -234,10 +234,10 @@ if (!Sherd.Video.QuickTime) {
         this.microformat.type = function () { return 'quicktime'; };
 
         // Replace the video identifier within the rendered .html
-        this.microformat.update = function (obj,html_dom) {
+        this.microformat.update = function (obj, html_dom) {
             if (obj.quicktime && self.components.player && self.media.ready()) {
                 try {
-                    if (obj.quicktime != self.components.mediaUrl) {
+                    if (obj.quicktime !== self.components.mediaUrl) {
                         self.components.player.SetURL(obj.quicktime);
                         self.components.mediaUrl = obj.quicktime;
                         if (/MSIE/.test(navigator.userAgent) && self.components.autoplay) {
@@ -261,25 +261,24 @@ if (!Sherd.Video.QuickTime) {
                     [{test: function () {
                         // Update the duration
                         var newDuration = self.media.duration();
-                        if (newDuration != self.media._duration) {
+                        if (newDuration !== self.media._duration) {
                             self.media._duration = newDuration;
                             self.components.duration.innerHTML = self.secondsToCode(newDuration);
                             self.events.signal(self, 'duration', { duration: newDuration });
                         }
-                        if (self.media.ready() ) {
+                        if (self.media.ready()) {
                             self.components.timedisplay.style.visibility = 'visible';
                             // set dimensions correctly
-                            self.media.resize(create_obj.object.presentation_width, 
-                                    create_obj.object.presentation_height, create_obj);
-
+                            self.media.resize(create_obj.object.presentation_width,
+                                create_obj.object.presentation_height, create_obj);
                         }
 
                         // Update the tick count
                         self.media._updateTickCount();
 
                         return false;
-                    }, 
-                    poll:500}
+                    },
+                    poll: 500}
                     ]);
         };
 
@@ -291,23 +290,24 @@ if (!Sherd.Video.QuickTime) {
 
             // kickoff some timers
             self.events.queue('quicktime ready to seek',
-                    [{test: function () {
-                        ready = (self.media.ready() 
-                                && self.media.duration() > 0 // Is the duration valid yet?
-                                && (self.components.player.GetMaxTimeLoaded()/self.media.timescale()) > self.components.starttime);
-
-                        return ready; 
-                    }, 
-                    poll:500
-                    },
-                    {call: function () {
-                        //we wait here for the situation of suckage:
-                        //Mac Chrome: auto-seeking from poster-frame needs some time to 'really' load the video
-                        setTimeout(function () {
-                            self.setState({"start":self.components.starttime, 
-                                "end":self.components.endtime});
-                        },400); }
-                    }]);
+                    [{ test: function () {
+                            return (self.media.ready() &&
+                                    self.media.duration() > 0 && // Is the duration valid yet?
+                                    (self.components.player.GetMaxTimeLoaded() / self.media.timescale()) > self.components.starttime);
+                        },
+                        poll: 500
+                     },
+                     { call: function () {
+                            // We wait here for the situation of suckage:
+                            // Mac Chrome: auto-seeking from poster-frame needs some time to 'really' load the video
+                            setTimeout(function () {
+                                self.setState({
+                                    "start": self.components.starttime,
+                                    "end": self.components.endtime
+                                });
+                            }, 400);
+                        }
+                     }]);
 
             self.microformat._startUpdateDisplayTimer(create_obj);
 
@@ -342,11 +342,11 @@ if (!Sherd.Video.QuickTime) {
         this.media.duration = function () {
             var duration = 0;
             try {
-                if (self.components.player 
-                        && typeof self.components.player.GetDuration != 'undefined') {
+                if (self.components.player &&
+                    typeof self.components.player.GetDuration !== 'undefined') {
                     var frame_duration = self.components.player.GetDuration();
                     if (frame_duration < 2147483647) {
-                        duration = frame_duration/self.media.timescale();
+                        duration = frame_duration / self.media.timescale();
                     }
                 }
             } catch (e) {}
@@ -354,20 +354,19 @@ if (!Sherd.Video.QuickTime) {
         };
 
         this.media.pause = function () {
-            if (self.components.player)
+            if (self.components.player) {
                 self.components.player.Stop();
+            }
         };
 
         this.media.play = function () {
             if (self.media.ready()) {
-                if (!self.media.swapPoster() ) {
+                if (!self.media.swapPoster()) {
                     self.components.player.Play();
-                }       
+                }
             } else {
-                self.events.queue('qt play',[
-                                             {test: self.media.ready, poll:100},
-                                             {call: self.media.play}
-                                             ]);
+                self.events.queue('qt play', [{ test: self.media.ready, poll: 100},
+                                              { call: self.media.play}]);
             }
         };
 
@@ -375,8 +374,8 @@ if (!Sherd.Video.QuickTime) {
             var p = self.components.player;
             ///WARNING: mimetype doesn't change after HREF advancement
             ///         so we need to test if we're already advanced
-            var mimetype ='';
-            try {//Safari SUX: dies on GetMIMEType for no reason.
+            var mimetype = '';
+            try { //Safari SUX: dies on GetMIMEType for no reason.
                 mimetype = p.GetMIMEType();
             } catch (e) {/*pass*/}
             var href = p.GetHREF();
@@ -397,9 +396,9 @@ if (!Sherd.Video.QuickTime) {
         this.media.isPlaying = function () {
             var playing = false;
             try {
-                playing = (self.components.player
-                        && self.components.player.GetRate
-                        && self.components.player.GetRate() > 0);
+                playing = (self.components.player &&
+                           self.components.player.GetRate &&
+                           self.components.player.GetRate() > 0);
             } catch (e) {}
             return playing;
         };
@@ -410,7 +409,7 @@ if (!Sherd.Video.QuickTime) {
                 var p = self.components.player;
                 ///IE SUX: will return 'unknown' for (typeof p.GetPluginStatus)
                 ///        and dies silently on (p.GetPluginStatus)
-                if (p && typeof p.GetPluginStatus != 'undefined') {
+                if (p && typeof p.GetPluginStatus !== 'undefined') {
                     status = p.GetPluginStatus();
                 }
             } catch (e) {} // player is not yet ready
@@ -422,9 +421,10 @@ if (!Sherd.Video.QuickTime) {
             if (self.media.ready()) {
                 var p = self.components.player;
                 if (starttime !== undefined) {
-                    playRate = p.GetRate();
-                    if (playRate > 0)
+                    var playRate = p.GetRate();
+                    if (playRate > 0) {
                         p.Stop(); // HACK: QT doesn't rebuffer if we don't stop-start
+                    }
                     try {
                         p.SetTime(starttime * self.media.timescale());
                     } catch (e) {}
@@ -446,7 +446,7 @@ if (!Sherd.Video.QuickTime) {
         this.media.time = function () {
             var time = 0;
             try {
-                time = self.components.player.GetTime()/self.media.timescale();
+                time = self.components.player.GetTime() / self.media.timescale();
             } catch (e) {}
             return time;
         };
@@ -461,10 +461,11 @@ if (!Sherd.Video.QuickTime) {
 
         this.media.timestrip = function () {
             var w = self.components.player.width;
-            return {w: w,
+            return {
+                w: w,
                 trackX: 152,
-                trackWidth: w-310,
-                visible:true
+                trackWidth: w - 310,
+                visible: true
             };
         };
 
@@ -481,13 +482,16 @@ if (!Sherd.Video.QuickTime) {
         };
 
         this.media._updateTickCount = function () {
-            if (typeof self.components.player.GetRate != 'undefined'
-                && self.components.player.GetRate() > 0) { 
-                self.components.elapsed.innerHTML = self.secondsToCode(self.media.time()); 
-            } 
+            if (typeof self.components.player.GetRate !== 'undefined' &&
+                self.components.player.GetRate() > 0) {
+                self.components.elapsed.innerHTML = self.secondsToCode(self.media.time());
+            }
         };
-        this.media.resize = function (w,h, obj) {
-            if (!self.debug) return;//RETURN
+        
+        this.media.resize = function (w, h, obj) {
+            if (!self.debug) {
+                return;
+            }
 
             /* Below is code that helps QT versions below 7.6.6
              * (uncertain of the exact version below)
@@ -496,48 +500,10 @@ if (!Sherd.Video.QuickTime) {
              *       we only support QT 7.6.6+
              */
             var p =  self.components.player;
-            if (typeof p.SetRectangle != 'undefined') {
-                //console.log(p.GetRectangle());
-                //console.log(p.GetMatrix());
-                p.SetRectangle("0,0,"+w+","+h);
-
+            if (typeof p.SetRectangle !== 'undefined') {
+                p.SetRectangle("0,0," + w + "," + h);
             }
         };
     }; //Sherd.AssetViews.QuickTime
-
-
-    ////ARCHIVED FROM VITAL CODE
-    /*this was trying to solve a harder problem 
-      when we don't know the proportions, but what if we know them?
-     */
-    var conformProportions = function (mymovie, w, h) {
-        /*
-      This function still doesn't work when QT loads the movie
-      in the mini-window that comes up before it auto-sizes.
-      When this function is run then, it doubles the proportions
-      and then QT re-doubles them and so we only see a quarter
-      of the screen.  Somehow we need to 'know' when this is happening.
-      Maybe doing something special if GetMatrix returns 2,2,0 on the diagonal?
-      Ideally we would stop it from loading in that stupid little window
-      to begin with.
-         */
-        if (true) return;
-        //ASSUME width is always greater than height
-        //    alert(theMovie.GetPluginStatus()+mymovie.GetRectangle()+mymovie.GetMatrix());
-
-        var cur_wh = mymovie.GetRectangle().split(',');
-
-        oldW = parseInt(cur_wh[2],10) - parseInt(cur_wh[0],10);
-        oldH = parseInt(cur_wh[3],10) - parseInt(cur_wh[1],10);
-        var newH = w*oldH/oldW;
-        mymovie.SetRectangle("0,0,"+w+","+newH);
-
-        matrix = mymovie.GetMatrix().split(',');
-        //    alert(mymovie.GetMatrix());
-        matrix[5] = Math.round(h-newH);
-        mymovie.SetMatrix(matrix.join(','));
-        //    alert('w'+w+' newH:'+newH+' '+theMovie.GetPluginStatus()+"-- "+matrix.join(','));
-    };
-
 }
 

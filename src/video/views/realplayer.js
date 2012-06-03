@@ -1,11 +1,11 @@
 /*
 Documentation:
   http://service.real.com/help/library/guides/ScriptingGuide/HTML/samples/javaembed/JAVAFrames.htm
-  clip position: 
+  clip position:
       http://service.real.com/help/library/guides/ScriptingGuide/HTML/samples/javaembed/position.txt
-  play/pause: 
+  play/pause:
       http://service.real.com/help/library/guides/ScriptingGuide/HTML/samples/javaembed/playback1.txt
-  embed/object attrs: 
+  embed/object attrs:
       http://service.real.com/help/library/guides/realone/ProductionGuide/HTML/htmfiles/embed.htm
 
   SERIALIZATION of asset
@@ -18,67 +18,67 @@ Documentation:
 	,type:'video/quicktime'
 	};
  */
-if (!Sherd) {Sherd = {};}
-if (!Sherd.Video) {Sherd.Video = {};}
+if (!Sherd) { Sherd = {}; }
+if (!Sherd.Video) { Sherd.Video = {}; }
 if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
     Sherd.Video.RealPlayer = function () {
         var self = this;
-        Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
+        Sherd.Video.Base.apply(this, arguments); //inherit off video.js - base.js
 
         ////////////////////////////////////////////////////////////////////////
         // Microformat
-        this.microformat.create = function (obj,doc) {
+        this.microformat.create = function (obj, doc) {
             var wrapperID = Sherd.Base.newID('realplayer-wrapper-');
             var playerID = Sherd.Base.newID('realplayer-player-');
             var controllerID = Sherd.Base.newID('realplayer-controller-');
-            var console = 'Console'+playerID;
+            var console = 'Console' + playerID;
 
             if (!obj.options) {
                 obj.options = {
-                        width: (obj.presentation === 'small' ? 320 : (obj.width||475)), 
-                        height: (obj.presentation === 'small' ? 240 : (obj.height||336)) 
+                    width: (obj.presentation === 'small' ? 320 : (obj.width || 475)),
+                    height: (obj.presentation === 'small' ? 240 : (obj.height || 336))
                 };
             }
 
             var create_obj = {
-                    object: obj,
-                    htmlID: wrapperID,
-                    playerID: playerID, // Used by .initialize post initialization
-                    currentTimeID:'currtime'+playerID,
-                    durationID:'totalcliplength'+playerID,
-                    text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper" '
-                    + '     style="width:'+obj.options.width+'px">' 
-                    + '<object id="'+playerID+'" classid="clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA"'
-                    + '        height="'+obj.options.height+'" width="'+obj.options.width+'">'
-                    + '<param name="CONTROLS" value="ImageWindow">'
-                    + '<param name="AUTOSTART" value="'+obj.autoplay+'">'
-                    + '<param name="CONSOLE" value="'+console+'">'
-                    + '<param name="SRC" value="'+obj.realplayer+'">'
-                    + '<embed height="'+obj.options.height+'" width="'+obj.options.width+'"'
-                    + '       NOJAVA="true" console="'+console+'" '
-                    + '  controls="ImageWindow" '
-                    + '  src="'+obj.realplayer+'" '
-                    + '  type="audio/x-pn-realaudio-plugin" '
-                    + '  autostart="'+obj.autoplay+'" > '
-                    + '</embed>'
-                    + '</object>'
-                    + '<object id="'+controllerID+'" classid="clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA"'
-                    + '        height="36" width="'+obj.options.width+'">'
-                    + '<param name="CONTROLS" value="ControlPanel">'
-                    + '<param name="CONSOLE" value="'+console+'">'
-                    + '<embed src="'+obj.realplayer+'" type="audio/x-pn-realaudio-plugin" controls="ControlPanel" '
-                    + '    console="'+console+'" '
-                    + '    width="'+obj.options.width+'" '
-                    + '    height="36">'
-                    + '</embed>'
-                    + '</object>'
-                    + '<div class="time-display"><span id="currtime'+playerID+'">00:00:00</span>/<span id="totalcliplength'+playerID+'">00:00:00</span></div>'
-                    + '</div>'
+                object: obj,
+                htmlID: wrapperID,
+                playerID: playerID, // Used by .initialize post initialization
+                currentTimeID: 'currtime' + playerID,
+                durationID: 'totalcliplength' + playerID,
+                text: '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper" ' +
+                '     style="width:' + obj.options.width + 'px">' +
+                '<object id="' + playerID + '" classid="clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA"' +
+                '        height="' + obj.options.height + '" width="' + obj.options.width + '">' +
+                '<param name="CONTROLS" value="ImageWindow">' +
+                '<param name="AUTOSTART" value="' + obj.autoplay + '">' +
+                '<param name="CONSOLE" value="' + console + '">' +
+                '<param name="SRC" value="' + obj.realplayer + '">' +
+                '<embed height="' + obj.options.height + '" width="' + obj.options.width + '"' +
+                '       NOJAVA="true" console="' + console + '" ' +
+                '  controls="ImageWindow" ' +
+                '  src="' + obj.realplayer + '" ' +
+                '  type="audio/x-pn-realaudio-plugin" ' +
+                '  autostart="' + obj.autoplay + '" > ' +
+                '</embed>' +
+                '</object>' +
+                '<object id="' + controllerID + '" classid="clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA"' +
+                '        height="36" width="' + obj.options.width + '">' +
+                '<param name="CONTROLS" value="ControlPanel">' +
+                '<param name="CONSOLE" value="' + console + '">' +
+                '<embed src="' + obj.realplayer + '" type="audio/x-pn-realaudio-plugin" controls="ControlPanel" ' +
+                '    console="' + console + '" ' +
+                '    width="' + obj.options.width + '" ' +
+                '    height="36">' +
+                '</embed>' +
+                '</object>' +
+                '<div class="time-display"><span id="currtime' + playerID + '">00:00:00</span>/<span id="totalcliplength' + playerID + '">00:00:00</span></div>' +
+                '</div>'
             };
             return create_obj;
         };
 
-        this.microformat.components = function (html_dom,create_obj) {
+        this.microformat.components = function (html_dom, create_obj) {
             try {
                 var rv = {};
                 if (html_dom) {
@@ -100,8 +100,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
 
                     rv.duration = document.getElementById(create_obj.durationID);
                     rv.elapsed = document.getElementById(create_obj.currentTimeID);
-
-                } 
+                }
                 return rv;
             } catch (e) {}
             return false;
@@ -111,8 +110,6 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         // Works in conjunction with read
         this.microformat.find = function (html_dom) {
             throw Error("unimplemented");
-            //var found = [];
-            //return found;
         };
 
         // Return asset object description (parameters) in a serialized JSON format.
@@ -120,14 +117,12 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         // works in conjunction with find
         this.microformat.read = function (found_obj) {
             throw Error("unimplemented");
-            //var obj = {};
-            //return obj;
         };
 
         this.microformat.type = function () { return 'realplayer'; };
 
         // Replace the video identifier within the rendered .html
-        this.microformat.update = function (obj,html_dom) {
+        this.microformat.update = function (obj, html_dom) {
             /*
             if (obj.realplayer && self.components.player && self.media.ready()) {
                 try {
@@ -147,19 +142,18 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         this.initialize = function (create_obj) {
             self.events.connect(self, 'seek', self.media.playAt);
             self.events.connect(self, 'playclip', function (obj) {
-                self.setState(obj, {autoplay:true});
+                self.setState(obj, { autoplay: true });
                 self.media.play();
             });
-            self.events.queue('realplayer tick-tock' ,[
-                                                       {poll:1000,
-                                                           test:function () {
-                                                               self.components.duration.innerHTML = self.secondsToCode(self.media.duration());
-                                                               self.components.elapsed.innerHTML = self.secondsToCode(self.media.time());
-                                                           }}
-                                                       ]);
+            self.events.queue('realplayer tick-tock', [{
+                poll: 1000,
+                test: function () {
+                    self.components.duration.innerHTML = self.secondsToCode(self.media.duration());
+                    self.components.elapsed.innerHTML = self.secondsToCode(self.media.time());
+                }
+            }]);
             ///TODO: figure out some hacky way to auto-buffer content
             ///      so load-time on each seek isn't so bad.  Realplayer sux.
-
         };
 
         // Overriding video.js
@@ -172,10 +166,10 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         this.media.duration = function () {
             var duration = 0;
             try {
-                if (self.components.player 
-                        && typeof self.components.player.GetLength != 'undefined') {
+                if (self.components.player &&
+                    typeof self.components.player.GetLength !== 'undefined') {
                     ///Real API returns milliseconds
-                    duration = self.components.player.GetLength()/1000 ;
+                    duration = self.components.player.GetLength() / 1000;
                     self.events.signal(self, 'duration', { duration: duration });
                 }
             } catch (e) {}
@@ -183,18 +177,17 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         };
 
         this.media.pause = function () {
-            if (self.components.player)
+            if (self.components.player) {
                 self.components.player.DoPause();
+            }
         };
 
         this.media.play = function () {
             if (self.media.ready()) {
                 self.components.player.DoPlay();
             } else {
-                self.events.queue('real play',[
-                                               {test: self.media.ready, poll:100},
-                                               {call: self.media.play}
-                                               ]);
+                self.events.queue('real play', [{ test: self.media.ready, poll: 100},
+                                                { call: self.media.play }]);
             }
         };
 
@@ -204,9 +197,9 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
             try {
                 ///API:0=stopped,1=contacting,2=buffering,3=playing,4=paused,5=seeking
                 ///Seek can occur when >= 2
-                playing = (self.components.player
-                        && self.components.player.GetPlayState
-                        && self.components.player.GetPlayState() === 3);
+                playing = (self.components.player &&
+                           self.components.player.GetPlayState &&
+                           self.components.player.GetPlayState() === 3);
             } catch (e) {}
             return playing;
         };
@@ -215,15 +208,15 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
             var status;
             try {
                 var p = self.components.player;
-                return (p && typeof p.GetPlayState != 'undefined');
+                return (p && typeof p.GetPlayState !== 'undefined');
             } catch (e) {
                 return false;
-            } 
+            }
         };
         this.media.seekable = function () {
             try {
                 var s = self.components.player.GetPlayState();
-                return (self.media.ready() && s>1 && s<5);
+                return (self.media.ready() && s > 1 && s < 5);
             } catch (e) {
                 return false;
             }
@@ -236,25 +229,28 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
             if (self.media.seekable()) {
                 if (starttime !== undefined) {
                     ///API in milliseconds
-                    p.SetPosition(starttime*1000);
-                    if (play) self.media.play();
+                    p.SetPosition(starttime * 1000);
+                    if (play) {
+                        self.media.play();
+                    }
                 }
                 if (endtime) {
                     // Watch the video's running time & stop it when the endtime rolls around
                     self.media.pauseAt(endtime);
                 }
             } else {
-                self.events.queue('realplayer ready to seek',
-                        [  { poll:500,
-                            test: self.media.seekable
-                        },{
-                            test: function () {
-                                return (seek_last === my_seek);}
-                        },{
-                            call: function () {
-                                self.media.seek(starttime,endtime,play);
-                            }
-                        }]);
+                self.events.queue('realplayer ready to seek', [ {
+                    poll : 500,
+                    test : self.media.seekable
+                }, {
+                    test : function () {
+                        return (seek_last === my_seek);
+                    }
+                }, {
+                    call : function () {
+                        self.media.seek(starttime, endtime, play);
+                    }
+                } ]);
             }
 
             // store the values away for when the player is ready
@@ -265,7 +261,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         this.media.time = function () {
             var time = 0;
             try {
-                time = self.components.player.GetPosition()/1000;
+                time = self.components.player.GetPosition() / 1000;
             } catch (e) {}
             return time;
         };
@@ -276,10 +272,11 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
 
         this.media.timestrip = function () {
             var w = self.components.player.width;
-            return {w: w,
+            return {
+                w: w,
                 trackX: 110,
-                trackWidth: w-220,
-                visible:true
+                trackWidth: w - 220,
+                visible: true
             };
         };
 

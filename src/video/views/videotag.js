@@ -17,16 +17,16 @@ Documentation:
      WebKit (Chrome) does not trigger 'progress' event, but triggers 'canplaythrough' like progress
      Would be nice to know if a particular event is supported (maybe even per-object)
  */
-if (!Sherd) {Sherd = {};}
-if (!Sherd.Video) {Sherd.Video = {};}
+if (!Sherd) { Sherd = {}; }
+if (!Sherd.Video) { Sherd.Video = {}; }
 if (!Sherd.Video.Videotag) {
     Sherd.Video.Videotag = function () {
         var self = this;
-        Sherd.Video.Base.apply(this,arguments); //inherit off video.js - base.js
+        Sherd.Video.Base.apply(this, arguments); //inherit off video.js - base.js
 
         ////////////////////////////////////////////////////////////////////////
         // Microformat
-        this.microformat.create = function (obj,doc) {
+        this.microformat.create = function (obj, doc) {
             var wrapperID = Sherd.Base.newID('videotag-wrapper-');
             var playerID = Sherd.Base.newID('videotag-player-');
             var controllerID = Sherd.Base.newID('videotag-controller-');
@@ -35,53 +35,59 @@ if (!Sherd.Video.Videotag) {
             if (supported) {
                 if (!obj.options) {
                     obj.options = {
-                            width: (obj.presentation === 'small' ? 320 : (obj.width||475)), 
-                            height: (obj.presentation === 'small' ? 240 : (obj.height||336)) 
+                        width: (obj.presentation === 'small' ? 320 : (obj.width || 475)),
+                        height: (obj.presentation === 'small' ? 240 : (obj.height || 336))
                     };
                 }
                 var create_obj = {
-                        object: obj,
-                        htmlID: wrapperID,
-                        playerID: playerID, // Used by .initialize post initialization
-                        text: '<div id="' + wrapperID + '" class="sherd-videotag-wrapper sherd-video-wrapper" '
-                        + '     style="width:'+obj.options.width+'px">' 
-                        + '<video id="'+playerID+'" controls="controls"'
-                        + ((obj.poster) ? ' poster="'+obj.poster+'" ' : '')
-                        + '       height="'+obj.options.height+'" width="'+obj.options.width+'"'
-                        + '       type=\''+ supported.mimetype +'\''
-                        + '       src="'+ supported.url +'">'
-                        + '</video>'
-                        + '</div>',
-                        provider: supported.provdier
+                    object: obj,
+                    htmlID: wrapperID,
+                    playerID: playerID, // Used by .initialize post initialization
+                    text: '<div id="' + wrapperID + '" class="sherd-videotag-wrapper sherd-video-wrapper" ' +
+                    '     style="width:' + obj.options.width + 'px">' +
+                    '<video id="' + playerID + '" controls="controls"' +
+                    ((obj.poster) ? ' poster="' + obj.poster + '" ' : '') +
+                    '       height="' + obj.options.height + '" width="' + obj.options.width + '"' +
+                    '       type=\'' + supported.mimetype + '\'' +
+                    '       src="' + supported.url + '">' +
+                    '</video>' +
+                    '</div>',
+                    provider: supported.provider
                 };
                 return create_obj;
             }
         };
         this.microformat._getPlayerParams = function (obj) {
             var types = {
-                    ogg:'video/ogg; codecs="theora, vorbis"',
-                    webm:'video/webm; codecs="vp8, vorbis"',
-                    mp4:'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+                ogg: 'video/ogg; codecs="theora, vorbis"',
+                webm: 'video/webm; codecs="vp8, vorbis"',
+                mp4: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
             };
             var vid = document.createElement('video');
             var browser_supported = [];
             for (var a in types) {
-                switch(vid.canPlayType(types[a])) {
-                case 'probably': browser_supported.unshift(a);break;
-                case 'maybe': browser_supported.push(a);break;
+                if (types.hasOwnProperty(a)) {
+                    switch (vid.canPlayType(types[a])) {
+                    case 'probably':
+                        browser_supported.unshift(a);
+                        break;
+                    case 'maybe':
+                        browser_supported.push(a);
+                        break;
+                    }
                 }
             }
-            for (var i=0;i<browser_supported.length;i++) {
+            for (var i = 0; i < browser_supported.length; i++) {
                 if (obj[browser_supported[i]]) {
                     return {
-                        'provider':browser_supported[i],
-                        'url':obj[browser_supported[i]],
-                        'mimetype':types[browser_supported[i]]
+                        'provider': browser_supported[i],
+                        'url': obj[browser_supported[i]],
+                        'mimetype': types[browser_supported[i]]
                     };
                 }
             }
         };
-        this.microformat.components = function (html_dom,create_obj) {
+        this.microformat.components = function (html_dom, create_obj) {
             try {
                 var rv = {};
                 if (html_dom) {
@@ -91,9 +97,9 @@ if (!Sherd.Video.Videotag) {
                     rv.player = html_dom.getElementsByTagName('video')[0];
                     rv.width = (create_obj.options && create_obj.options.width) || rv.player.offsetWidth;
                     rv.mediaUrl = create_obj.object[create_obj.provider];
-                } 
+                }
                 return rv;
-            } catch(e) {}
+            } catch (e) {}
             return false;
         };
 
@@ -117,7 +123,7 @@ if (!Sherd.Video.Videotag) {
         this.microformat.type = function () { return 'videotag'; };
 
         // Replace the video identifier within the rendered .html
-        this.microformat.update = function (obj,html_dom) {
+        this.microformat.update = function (obj, html_dom) {
             var supported = self.microformat._getPlayerParams(obj);
             if (supported && self.components.player) {
                 try {
@@ -125,7 +131,7 @@ if (!Sherd.Video.Videotag) {
                     self.components.player.src = supported.url;
                     self.components.mediaUrl = supported.url;
                     return true;
-                } catch(e) { }
+                } catch (e) {}
             }
             return false;
         };
@@ -144,10 +150,11 @@ if (!Sherd.Video.Videotag) {
                 var signal_duration = function () {
                     self.events.signal(self, 'duration', { duration: self.media.duration() });
                 };
-                if (self.media.duration() > 0) 
+                if (self.media.duration() > 0) {
                     signal_duration();
-                else
+                } else {
                     self.events.connect(self.components.player, 'loadedmetadata', signal_duration);
+                }
             }
         };
 
@@ -156,63 +163,70 @@ if (!Sherd.Video.Videotag) {
 
         this.media.duration = function () {
             var duration = 0;
-            if (self.components.player) 
-                duration = self.components.player.duration||0;
+            if (self.components.player) {
+                duration = self.components.player.duration || 0;
+            }
             return duration;
         };
 
         this.media.pause = function () {
-            if (self.components.player)
+            if (self.components.player) {
                 self.components.player.pause();
+            }
         };
 
         this.media.play = function () {
-            if (self.components.player)
+            if (self.components.player) {
                 self.components.player.play();
+            }
         };
 
         // Used by tests
         this.media.isPlaying = function () {
-            return (self.components.player 
-                    && !self.components.player.paused);
+            return (self.components.player && !self.components.player.paused);
         };
 
         this.media.ready = function () {
             ///http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#dom-media-have_metadata
-            return (self.components.player 
-                    && self.components.player.readyState > 2);
+            return (self.components.player && self.components.player.readyState > 2);
         };
 
         this.media.seek = function (starttime, endtime, autoplay) {
             if (self.components.player) {
-                var c,d = {}; //event listeners
+                var c, d = {}; //event listeners
                 var _seek = function (evt) {
                     if (starttime !== undefined) {
                         try {
                             self.components.player.currentTime = starttime;
-                            if (d.disconnect) d.disconnect();
-                        } catch(e) {
-                            return {error:true};
+                            if (d.disconnect) {
+                                d.disconnect();
+                            }
+                        } catch (e) {
+                            return { error: true };
                         }
                     }
-                    if (endtime)
+                    if (endtime) {
                         self.media.pauseAt(endtime);
-                    if (autoplay || self.components.autoplay)
+                    }
+                    if (autoplay || self.components.autoplay) {
                         self.media.play();
+                    }
                     return {};
                 };
                 if (_seek().error) {
                     var progress_triggers = 0;
-                    d = self.events.connect(self.components.player,'progress', function (evt) {
+                    d = self.events.connect(self.components.player, 'progress', function (evt) {
                         progress_triggers = 1;
                         _seek(evt);
                     });
                     ///WebKit(Chrome) doesn't trigger progress, but 'canplaythrough' seems to trigger enough
-                    c = self.events.connect(self.components.player,'canplaythrough', function (evt) {
+                    c = self.events.connect(self.components.player, 'canplaythrough', function (evt) {
                         if (progress_triggers === 1) {
                             c.disconnect();
                         } else {
-                            if (!(progress_triggers--)) d.disconnect();
+                            if (!(progress_triggers--)) {
+                                d.disconnect();
+                            }
                             d = c;
                             _seek(evt);
                         }
@@ -233,8 +247,8 @@ if (!Sherd.Video.Videotag) {
             var w = self.components.player.width;
             return {w: w,
                 trackX: 40,
-                trackWidth: w-140,
-                visible:true
+                trackWidth: w - 140,
+                visible: true
             };
         };
 

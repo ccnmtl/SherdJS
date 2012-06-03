@@ -270,7 +270,7 @@ CitationView.prototype.decorateLinks = function (parent) {
     ///decorate LINKS to OPEN annotations within a specified div or the whole document
     var elt = parent ? document.getElementById(parent) : document;
     return self.decorateElementLinks(elt);
-}
+};
 
 CitationView.prototype.decorateElementLinks = function (element) {
     var self = this;
