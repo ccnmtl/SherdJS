@@ -461,8 +461,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             ///TODO: ugh, flowplayer changes scrubber length based on duration timecode
             var w = self.components.width;
             return {w: w,
-                    trackX: 50,
-                    trackWidth: w - 187,
+                    trackX: 45,
+                    trackWidth: w - 175,
                     visible: true
                    };
         };
