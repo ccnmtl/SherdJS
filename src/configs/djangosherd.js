@@ -299,6 +299,10 @@ CitationView.prototype.decorateElementLinks = function (element) {
 CitationView.prototype.openCitation = function (anchor) {
     var self = this;
     
+    if (jQuery(anchor).hasClass("disabled")) {
+        return;
+    }
+    
     self.unload();
     
     // /# where is my destination?
