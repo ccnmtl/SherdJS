@@ -300,7 +300,7 @@ if (typeof jQuery !== 'undefined') {
     ///TODO: before making jQuery take precedent over MochiKit, we need to
     /// make sure  viewers using self.events.connect()/signal() work with jQuery
     Sherd.winHeight = function () {
-        return jQuery(window).height() - 235;
+        return jQuery(window).height() - 245;
     };
     Sherd.Base.Events = {
         'connect' : function (subject, event, func) {

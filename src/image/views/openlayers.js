@@ -335,9 +335,17 @@ if (!Sherd.Image.OpenLayers) {
                 }
             },
             'medium': {
-                height: function () { return '336px'; },
-                width: function () { return '100%'; },
-                initialize: function () {/*noop*/}
+                height: function (obj, presenter) {
+                    return Sherd.winHeight() + 'px';
+                },
+                width: function (obj, presenter) { return '100%'; },
+                initialize: function (obj, presenter) {
+                    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
+                    self.events.connect(window, 'resize', function () {
+                        presenter.components.top.style.height = Sherd.winHeight() + 'px';
+                    });
+                }
+
             },
             'small': {
                 height: function () { return '240px'; },

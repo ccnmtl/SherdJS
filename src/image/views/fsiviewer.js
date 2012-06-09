@@ -96,9 +96,16 @@ if (!Sherd.Image.FSIViewer) {
                 }
             },
             'medium': {
-                height: function () { return '336px'; },
-                width: function () { return '100%'; },
-                initialize: function () { /*noop*/ }
+                height: function (obj, presenter) { return Sherd.winHeight() + 'px'; },
+                width: function (obj, presenter) { return '100%'; },
+                extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
+                initialize: function (obj, presenter) {
+                    self.events.connect(window, 'resize', function () {
+                        var top = presenter.components.top;
+                        top.setAttribute('height', Sherd.winHeight() + 'px');
+                        self.current_state.wh_ratio = (top.offsetWidth / (top.offsetHeight - 30));
+                    });
+                }            
             },
             'small': {
                 height: function () { return '240px'; },
