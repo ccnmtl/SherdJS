@@ -88,7 +88,7 @@ if (!Sherd.Image.FSIViewer) {
                 width: function (obj, presenter) { return '100%'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
                 initialize: function (obj, presenter) {
-                    self.events.connect(window, 'resize', function () {
+                    return self.events.connect(window, 'resize', function () {
                         var top = presenter.components.top;
                         top.setAttribute('height', Sherd.winHeight() + 'px');
                         self.current_state.wh_ratio = (top.offsetWidth / (top.offsetHeight - 30));
@@ -96,16 +96,20 @@ if (!Sherd.Image.FSIViewer) {
                 }
             },
             'medium': {
-                height: function (obj, presenter) { return Sherd.winHeight() + 'px'; },
+                height: function (obj, presenter) { 
+                    var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
+                    return height + 'px'; 
+                },
                 width: function (obj, presenter) { return '100%'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
                 initialize: function (obj, presenter) {
-                    self.events.connect(window, 'resize', function () {
+                    return self.events.connect(window, 'resize', function () {
                         var top = presenter.components.top;
-                        top.setAttribute('height', Sherd.winHeight() + 'px');
+                        var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
+                        top.setAttribute('height', height + 'px');
                         self.current_state.wh_ratio = (top.offsetWidth / (top.offsetHeight - 30));
                     });
-                }            
+                }
             },
             'small': {
                 height: function () { return '240px'; },
@@ -190,9 +194,12 @@ if (!Sherd.Image.FSIViewer) {
         };
         this.microformat = {};
         this.microformat.components = function (html_dom, create_obj) {
-            return {'top': html_dom};
+            return {
+                'top': html_dom,
+                'winHeight': create_obj.winHeight
+            };
         };
-        this.microformat.create = function (obj, doc) {
+        this.microformat.create = function (obj, doc, options) {
             ///NOTE: we need underscores because this will become a javascript function name
             var fsi_object_id = Sherd.Base.newID('fsiviewer_wrapper');
             var broken_url = obj.image_fpx.split('/');
@@ -217,7 +224,8 @@ if (!Sherd.Image.FSIViewer) {
             return {
                 object: obj,
                 htmlID: fsi_object_id,
-                text: html
+                text: html,
+                winHeight: options && options.functions && options.functions.winHeight ? options.functions.winHeight : Sherd.winHeight 
             };
         };
     };

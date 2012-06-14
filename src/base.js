@@ -214,7 +214,7 @@ Sherd.Base = {
 
                         var updated = (options.microformat.update && options.microformat.update(options.asset, dom_or_id.firstChild));
                         if (!updated) {
-                            var create_obj = options.microformat.create(options.asset);
+                            var create_obj = options.microformat.create(options.asset, null, options);
 
                             if (create_obj.text && dom_or_id) {
                                 dom_or_id.innerHTML = create_obj.text;
