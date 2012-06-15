@@ -49,6 +49,15 @@ if (!Sherd.Image.OpenLayers) {
     Sherd.Image.OpenLayers = function () {
         var self = this;
         Sherd.Base.AssetView.apply(this, arguments); //inherit
+        
+        this.presentation = null;
+        
+        this.events.connect(window, 'resize', function () {
+            if (self.presentation) {
+                self.presentation.resize();
+            }
+        });
+
 
         this.openlayers = {
             'features': [],
@@ -320,29 +329,36 @@ if (!Sherd.Image.OpenLayers) {
                     while (m.controls.length) {
                         m.removeControl(m.controls[0]);
                     }
-                }
+                },
+                resize: function () {}
             },
             'default': {
                 height: function (obj, presenter) {
                     return Sherd.winHeight() + 'px';
                 },
                 width: function (obj, presenter) { return '100%'; },
-                initialize: function (obj, presenter) {
-                    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
-                    self.events.connect(window, 'resize', function () {
-                        presenter.components.top.style.height = Sherd.winHeight() + 'px';
-                    });
+                initialize: function (obj, presenter) {},
+                resize: function () {
+                    self.components.top.style.height = Sherd.winHeight() + 'px';
                 }
             },
             'medium': {
-                height: function () { return '336px'; },
-                width: function () { return '100%'; },
-                initialize: function () {/*noop*/}
+                height: function (obj, presenter) {
+                    var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
+                    return height + 'px';
+                },
+                width: function (obj, presenter) { return '100%'; },
+                initialize: function (obj, presenter) {},
+                resize: function () {
+                    var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
+                    self.components.top.style.height = height + 'px';
+                }
             },
             'small': {
                 height: function () { return '240px'; },
                 width: function () { return '320px'; },
-                initialize: function () {/*noop*/}
+                initialize: function () {/*noop*/},
+                resize: function () {}
             }
         };
 
@@ -420,7 +436,7 @@ if (!Sherd.Image.OpenLayers) {
             }
         };
         this.microformat = {};
-        this.microformat.create = function (obj, doc) {
+        this.microformat.create = function (obj, doc, options) {
             var wrapperID = Sherd.Base.newID('openlayers-wrapper');
             ///TODO:zoom-levels might be something more direct on the object?
             if (!obj.options) {
@@ -442,7 +458,8 @@ if (!Sherd.Image.OpenLayers) {
             return {
                 object: obj,
                 htmlID: wrapperID,
-                text: '<div id="' + wrapperID + '" class="sherd-openlayers-map"></div>'
+                text: '<div id="' + wrapperID + '" class="sherd-openlayers-map"></div>',
+                winHeight: options && options.functions && options.functions.winHeight ? options.functions.winHeight : Sherd.winHeight
             };
         };
         this.microformat.update = function (obj, html_dom) {
@@ -462,7 +479,7 @@ if (!Sherd.Image.OpenLayers) {
                 this.openlayers.map.destroy();
             }
         };
-        this.initialize = function (create_obj) {
+        this.initialize = function (create_obj) {            
             if (create_obj) {
                 var top = document.getElementById(create_obj.htmlID);
 
@@ -677,10 +694,14 @@ if (!Sherd.Image.OpenLayers) {
                 });
 
                 presentation.initialize(create_obj.object, self);
+                self.presentation = presentation;
             }
         };
         this.microformat.components = function (html_dom, create_obj) {
-            return {'top': html_dom};
+            return {
+                'top': html_dom,
+                'winHeight': create_obj.winHeight
+            };
         };
 
         this.queryformat = {
