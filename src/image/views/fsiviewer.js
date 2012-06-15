@@ -9,6 +9,13 @@ if (!Sherd.Image.FSIViewer) {
         this.ready = false;
         this.current_state = {type: 'fsiviewer'};
         this.intended_states = [];
+        this.presentation = null;
+        
+        this.events.connect(window, 'resize', function () {
+            if (self.presentation) {
+                self.presentation.resize();
+            }
+        });
 
         this.getState = function () {
             ///see this.initialize() for function that updates current_state
@@ -81,18 +88,16 @@ if (!Sherd.Image.FSIViewer) {
                 height: function () { return '100px'; },
                 width: function () { return '100px'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
-                initialize: function (obj, presenter) {}
+                resize: function () {}
             },
             'default': {
                 height: function (obj, presenter) { return Sherd.winHeight() + 'px'; },
                 width: function (obj, presenter) { return '100%'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
-                initialize: function (obj, presenter) {
-                    return self.events.connect(window, 'resize', function () {
-                        var top = presenter.components.top;
-                        top.setAttribute('height', Sherd.winHeight() + 'px');
-                        self.current_state.wh_ratio = (top.offsetWidth / (top.offsetHeight - 30));
-                    });
+                resize: function () {
+                    var top = self.components.top;
+                    top.setAttribute('height', Sherd.winHeight() + 'px');
+                    self.current_state.wh_ratio = (top.offsetWidth / (top.offsetHeight - 30));
                 }
             },
             'medium': {
@@ -102,39 +107,34 @@ if (!Sherd.Image.FSIViewer) {
                 },
                 width: function (obj, presenter) { return '100%'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
-                initialize: function (obj, presenter) {
-                    return self.events.connect(window, 'resize', function () {
-                        var top = presenter.components.top;
-                        var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
-                        top.setAttribute('height', height + 'px');
-                        self.current_state.wh_ratio = (top.offsetWidth / (top.offsetHeight - 30));
-                    });
+                resize: function () {
+                    var top = self.components.top;
+                    var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
+                    top.setAttribute('height', height + 'px');
+                    self.current_state.wh_ratio = (top.offsetWidth / (top.offsetHeight - 30));
                 }
             },
             'small': {
                 height: function () { return '240px'; },
                 width: function () { return '320px'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=BL',
-                initialize: function () {/*noop*/}
+                resize: function () {/*noop*/}
             }
         };
 
         this.initialize = function (create_obj) {
             ///copied from openlayers code:
-            var presentation;
             switch (typeof create_obj.object.presentation) {
             case 'string':
-                presentation = self.presentations[create_obj.object.presentation];
+                self.presentation = self.presentations[create_obj.object.presentation];
                 break;
             case 'object':
-                presentation = create_obj.object.presentation;
+                self.presentation = create_obj.object.presentation;
                 break;
             case 'undefined':
-                presentation = self.presentations['default'];
+                self.presentation = self.presentations['default'];
                 break;
             }
-
-            presentation.initialize(create_obj.object, self);
 
             var top = self.components.top;
             self.current_state.wh_ratio = (top.offsetWidth / (top.offsetHeight - 30));

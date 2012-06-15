@@ -49,6 +49,15 @@ if (!Sherd.Image.OpenLayers) {
     Sherd.Image.OpenLayers = function () {
         var self = this;
         Sherd.Base.AssetView.apply(this, arguments); //inherit
+        
+        this.presentation = null;
+        
+        this.events.connect(window, 'resize', function () {
+            if (self.presentation) {
+                self.presentation.resize();
+            }
+        });
+
 
         this.openlayers = {
             'features': [],
@@ -320,18 +329,17 @@ if (!Sherd.Image.OpenLayers) {
                     while (m.controls.length) {
                         m.removeControl(m.controls[0]);
                     }
-                }
+                },
+                resize: function () {}
             },
             'default': {
                 height: function (obj, presenter) {
                     return Sherd.winHeight() + 'px';
                 },
                 width: function (obj, presenter) { return '100%'; },
-                initialize: function (obj, presenter) {
-                    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
-                    return self.events.connect(window, 'resize', function () {
-                        presenter.components.top.style.height = Sherd.winHeight() + 'px';
-                    });
+                initialize: function (obj, presenter) {},
+                resize: function () {
+                    self.components.top.style.height = Sherd.winHeight() + 'px';
                 }
             },
             'medium': {
@@ -340,18 +348,17 @@ if (!Sherd.Image.OpenLayers) {
                     return height + 'px';
                 },
                 width: function (obj, presenter) { return '100%'; },
-                initialize: function (obj, presenter) {
-                    ///TODO:this should use presenter.events to register, so it can auto-deregister on finish
-                    return self.events.connect(window, 'resize', function () {
-                        var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
-                        presenter.components.top.style.height = height + 'px';
-                    });
+                initialize: function (obj, presenter) {},
+                resize: function () {
+                    var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
+                    self.components.top.style.height = height + 'px';
                 }
             },
             'small': {
                 height: function () { return '240px'; },
                 width: function () { return '320px'; },
-                initialize: function () {/*noop*/}
+                initialize: function () {/*noop*/},
+                resize: function () {}
             }
         };
 
@@ -472,7 +479,7 @@ if (!Sherd.Image.OpenLayers) {
                 this.openlayers.map.destroy();
             }
         };
-        this.initialize = function (create_obj) {
+        this.initialize = function (create_obj) {            
             if (create_obj) {
                 var top = document.getElementById(create_obj.htmlID);
 
@@ -687,6 +694,7 @@ if (!Sherd.Image.OpenLayers) {
                 });
 
                 presentation.initialize(create_obj.object, self);
+                self.presentation = presentation;
             }
         };
         this.microformat.components = function (html_dom, create_obj) {
