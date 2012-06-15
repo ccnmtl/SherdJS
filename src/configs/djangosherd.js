@@ -322,6 +322,7 @@ CitationView.prototype.openCitation = function (anchor) {
     var return_value = {};
     djangosherd.storage.get({id: id, type: ann_url[1]},
         function (ann_obj) {
+            self.options.deleted = false;
             return_value = self.displayCitation(anchor, ann_obj, id);
         },
         null,
@@ -384,7 +385,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
     
     if (targets.annotation_title) {
         if (self.options.deleted) {
-            targets.annotation_title.innerHTML = "<h2>Selection Deleted</h2>";
+            targets.annotation_title.innerHTML = "Selection Deleted";
         } else {
             targets.annotation_title.innerHTML =
                 ((ann_obj.metadata && ann_obj.metadata.title) ?
@@ -406,7 +407,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
             
             if (targets.annotation_title.innerHTML === "") {
                 targets.annotation_title.innerHTML = '<a href="' + asset_obj.local_url + '">' + asset_obj.title + '</a>';
-                targets.asset_title.innerHTML = '';
+                targets.asset_title.innerHTML = '&nbsp;';
             } else {
                 targets.asset_title.innerHTML =
                     ((asset_obj.title && asset_obj.local_url) ?
@@ -419,7 +420,8 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         }
         djangosherd.assetview.html.push(targets.asset, {
             asset : asset_obj,
-            targets: {clipstrip: targets.clipstrip}
+            targets: {clipstrip: targets.clipstrip},
+            functions: { winHeight: self.options.winHeight }
         });
     
         if (ann_obj.hasOwnProperty("annotations") && ann_obj.annotations.length > 0 && ann_obj.annotations[0] !== null) {
@@ -432,6 +434,8 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         djangosherd.assetview.html.remove();
         targets.asset_title.innerHTML = "";
     }
+    
+    jQuery(window).trigger("resize");
 
     var return_value = {};
     return_value.onUnload = self.unload;
