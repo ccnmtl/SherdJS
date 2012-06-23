@@ -101,9 +101,9 @@ if (!Sherd.Image.FSIViewer) {
                 }
             },
             'medium': {
-                height: function (obj, presenter) { 
+                height: function (obj, presenter) {
                     var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
-                    return height + 'px'; 
+                    return height + 'px';
                 },
                 width: function (obj, presenter) { return '100%'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
@@ -225,7 +225,7 @@ if (!Sherd.Image.FSIViewer) {
                 object: obj,
                 htmlID: fsi_object_id,
                 text: html,
-                winHeight: options && options.functions && options.functions.winHeight ? options.functions.winHeight : Sherd.winHeight 
+                winHeight: options && options.functions && options.functions.winHeight ? options.functions.winHeight : Sherd.winHeight
             };
         };
     };

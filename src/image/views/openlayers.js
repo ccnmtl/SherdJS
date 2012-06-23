@@ -479,7 +479,7 @@ if (!Sherd.Image.OpenLayers) {
                 this.openlayers.map.destroy();
             }
         };
-        this.initialize = function (create_obj) {            
+        this.initialize = function (create_obj) {          
             if (create_obj) {
                 var top = document.getElementById(create_obj.htmlID);
 
