@@ -1,6 +1,8 @@
 //requires jQuery
 if (typeof djangosherd === 'undefined') {
     djangosherd = {};
+    djangosherd.storage = new DjangoSherd_Storage();
+    djangosherd.noteform = new DjangoSherd_NoteForm();
 }
 
 // /assetview: html.pull,html.push,html.remove,setState,getState,&OPTIONAL:play
@@ -55,7 +57,6 @@ function DjangoSherd_adaptAsset(asset) {
     }
     return asset;
 }
-
 
 //Object: DjangSherd_AssetMicroFormat
 //Find and Return the assets listed in the page
@@ -168,12 +169,13 @@ function DjangoSherd_AnnotationMicroFormat() {
             ann_data.startCode = video.secondsToCode(ann_data.start);// CHOP
             ann_data.endCode = video.secondsToCode(ann_data.end);// CHOP
             rv.annotations.push(ann_data);
-        } catch (e) {/* non-valid json? */
+        } catch (e) { //non-valid json?
             Sherd.Base.log(e);
         }
         return rv;
     };
 }
+
 
 function DjangoSherd_NoteForm() {
     var self = this;
@@ -205,6 +207,7 @@ function DjangoSherd_NoteForm() {
         }
     };
 }
+
 
 function DjangoSherd_Asset_Config() {
     var ds = djangosherd;
@@ -261,6 +264,28 @@ CitationView.prototype.init = function (options) {
     
     if (self.options.default_target) {
         self.options.targets.asset = document.getElementById(self.options.default_target);
+    }
+    
+    // Create an assetview.
+    // @todo - We have potentially more than 1 assetview on the project page. The singleton nature in the
+    // core architecture means the two views are really sharing the underlying code.
+    // Consider how to resolve this contention. (It's a big change in the core.)
+    
+    // This may be DANGEROUS in any sense. The old assetview should be destroyed first?
+    if (!djangosherd.assetview) {
+        var clipform = options.hasOwnProperty('clipform') ? options.clipform : false;
+        
+        if (!clipform) {
+            djangosherd.assetview = new Sherd.GenericAssetView({ clipform: false, clipstrip: true});
+        } else {
+            // GenericAssetView is a wrapper in ../assets.js.
+            djangosherd.assetview = new Sherd.GenericAssetView({
+                'clipform': true,
+                'clipstrip': true,
+                'storage': djangosherd.noteform,
+                'targets': { clipstrip: 'clipstrip-display' }
+            });
+        }
     }
 };
       
