@@ -422,7 +422,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         
     var asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
     if (asset_obj) {
-        asset_obj.autoplay = (self.options.autoplay) ? 'true' : 'false';
+        asset_obj.autoplay = (self.options.autoplay) ? self.options.autoplay : false;
         asset_obj.presentation = self.options.presentation || 'small';
 
         if (targets.asset_title) {

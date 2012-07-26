@@ -332,6 +332,23 @@ if (!Sherd.Image.OpenLayers) {
                 },
                 resize: function () {}
             },
+            'gallery': {
+                height: function (obj, presenter) { 
+                    // scale the height
+                    return parseInt(this.width(obj, presenter)) / obj.width * obj.height + 'px';
+                },
+                width: function (obj, presenter) { 
+                    return '200px'; 
+                },
+                initialize: function (obj, presenter) {
+                    ///remove controls
+                    var m = presenter.openlayers.map;
+                    while (m.controls.length) {
+                        m.removeControl(m.controls[0]);
+                    }
+                },
+                resize: function () {}
+            },
             'default': {
                 height: function (obj, presenter) {
                     return Sherd.winHeight() + 'px';
@@ -393,6 +410,10 @@ if (!Sherd.Image.OpenLayers) {
             if (obj === null) {
                 obj = {};
             }
+            if (obj === undefined) {
+                self.currentfeature = false;
+            }
+            
             if (typeof obj === 'object' && obj !== null) {
                 if (obj.feature) {
                     self.currentfeature = obj.feature;
@@ -401,8 +422,8 @@ if (!Sherd.Image.OpenLayers) {
                 } else if (obj.xywh) {//obj is a mediafragment box
                     self.currentfeature = self.openlayers.frag2feature(obj, self.openlayers.map);
                 } else {
-                    if (obj.x) { state.x = obj.x; }
-                    if (obj.y) { state.y = obj.y; }
+                    if (obj.x !== undefined) { state.x = obj.x; }
+                    if (obj.y !== undefined) { state.y = obj.y; }
                     if (obj.zoom) { state.zoom = obj.zoom; }
                     self.currentfeature = false;
                 }
@@ -426,7 +447,7 @@ if (!Sherd.Image.OpenLayers) {
                     }
                 }
             } else if (!obj || !obj.preserveCurrentFocus) {
-                if (state.x) {
+                if (state.x !== undefined) {
                     self.openlayers.map.setCenter(
                             new OpenLayers.LonLat(state.x, state.y), state.zoom
                     );
@@ -434,6 +455,8 @@ if (!Sherd.Image.OpenLayers) {
                     self.openlayers.map.zoomToMaxExtent();
                 }
             }
+            
+           
         };
         this.microformat = {};
         this.microformat.create = function (obj, doc, options) {

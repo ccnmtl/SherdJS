@@ -90,6 +90,15 @@ if (!Sherd.Image.FSIViewer) {
                 extra: 'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
                 resize: function () {}
             },
+            'gallery': {
+                height: function (obj, presenter) { 
+                    // scale the height
+                    return parseInt(this.width(obj, presenter)) / obj.width * obj.height + 'px';
+                },
+                width: function (obj, presenter) { return '200px'; },
+                extra: 'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
+                resize: function () {}
+            },
             'default': {
                 height: function (obj, presenter) { return Sherd.winHeight() + 'px'; },
                 width: function (obj, presenter) { return '100%'; },
@@ -213,7 +222,7 @@ if (!Sherd.Image.FSIViewer) {
                 '&amp;FPXWidth=' + fpx.width +
                 '&amp;FPXHeight=' + fpx.height + '&amp;' + presentation.extra;
 
-            var html = '<object width="' + presentation.width() + '" height="' + presentation.height() + '" ' +
+            var html = '<object width="' + presentation.width(obj, self) + '" height="' + presentation.height(obj, self) + '" ' +
             'type="application/x-shockwave-flash" data="' + full_fpx_url + '" ' +
             //MS IE SUX !!!  this might break Opera--that's what you get for falsifying browser strings
             ((/MSIE/.test(navigator.userAgent)) ? ' classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' : '') +
