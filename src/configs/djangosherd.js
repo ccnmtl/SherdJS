@@ -323,47 +323,60 @@ CitationView.prototype.decorateElementLinks = function (element) {
 
 CitationView.prototype.openCitation = function (anchor) {
     var self = this;
+
+    var url = anchor.href;
     
-    if (jQuery(anchor).hasClass("disabled")) {
+    var asset_url = url.match(/(asset)\/(\d+)\//);
+    var asset_id = asset_url.pop();
+    
+    var ann_url = url.match(/(annotations)\/(\d+)\/$/);
+    var annotation_id = (ann_url && ann_url.pop()) || null;
+    
+    return self.openCitationById(anchor, asset_id, annotation_id);
+};
+
+CitationView.prototype.openCitationById = function (anchor, asset_id, annotation_id) {
+    var self = this;
+    
+    if (anchor && jQuery(anchor).hasClass("disabled")) {
         return;
     }
     
     self.unload();
     
-    // /# where is my destination?
-    // /# is there an annotation/asset already there?
-    // /# if same: leave alone
-    // /# else:
-    // /# unload oldasset,
-    // /# load asset
-    // /# else: load asset
-    // /# is annotation not-present?
-    // /# load annotation (with options (e.g. autoplay)
-    // /# update local views
-    // /# e.g. location.hash
-    var url = anchor.href;
-    var ann_url = url.match(/(asset|annotations)\/(\d+)\/$/);
-    var id = ann_url.pop();
     var return_value = {};
-    djangosherd.storage.get({id: id, type: ann_url[1]},
-        function (ann_obj) {
-            self.options.deleted = false;
-            return_value = self.displayCitation(anchor, ann_obj, id);
-        },
-        null,
-        function (error) {
-            var asset_url = url.match(/(asset)\/(\d+)\//);
-            var id = asset_url.pop();
-            djangosherd.storage.get({id: id, type: asset_url[1]}, function (asset_obj) {
-                self.options.deleted = true;
-                return_value = self.displayCitation(anchor, asset_obj, id);
-            },
-            null,
-            function (error) {
-                var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
-                return_value = self.displayCitation(anchor, obj, null);
-            });
-        });
+    var id, type;
+    if (annotation_id) {
+        id = annotation_id;
+        type = "annotations";
+    } else {
+        id = asset_id;
+        type = "asset";
+    }
+        
+    djangosherd.storage.get({id: id, type: type },
+    function (ann_obj) {
+        self.options.deleted = false;
+        return_value = self.displayCitation(anchor, ann_obj, id);
+    },
+    null,
+    function (error) {
+        if (type === "annotations") {
+            // attempt to get asset level
+            djangosherd.storage.get({id: asset_id, type: 'asset' }, function (asset_obj) {
+                    self.options.deleted = true;
+                    return_value = self.displayCitation(anchor, asset_obj, id);
+                },
+                null,
+                function (error) {
+                    var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
+                    return_value = self.displayCitation(anchor, obj, null);
+                });
+        } else {
+            var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
+            return_value = self.displayCitation(anchor, obj, null);
+        }
+    });
     return return_value;
 };
 
