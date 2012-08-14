@@ -30,6 +30,8 @@ if (!Sherd.Video.Annotators.ClipForm) {
         this.addStorage = function (stor) {
             this.targetstorage.push(stor);
         };
+        
+        this.unbind = {};
 
         // @todo -- this getState is what is used for storing
         // all the data about the video. would be better if
@@ -58,6 +60,17 @@ if (!Sherd.Video.Annotators.ClipForm) {
                     obj = {};
                     obj.start = 0;
                     obj.end = 0;
+                }
+                
+                // hook up an extra playbutton
+                if (self.unbind.hasOwnProperty('tool_play')) {
+                    self.unbind.tool_play.disconnect();
+                }
+                if (options && options.tool_play) {
+                    self.unbind.tool_play = self.events.connect(options.tool_play, 'click', function (evt) {
+                        var obj = self.getState();
+                        self.events.signal(self.targetview, 'playclip', { start: obj.start, end: obj.end });
+                    });
                 }
 
                 self.showForm();
@@ -115,7 +128,6 @@ if (!Sherd.Video.Annotators.ClipForm) {
 
                     if (self.components.clipcontrols) {
                         self.components.clipcontrols.style.display = "none";
-                        self.components.clipcontrols_readonly.style.display = "inline";
                     }
                     if (self.components.instructions) {
                         self.components.instructions.style.display = "none";
@@ -137,7 +149,6 @@ if (!Sherd.Video.Annotators.ClipForm) {
 
                     if (self.components.clipcontrols) {
                         self.components.clipcontrols.style.display = "inline";
-                        self.components.clipcontrols_readonly.style.display = "none";
                     }
                     if (self.components.instructions) {
                         self.components.instructions.style.display = "block";
@@ -215,11 +226,6 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 var obj = self.getState();
                 self.events.signal(self.targetview, 'playclip', { start: obj.start, end: obj.end });
             });
-            self.events.connect(self.components.playClip2, 'click', function (evt) {
-                var obj = self.getState();
-                self.events.signal(self.targetview, 'playclip', { start: obj.start, end: obj.end });
-            });
-
         };
 
         this.showForm = function () {
@@ -240,7 +246,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 htmlID : htmlID,
                 text : '<div id="' + htmlID + '" style="display: none">' +
                 '<div id="clipcontrols" class="sherd-clipform">' +
-                   '<p id="instructions" class="sherd-instructions">Create a selection by clicking Start Time and End Time buttons as the video plays or by manually typing in times in the associated edit boxes. Add title, tags and notes. Click Save when you are finished.</p><br />' +
+                   '<p id="instructions" class="sherd-instructions">Create a selection by clicking Start Time and End Time buttons as the video plays or by manually typing in times in the associated edit boxes. Add title, tags and notes. Click Save when you are finished.</p>' +
                       '<table>' +
                        '<tr class="sherd-clipform-editing">' +
                          '<td>' +
@@ -256,17 +262,14 @@ if (!Sherd.Video.Annotators.ClipForm) {
                          '<td>' +
                            '<input type="text" class="timecode" id="clipStart" value="' + self.components.start + '" />' +
                          '</td>' +
-                         '<td width="10px">-</td>' +
+                         '<td style="width: 10px; text-align: center">-</td>' +
                          '<td>' +
                            '<input type="text" class="timecode" id="clipEnd" value="' + self.components.end + '" />' +
                          '</td>' +
-                         '<td class="sherd-clipform-play"><input type="button" class="regButton videoplay" value="Play Selection" id="btnPlayClip"/></td>' +
+                         '<td class="sherd-clipform-play"><input type="button" class="regButton videoplay" value="Play" id="btnPlayClip"/></td>' +
                        '</tr>' +
                       '</table>' +
-                '</div>' +
-                '<div id="clipcontrols_readonly" class="sherd-clipform">' +
-                    '<span id="clipStartDisplay">' + self.components.start + '</span> - <span id="clipEndDisplay">' + self.components.end + '</span>&nbsp;&nbsp;&nbsp;<input type="button" class="regButton videoplay" value="Play Selection" id="btnPlayClip2"/>' +
-                '</div></div>'
+                '</div>'
             };
         };
 
@@ -280,9 +283,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 'startFieldDisplay' : document.getElementById('clipStartDisplay'),
                 'endFieldDisplay' : document.getElementById('clipEndDisplay'),
                 'playClip' : document.getElementById('btnPlayClip'),
-                'playClip2' : document.getElementById('btnPlayClip2'),
                 'clipcontrols' : document.getElementById('clipcontrols'),
-                'clipcontrols_readonly' : document.getElementById('clipcontrols_readonly'),
                 'instructions': document.getElementById('instructions'),
                 'start': "00:00:00",
                 'end': "00:00:00"
