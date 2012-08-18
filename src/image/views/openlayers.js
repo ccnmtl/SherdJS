@@ -481,7 +481,7 @@ if (!Sherd.Image.OpenLayers) {
             return {
                 object: obj,
                 htmlID: wrapperID,
-                text: '<div id="' + wrapperID + '" class="sherd-openlayers-map"></div>',
+                text: '<center><div id="' + wrapperID + '" class="sherd-openlayers-map"></div></center>',
                 winHeight: options && options.functions && options.functions.winHeight ? options.functions.winHeight : Sherd.winHeight
             };
         };
