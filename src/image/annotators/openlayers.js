@@ -48,6 +48,12 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                 }
             }
         };
+        
+        this.deinitialize = function () {
+            if (self.openlayers.editingtoolbar) {
+                self.openlayers.editingtoolbar = null;
+            }
+        }
 
         this.initialize = function (create_obj) {
             if (!self.openlayers.editingtoolbar) {
