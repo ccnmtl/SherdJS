@@ -579,6 +579,19 @@ function DjangoSherd_Storage() {
                     }
                     DjangoSherd_adaptAsset(a); //in-place
                     _cache.asset[a.id] = a;
+                    
+                    if (a.hasOwnProperty('annotations')) {
+                        for (var l in a.annotations) {
+                            if (a.annotations.hasOwnProperty(l)) {
+                                var ann1 = jQuery.extend({}, a.annotations[l]);
+                                ann1.asset = jQuery.extend({}, a);
+                                delete ann1.asset.annotations;
+                                delete ann1.asset.global_annotation;
+                                ann1.annotations = [ann1.annotation];
+                                _cache.annotations[ann1.id] = ann1;
+                            }
+                        }
+                    }
                 }
             }
             if (json.annotations) {

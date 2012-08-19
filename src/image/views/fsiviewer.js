@@ -11,6 +11,10 @@ if (!Sherd.Image.FSIViewer) {
         this.intended_states = [];
         this.presentation = null;
         
+        this.valid_attributes = { 'bottom': 0, 'left': 0, 'right': 0, 'top': 0,
+            'rotation': 0, 'imageUrl': '', 'scene': 0, 'set': 0, 'type': '',
+            'wh_ratio': 0 }
+        
         this.events.connect(window, 'resize', function () {
             if (self.presentation) {
                 self.presentation.resize();
@@ -38,7 +42,8 @@ if (!Sherd.Image.FSIViewer) {
         this.setState = function (obj) {
             if (obj) {
                 for (var a in obj) {
-                    if (obj.hasOwnProperty(a)) {
+                    if (obj.hasOwnProperty(a) && 
+                            self.valid_attributes.hasOwnProperty(a)) {
                         self.current_state[a] = obj[a];
                     }
                 }

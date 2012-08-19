@@ -265,9 +265,13 @@ if (!Sherd.Video.YouTube) {
             if (self.media.ready()) {
                 if (starttime !== undefined) {
                     if (autoplay || self.components.autoplay) {
-                        self.components.player.seekTo(starttime, true);
+                        if (self.components.player.seekTo) {
+                            self.components.player.seekTo(starttime, true);
+                        }
                     } else {
-                        self.components.player.cueVideoByUrl(self.components.mediaUrl, starttime);
+                        if (self.components.player.cueVideoByUrl) { 
+                            self.components.player.cueVideoByUrl(self.components.mediaUrl, starttime);
+                        }
                     }
                 }
 

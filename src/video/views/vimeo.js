@@ -256,12 +256,16 @@ if (!Sherd.Video.Vimeo) {
                 self.state.seeking = true;
 
                 if (!self.media.isPlaying()) {
-                    self.components.player.api_play();
+                    if (self.components.player.api_play) {
+                        self.components.player.api_play();
+                    }
                 }
             } else {
                 // executes immediately
                 if (starttime !== undefined) {
-                    self.components.player.api_seekTo(starttime);
+                    if (self.components.player.api_seekTo) {
+                        self.components.player.api_seekTo(starttime);
+                    }
                 }
 
                 if (endtime !== undefined) {
