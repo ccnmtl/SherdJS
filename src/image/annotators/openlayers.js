@@ -26,34 +26,32 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                 /// in an annotation rather than overwriting with the last one
                 /// but then we run into confusion where people think they're making
                 /// a lot of annotations, but really made one.
-
-                self.mode = null;
-                // options.mode == null||'create'||'browse'||'edit'||'copy'
-                if (self.openlayers.editingtoolbar) {
-                    if (!options || !options.mode || options.mode === 'browse') {
-                        // whole asset view. no annotations. or, just browsing
-                        self.openlayers.editingtoolbar.deactivate();
-                        if (self.components.instructions) {
-                            self.components.instructions.style.display = 'none';
+                
+                if (options && options.mode && options.mode === "reset") {
+                    self.openlayers.editingtoolbar = undefined;
+                } else {
+                    self.mode = null;
+                    // options.mode == null||'create'||'browse'||'edit'||'copy'
+                    if (self.openlayers.editingtoolbar) {
+                        if (!options || !options.mode || options.mode === 'browse') {
+                            // whole asset view. no annotations. or, just browsing
+                            self.openlayers.editingtoolbar.deactivate();
+                            if (self.components.instructions) {
+                                self.components.instructions.style.display = 'none';
+                            }
+                            self.mode = "browse";
+                        } else {
+                            // create, edit, copy
+                            self.openlayers.editingtoolbar.activate();
+                            if (self.components.instructions) {
+                                self.components.instructions.style.display = 'block';
+                            }
+                            self.mode = options.mode;
                         }
-                        self.mode = "browse";
-                    } else {
-                        // create, edit, copy
-                        self.openlayers.editingtoolbar.activate();
-                        if (self.components.instructions) {
-                            self.components.instructions.style.display = 'block';
-                        }
-                        self.mode = options.mode;
                     }
                 }
             }
         };
-        
-        this.deinitialize = function () {
-            if (self.openlayers.editingtoolbar) {
-                self.openlayers.editingtoolbar = null;
-            }
-        }
 
         this.initialize = function (create_obj) {
             if (!self.openlayers.editingtoolbar) {
