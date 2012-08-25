@@ -440,7 +440,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
 
         if (targets.asset_title) {
             if (targets.create_selection) {
-                targets.create_selection.innerHTML = '<a href="' + asset_obj.local_url + '?edit_state=new">Create Selection</a>';
+                targets.create_selection.innerHTML = '<a href="' + asset_obj.local_url + '#edit_state=new">Create Selection</a>';
             }
             
             if (targets.annotation_title.innerHTML === "") {
