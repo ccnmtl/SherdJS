@@ -302,7 +302,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 if (create_obj.object.poster) {
                     options.clip.coverImage = { url: create_obj.object.poster, scaling: 'orig' };
                 } else if (create_obj.playerParams.provider === "audio") {
-                    options.clip.coverImage = { url: "http://mediathread/site_media/img/poster_audio.png", scaling: 'orig' };
+                    options.clip.coverImage = { url: "http://mediathread.ccnmtl.columbia.edu/site_media/img/poster_audio.png", scaling: 'orig' };
                 }
                 
                 if (create_obj.playerParams.provider === 'pseudo') {
