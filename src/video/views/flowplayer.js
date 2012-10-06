@@ -235,12 +235,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         if (self.media.state() > 2) {
                             if (self.media.duration() > 0) {
                                 return true;
-                            } else if (self.media.isPlaying() && self.components.player.getClip().type === 'audio') {
-                                ///SUPER HACKY: MP3's don't load duration until a pause event
-                                ///http://flowplayer.org/forum/8/37767
-                                ///so we really quickly pause/play for MP3's
-                                self.components.player.pause();
-                                self.components.player.play();
                             }
                         }
                         return (self.media.state() > 2 && self.media.duration() > 0);
@@ -279,9 +273,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         }
                     },
                     plugins: {
-                        pseudo: { url: 'flowplayer.pseudostreaming-3.2.9.swf' },
-                        rtmp: { url: 'flowplayer.rtmp-3.2.9.swf' },
-                        audio: { url: 'flowplayer.audio-3.2.8.swf' },
                         controls: {
                             autoHide: false,
                             volume: true,
@@ -301,8 +292,17 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     options.playlist[0].provider = create_obj.playerParams.provider;
                 }
                 
+                if (create_obj.playerParams.provider === "audio") {
+                    options.plugins.audio = { url: 'flowplayer.audio-3.2.8.swf' };
+                } else {
+                    options.plugins.pseudo = { url: 'flowplayer.pseudostreaming-3.2.9.swf' };
+                    options.plugins.rtmp = { url: 'flowplayer.rtmp-3.2.9.swf' };
+                }
+                
                 if (create_obj.object.poster) {
                     options.clip.coverImage = { url: create_obj.object.poster, scaling: 'orig' };
+                } else if (create_obj.playerParams.provider === "audio") {
+                    options.clip.coverImage = { url: "http://mediathread/site_media/img/poster_audio.png", scaling: 'orig' };
                 }
                 
                 if (create_obj.playerParams.provider === 'pseudo') {
@@ -462,7 +462,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var w = self.components.width;
             return {w: w,
                     trackX: 45,
-                    trackWidth: w - 175,
+                    trackWidth: w - 180,
                     visible: true
                    };
         };
