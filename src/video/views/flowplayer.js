@@ -293,7 +293,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 }
                 
                 if (create_obj.playerParams.provider === "audio") {
-                    options.plugins.audio = { url: 'flowplayer.audio-3.2.8.swf' };
+                    options.plugins.audio = { url: 'flowplayer.audio-3.2.10.swf' };
                 } else {
                     options.plugins.pseudo = { url: 'flowplayer.pseudostreaming-3.2.9.swf' };
                     options.plugins.rtmp = { url: 'flowplayer.rtmp-3.2.9.swf' };
@@ -381,17 +381,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 self.components.player.pause();
             }
         };
-        
-        // this.media.pauseAt notes --
-        // using the standard timer mechanism
-        // Using this method over the Flowplayer's specific "duration" function
-        // as the duration cuts the end of the movie in the player, so you can't see
-        // the whole thing. Would be great clip functionality, but not for us.
-        //
-        // Also tried cuepoints. they're great, but there's no way to programmatically remove a cuepoint
-        // this is problematic for us, so am sticking with timers for the moment
-        // self.components.player.onCuepoint(endtime * 1000, function (clip, cuepoint) { self.media.pause(); });
-        
+
         this.media.play = function () {
             if (self.components.player) {
                 self.components.player.play();
@@ -458,11 +448,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         };
         
         this.media.timestrip = function () {
-            ///TODO: ugh, flowplayer changes scrubber length based on duration timecode
             var w = self.components.width;
             return {w: w,
-                    trackX: 45,
-                    trackWidth: w - 180,
+                    trackX: 43,
+                    trackWidth: w - 177,
                     visible: true
                    };
         };
