@@ -295,8 +295,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 if (create_obj.playerParams.provider === "audio") {
                     options.plugins.audio = { url: 'flowplayer.audio-3.2.10.swf' };
                 } else {
-                    options.plugins.pseudo = { url: 'flowplayer.pseudostreaming-3.2.9.swf' };
-                    options.plugins.rtmp = { url: 'flowplayer.rtmp-3.2.9.swf' };
+                    options.plugins.pseudo = { url: 'flowplayer.pseudostreaming-3.2.11.swf' };
+                    options.plugins.rtmp = { url: 'flowplayer.rtmp-3.2.11.swf' };
                 }
                 
                 if (create_obj.object.poster) {

@@ -177,7 +177,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
                 width = 0;
             }
 
-            self.components.clipStartMarker.style.left = (left - 4) + 'px';
+            self.components.clipStartMarker.style.left = (left - CLIP_MARKER_WIDTH) + 'px';
             self.components.clipEndMarker.style.left = right + 'px';
             self.components.clipRange.style.left = left + "px";
             self.components.clipRange.style.width = width + 'px';
