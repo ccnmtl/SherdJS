@@ -325,6 +325,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
     
                 // Save reference to the player
                 self.components.player = $f(create_obj.playerID);
+                self.components.provider = create_obj.playerParams.provider;
                 
                 // Setup timers to watch for readiness to seek/setState
                 self.microformat._queueReadyToSeekEvent();
@@ -356,6 +357,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     test : function () {
                         self.components.elapsed.innerHTML =
                             self.secondsToCode(self.media.time());
+                        
+                        if (self.components.provider === "audio") {
+                            self.media.duration();
+                        }
                     },
                     poll: 1000
                 }]);
@@ -371,6 +376,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 var fullDuration = self.components.player.getPlaylist()[0].fullDuration;
                 if (fullDuration) {
                     duration = fullDuration;
+                    
+                    if (self.components.lastDuration !== fullDuration) {
+                        // signal the change
+                        
+                        self.events.signal(self/*==view*/, 'duration', { duration: fullDuration });
+                        self.components.lastDuration = fullDuration;
+                    }
                 }
             }
             return duration;
@@ -406,8 +418,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         };
         
         this.media.seek = function (starttime, endtime, autoplay) {
-            // this might need to be a timer to determine "when" the media player is ready
-            // it's working differently from initial load to the update method
+            // Reset the saved duration
+            self.components.lastDuration = 0;
+            
             if (!self.media.ready()) {
                 self.state.starttime = starttime;
                 self.state.endtime = endtime;
@@ -425,8 +438,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 delete self.state.endtime;
                 
                 // Delay the play for a few milliseconds
-                // In an update situation, we need a little time for the seek
-                // to happen before play occurs. Otherwise, the movie just
+                // We need a little time for Flowplayer to process the seek
+                // before play occurs. Otherwise, the player just
                 // starts from the beginning of the clip and ignores the seek
                 if ((autoplay || self.components.autoplay) && self.media.state() !== 3) {
                     setTimeout(function () {
@@ -448,10 +461,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         };
         
         this.media.timestrip = function () {
+            // The clipstrip is calibrated to the flowplayer scrubber
+            // Visually, it looks a little "short", but trust, it tags along
+            // with the circle shaped thumb properly.
             var w = self.components.width;
             return {w: w,
-                    trackX: 43,
-                    trackWidth: w - 177,
+                    trackX: 47,
+                    trackWidth: w - 185,
                     visible: true
                    };
         };
