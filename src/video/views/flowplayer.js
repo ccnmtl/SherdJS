@@ -110,6 +110,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.timedisplay = document.getElementById(create_obj.timedisplayID);
                     rv.elapsed = document.getElementById(create_obj.currentTimeID);
                     rv.duration = document.getElementById(create_obj.durationID);
+                    rv.lastDuration = 0;
                 }
                 return rv;
             } catch (e) {}
@@ -378,8 +379,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     duration = fullDuration;
                     
                     if (self.components.lastDuration !== fullDuration) {
-                        // signal the change
-                        
+                        // signal the change                        
                         self.events.signal(self/*==view*/, 'duration', { duration: fullDuration });
                         self.components.lastDuration = fullDuration;
                     }
