@@ -13,7 +13,7 @@ if (!Sherd.Image.FSIViewer) {
         
         this.valid_attributes = { 'bottom': 0, 'left': 0, 'right': 0, 'top': 0,
             'rotation': 0, 'imageUrl': '', 'scene': 0, 'set': 0, 'type': '',
-            'wh_ratio': 0 }
+            'wh_ratio': 0 };
         
         this.events.connect(window, 'resize', function () {
             if (self.presentation) {
@@ -42,7 +42,7 @@ if (!Sherd.Image.FSIViewer) {
         this.setState = function (obj) {
             if (obj) {
                 for (var a in obj) {
-                    if (obj.hasOwnProperty(a) && 
+                    if (obj.hasOwnProperty(a) &&
                             self.valid_attributes.hasOwnProperty(a)) {
                         self.current_state[a] = obj[a];
                     }
@@ -96,9 +96,9 @@ if (!Sherd.Image.FSIViewer) {
                 resize: function () {}
             },
             'gallery': {
-                height: function (obj, presenter) { 
+                height: function (obj, presenter) {
                     // scale the height
-                    return parseInt(this.width(obj, presenter)) / obj.width * obj.height + 'px';
+                    return parseInt(this.width(obj, presenter), 10) / obj.width * obj.height + 'px';
                 },
                 width: function (obj, presenter) { return '200px'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',

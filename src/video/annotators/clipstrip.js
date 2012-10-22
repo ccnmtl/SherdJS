@@ -214,7 +214,7 @@ if (!Sherd.Video.Annotators.ClipStrip) {
             if (duration > 0) {
                 var ratio = width / duration;
                 var pos = ratio * seconds;
-                return Math.round(Number(pos))
+                return Math.round(Number(pos));
             } else {
                 return 0;
             }

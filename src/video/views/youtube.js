@@ -269,7 +269,7 @@ if (!Sherd.Video.YouTube) {
                             self.components.player.seekTo(starttime, true);
                         }
                     } else {
-                        if (self.components.player.cueVideoByUrl) { 
+                        if (self.components.player.cueVideoByUrl) {
                             self.components.player.cueVideoByUrl(self.components.mediaUrl, starttime);
                         }
                     }

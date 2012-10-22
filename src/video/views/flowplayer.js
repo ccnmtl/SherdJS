@@ -379,7 +379,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     duration = fullDuration;
                     
                     if (self.components.lastDuration !== fullDuration) {
-                        // signal the change                        
+                        // signal the change
                         self.events.signal(self/*==view*/, 'duration', { duration: fullDuration });
                         self.components.lastDuration = fullDuration;
                     }

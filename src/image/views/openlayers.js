@@ -333,12 +333,12 @@ if (!Sherd.Image.OpenLayers) {
                 resize: function () {}
             },
             'gallery': {
-                height: function (obj, presenter) { 
+                height: function (obj, presenter) {
                     // scale the height
-                    return parseInt(this.width(obj, presenter)) / obj.width * obj.height + 'px';
+                    return parseInt(this.width(obj, presenter), 10) / obj.width * obj.height + 'px';
                 },
-                width: function (obj, presenter) { 
-                    return '200px'; 
+                width: function (obj, presenter) {
+                    return '200px';
                 },
                 initialize: function (obj, presenter) {
                     ///remove controls
@@ -502,7 +502,7 @@ if (!Sherd.Image.OpenLayers) {
                 this.openlayers.map.destroy();
             }
         };
-        this.initialize = function (create_obj) {          
+        this.initialize = function (create_obj) {
             if (create_obj) {
                 var top = document.getElementById(create_obj.htmlID);
 
