@@ -91,6 +91,15 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                       '</div>' +
                      '</div>'
             };
+            
+            if (obj.metadata) {
+                for (var i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].key === 'duration') {
+                        create_obj.staticDuration = obj.metadata[i].value;
+                    }
+                }
+            }
+            
             return create_obj;
         };
         
@@ -109,8 +118,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.autoplay = create_obj.object.autoplay ? true : false;
                     rv.timedisplay = document.getElementById(create_obj.timedisplayID);
                     rv.elapsed = document.getElementById(create_obj.currentTimeID);
-                    rv.duration = document.getElementById(create_obj.durationID);
+                    rv.duration = document.getElementById(create_obj.durationID);                    
                     rv.lastDuration = 0;
+                    
+                    if (create_obj.staticDuration) {
+                        rv.staticDuration = create_obj.staticDuration;
+                    }
                 }
                 return rv;
             } catch (e) {}
@@ -373,7 +386,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
 
         this.media.duration = function () {
             var duration = 0;
-            if (self.components.player && self.components.player.isLoaded()) {
+            if (self.components.staticDuration) {
+                // Audio has major issues resolving duration. Pick up statically
+                // described duration metadata if available.
+                duration = self.components.staticDuration;
+            } else if (self.components.player && self.components.player.isLoaded()) {
                 var fullDuration = self.components.player.getPlaylist()[0].fullDuration;
                 if (fullDuration) {
                     duration = fullDuration;
