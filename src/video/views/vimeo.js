@@ -152,7 +152,7 @@ if (!Sherd.Video.Vimeo) {
                 self.state.seeking = false;
                 delete self.state.autoplay;
 
-                if (self.state.starttime !== undefined) {
+                if (self.state.starttime !== undefined && self.state.starttime > 0) {
                     self.components.player.api_seekTo(self.state.starttime);
                     delete self.state.starttime;
                 }
@@ -256,12 +256,16 @@ if (!Sherd.Video.Vimeo) {
                 self.state.seeking = true;
 
                 if (!self.media.isPlaying()) {
-                    self.components.player.api_play();
+                    if (self.components.player.api_play) {
+                        self.components.player.api_play();
+                    }
                 }
-            } else {
+            } else if (self.media.isPlaying() || self.state.seeking || self.state.autoplay) {
                 // executes immediately
-                if (starttime !== undefined) {
-                    self.components.player.api_seekTo(starttime);
+                if (starttime !== undefined && starttime > 0) {
+                    if (self.components.player.api_seekTo) {
+                        self.components.player.api_seekTo(starttime);
+                    }
                 }
 
                 if (endtime !== undefined) {

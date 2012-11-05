@@ -11,6 +11,10 @@ if (!Sherd.Image.FSIViewer) {
         this.intended_states = [];
         this.presentation = null;
         
+        this.valid_attributes = { 'bottom': 0, 'left': 0, 'right': 0, 'top': 0,
+            'rotation': 0, 'imageUrl': '', 'scene': 0, 'set': 0, 'type': '',
+            'wh_ratio': 0 };
+        
         this.events.connect(window, 'resize', function () {
             if (self.presentation) {
                 self.presentation.resize();
@@ -38,7 +42,8 @@ if (!Sherd.Image.FSIViewer) {
         this.setState = function (obj) {
             if (obj) {
                 for (var a in obj) {
-                    if (obj.hasOwnProperty(a)) {
+                    if (obj.hasOwnProperty(a) &&
+                            self.valid_attributes.hasOwnProperty(a)) {
                         self.current_state[a] = obj[a];
                     }
                 }
@@ -90,6 +95,15 @@ if (!Sherd.Image.FSIViewer) {
                 extra: 'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
                 resize: function () {}
             },
+            'gallery': {
+                height: function (obj, presenter) {
+                    // scale the height
+                    return parseInt(this.width(obj, presenter), 10) / obj.width * obj.height + 'px';
+                },
+                width: function (obj, presenter) { return '200px'; },
+                extra: 'CustomButton_buttons=&amp;NoNav=true&amp;MenuAlign=TL&amp;HideUI=true',
+                resize: function () {}
+            },
             'default': {
                 height: function (obj, presenter) { return Sherd.winHeight() + 'px'; },
                 width: function (obj, presenter) { return '100%'; },
@@ -101,9 +115,9 @@ if (!Sherd.Image.FSIViewer) {
                 }
             },
             'medium': {
-                height: function (obj, presenter) { 
+                height: function (obj, presenter) {
                     var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
-                    return height + 'px'; 
+                    return height + 'px';
                 },
                 width: function (obj, presenter) { return '100%'; },
                 extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
@@ -213,7 +227,7 @@ if (!Sherd.Image.FSIViewer) {
                 '&amp;FPXWidth=' + fpx.width +
                 '&amp;FPXHeight=' + fpx.height + '&amp;' + presentation.extra;
 
-            var html = '<object width="' + presentation.width() + '" height="' + presentation.height() + '" ' +
+            var html = '<object width="' + presentation.width(obj, self) + '" height="' + presentation.height(obj, self) + '" ' +
             'type="application/x-shockwave-flash" data="' + full_fpx_url + '" ' +
             //MS IE SUX !!!  this might break Opera--that's what you get for falsifying browser strings
             ((/MSIE/.test(navigator.userAgent)) ? ' classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' : '') +
@@ -225,7 +239,7 @@ if (!Sherd.Image.FSIViewer) {
                 object: obj,
                 htmlID: fsi_object_id,
                 text: html,
-                winHeight: options && options.functions && options.functions.winHeight ? options.functions.winHeight : Sherd.winHeight 
+                winHeight: options && options.functions && options.functions.winHeight ? options.functions.winHeight : Sherd.winHeight
             };
         };
     };

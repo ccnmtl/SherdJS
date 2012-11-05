@@ -168,7 +168,10 @@ if (!Sherd.Video.Annotators.ClipStrip) {
 
         this.microformat._resize = function () {
             var left = self.microformat._timeToPixels(self.components.starttime, self.components.duration, self.components.timestrip.trackWidth);
-            var right = self.microformat._timeToPixels(self.components.endtime, self.components.duration, self.components.timestrip.trackWidth);
+            
+            var endtime = self.components.endtime > self.components.duration ? self.components.duration : self.components.endtime;
+            
+            var right = self.microformat._timeToPixels(endtime, self.components.duration, self.components.timestrip.trackWidth);
             var width = right - left;
             if (width < 0) {
                 width = 0;
@@ -189,9 +192,11 @@ if (!Sherd.Video.Annotators.ClipStrip) {
                     for (var annotationName in layer._anns) {
                         if (layer._anns.hasOwnProperty(annotationName)) {
                             var annotation = layer._anns[annotationName];
+                            
+                            endtime = annotation.endtime > self.components.duration ? self.components.duration : annotation.endtime;
         
                             left = self.microformat._timeToPixels(annotation.starttime, self.components.duration, self.components.timestrip.trackWidth);
-                            right = self.microformat._timeToPixels(annotation.endtime, self.components.duration, self.components.timestrip.trackWidth);
+                            right = self.microformat._timeToPixels(endtime, self.components.duration, self.components.timestrip.trackWidth);
                             width = (right - left);
                             if (width < 0) {
                                 width = 0;
@@ -208,7 +213,8 @@ if (!Sherd.Video.Annotators.ClipStrip) {
         this.microformat._timeToPixels = function (seconds, duration, width) {
             if (duration > 0) {
                 var ratio = width / duration;
-                return ratio * seconds;
+                var pos = ratio * seconds;
+                return Math.round(Number(pos));
             } else {
                 return 0;
             }

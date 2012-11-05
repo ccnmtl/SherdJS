@@ -91,6 +91,15 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                       '</div>' +
                      '</div>'
             };
+            
+            if (obj.metadata) {
+                for (var i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].key === 'duration') {
+                        create_obj.staticDuration = obj.metadata[i].value;
+                    }
+                }
+            }
+            
             return create_obj;
         };
         
@@ -109,7 +118,12 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.autoplay = create_obj.object.autoplay ? true : false;
                     rv.timedisplay = document.getElementById(create_obj.timedisplayID);
                     rv.elapsed = document.getElementById(create_obj.currentTimeID);
-                    rv.duration = document.getElementById(create_obj.durationID);
+                    rv.duration = document.getElementById(create_obj.durationID);                    
+                    rv.lastDuration = 0;
+                    
+                    if (create_obj.staticDuration) {
+                        rv.staticDuration = create_obj.staticDuration;
+                    }
                 }
                 return rv;
             } catch (e) {}
@@ -235,12 +249,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         if (self.media.state() > 2) {
                             if (self.media.duration() > 0) {
                                 return true;
-                            } else if (self.media.isPlaying() && self.components.player.getClip().type === 'audio') {
-                                ///SUPER HACKY: MP3's don't load duration until a pause event
-                                ///http://flowplayer.org/forum/8/37767
-                                ///so we really quickly pause/play for MP3's
-                                self.components.player.pause();
-                                self.components.player.play();
                             }
                         }
                         return (self.media.state() > 2 && self.media.duration() > 0);
@@ -279,9 +287,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         }
                     },
                     plugins: {
-                        pseudo: { url: 'flowplayer.pseudostreaming-3.2.9.swf' },
-                        rtmp: { url: 'flowplayer.rtmp-3.2.9.swf' },
-                        audio: { url: 'flowplayer.audio-3.2.8.swf' },
                         controls: {
                             autoHide: false,
                             volume: true,
@@ -301,8 +306,21 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     options.playlist[0].provider = create_obj.playerParams.provider;
                 }
                 
+                if (create_obj.staticDuration) {
+                    options.clip.duration = create_obj.staticDuration;
+                }
+                
+                if (create_obj.playerParams.provider === "audio") {
+                    options.plugins.audio = { url: 'flowplayer.audio-3.2.10.swf' };                    
+                } else {
+                    options.plugins.pseudo = { url: 'flowplayer.pseudostreaming-3.2.11.swf' };
+                    options.plugins.rtmp = { url: 'flowplayer.rtmp-3.2.11.swf' };
+                }
+                
                 if (create_obj.object.poster) {
                     options.clip.coverImage = { url: create_obj.object.poster, scaling: 'orig' };
+                } else if (create_obj.playerParams.provider === "audio") {
+                    options.clip.coverImage = { url: "http://mediathread.ccnmtl.columbia.edu/site_media/img/poster_audio.png", scaling: 'orig' };
                 }
                 
                 if (create_obj.playerParams.provider === 'pseudo') {
@@ -325,6 +343,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
     
                 // Save reference to the player
                 self.components.player = $f(create_obj.playerID);
+                self.components.provider = create_obj.playerParams.provider;
                 
                 // Setup timers to watch for readiness to seek/setState
                 self.microformat._queueReadyToSeekEvent();
@@ -356,6 +375,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     test : function () {
                         self.components.elapsed.innerHTML =
                             self.secondsToCode(self.media.time());
+                        
+                        if (self.components.provider === "audio") {
+                            self.media.duration();
+                        }
                     },
                     poll: 1000
                 }]);
@@ -367,10 +390,20 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
 
         this.media.duration = function () {
             var duration = 0;
-            if (self.components.player && self.components.player.isLoaded()) {
+            if (self.components.staticDuration) {
+                // Audio has major issues resolving duration. Pick up statically
+                // described duration metadata if available.
+                duration = self.components.staticDuration;
+            } else if (self.components.player && self.components.player.isLoaded()) {
                 var fullDuration = self.components.player.getPlaylist()[0].fullDuration;
                 if (fullDuration) {
                     duration = fullDuration;
+                    
+                    if (self.components.lastDuration !== fullDuration) {
+                        // signal the change
+                        self.events.signal(self/*==view*/, 'duration', { duration: fullDuration });
+                        self.components.lastDuration = fullDuration;
+                    }
                 }
             }
             return duration;
@@ -381,17 +414,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 self.components.player.pause();
             }
         };
-        
-        // this.media.pauseAt notes --
-        // using the standard timer mechanism
-        // Using this method over the Flowplayer's specific "duration" function
-        // as the duration cuts the end of the movie in the player, so you can't see
-        // the whole thing. Would be great clip functionality, but not for us.
-        //
-        // Also tried cuepoints. they're great, but there's no way to programmatically remove a cuepoint
-        // this is problematic for us, so am sticking with timers for the moment
-        // self.components.player.onCuepoint(endtime * 1000, function (clip, cuepoint) { self.media.pause(); });
-        
+
         this.media.play = function () {
             if (self.components.player) {
                 self.components.player.play();
@@ -416,8 +439,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         };
         
         this.media.seek = function (starttime, endtime, autoplay) {
-            // this might need to be a timer to determine "when" the media player is ready
-            // it's working differently from initial load to the update method
+            // Reset the saved duration
+            self.components.lastDuration = 0;
+            
             if (!self.media.ready()) {
                 self.state.starttime = starttime;
                 self.state.endtime = endtime;
@@ -435,8 +459,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 delete self.state.endtime;
                 
                 // Delay the play for a few milliseconds
-                // In an update situation, we need a little time for the seek
-                // to happen before play occurs. Otherwise, the movie just
+                // We need a little time for Flowplayer to process the seek
+                // before play occurs. Otherwise, the player just
                 // starts from the beginning of the clip and ignores the seek
                 if ((autoplay || self.components.autoplay) && self.media.state() !== 3) {
                     setTimeout(function () {
@@ -458,11 +482,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         };
         
         this.media.timestrip = function () {
-            ///TODO: ugh, flowplayer changes scrubber length based on duration timecode
+            // The clipstrip is calibrated to the flowplayer scrubber
+            // Visually, it looks a little "short", but trust, it tags along
+            // with the circle shaped thumb properly.
             var w = self.components.width;
             return {w: w,
-                    trackX: 45,
-                    trackWidth: w - 175,
+                    trackX: 47,
+                    trackWidth: w - 185,
                     visible: true
                    };
         };

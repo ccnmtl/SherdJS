@@ -1,6 +1,8 @@
 //requires jQuery
 if (typeof djangosherd === 'undefined') {
     djangosherd = {};
+    djangosherd.storage = new DjangoSherd_Storage();
+    djangosherd.noteform = new DjangoSherd_NoteForm();
 }
 
 // /assetview: html.pull,html.push,html.remove,setState,getState,&OPTIONAL:play
@@ -55,7 +57,6 @@ function DjangoSherd_adaptAsset(asset) {
     }
     return asset;
 }
-
 
 //Object: DjangSherd_AssetMicroFormat
 //Find and Return the assets listed in the page
@@ -168,12 +169,13 @@ function DjangoSherd_AnnotationMicroFormat() {
             ann_data.startCode = video.secondsToCode(ann_data.start);// CHOP
             ann_data.endCode = video.secondsToCode(ann_data.end);// CHOP
             rv.annotations.push(ann_data);
-        } catch (e) {/* non-valid json? */
+        } catch (e) { //non-valid json?
             Sherd.Base.log(e);
         }
         return rv;
     };
 }
+
 
 function DjangoSherd_NoteForm() {
     var self = this;
@@ -205,6 +207,7 @@ function DjangoSherd_NoteForm() {
         }
     };
 }
+
 
 function DjangoSherd_Asset_Config() {
     var ds = djangosherd;
@@ -262,6 +265,28 @@ CitationView.prototype.init = function (options) {
     if (self.options.default_target) {
         self.options.targets.asset = document.getElementById(self.options.default_target);
     }
+    
+    // Create an assetview.
+    // @todo - We have potentially more than 1 assetview on the project page. The singleton nature in the
+    // core architecture means the two views are really sharing the underlying code.
+    // Consider how to resolve this contention. (It's a big change in the core.)
+    
+    // This may be DANGEROUS in any sense. The old assetview should be destroyed first?
+    if (!djangosherd.assetview) {
+        var clipform = options.hasOwnProperty('clipform') ? options.clipform : false;
+        
+        if (!clipform) {
+            djangosherd.assetview = new Sherd.GenericAssetView({ clipform: false, clipstrip: true});
+        } else {
+            // GenericAssetView is a wrapper in ../assets.js.
+            djangosherd.assetview = new Sherd.GenericAssetView({
+                'clipform': true,
+                'clipstrip': true,
+                'storage': djangosherd.noteform,
+                'targets': { clipstrip: 'clipstrip-display' }
+            });
+        }
+    }
 };
       
 CitationView.prototype.decorateLinks = function (parent) {
@@ -298,47 +323,60 @@ CitationView.prototype.decorateElementLinks = function (element) {
 
 CitationView.prototype.openCitation = function (anchor) {
     var self = this;
+
+    var url = anchor.href;
     
-    if (jQuery(anchor).hasClass("disabled")) {
+    var asset_url = url.match(/(asset)\/(\d+)\//);
+    var asset_id = asset_url.pop();
+    
+    var ann_url = url.match(/(annotations)\/(\d+)\/$/);
+    var annotation_id = (ann_url && ann_url.pop()) || null;
+    
+    return self.openCitationById(anchor, asset_id, annotation_id);
+};
+
+CitationView.prototype.openCitationById = function (anchor, asset_id, annotation_id) {
+    var self = this;
+    
+    if (anchor && jQuery(anchor).hasClass("disabled")) {
         return;
     }
     
     self.unload();
     
-    // /# where is my destination?
-    // /# is there an annotation/asset already there?
-    // /# if same: leave alone
-    // /# else:
-    // /# unload oldasset,
-    // /# load asset
-    // /# else: load asset
-    // /# is annotation not-present?
-    // /# load annotation (with options (e.g. autoplay)
-    // /# update local views
-    // /# e.g. location.hash
-    var url = anchor.href;
-    var ann_url = url.match(/(asset|annotations)\/(\d+)\/$/);
-    var id = ann_url.pop();
     var return_value = {};
-    djangosherd.storage.get({id: id, type: ann_url[1]},
-        function (ann_obj) {
-            self.options.deleted = false;
-            return_value = self.displayCitation(anchor, ann_obj, id);
-        },
-        null,
-        function (error) {
-            var asset_url = url.match(/(asset)\/(\d+)\//);
-            var id = asset_url.pop();
-            djangosherd.storage.get({id: id, type: asset_url[1]}, function (asset_obj) {
-                self.options.deleted = true;
-                return_value = self.displayCitation(anchor, asset_obj, id);
-            },
-            null,
-            function (error) {
-                var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
-                return_value = self.displayCitation(anchor, obj, null);
-            });
-        });
+    var id, type;
+    if (annotation_id) {
+        id = annotation_id;
+        type = "annotations";
+    } else {
+        id = asset_id;
+        type = "asset";
+    }
+        
+    djangosherd.storage.get({id: id, type: type },
+    function (ann_obj) {
+        self.options.deleted = false;
+        return_value = self.displayCitation(anchor, ann_obj, id);
+    },
+    null,
+    function (error) {
+        if (type === "annotations") {
+            // attempt to get asset level
+            djangosherd.storage.get({id: asset_id, type: 'asset' }, function (asset_obj) {
+                    self.options.deleted = true;
+                    return_value = self.displayCitation(anchor, asset_obj, id);
+                },
+                null,
+                function (error) {
+                    var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
+                    return_value = self.displayCitation(anchor, obj, null);
+                });
+        } else {
+            var obj = { 'asset': null, 'metadata': { 'title': 'Item Deleted' } };
+            return_value = self.displayCitation(anchor, obj, null);
+        }
+    });
     return return_value;
 };
 
@@ -397,12 +435,12 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         
     var asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
     if (asset_obj) {
-        asset_obj.autoplay = (self.options.autoplay) ? 'true' : 'false';
+        asset_obj.autoplay = (self.options.autoplay) ? self.options.autoplay : false;
         asset_obj.presentation = self.options.presentation || 'small';
 
         if (targets.asset_title) {
             if (targets.create_selection) {
-                targets.create_selection.innerHTML = '<a href="' + asset_obj.local_url + '?edit_state=new">Create Selection</a>';
+                targets.create_selection.innerHTML = '<a href="' + asset_obj.local_url + '#edit_state=new">Create Selection</a>';
             }
             
             if (targets.annotation_title.innerHTML === "") {
@@ -443,11 +481,6 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
     return_value.object = ann_obj;
     return_value.id = id;
     return_value.target = asset_target;
-
-    if (!/WebKit/.test(navigator.userAgent)) {
-        //WebKit doesn't replace history correctly
-        document.location.replace('#annotation=annotation' + id);
-    }
     return return_value;
 };
 
@@ -541,6 +574,19 @@ function DjangoSherd_Storage() {
                     }
                     DjangoSherd_adaptAsset(a); //in-place
                     _cache.asset[a.id] = a;
+                    
+                    if (a.hasOwnProperty('annotations')) {
+                        for (var l in a.annotations) {
+                            if (a.annotations.hasOwnProperty(l)) {
+                                var ann1 = jQuery.extend({}, a.annotations[l]);
+                                ann1.asset = jQuery.extend({}, a);
+                                delete ann1.asset.annotations;
+                                delete ann1.asset.global_annotation;
+                                ann1.annotations = [ann1.annotation];
+                                _cache.annotations[ann1.id] = ann1;
+                            }
+                        }
+                    }
                 }
             }
             if (json.annotations) {
