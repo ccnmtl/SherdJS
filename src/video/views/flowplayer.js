@@ -118,7 +118,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.autoplay = create_obj.object.autoplay ? true : false;
                     rv.timedisplay = document.getElementById(create_obj.timedisplayID);
                     rv.elapsed = document.getElementById(create_obj.currentTimeID);
-                    rv.duration = document.getElementById(create_obj.durationID);                    
+                    rv.duration = document.getElementById(create_obj.durationID);
                     rv.lastDuration = 0;
                     
                     if (create_obj.staticDuration) {
@@ -220,6 +220,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             } else if (obj.mp3) {
                 rc.url = obj.mp3;
                 rc.provider = 'audio';
+            } else if (obj.mp4_audio) {
+                rc.url = obj.mp4_audio;
+                rc.provider = 'pseudo';
             }
             if (rc.provider === 'pseudo' && /\{start\}/.test(rc.url)) {
                 var pieces = rc.url.split('?');
@@ -311,7 +314,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 }
                 
                 if (create_obj.playerParams.provider === "audio") {
-                    options.plugins.audio = { url: 'flowplayer.audio-3.2.10.swf' };                    
+                    options.plugins.audio = { url: 'flowplayer.audio-3.2.10.swf' };
                 } else {
                     options.plugins.pseudo = { url: 'flowplayer.pseudostreaming-3.2.11.swf' };
                     options.plugins.rtmp = { url: 'flowplayer.rtmp-3.2.11.swf' };
