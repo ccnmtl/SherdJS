@@ -17,7 +17,10 @@ function legacy_json(unparsed_json) {
 }
 
 function DjangoSherd_adaptAsset(asset) {
-    if (asset.flv || asset.flv_pseudo || asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp || asset.flv_rtmp || asset.video_pseudo || asset.video_rtmp || asset.video || asset.mp3) {
+    if (asset.flv || asset.flv_pseudo ||
+        asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp ||
+        asset.flv_rtmp || asset.video_pseudo || asset.video_rtmp ||
+        asset.video || asset.mp3 || asset.mp4_audio) {
         asset.type = 'flowplayer';
     } else if (asset.youtube) {
         asset.type = 'youtube';
