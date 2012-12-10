@@ -156,7 +156,7 @@ if (!Sherd.GenericAssetView) {
                         console.log(options);
                         console.log(self.settings);
                     }
-                    throw Error("Your asset does not have a (supported) type marked.");
+                    throw new Error("Your asset does not have a (supported) type marked.");
                 }
             }
         };

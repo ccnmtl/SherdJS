@@ -70,7 +70,7 @@ if (!Sherd.Image.OpenLayers) {
                 }
             },
             'features2svg': function () {
-                throw Error('not implemented correctly');
+                throw new Error('not implemented correctly');
                 ///This gets it from the vectorLayer, which is
                 /// abandoned for a Rootcontainer object, which will be different
                 /// also the svg will be relative to the MapContainer div's pos-style
@@ -247,7 +247,7 @@ if (!Sherd.Image.OpenLayers) {
             },
             add: function (ann, opts) {
                 if (!this.v) {
-                    throw Error('layer not created yet');
+                    throw new Error('layer not created yet');
                 }
                 var feature_bg = self.openlayers.GeoJSON.parseFeature(ann);
                 var feature_fg = feature_bg.clone();
@@ -343,9 +343,9 @@ if (!Sherd.Image.OpenLayers) {
                 initialize: function (obj, presenter) {
                     ///remove controls
                     var m = presenter.openlayers.map;
-                    controls = m.getControlsByClass('OpenLayers.Control.Navigation');
+                    var controls = m.getControlsByClass('OpenLayers.Control.Navigation');
                     for (var i = 0; i < controls.length; i++) {
-                         controls[i].disableZoomWheel();
+                        controls[i].disableZoomWheel();
                     }
                     
                     while (m.controls.length) {

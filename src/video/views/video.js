@@ -64,7 +64,7 @@ if (!Sherd.Video.Base) {
     var noop = function () {
     };
     var unimplemented = function () {
-        throw Error('unimplemented');
+        throw new Error('unimplemented');
     };
 
     Sherd.Video.Base = function (options) {

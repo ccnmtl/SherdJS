@@ -109,14 +109,14 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
         // Find the objects based on the individual player properties in the DOM
         // Works in conjunction with read
         this.microformat.find = function (html_dom) {
-            throw Error("unimplemented");
+            throw new Error("unimplemented");
         };
 
         // Return asset object description (parameters) in a serialized JSON format.
         // Will be used for things like printing, or spitting out a description.
         // works in conjunction with find
         this.microformat.read = function (found_obj) {
-            throw Error("unimplemented");
+            throw new Error("unimplemented");
         };
 
         this.microformat.type = function () { return 'realplayer'; };
@@ -287,7 +287,7 @@ if (!Sherd.Video.RealPlayer && Sherd.Video.Base) {
 
         // Used by tests.
         this.media.url = function () {
-            throw Error("unimplemented function media.url");
+            throw new Error("unimplemented function media.url");
         };
 
     }; //Sherd.Video.RealPlayer

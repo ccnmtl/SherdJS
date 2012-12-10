@@ -1,4 +1,36 @@
-//requires jQuery
+function DjangoSherd_NoteForm() {
+    var self = this;
+    Sherd.Base.DomObject.apply(this, arguments);// inherit
+    this.form_name = 'edit-annotation-form';
+    this.f = function (field) {
+        //returns field from form, but without keeping pointers around
+        return document.forms[self.form_name].elements[field];
+    };
+    this.storage = {
+        update : function (obj) {
+            var range1 = '0';
+            var range2 = '0';
+            function numOrEmpty(v) {
+                return v || ((v === 0) ? v: '');
+            }
+            ///if isNaN, then it's an empty value to be saved as null
+            if (obj.start || obj.end) {// video
+                range1 = numOrEmpty(obj.start);
+                range2 = numOrEmpty(obj.end);
+            } else if (obj.x) {// image
+                range1 = numOrEmpty(obj.x);
+                range2 = numOrEmpty(obj.y);
+            }
+            // top is the form
+            self.f('annotation-range1').value = range1;
+            self.f('annotation-range2').value = range2;
+            self.f('annotation-annotation_data').value = JSON.stringify(obj);
+        }
+    };
+}
+
+
+// requires jQuery
 if (typeof djangosherd === 'undefined') {
     djangosherd = {};
     djangosherd.storage = new DjangoSherd_Storage();
@@ -16,7 +48,7 @@ function legacy_json(unparsed_json) {
     return unparsed_json.replace(/\"wh_ratio\":\sNaN/, '"wh_ratio":null');
 }
 
-function DjangoSherd_adaptAsset(asset) {
+function djangosherd_adaptAsset(asset) {
     if (asset.flv || asset.flv_pseudo ||
         asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp ||
         asset.flv_rtmp || asset.video_pseudo || asset.video_rtmp ||
@@ -109,7 +141,7 @@ function DjangoSherd_AssetMicroFormat() {
                 }
             }
         });
-        return DjangoSherd_adaptAsset(rv);//in-place
+        return djangosherd_adaptAsset(rv);//in-place
     };
 }
 
@@ -180,36 +212,6 @@ function DjangoSherd_AnnotationMicroFormat() {
 }
 
 
-function DjangoSherd_NoteForm() {
-    var self = this;
-    Sherd.Base.DomObject.apply(this, arguments);// inherit
-    this.form_name = 'edit-annotation-form';
-    this.f = function (field) {
-        //returns field from form, but without keeping pointers around
-        return document.forms[self.form_name].elements[field];
-    };
-    this.storage = {
-        update : function (obj) {
-            var range1 = '0';
-            var range2 = '0';
-            function numOrEmpty(v) {
-                return v || ((v === 0) ? v: '');
-            }
-            ///if isNaN, then it's an empty value to be saved as null
-            if (obj.start || obj.end) {// video
-                range1 = numOrEmpty(obj.start);
-                range2 = numOrEmpty(obj.end);
-            } else if (obj.x) {// image
-                range1 = numOrEmpty(obj.x);
-                range2 = numOrEmpty(obj.y);
-            }
-            // top is the form
-            self.f('annotation-range1').value = range1;
-            self.f('annotation-range2').value = range2;
-            self.f('annotation-annotation_data').value = JSON.stringify(obj);
-        }
-    };
-}
 
 
 function DjangoSherd_Asset_Config() {
@@ -575,7 +577,7 @@ function DjangoSherd_Storage() {
                             }
                         }
                     }
-                    DjangoSherd_adaptAsset(a); //in-place
+                    djangosherd_adaptAsset(a); //in-place
                     _cache.asset[a.id] = a;
                     
                     if (a.hasOwnProperty('annotations')) {

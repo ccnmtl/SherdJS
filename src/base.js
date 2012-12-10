@@ -92,10 +92,10 @@ Sherd.Base = {
 
         this.components = {}; // all html refs should go in here
         this.get = function () {
-            throw Error("get() not implemented");
+            throw new Error("get() not implemented");
         };
         this.microformat = function () {
-            throw Error("microformat() not implemented");
+            throw new Error("microformat() not implemented");
         };
         this.idPrefix = function () {
             return 'domObj';
@@ -346,5 +346,5 @@ else if (typeof MochiKit !== 'undefined') {
     };
 } //end mochikit
 else {
-    throw Error("Use a framework, Dude! MochiKit, jQuery, YUI, whatever!");
+    throw new Error("Use a framework, Dude! MochiKit, jQuery, YUI, whatever!");
 }

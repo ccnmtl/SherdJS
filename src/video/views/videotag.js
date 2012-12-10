@@ -106,7 +106,7 @@ if (!Sherd.Video.Videotag) {
         // Find the objects based on the individual player properties in the DOM
         // Works in conjunction with read
         this.microformat.find = function (html_dom) {
-            throw Error("unimplemented");
+            throw new Error("unimplemented");
             //var found = [];
             //return found;
         };
@@ -115,9 +115,7 @@ if (!Sherd.Video.Videotag) {
         // Will be used for things like printing, or spitting out a description.
         // works in conjunction with find
         this.microformat.read = function (found_obj) {
-            throw Error("unimplemented");
-            //var obj = {};
-            //return obj;
+            throw new Error("unimplemented");
         };
 
         this.microformat.type = function () { return 'videotag'; };
