@@ -120,6 +120,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     rv.elapsed = document.getElementById(create_obj.currentTimeID);
                     rv.duration = document.getElementById(create_obj.durationID);
                     rv.lastDuration = 0;
+                    rv.itemId = create_obj.object.id;
+                    rv.primaryType = create_obj.object.primary_type;                    
                     
                     if (create_obj.staticDuration) {
                         rv.staticDuration = create_obj.staticDuration;
@@ -273,10 +275,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         this.initialize = function (create_obj) {
             if (create_obj) {
-                var tracker;
-                if (window._gat && window._gaq_mediathread) {
-                    tracker = _gat._getTracker(_gaq_mediathread);
-                }
                 var options = {
                     clip: {
                         scaling: "fit",
@@ -287,6 +285,18 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         },
                         onSeek: function (clip, target_time) {
                             self.state.last_pause_time = target_time;
+                        },
+                        onStart: function () {
+                            jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
+                        },
+                        onPause: function () {
+                            jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
+                        },
+                        onResume: function () {
+                            jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
+                        },
+                        onFinish: function () {
+                            jQuery(window).trigger('video.finish', [self.components.itemId, self.components.primaryType]);
                         }
                     },
                     plugins: {
@@ -339,6 +349,8 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         options.playlist[0].netConnectionUrl = create_obj.playerParams.netConnectionUrl;
                     }
                 }
+                
+                jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
                 
                 flowplayer(create_obj.playerID,
                            flowplayer.swf_location || "http://releases.flowplayer.org/swf/flowplayer-3.2.2.swf",

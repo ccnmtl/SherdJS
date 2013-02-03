@@ -125,6 +125,8 @@ if (!Sherd.Video.YouTube) {
                     rv.mediaUrl = create_obj.mediaUrl;
                     rv.playerID = create_obj.playerID;
                     rv.presentation = create_obj.object.presentation;
+                    rv.itemId = create_obj.object.id;
+                    rv.primaryType = create_obj.object.primary_type;
                 }
                 return rv;
             } catch (e) {}
@@ -182,6 +184,8 @@ if (!Sherd.Video.YouTube) {
         window.onYouTubePlayerReady = function (playerID) {
             if (unescape(playerID) === self.components.playerID) {
                 self.media._ready = true;
+                
+                jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
 
                 // reset the state
                 self.setState({ start: self.components.starttime, end: self.components.endtime});
@@ -201,19 +205,21 @@ if (!Sherd.Video.YouTube) {
         // @todo -- onYTStateChange does not pass the playerID into the function, which will be
         // a problem if we ever have multiple players on the page
         window.onYTStateChange = function (newState) {
-            //log('window.onYTStateChange: ' + newState);
             switch (newState) {
-            case 1:
+            case 0: //ended
+                self.events.clearTimers();
+                jQuery(window).trigger('video.finish', [self.components.itemId, self.components.primaryType]);
+                break;
+            case 1: // playing
                 var duration = self.media.duration();
                 if (duration > 1) {
-                    self.events.signal(self, 'duration', { duration: duration });
+                    self.events.signal(self, 'duration', {duration: duration});                    
+                    jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
                 }
                 break;
-            case 2:// stopped
+            case 2: // stopped
                 ///Do NOT clear timers here, because clicking 'play' cycles through a 2-state
-                break;
-            case 0://finished
-                self.events.clearTimers();
+                jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
                 break;
             }
         };

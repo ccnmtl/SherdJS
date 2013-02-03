@@ -103,7 +103,8 @@ if (!Sherd.Video.Vimeo) {
                 playerID: playerID,
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 mediaUrl: obj.vimeo, // Used by _seek seeking behavior
-                text: embedCode
+                text: embedCode,
+                object: obj
             };
         };
 
@@ -120,6 +121,8 @@ if (!Sherd.Video.Vimeo) {
                     rv.playerID = create_obj.playerID;
                     rv.width = create_obj.options.width;
                     rv.height = create_obj.options.height;
+                    rv.itemId = create_obj.object.id;
+                    rv.primaryType = create_obj.object.primary_type;                    
                 }
                 return rv;
             } catch (e) {}
@@ -165,11 +168,27 @@ if (!Sherd.Video.Vimeo) {
                 }
             }
         };
+        
+        window.on_vimeo_play = function () {
+            jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
+        };
+        
+        window.on_vimeo_pause = function () {
+            jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
+        };
+        
+        window.on_vimeo_finish = function () {
+            jQuery(window).trigger('video.finish', [self.components.itemId, self.components.primaryType]);
+        };
 
         window.vimeo_player_loaded = function (playerID) {
-
+            jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
+            
             self.components.player = document.getElementById(self.components.playerID);
             self.components.player.api_addEventListener("playProgress", "vimeo_player_progress");
+            self.components.player.api_addEventListener("play", "on_vimeo_play");
+            self.components.player.api_addEventListener("pause", "on_vimeo_pause");
+            self.components.player.api_addEventListener("finish", "on_vimeo_finish");
 
             // register for notifications from clipstrip to seek to various times in the video
             self.events.connect(self, 'seek', self.media.playAt);

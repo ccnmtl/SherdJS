@@ -114,6 +114,8 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
                     rv.playerID = create_obj.playerID;
                     rv.width = create_obj.width;
                     rv.height = create_obj.height;
+                    rv.itemId = create_obj.object.id;
+                    rv.primaryType = create_obj.object.primary_type;                    
                 }
                 return rv;
             } catch (e) {}
@@ -162,12 +164,15 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             self.components.player.addJsListener("durationChange", "durationChangeHandler");
             self.components.player.addJsListener("entryReady", "entryReadyHandler");
             self.components.player.addJsListener("playerUpdatePlayhead", "timeChangeHandler");
+            self.components.player.addJsListener("playerPlayEnd", "playerFinished");
         };
         
         window.entryReadyHandler = function (data, id) {
             self.media._ready = true;
             self.media.video_duration = data.duration;
+            self.media.binary_state = "paused";
             self.events.signal(self, 'duration', { duration: data.duration });
+            jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
         };
         
         window.durationChangeHandler = function (data, id) {
@@ -183,8 +188,19 @@ if (!Sherd.Video.Kaltura && Sherd.Video.Base) {
             }
         };
         
-        window.playerStateChangeHandler = function (data, id) {
+        window.playerStateChangeHandler = function (data, id) {            
+            if (self.media.binary_state === "paused" && data === "playing") {
+                jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
+                self.media.binary_state = "playing";
+            } else if (self.media.binary_state === "playing" && data === "paused") {
+                jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
+                self.media.binary_state = "paused";
+            }
             self.media.current_state = data;
+        };
+        
+        window.playerFinished = function () {
+            jQuery(window).trigger('video.finish', [self.components.itemId, self.components.primaryType]);
         };
 
         this.media.duration = function () {

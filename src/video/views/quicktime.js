@@ -168,6 +168,8 @@ if (!Sherd.Video.QuickTime) {
                     rv.playerID = create_obj.playerID;
                     rv.htmlID = create_obj.htmlID;
                     rv.mediaUrl = create_obj.object.quicktime;
+                    rv.itemId = create_obj.object.id;
+                    rv.primaryType = create_obj.object.primary_type;                                        
                 }
                 return rv;
             } catch (e) {}
@@ -284,9 +286,38 @@ if (!Sherd.Video.QuickTime) {
 
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
+        
+        this.addListener = function (evt, handler) { 
+            if (document.addEventListener) {
+                self.components.player.addEventListener(evt, handler);
+            } else {
+                // IE
+                self.components.player.attachEvent('on' + evt, handler);
+            }
+        };
+        
+        window.onQuicktimePlay = function () {
+            if (self.media.binary_state === 'paused') {
+                jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
+                self.media.binary_state = 'playing';
+            }
+        };
+        
+        window.onQuicktimePause = function () {
+            if (self.media.binary_state === 'playing') {
+                jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
+                self.media.binary_state = 'paused';
+            }
+        };
+        
+        window.onQuicktimeFinish = function () {
+            jQuery(window).trigger('video.finish', [self.components.itemId, self.components.primaryType]);
+            self.media.binary_state = 'paused';
+        };
 
         this.initialize = function (create_obj) {
             self.media._duration = self.media.duration();
+            self.media.binary_state = 'paused';
 
             // kickoff some timers
             self.events.queue('quicktime ready to seek',
@@ -321,7 +352,12 @@ if (!Sherd.Video.QuickTime) {
                 ///TODO: should just use self.setState(obj, {autoplay:true});
                 window.setTimeout(function () { self.media.play(); }, 200);
             });
-
+            
+            jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
+            
+            self.addListener('qt_play', onQuicktimePlay);
+            self.addListener('qt_pause', onQuicktimePause);
+            self.addListener('qt_ended', onQuicktimeFinish);
         };
 
         // Overriding video.js
