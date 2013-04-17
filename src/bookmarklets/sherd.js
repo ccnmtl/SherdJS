@@ -942,6 +942,12 @@ SherdBookmarklet = {
                       } else {
                           sources[primary_type+"-metadata"] = "w"+obj.offsetWidth+"h"+(obj.offsetHeight-25);
                       }
+                      
+                      var meta_obj = SherdBookmarklet.flowclip_meta_search(document);
+                        for(k in meta_obj){
+                          sources[k] = meta_obj[k];
+                      }
+
                       return {
                           "html":obj,
                           "sources":sources,
@@ -1849,6 +1855,21 @@ SherdBookmarklet = {
               return props;
           }
       }
+  },
+  "flowclip_meta_search": function(doc){
+    if (jQuery){
+      var meta_data = {};
+      var meta_data_elms = jQuery('*[itemprop]', document);
+      if (meta_data_elms !== undefined){
+        meta_data_elms.each(function(){
+          var prop = jQuery(this).attr('itemprop');
+          var val = jQuery(this).text();
+          meta_data[prop] = val;
+        })
+        return meta_data;
+      }else{
+        return}
+    }
   },
   "xml2dom":function (str,xhr) {
       if (window.DOMParser) {
