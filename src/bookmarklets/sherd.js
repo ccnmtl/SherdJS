@@ -947,7 +947,8 @@ SherdBookmarklet = {
                         for(k in meta_obj){
                           sources[k] = meta_obj[k];
                       }
-
+                      console.log('meta_obj: ')
+                      console.log(meta_obj);
                       return {
                           "html":obj,
                           "sources":sources,
@@ -1866,6 +1867,8 @@ SherdBookmarklet = {
           var val = jQuery(this).text();
           meta_data[prop] = val;
         })
+        console.log('meta_data');
+        console.log(meta_data);
         return meta_data;
       }else{
         return}
