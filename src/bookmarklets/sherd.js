@@ -1862,16 +1862,17 @@ SherdBookmarklet = {
       var meta_data = {};
       var meta_data_elms = jQuery('*[itemprop]', document);
       if (meta_data_elms !== undefined){
-        meta_data_elms.each(function(){
-          var prop = jQuery(this).attr('itemprop');
-          var val = jQuery(this).text();
-          meta_data[prop] = val;
-        })
-        console.log('meta_data');
-        console.log(meta_data);
-        return meta_data;
-      }else{
-        return}
+          meta_data_elms.each(function(){
+            var prop = jQuery(this).attr('itemprop');
+            var val = jQuery(this).text();
+            if(prop === "title"){
+              meta_data[prop] = val;
+            }else{
+              meta_data['metadata-' + prop] = val;
+            }
+          })
+          return meta_data;
+      }
     }
   },
   "xml2dom":function (str,xhr) {
