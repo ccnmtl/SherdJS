@@ -947,8 +947,6 @@ SherdBookmarklet = {
                         for(k in meta_obj){
                           sources[k] = meta_obj[k];
                       }
-                      console.log('meta_obj: ')
-                      console.log(meta_obj);
                       return {
                           "html":obj,
                           "sources":sources,
@@ -1863,12 +1861,22 @@ SherdBookmarklet = {
       var meta_data_elms = jQuery('*[itemprop]', document);
       if (meta_data_elms !== undefined){
           meta_data_elms.each(function(){
-            var prop = jQuery(this).attr('itemprop');
-            var val = jQuery(this).text();
-            if(prop === "title"){
-              meta_data[prop] = val;
-            }else{
-              meta_data['metadata-' + prop] = val;
+             var item_prop = jQuery(this).attr('itemprop');
+            if(jQuery(this).attr('itemref')){
+              var meta_id = jQuery(this).attr('itemref');
+              if (meta_data['metadata-'+item_prop] == undefined ){
+               meta_data['metadata-'+item_prop] = {};
+              };
+              meta_list_item = jQuery("#"+meta_id).text();
+              meta_data['metadata-'+item_prop][meta_id] = meta_list_item;
+            }
+            if (val == undefined){
+              var val = jQuery(this).text();
+            }
+            if(item_prop === "title"){
+              meta_data[item_prop] = val;
+            }else if(typeof meta_data['metadata-'+item_prop] !== "object"){
+              meta_data['metadata-' + item_prop] = val;
             }
           })
           return meta_data;
