@@ -1879,6 +1879,19 @@ SherdBookmarklet = {
               meta_data['metadata-' + item_prop] = val;
             }
           })
+          for(data in meta_data){
+            if(typeof meta_data[data]== "object"){
+              var flat_meta_data = '';
+              for(str in meta_data[data]){
+                if(flat_meta_data==''){
+                  flat_meta_data = meta_data[data][str];
+                }else{
+                  flat_meta_data += ', '+ meta_data[data][str];
+                }
+              }
+              meta_data[data] = flat_meta_data;
+            }
+          }
           return meta_data;
       }
     }
