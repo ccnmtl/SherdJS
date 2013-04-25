@@ -1286,16 +1286,42 @@ SherdBookmarklet = {
       },/* end image assethandler */
       "audio": {
           find:function(callback,context) {
-              if (/.mp3$/.test(document.location)) {
+            if(!jQuery){
+              jQuery = window.SherdBookmarkletOptions.jQuery;
+            }
+            // test if we are on the asset itself, relying on
+            // the browser (support) handling the mp3 file
+            if (/.mp3$/.test(document.location)) {
+                callback([{
+                    "html":document.documentElement,
+                    "primary_type":"mp3",
+                    "sources": {
+                        "mp3": String(document.location)
+                    }
+                }]);
+            }else{//this must be a listing of audio files somewhere 
+                  // on the page.
+                window.SherdBookmarklet.snd_asset_2_django = function(mp3, type){
+                  mp3.each(function(i){
                   callback([{
                       "html":document.documentElement,
                       "primary_type":"mp3",
                       "sources": {
-                          "mp3": String(document.location)
+                        "mp3": mp3[i][type]
                       }
                   }]);
-              }
-          }
+                });
+                }
+              if(jQuery('*[href$="mp3"]').length){// check for href
+                var mp3 = jQuery('*[href$="mp3"]');
+                var type = 'href';
+              }else if(jQuery('*[src$="mp3"]').length){// check for src
+                var mp3 = jQuery('*[src$="mp3"]');
+                var type = 'src';
+              }//end else if
+              window.SherdBookmarklet.snd_asset_2_django(mp3, type);
+            }//end else
+          }//end find
       },
       "iframe.postMessage":{
           find:function(callback,context) {
