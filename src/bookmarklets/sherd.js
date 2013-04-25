@@ -1861,18 +1861,16 @@ SherdBookmarklet = {
       var meta_data_elms = jQuery('*[itemprop]', document);
       if (meta_data_elms !== undefined){
           meta_data_elms.each(function(){
-             var item_prop = jQuery(this).attr('itemprop');
+            var item_prop = jQuery(this).attr('itemprop');
+            var val = jQuery(this).text();
             if(jQuery(this).attr('itemref')){
               var meta_id = jQuery(this).attr('itemref');
-              if (meta_data['metadata-'+item_prop] == undefined ){
-               meta_data['metadata-'+item_prop] = {};
+              if(meta_data['metadata-'+item_prop] == undefined ){
+                meta_data['metadata-'+item_prop] = {};
               };
               meta_list_item = jQuery("#"+meta_id).text();
               meta_data['metadata-'+item_prop][meta_id] = meta_list_item;
-            }
-            if (val == undefined){
-              var val = jQuery(this).text();
-            }
+            };
             if(item_prop === "title"){
               meta_data[item_prop] = val;
             }else if(typeof meta_data['metadata-'+item_prop] !== "object"){
@@ -1892,9 +1890,9 @@ SherdBookmarklet = {
               meta_data[data] = flat_meta_data;
             }
           }
-          return meta_data;
-      }
-    }
+        return meta_data;
+      }// end meta_data_elms !== undefined
+    }// end if (jQuery)
   },
   "xml2dom":function (str,xhr) {
       if (window.DOMParser) {
