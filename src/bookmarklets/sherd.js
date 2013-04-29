@@ -1319,8 +1319,10 @@ SherdBookmarklet = {
                 var mp3 = jQuery('*[src$="mp3"]');
                 var type = 'src';
               }//end else if
-              window.SherdBookmarklet.snd_asset_2_django(mp3, type);
-            }//end else
+              if (mp3 !== undefined){
+                window.SherdBookmarklet.snd_asset_2_django(mp3, type);
+              };//end if
+            };//end else
           }//end find
       },
       "iframe.postMessage":{
