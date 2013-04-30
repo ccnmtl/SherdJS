@@ -510,24 +510,26 @@ SherdBookmarklet = {
       find:function(callback) {
         _asset = true;
         var returnArray = [];
+        var patt = /data/;// regex pattern for data url
         SherdBookmarklet.run_with_jquery(function(jQ){
         jQuery('img').each(function(i){
             var obj = {};
             var temp_img = document.createElement("img");
             var source = jQuery(this).attr('src');
-            if (source.split('//').length < 3){
+            if (source.split('//').length < 3 && !patt.test(source)){
                 source = 'http://' + source.split('//')[1];
+                source = source.split('=')[0];
+                jQuery(temp_img).attr('src', source);
+                obj.html = temp_img;
+                obj.sources = {};
+                obj.sources.image = source;
+                obj.sources.title = jQuery(this).attr('alt');
+                obj.sources.url = window.location.href;
+                obj.primary_type = "image";
+                obj.sources["image-metadata"] = 'w'+temp_img.width+'h'+temp_img.height;
+                returnArray[i]=obj;
               }
-            source = source.split('=')[0];
-            jQuery(temp_img).attr('src', source);
-            obj.html = temp_img;
-            obj.sources = {};
-            obj.sources.image = source;
-            obj.sources.title = jQuery(this).attr('alt');
-            obj.sources.url = window.location.href;
-            obj.primary_type = "image";
-            obj.sources["image-metadata"] = 'w'+temp_img.width+'h'+temp_img.height;
-            returnArray[i]=obj;
+            
         })//end each
         console.log(returnArray)
         return callback( returnArray );
