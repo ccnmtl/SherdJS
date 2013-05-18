@@ -282,15 +282,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         // they (theoretically) apply to all the clips
                         onPause: function (clip) {
                             self.state.last_pause_time = self.components.player.getTime();
+                            jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
                         },
                         onSeek: function (clip, target_time) {
                             self.state.last_pause_time = target_time;
                         },
                         onStart: function () {
                             jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
-                        },
-                        onPause: function () {
-                            jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
                         },
                         onResume: function () {
                             jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
