@@ -507,31 +507,30 @@ SherdBookmarklet = {
         }
     },
     "googleartproject.com":{
-      find:function(callback) {
-        _asset = true;
-        var returnArray = [];
-        var patt = /data/;// regex pattern for data url
-        SherdBookmarklet.run_with_jquery(function(jQ){
-            jQ('img').each(function(i){
-                var obj = {};
-                var source = jQuery(this).attr('src');
-                if (source.split('//').length < 3 && !patt.test(source)){
-                    source = 'http://' + source.split('//')[1];
-                    source = source.split('=')[0];
-                    obj.html = this;
-                    obj.sources = {};
-                    obj.sources.image =  source;
-                    obj.sources.title = jQuery(this).attr('alt');
-                    obj.sources.url = window.location.href;
-                    obj.primary_type = "image";
-                    obj.sources.thumb = source;
-                    obj.sources["image-metadata"] = 'w'+this.width+'h'+this.height;
-                    returnArray[i]=obj;
-                  }
-            })//end each
-        });
-        return callback( returnArray );
-      }
+        find:function(callback) {
+            var returnArray = [];
+            var patt = /data/;// regex pattern for data url
+            SherdBookmarklet.run_with_jquery(function(jQ){
+                jQ('img').each(function(i){
+                    var obj = {};
+                    var source = jQuery(this).attr('src');
+                    if (source.split('//').length < 3 && !patt.test(source)){
+                        source = 'http://' + source.split('//')[1];
+                        source = source.split('=')[0];
+                        obj.html = this;
+                        obj.sources = {};
+                        obj.sources.image =  source;
+                        obj.sources.title = jQuery(this).attr('alt');
+                        obj.sources.url = window.location.href;
+                        obj.primary_type = "image";
+                        obj.sources.thumb = source;
+                        obj.sources["image-metadata"] = 'w'+(this.width*2)+'h'+(this.height*2);
+                        returnArray[i]=obj;
+                      }
+                })//end each
+            });
+            return callback( returnArray );
+          }
     },
     "vital.ccnmtl.columbia.edu": {
         allow_save_all:true,
