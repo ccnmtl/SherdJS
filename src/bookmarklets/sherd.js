@@ -969,9 +969,15 @@ SherdBookmarklet = {
                           sources[primary_type+"-metadata"] = "w"+obj.offsetWidth+"h"+(obj.offsetHeight-25);
                       }
                       
-                      var meta_obj = SherdBookmarklet.flowclip_meta_search(document);
+                      var meta_obj = SherdBookmarklet.flowclipMetaSearch(document);
                         for(k in meta_obj){
                           sources[k] = meta_obj[k];
+                      }
+                      if(!sources.thumb){
+                        var paramConfig = jQuery('*[name=flashvars]')[0].value.split('config=')[1];
+                        eval('var paramObj='+paramConfig);
+                        paramThumb = paramObj.canvas.background.split('url(')[1].split(')')[0];
+                        sources.thumb = paramThumb;
                       }
                       return {
                           "html":obj,
@@ -1927,44 +1933,44 @@ SherdBookmarklet = {
           }
       }
   },
-  "flowclip_meta_search": function(doc){
-    if (jQuery){
-      var meta_data = {};
-      var meta_data_elms = jQuery('*[itemprop]', document);
-      if (meta_data_elms !== undefined){
-          meta_data_elms.each(function(){
-            var item_prop = jQuery(this).attr('itemprop');
-            var val = jQuery(this).text();
-            if(jQuery(this).attr('itemref')){
-              var meta_id = jQuery(this).attr('itemref');
-              if(meta_data['metadata-'+item_prop] == undefined ){
-                meta_data['metadata-'+item_prop] = {};
-              };
-              meta_list_item = jQuery("#"+meta_id).text();
-              meta_data['metadata-'+item_prop][meta_id] = meta_list_item;
-            };
-            if(item_prop === "title"){
-              meta_data[item_prop] = val;
-            }else if(typeof meta_data['metadata-'+item_prop] !== "object"){
-              meta_data['metadata-' + item_prop] = val;
-            }
-          })
-          for(data in meta_data){
-            if(typeof meta_data[data]== "object"){
-              var flat_meta_data = '';
-              for(str in meta_data[data]){
-                if(flat_meta_data==''){
-                  flat_meta_data = meta_data[data][str];
-                }else{
-                  flat_meta_data += ', '+ meta_data[data][str];
+  "flowclipMetaSearch": function(doc){
+      if (jQuery){
+        var metaData = {};
+        var metaDataElms = jQuery('*[itemprop]', document);
+            if (metaDataElms !== undefined){
+                metaDataElms.each(function(){
+                    var itemProp = jQuery(this).attr('itemprop');
+                    var val = jQuery(this).text();
+                    if(jQuery(this).attr('itemref')){
+                        var metaId = jQuery(this).attr('itemref');
+                        if(metaData['metadata-'+itemProp] == undefined ){
+                            metaData['metadata-'+itemProp] = {};
+                        };
+                        metaListItem = jQuery("#"+metaId).text();
+                        metaData['metadata-'+itemProp][metaId] = metaListItem;
+                    };
+                    if(itemProp === "title"){
+                        metaData[itemProp] = val;
+                    }else if(typeof metaData['metadata-'+itemProp] !== "object"){
+                        metaData['metadata-' + itemProp] = val;
+                    }
+                })
+                for(data in metaData){
+                    if(typeof metaData[data]== "object"){
+                        var flatMetaData = '';
+                        for(str in metaData[data]){
+                            if(flatMetaData==''){
+                                flatMetaData = metaData[data][str];
+                            }else{
+                                flatMetaData += ', '+ metaData[data][str];
+                            }
+                        }
+                        metaData[data] = flatMetaData;
+                    }// end if typeof metaData[data]
                 }
-              }
-              meta_data[data] = flat_meta_data;
-            }
-          }
-        return meta_data;
-      }// end meta_data_elms !== undefined
-    }// end if (jQuery)
+                return metaData;
+            }// end meta_data_elms !== undefined
+      }// end if (jQuery)
   },
   "xml2dom":function (str,xhr) {
       if (window.DOMParser) {
