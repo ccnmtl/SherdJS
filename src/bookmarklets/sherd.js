@@ -1390,16 +1390,16 @@ SherdBookmarklet = {
           find:function(callback, context) {
               var frms = context.document.getElementsByTagName("iframe");
               var result = [];
-              var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+              var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
               for (var i = 0; i < frms.length; i++) {
                   var v_match = String(frms[i].src).match(/^http:\/\/www.youtube.com\/embed\/([\w\-]*)/);
                   if (v_match && v_match.length > 1) {
                       SherdBookmarklet.assethandler.objects_and_embeds.players
-                      .youtube.asset(frms[i], 
+                      .youtube.asset(frms[i],
                                      v_match,
                                      {'window': window,
                                       'document': document}, 0,
-                                     function(ind,rv){ callback([rv]); });
+                                     function(ind, rv){ callback([rv]); });
                   }
               }
           }          
