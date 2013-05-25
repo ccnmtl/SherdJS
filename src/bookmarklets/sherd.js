@@ -506,6 +506,32 @@ SherdBookmarklet = {
         decorate:function(objs) {
         }
     },
+    "googleartproject.com":{
+        find:function(callback) {
+            var returnArray = [];
+            var patt = /data/;// regex pattern for data url
+            SherdBookmarklet.run_with_jquery(function(jQ){
+                jQ('img').each(function(i){
+                    var obj = {};
+                    var source = jQuery(this).attr('src');
+                    if (source.split('//').length < 3 && !patt.test(source)){
+                        source = 'http://' + source.split('//')[1];
+                        source = source.split('=')[0];
+                        obj.html = this;
+                        obj.sources = {};
+                        obj.sources.image =  source;
+                        obj.sources.title = jQuery(this).attr('alt');
+                        obj.sources.url = window.location.href;
+                        obj.primary_type = "image";
+                        obj.sources.thumb = source;
+                        obj.sources["image-metadata"] = 'w'+(this.width*2)+'h'+(this.height*2);
+                        returnArray[i]=obj;
+                      }
+                })//end each
+            });
+            return callback( returnArray );
+          }
+    },
     "vital.ccnmtl.columbia.edu": {
         allow_save_all:true,
         find:function(callback) {
@@ -942,6 +968,17 @@ SherdBookmarklet = {
                       } else {
                           sources[primary_type+"-metadata"] = "w"+obj.offsetWidth+"h"+(obj.offsetHeight-25);
                       }
+                      
+                      var meta_obj = SherdBookmarklet.flowclipMetaSearch(document);
+                        for(k in meta_obj){
+                          sources[k] = meta_obj[k];
+                      }
+                      if(!sources.thumb){
+                        var paramConfig = jQuery('*[name=flashvars]')[0].value.split('config=')[1];
+                        eval('var paramObj='+paramConfig);
+                        paramThumb = paramObj.canvas.background.split('url(')[1].split(')')[0];
+                        sources.thumb = paramThumb;
+                      }
                       return {
                           "html":obj,
                           "sources":sources,
@@ -1281,16 +1318,44 @@ SherdBookmarklet = {
       },/* end image assethandler */
       "audio": {
           find:function(callback,context) {
-              if (/.mp3$/.test(document.location)) {
+            if(!jQuery){
+              jQuery = window.SherdBookmarkletOptions.jQuery;
+            }
+            // test if we are on the asset itself, relying on
+            // the browser (support) handling the mp3 file
+            if (/.mp3$/.test(document.location)) {
+                callback([{
+                    "html":document.documentElement,
+                    "primary_type":"mp3",
+                    "sources": {
+                        "mp3": String(document.location)
+                    }
+                }]);
+            }else{//this must be a listing of audio files somewhere 
+                  // on the page.
+                window.SherdBookmarklet.snd_asset_2_django = function(mp3, type){
+                  mp3.each(function(i){
                   callback([{
                       "html":document.documentElement,
                       "primary_type":"mp3",
                       "sources": {
-                          "mp3": String(document.location)
+                        "mp3": mp3[i][type]
                       }
                   }]);
-              }
-          }
+                });
+                }
+              if(jQuery('*[href$="mp3"]').length){// check for href
+                var mp3 = jQuery('*[href$="mp3"]');
+                var type = 'href';
+              }else if(jQuery('*[src$="mp3"]').length){// check for src
+                var mp3 = jQuery('*[src$="mp3"]');
+                var type = 'src';
+              }//end else if
+              if (mp3 !== undefined){
+                window.SherdBookmarklet.snd_asset_2_django(mp3, type);
+              };//end if
+            };//end else
+          }//end find
       },
       "iframe.postMessage":{
           find:function(callback,context) {
@@ -1321,6 +1386,24 @@ SherdBookmarklet = {
               }              
           }
       },
+      "iframe.youtube": {
+          find:function(callback, context) {
+              var frms = context.document.getElementsByTagName("iframe");
+              var result = [];
+              var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
+              for (var i = 0; i < frms.length; i++) {
+                  var v_match = String(frms[i].src).match(/^http:\/\/www.youtube.com\/embed\/([\w\-]*)/);
+                  if (v_match && v_match.length > 1) {
+                      SherdBookmarklet.assethandler.objects_and_embeds.players
+                      .youtube.asset(frms[i],
+                                     v_match,
+                                     {'window': window,
+                                      'document': document}, 0,
+                                     function(ind, rv){ callback([rv]); });
+                  }
+              }
+          }          
+      },      
       "image": {
           find:function(callback,context) {
               var imgs = context.document.getElementsByTagName("img");
@@ -1849,6 +1932,45 @@ SherdBookmarklet = {
               return props;
           }
       }
+  },
+  "flowclipMetaSearch": function(doc){
+      if (jQuery){
+        var metaData = {};
+        var metaDataElms = jQuery('*[itemprop]', document);
+            if (metaDataElms !== undefined){
+                metaDataElms.each(function(){
+                    var itemProp = jQuery(this).attr('itemprop');
+                    var val = jQuery(this).text();
+                    if(jQuery(this).attr('itemref')){
+                        var metaId = jQuery(this).attr('itemref');
+                        if(metaData['metadata-'+itemProp] == undefined ){
+                            metaData['metadata-'+itemProp] = {};
+                        };
+                        metaListItem = jQuery("#"+metaId).text();
+                        metaData['metadata-'+itemProp][metaId] = metaListItem;
+                    };
+                    if(itemProp === "title"){
+                        metaData[itemProp] = val;
+                    }else if(typeof metaData['metadata-'+itemProp] !== "object"){
+                        metaData['metadata-' + itemProp] = val;
+                    }
+                })
+                for(data in metaData){
+                    if(typeof metaData[data]== "object"){
+                        var flatMetaData = '';
+                        for(str in metaData[data]){
+                            if(flatMetaData==''){
+                                flatMetaData = metaData[data][str];
+                            }else{
+                                flatMetaData += ', '+ metaData[data][str];
+                            }
+                        }
+                        metaData[data] = flatMetaData;
+                    }// end if typeof metaData[data]
+                }
+                return metaData;
+            }// end meta_data_elms !== undefined
+      }// end if (jQuery)
   },
   "xml2dom":function (str,xhr) {
       if (window.DOMParser) {
