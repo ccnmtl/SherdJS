@@ -1,0 +1,53 @@
+{# Filename: _templates/layout.html #}
+{% extends '!layout.html' %}
+{%- block extrahead %} 
+  <link rel="stylesheet" href="http://openlayers.org/common.css" type="text/css" />
+  <link rel="stylesheet" href="http://openlayers.org/trac.css" type="text/css" />
+  <link rel="stylesheet" href="http://openlayers.org/website.css" type="text/css" />
+  <meta name="verify-v1" content="p07VY29NG/hLEwVP1RyE0P1chgYyekPikjkMUEgrVAI=" />  
+  <!--[if lt IE 7]>
+  <script defer="defer" type="text/javascript" src="http://openlayers.org/pngfix.js"></script>
+  <![endif]-->
+  <style type='text/css'>
+    body {
+     font-family: sans-serif;
+     font-size: .9em;
+    }
+  </style>  
+{% endblock %}
+{%- block relbar1 %}
+<div id="olbanner">
+<img class="openlayersbannerimg" src="http://www.openlayers.org/images/OpenLayers.trac.png" style="height: 44px; width: 49px;border:0px" alt="OpenLayers" />
+<a class="openlayersbanner" href="http://www.openlayers.org/" >
+OpenLayers</a>
+</div>
+<div id="navcontainer">
+<a class="navtabtraccurrent" href="http://www.openlayers.org">Home</a>
+<a class="navtab" href="http://gallery.osgeo.org/?tag=OpenLayers">Gallery</a>
+<a class="navtab" href="http://trac.osgeo.org/openlayers">Support &amp; Development</a>
+</div>
+
+<div id="mainnav" class="nav"><ul><li class="first"><a href="/sponsorship/">Sponsorship</a></li><li><a href="http://trac.openlayers.org/wiki" accesskey="1">Wiki</a></li><li><a href="http://openlayers.org/blog/">Blog</a></li><li><a href="http://trac.osgeo.org/openlayers/wiki/FrequentlyAskedQuestions">FAQ</a></li><li><a href="http://trac.osgeo.org/openlayers/wiki/HowToDownload" accesskey="3">Download</a></li><li><a href="http://trac.osgeo.org/openlayers/wiki/MailingLists">Email Lists</a></li></ul></div>
+
+
+{{ relbar() }}
+{% endblock %}
+
+{%- block sidebar1 %}{{ sidebar() }}{% endblock %}
+{%- block sidebar2 %}{% endblock %}
+
+
+{%- block footer %}
+    <div class="footer">
+    &copy; Copyright {{ copyright }}.
+    </div>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-2577926-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+{% endblock %}
