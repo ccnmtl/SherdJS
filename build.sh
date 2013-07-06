@@ -1,0 +1,1 @@
+tar -c --exclude '.*' -f - * | gzip > sherdjs-0.1.0.tar.gz
