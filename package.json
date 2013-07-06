@@ -1,0 +1,23 @@
+{
+  "name": "SherdJS",
+  "version": "0.1.0",
+  "author": "Schuyler Duveen <sky@skyb.us>"
+  "description": "A Javascript library that 'knows' how to display and annotate (and maybe embed) objects into certain contexts.",
+  "contributors": [ 
+    {
+      "name": "Susan Dreher"
+      "email": "sdreher@columbia.edu"
+    } 
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ccnmtl/SherdJS.git"
+  },
+  "bundledDependencies": [
+    "mcePlugin_editorwindow",
+    "mcePlugin_citation",
+    "openlayers",
+    "tiny_mce3"
+  ],  
+  "license": "gpl2+",
+}
