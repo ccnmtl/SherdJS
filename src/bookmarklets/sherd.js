@@ -850,7 +850,7 @@ SherdBookmarklet = {
                           c = obj.getConfig(), 
                           pcfg = obj.getPluginConfig('http');
                       if (item.type == 'rtmp') {
-                      	 // ensure that mp4 rtmp files contain the
+                         // ensure that mp4 rtmp files contain the
                          // needed mp4: prefix so that they will play
                          // properly in flowplayer;
                          // JW Player allows you to omit this prefix,
@@ -1666,7 +1666,7 @@ SherdBookmarklet = {
     var destination =  host_url;
     for (a in obj.sources) {
         if (typeof obj.sources[a] =="undefined") continue;
-	destination += ( a+"="+escape(obj.sources[a]) +"&" );
+  destination += ( a+"="+escape(obj.sources[a]) +"&" );
     }
     if (obj.hash) {
         destination += "#"+obj.hash;
@@ -2306,12 +2306,18 @@ SherdBookmarklet = {
           var doc = target.ownerDocument;
           comp.top.appendChild(
               self.elt(doc,'div','sherd-tab',
-                       "display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;",
+                       "display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;\
+                       top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;\
+                       border:3px solid black;text-align:center;background-color:#cccccc;\
+                       text-decoration:underline;cursor:pointer;text-align:left;",
                        [o.tab_label]));
           comp.top.appendChild(
-              self.elt(doc,'div','sherd-window',"display:none;left:0;position:absolute;z-index:999999;top:0;margin:0;padding:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc",
+              self.elt(doc,'div','sherd-window',"display:none;left:0;position:absolute;z-index:999999;\
+                top:0;margin:0;padding:0;width:400px;height:400px;overflow:hidden;border:3px \
+                solid black;text-align:left;background-color:#cccccc",
                        [
-                           self.elt(doc,'div','sherd-window-inner',"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;",[
+                           self.elt(doc,'div','sherd-window-inner',"overflow-y:auto;width:384px;\
+                            height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;",[
                                self.elt(doc,'button','sherd-close',"float:right;",['close']),
                                self.elt(doc,'button','sherd-move',"float:right;",['move']),
                                self.elt(doc,'h2','','',['Choose an item to import for analysis']),
