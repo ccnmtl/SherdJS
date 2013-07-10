@@ -2305,19 +2305,11 @@ SherdBookmarklet = {
           var pageYOffset = self.visibleY(target)+o.top;
           var doc = target.ownerDocument;
           comp.top.appendChild(
-              self.elt(doc,'div','sherd-tab',
-                       "display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;\
-                       top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;\
-                       border:3px solid black;text-align:center;background-color:#cccccc;\
-                       text-decoration:underline;cursor:pointer;text-align:left;",
-                       [o.tab_label]));
+              self.elt(doc,'div','sherd-tab','',[o.tab_label]));
           comp.top.appendChild(
-              self.elt(doc,'div','sherd-window',"display:none;left:0;position:absolute;z-index:999999;\
-                top:0;margin:0;padding:0;width:400px;height:400px;overflow:hidden;border:3px \
-                solid black;text-align:left;background-color:#cccccc",
+              self.elt(doc,'div','sherd-window','',
                        [
-                           self.elt(doc,'div','sherd-window-inner',"overflow-y:auto;width:384px;\
-                            height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;",[
+                           self.elt(doc,'div','sherd-window-inner','',[
                                self.elt(doc,'button','sherd-close',"float:right;",['close']),
                                self.elt(doc,'button','sherd-move',"float:right;",['move']),
                                self.elt(doc,'h2','','',['Choose an item to import for analysis']),
@@ -2394,16 +2386,19 @@ SherdBookmarklet = {
           li.style.padding = '4px';
           li.style.margin = '4px';
           li.style.border = '1px solid black';
-          jQ('input.sherd-form-title',form).prev().empty().append(self.elt(null,'div','','margin:0;border:0;padding:3px 0;',[self.elt(null,'label','',{label:'title'},['Title:'])]));
+          jQ('input.sherd-form-title',form).prev().empty().append(self.elt(null,'div','\
+            ','margin:0;border:0;padding:3px 0;',[self.elt(null,'label','',{label:'title'},['Title:'])]));
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              jQ(form.firstChild).empty().append(self.elt(null,'img','',{src:img,style:'width:20%;max-width:120px;max-height:120px;',height:null}));
+              jQ(form.firstChild).empty().append(self.elt(null,'img','',{src:img,style:'width:20%;\
+                max-width:120px;max-height:120px;',height:null}));
           }
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
           } else if (SherdBookmarklet.user_ready()){
-              form.submitButton = self.elt(null,'input','',{type:'submit',style:'display:block;padding:4px;margin:4px;',value:'analyze'});
+              form.submitButton = self.elt(null,'input','',{type:'submit',style:'display:block;\
+                padding:4px;margin:4px;',value:'analyze'});
               jQ(form.lastChild).empty().append(form.submitButton);
           }
 
