@@ -2256,9 +2256,17 @@ SherdBookmarklet = {
       this.visibleY = function(target) {
           return target.ownerDocument.body.scrollTop;
       }
+      this.loadStyles = function(){
+        var root_url =  SherdBookmarkletOptions.host_url.split('/save/?').shift()
+        
+        jQuery('head').append('<link rel="stylesheet" type="text/css"\
+         href="'+ root_url +'/site_media/js/sherdjs/src/bookmarklets/sherd_styles.css">');
+
+      }
       this.showWindow = function() {
           self.windowStatus = true;
           if (comp.window) {
+              self.loadStyles();
               comp.window.style.top = self.visibleY(comp.window)+'px';
               comp.window.style.display = "block";
               comp.tab.style.display = "none";
