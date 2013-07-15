@@ -1685,9 +1685,9 @@ SherdBookmarklet = {
           destination += "#"+obj.hash;
       }
       var form = M.elt(doc,'form','',{},[
-          M.elt(doc,'span','',{}),
-          M.elt(doc,'div','','border:0;margin:0;float:right;',
-                ['Type: '+(obj.label||obj.primary_type||'Unknown')])
+          M.elt(doc,'div','sherd-asset-wrap',{}),
+          M.elt(doc,'div','sherd-asset-type','',
+               ['Type: '+(obj.label||obj.primary_type||'Unknown')])
       ]); 
       form.action = destination;
       form.target = target;
@@ -2322,7 +2322,7 @@ SherdBookmarklet = {
                                self.elt(doc,'button','sherd-move',"float:right;",['move']),
                                self.elt(doc,'h2','','',['Choose an item to import for analysis']),
                                self.elt(doc,'p','sherd-message',"",['Searching for items....']),
-                               self.elt(doc,'ul','',"")
+                               self.elt(doc,'ul','sherd-asset',"")
                            ])
                        ])
           );
@@ -2343,7 +2343,7 @@ SherdBookmarklet = {
               s[dir] = '0px';
           });
           M.connect(comp.close, "click", function(evt) {
-              jQ(comp.ul).empty();
+              jQ('.sherd-analyzer').remove();
               comp.window.style.display = "none";
               if (SherdBookmarklet.options.decorate) {
                   comp.tab.style.display = 'block';
@@ -2390,17 +2390,12 @@ SherdBookmarklet = {
           var form = M.obj2form(host_url, asset, doc, o.postTarget, index);
           li.id = asset.html_id;
           li.appendChild(form);
-          li.style.listStyleType = 'none';
-          li.style.padding = '4px';
-          li.style.margin = '4px';
-          li.style.border = '1px solid black';
           jQ('input.sherd-form-title',form).prev().empty().append(self.elt(null,'div','\
-            ','margin:0;border:0;padding:3px 0;',[self.elt(null,'label','',{label:'title'},['Title:'])]));
+            sherd-asset-title','',[self.elt(null,'label','',{label:'title'},['Editable Title:'])]));
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              jQ(form.firstChild).empty().append(self.elt(null,'img','',{src:img,style:'width:20%;\
-                max-width:120px;max-height:120px;',height:null}));
+              jQ(form.firstChild).empty().append(self.elt(null,'img','sherd-image',{src:img,style:'',height:null}));
           }
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
