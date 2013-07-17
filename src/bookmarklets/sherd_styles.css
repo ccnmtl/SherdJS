@@ -7,7 +7,7 @@
 	left: 0;
 }
 .sherd-window{
-	background: #e2e2e2;
+	background:#fff url(/site_media/js/sherdjs/src/bookmarklets/sherd_bg.png);
 	padding:0 25px 0 0;
 }
 .sherd-window-inner ul{
@@ -37,6 +37,11 @@
 }
 .sherd-window-inner .sherd-form-title{
 	margin:0;border:0;padding:3px 0;
+}
+.sherd-analyze-btn{
+	display:block;
+    padding:4px;
+    margin:4px;
 }
 img.sherd-image{
 	width:90%;

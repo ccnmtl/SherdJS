@@ -2179,7 +2179,8 @@ SherdBookmarklet = {
               var after_merge = self.mergeRedundant(assets[i]);
               if (after_merge) {
                   after_merge.html_id = self.assetHtmlID(after_merge); 
-                  self.ASYNC.display(after_merge, /*index*/assets.length-1); 
+                  self.ASYNC.display(after_merge, /*index*/assets.length-1);
+                  window.SherdBookmarklet.assetBucket = assets; 
                   if (window.console) {
                       window.console.log(assets);
                   }
@@ -2294,7 +2295,6 @@ SherdBookmarklet = {
                   }
               }
           }
-
       };
       this.elt = function(doc,tag,className,style,children) {
           ///we use this to be even more careful than jquery for contexts like doc.contentType='video/m4v' in firefox
@@ -2400,9 +2400,26 @@ SherdBookmarklet = {
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
           } else if (SherdBookmarklet.user_ready()){
-              form.submitButton = self.elt(null,'input','',{type:'submit',style:'display:block;\
-                padding:4px;margin:4px;',value:'analyze'});
+              form.submitButton = self.elt(null,'input','sherd-analyze-btn',{type:'button',value:'analyze'});
               jQ(form.lastChild).empty().append(form.submitButton);
+              jQ(form.submitButton).click(function(){
+
+                /* A pop up window solution... */
+                var bucket = jQuery(form).clone();
+                var bucket_window = window.open(
+                  //window.SherdBookmarkletOptions.host_url,
+                  "",
+                  "",
+                  "width=420,height=230,resizable,scrollbars=yes,status=1,location=0"
+                  );
+                jQuery('body',bucket_window.document).append(bucket);
+                var a = 1;
+                //var ajax_url = window.SherdBookmarkletOptions.host_url;
+                //jQ.post(ajax_url, function(data) {
+                  //window.data_ = data
+                    //jQ('.result').html(data);
+                  //});
+              });//end .click
           }
 
           if (comp.ul) {
