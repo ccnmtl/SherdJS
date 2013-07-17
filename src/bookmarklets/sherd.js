@@ -1706,8 +1706,6 @@ SherdBookmarklet = {
     if (name=="title") {
       item.type = "text";
       //IE7 doesn't allow setAttribute here, mysteriously
-      item.style.display = "block";
-      item.style.width = "90%";
       item.className = "sherd-form-title";
     } else {
       item.type = "hidden";
@@ -2259,7 +2257,6 @@ SherdBookmarklet = {
       }
       this.loadStyles = function(){
         var root_url =  SherdBookmarkletOptions.host_url.split('/save/?').shift()
-        
         jQuery('head').append('<link rel="stylesheet" type="text/css"\
          href="'+ root_url +'/site_media/js/sherdjs/src/bookmarklets/sherd_styles.css">');
 
@@ -2402,23 +2399,44 @@ SherdBookmarklet = {
           } else if (SherdBookmarklet.user_ready()){
               form.submitButton = self.elt(null,'input','sherd-analyze-btn',{type:'button',value:'analyze'});
               jQ(form.lastChild).empty().append(form.submitButton);
-              jQ(form.submitButton).click(function(){
+              jQ(form).mouseenter(function(){
+                jQ(this).css({
+                  background:"#1e1e1e",
+                  cursor:"pointer"
+                })
+              }).mouseleave(function(){
+                jQ(this).css({
+                  background:""
+                })
+              });
+              jQ(form).click(function(){
 
                 /* A pop up window solution... */
                 var bucket = jQuery(form).clone();
+                bucket.css({
+                  background:"#fff"
+                })
                 var bucket_window = window.open(
                   //window.SherdBookmarkletOptions.host_url,
                   "",
                   "",
-                  "width=420,height=230,resizable,scrollbars=yes,status=1,location=0"
+                  "resizable,scrollbars=yes,status=1,location=0"
                   );
                 jQuery('body',bucket_window.document).append(bucket);
-                var a = 1;
-                //var ajax_url = window.SherdBookmarkletOptions.host_url;
-                //jQ.post(ajax_url, function(data) {
-                  //window.data_ = data
-                    //jQ('.result').html(data);
-                  //});
+                jQuery('.sherd-analyze-btn',bucket_window.document).click(function(){
+                  console.log('analyze')
+                  var data = 
+                    {
+                      "image":"http://www.picgifs.com/soccer-graphics/soccer-graphics/messi/soccer-graphics-messi-856696.jpg",
+                      "image-metadata":"w1024h768",
+                      "url":"http://www.picgifs.com/soccer-graphics/messi/soccer-graphics-messi-856696-943056/",
+                      "title":"soccer-graphics-messi-856696.jpg",
+                      "asset-source":"bookmarklet"
+                    }
+                  var ajax_url = window.SherdBookmarkletOptions.host_url;
+                  jQ.post(ajax_url, data);
+                });
+                
               });//end .click
           }
 
