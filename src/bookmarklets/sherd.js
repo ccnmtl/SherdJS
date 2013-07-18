@@ -2424,6 +2424,10 @@ SherdBookmarklet = {
                   );
                 jQuery('body',bucket_window.document).append(bucket);
                 jQuery('.sherd-analyze-btn',bucket_window.document).click(function(){
+                  var data1 = jQuery('form input',bucket_window.document).serialize();
+                  jQuery('form input',bucket_window.document).each(function(){
+                    //console.log(this);
+                  })
                   console.log('analyze')
                   var data = 
                     {
@@ -2431,7 +2435,8 @@ SherdBookmarklet = {
                       "image-metadata":"w1024h768",
                       "url":"http://www.picgifs.com/soccer-graphics/messi/soccer-graphics-messi-856696-943056/",
                       "title":"soccer-graphics-messi-856696.jpg",
-                      "asset-source":"bookmarklet"
+                      "asset-source":"bookmarklet",
+                      "primary_type": "image"
                     }
                   var ajax_url = window.SherdBookmarkletOptions.host_url;
                   jQ.post(ajax_url, data);
