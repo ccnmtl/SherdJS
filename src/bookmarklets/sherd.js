@@ -2423,26 +2423,22 @@ SherdBookmarklet = {
                   "resizable,scrollbars=yes,status=1,location=0"
                   );
                 jQuery('body',bucket_window.document).append(bucket);
-                jQuery('.sherd-analyze-btn',bucket_window.document).click(function(){
-                  var data1 = jQuery('form input',bucket_window.document).serialize();
-                  jQuery('form input',bucket_window.document).each(function(){
-                    //console.log(this);
-                  })
-                  console.log('analyze')
-                  var data = 
-                    {
-                      "image":"http://www.picgifs.com/soccer-graphics/soccer-graphics/messi/soccer-graphics-messi-856696.jpg",
-                      "image-metadata":"w1024h768",
-                      "url":"http://www.picgifs.com/soccer-graphics/messi/soccer-graphics-messi-856696-943056/",
-                      "title":"soccer-graphics-messi-856696.jpg",
-                      "asset-source":"bookmarklet",
-                      "primary_type": "image"
-                    }
-                  var ajax_url = window.SherdBookmarkletOptions.host_url;
-                  jQ.post(ajax_url, data);
-                });
+                jQuery(bucket,bucket_window.document).append('<input class="\
+                  sherd-goto-btn" type="button" name="gotoMeth" value="go to MeTh" />');
                 
-              });//end .click
+                //analyze
+                jQuery('.sherd-analyze-btn',bucket_window.document).click(function(){
+                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="analyze" name="button" />');
+                  jQuery(bucket).submit();
+                });//end .click
+
+                //go to MeTh
+                jQuery('.sherd-goto-btn',bucket_window.document).click(function(){
+                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="goto" name="button" />');
+                  jQuery(bucket).submit();
+                });//end .click
+
+            })
           }
 
           if (comp.ul) {
