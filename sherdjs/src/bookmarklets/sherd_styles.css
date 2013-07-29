@@ -1,0 +1,64 @@
+.sherd-analyzer{
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	z-index: 999999999;
+	top: 0;
+	left: 0;
+	background: url(/site_media/js/sherdjs/src/bookmarklets/sherd_bg.png);
+}
+.sherd-window-inner h2{
+   color: #fff;
+   font-size: 24px;
+   font-family : Arial !important;
+}
+.sherd-window{
+	padding:0 25px 0 0;
+}
+.sherd-window-inner ul{
+	display: inline-block;
+	list-style: none;
+}
+.sherd-window-inner ul li {
+	float:left;
+	list-style: none;
+	width: 150px;
+	border: 1px solid #000;
+	padding: 4px;
+	margin: 4px;
+}
+.sherd-asset-type{
+	float: left;
+	width: 100%;
+	text-align: left;
+	color: #fff;
+}
+.sherd-asset-title{
+	float: left;
+	width: 100%;
+	text-align: left;
+	color: #fff;
+}
+.sherd-asset-wrap{
+	height: 135px; /* 90% of the possible height of 150px */
+}
+.sherd-window-inner .sherd-form-title{
+	margin:0;
+	border:0;
+	padding:3px 0;
+	color: #fff;
+}
+.sherd-analyze-btn{
+	display:block;
+    padding:4px;
+    margin:4px;
+}
+.sherd-asset-type, .sherd-asset-title, 
+.sherd-form-title, .sherd-analyze-btn{
+	display: none;
+}
+img.sherd-image{
+	width:90%;
+	max-width:120px;
+	max-height:120px;
+}
