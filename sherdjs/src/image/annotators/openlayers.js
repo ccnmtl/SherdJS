@@ -36,16 +36,10 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                         if (!options || !options.mode || options.mode === 'browse') {
                             // whole asset view. no annotations. or, just browsing
                             self.openlayers.editingtoolbar.deactivate();
-                            if (self.components.instructions) {
-                                self.components.instructions.style.display = 'none';
-                            }
                             self.mode = "browse";
                         } else {
                             // create, edit, copy
                             self.openlayers.editingtoolbar.activate();
-                            if (self.components.instructions) {
-                                self.components.instructions.style.display = 'block';
-                            }
                             self.mode = options.mode;
                         }
                     }
@@ -162,7 +156,6 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                 return {
                     'top': html_dom,
                     'center': document.getElementById("btnCenter"),
-                    'instructions': document.getElementById("instructions")
                 };
             }
         };

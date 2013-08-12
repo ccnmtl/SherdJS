@@ -129,9 +129,6 @@ if (!Sherd.Video.Annotators.ClipForm) {
                     if (self.components.clipcontrols) {
                         self.components.clipcontrols.style.display = "none";
                     }
-                    if (self.components.instructions) {
-                        self.components.instructions.style.display = "none";
-                    }
                 } else {
                     // create, copy, edit
                     if (self.components.startField) {
@@ -149,9 +146,6 @@ if (!Sherd.Video.Annotators.ClipForm) {
 
                     if (self.components.clipcontrols) {
                         self.components.clipcontrols.style.display = "inline";
-                    }
-                    if (self.components.instructions) {
-                        self.components.instructions.style.display = "block";
                     }
                 }
             }
@@ -246,7 +240,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 htmlID : htmlID,
                 text : '<div id="' + htmlID + '" style="display: none">' +
                 '<div id="clipcontrols" class="sherd-clipform">' +
-                   '<p id="instructions" class="sherd-instructions">Create a selection by clicking Start Time and End Time buttons as the video plays or by manually typing in times in the associated edit boxes. Add title, tags and notes. Click Save when you are finished.</p>' +
+                   '<p id="instructions" style="display: none" class="sherd-instructions">Create a selection by clicking Start Time and End Time buttons as the video plays or by manually typing in times in the associated edit boxes. Add title, tags and notes. Click Save when you are finished.</p>' +
                       '<table>' +
                        '<tr class="sherd-clipform-editing">' +
                          '<td>' +
@@ -284,7 +278,6 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 'endFieldDisplay' : document.getElementById('clipEndDisplay'),
                 'playClip' : document.getElementById('btnPlayClip'),
                 'clipcontrols' : document.getElementById('clipcontrols'),
-                'instructions': document.getElementById('instructions'),
                 'start': "00:00:00",
                 'end': "00:00:00"
             };

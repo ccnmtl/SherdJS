@@ -510,7 +510,7 @@ function DjangoSherd_Storage() {
     this.get = function (subject, callback, list_callback, errorCallback) {
         ///currently obj_type in [annotations, asset, project]
         /// that is used for the URL and a reference to the _cache{} section
-        var id = subject.id;
+        var id = parseInt(subject.id, 10);
         var obj_type = subject.type || 'annotations';
         var ann_obj = null;
         var delay = false;

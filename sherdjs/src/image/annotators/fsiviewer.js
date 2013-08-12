@@ -26,18 +26,6 @@ if (!Sherd.Image.Annotators.FSIViewer) {
                 self.current_state = obj;
 
                 self.mode = null;
-
-                // options.mode == null||'create'||'browse'||'edit'||'copy'
-                if (!options || !options.mode || options.mode === "browse") {
-                    if (self.components.instructions) {
-                        self.components.instructions.style.display = 'none';
-                    }
-                }  else {
-                    // create, edit, copy
-                    if (self.components.instructions) {
-                        self.components.instructions.style.display = 'block';
-                    }
-                }
             }
         };
 
@@ -80,7 +68,6 @@ if (!Sherd.Image.Annotators.FSIViewer) {
                     'top': html_dom,
                     'image': html_dom.getElementsByTagName('img')[0],
                     'center': document.getElementById('btnCenter'),
-                    'instructions': document.getElementById('instructions')
                 };
             }
         };
