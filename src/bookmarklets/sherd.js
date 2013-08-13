@@ -2446,7 +2446,7 @@ SherdBookmarklet = {
                 jQuery('.sherd-analyze-btn',bucket_window.document).click(function(_window){
                   jQuery(bucket,bucket_window.document).append('<input type="hidden" value="analyze" name="button" />');                  
                   jQuery(bucket).submit();
-                  //window.open(host_url);
+                  var newTab = window.host_url.split('/save/?')[0];
                 });//end .click
 
                 //go to MeTh - collection
