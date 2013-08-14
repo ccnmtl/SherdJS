@@ -2414,7 +2414,13 @@ SherdBookmarklet = {
               jQ(form).click(function(_window){
 
                 /* A pop up window solution... */
-                var bucket = jQuery(form).clone();
+                var bucketWrap = jQ('<div id="bucket-wrap"/>');
+                var bucket = jQ(form).clone();
+                bucket.appendTo(bucketWrap);
+                bucketWrap.css({
+                  position:'fixed',
+                  bottom:'0'
+                })
                 bucket.css({
                   background:"#fff"
                 })
@@ -2424,35 +2430,37 @@ SherdBookmarklet = {
                   "bucket_window",
                   "resizable,scrollbars=yes,status=1,location=false, width=700, height=600"
                   );
-                jQuery('body',bucket_window.document).append(bucket);
+                jQ('body',bucket_window.document).append(bucketWrap);
 
                 //set the buttons in the pop up 
-                jQuery('.collect',bucket_window.document).attr({
+                jQ('.collect',bucket_window.document).attr({
                   value:"continue",
                   class:"sherd-cont-btn"
                 });
-                jQuery(bucket,bucket_window.document).append('<input class="\
+                jQ(bucket,bucket_window.document).append('<input class="\
                   sherd-analyze-btn" type="button" name="analyze" value="analyze" />');
-                jQuery(bucket,bucket_window.document).append('<input class="\
+                jQ(bucket,bucket_window.document).append('<input class="\
                   sherd-collection-btn" type="button" name="continue" value="collection" />');
                 
                 //continue
-                jQuery('.sherd-cont-btn',bucket_window.document).click(function(){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="cont" name="button" />');
-                  jQuery(bucket).submit();
+                jQ('.sherd-cont-btn',bucket_window.document).click(function(){
+                  jQ(bucket,bucket_window.document).append('<input type="hidden" value="cont" name="button" />');
+                  jQ(bucket).submit();
                 });//end .click
 
                 //go to MeTh - analyze item
-                jQuery('.sherd-analyze-btn',bucket_window.document).click(function(_window){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="analyze" name="button" />');                  
-                  jQuery(bucket).submit();
+                jQ('.sherd-analyze-btn',bucket_window.document).click(function(_window){
+                  jQ(bucket,bucket_window.document).append('<input type="hidden" value="analyze" name="button" />');                  
+                  jQ(bucket).submit();
                   var newTab = window.host_url.split('/save/?')[0];
+                  var reTab = 1;
+                  window.open(newTab + '/asset/');
                 });//end .click
 
                 //go to MeTh - collection
-                jQuery('.sherd-collection-btn',bucket_window.document).click(function(){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="collection" name="button" />');
-                  jQuery(bucket).submit();
+                jQ('.sherd-collection-btn',bucket_window.document).click(function(){
+                  jQ(bucket,bucket_window.document).append('<input type="hidden" value="collection" name="button" />');
+                  jQ(bucket).submit();
                   var newTab = window.host_url.split('/save/?')[0];
                   window.open(newTab + '/asset/');
                 });//end .click
