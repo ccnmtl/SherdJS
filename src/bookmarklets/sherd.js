@@ -2437,8 +2437,9 @@ SherdBookmarklet = {
                   value:"continue",
                   class:"sherd-cont-btn"
                 });
-                jQ(bucket,bucket_window.document).append('<input class="\
-                  sherd-analyze-btn" type="button" name="analyze" value="analyze" />');
+                // add the analyze button later
+                //jQ(bucket,bucket_window.document).append('<input class="\
+                //  sherd-analyze-btn" type="button" name="analyze" value="analyze" />');
                 jQ(bucket,bucket_window.document).append('<input class="\
                   sherd-collection-btn" type="button" name="continue" value="collection" />');
                 
@@ -2448,14 +2449,15 @@ SherdBookmarklet = {
                   jQ(bucket).submit();
                 });//end .click
 
+                /* Having issues with this for now... will revisit
                 //go to MeTh - analyze item
                 jQ('.sherd-analyze-btn',bucket_window.document).click(function(_window){
-                  jQ(bucket,bucket_window.document).append('<input type="hidden" value="analyze" name="button" />');                  
+                  var opener = window
+                  jQ(bucket,bucket_window.document).append('<input type="hidden" value="analyze" name="button" />');
+                  jQ(bucket,bucket_window.document).append('<input type="hidden" value="'+ opener +'" name="window" />');                  
                   jQ(bucket).submit();
-                  var newTab = window.host_url.split('/save/?')[0];
-                  var reTab = 1;
-                  window.open(newTab + '/asset/');
                 });//end .click
+                */
 
                 //go to MeTh - collection
                 jQ('.sherd-collection-btn',bucket_window.document).click(function(){
