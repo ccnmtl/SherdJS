@@ -850,7 +850,7 @@ SherdBookmarklet = {
                           c = obj.getConfig(), 
                           pcfg = obj.getPluginConfig('http');
                       if (item.type == 'rtmp') {
-                         // ensure that mp4 rtmp files contain the
+                      	 // ensure that mp4 rtmp files contain the
                          // needed mp4: prefix so that they will play
                          // properly in flowplayer;
                          // JW Player allows you to omit this prefix,
@@ -1666,7 +1666,7 @@ SherdBookmarklet = {
     var destination =  host_url;
     for (a in obj.sources) {
         if (typeof obj.sources[a] =="undefined") continue;
-  destination += ( a+"="+escape(obj.sources[a]) +"&" );
+	destination += ( a+"="+escape(obj.sources[a]) +"&" );
     }
     if (obj.hash) {
         destination += "#"+obj.hash;
@@ -1685,9 +1685,9 @@ SherdBookmarklet = {
           destination += "#"+obj.hash;
       }
       var form = M.elt(doc,'form','',{},[
-          M.elt(doc,'div','sherd-asset-wrap',{}),
-          M.elt(doc,'div','sherd-asset-type','',
-               ['Type: '+(obj.label||obj.primary_type||'Unknown')])
+          M.elt(doc,'span','',{}),
+          M.elt(doc,'div','','border:0;margin:0;float:right;',
+                ['Type: '+(obj.label||obj.primary_type||'Unknown')])
       ]); 
       form.action = destination;
       form.target = target;
@@ -1706,6 +1706,8 @@ SherdBookmarklet = {
     if (name=="title") {
       item.type = "text";
       //IE7 doesn't allow setAttribute here, mysteriously
+      item.style.display = "block";
+      item.style.width = "90%";
       item.className = "sherd-form-title";
     } else {
       item.type = "hidden";
@@ -2177,8 +2179,7 @@ SherdBookmarklet = {
               var after_merge = self.mergeRedundant(assets[i]);
               if (after_merge) {
                   after_merge.html_id = self.assetHtmlID(after_merge); 
-                  self.ASYNC.display(after_merge, /*index*/assets.length-1);
-                  window.SherdBookmarklet.assetBucket = assets; 
+                  self.ASYNC.display(after_merge, /*index*/assets.length-1); 
                   if (window.console) {
                       window.console.log(assets);
                   }
@@ -2255,16 +2256,9 @@ SherdBookmarklet = {
       this.visibleY = function(target) {
           return target.ownerDocument.body.scrollTop;
       }
-      this.loadStyles = function(){
-        var root_url =  SherdBookmarkletOptions.host_url.split('/save/?').shift()
-        jQuery('head').append('<link rel="stylesheet" type="text/css"\
-         href="'+ root_url +'/site_media/js/sherdjs/src/bookmarklets/sherd_styles.css">');
-
-      }
       this.showWindow = function() {
           self.windowStatus = true;
           if (comp.window) {
-              self.loadStyles();
               comp.window.style.top = self.visibleY(comp.window)+'px';
               comp.window.style.display = "block";
               comp.tab.style.display = "none";
@@ -2292,6 +2286,7 @@ SherdBookmarklet = {
                   }
               }
           }
+
       };
       this.elt = function(doc,tag,className,style,children) {
           ///we use this to be even more careful than jquery for contexts like doc.contentType='video/m4v' in firefox
@@ -2310,16 +2305,18 @@ SherdBookmarklet = {
           var pageYOffset = self.visibleY(target)+o.top;
           var doc = target.ownerDocument;
           comp.top.appendChild(
-              self.elt(doc,'div','sherd-tab','',[o.tab_label]));
+              self.elt(doc,'div','sherd-tab',
+                       "display:block;position:absolute;"+o.side+":0px;z-index:999998;height:2.5em;top:"+pageYOffset+"px;color:black;font-weight:bold;margin:0;padding:5px;border:3px solid black;text-align:center;background-color:#cccccc;text-decoration:underline;cursor:pointer;text-align:left;",
+                       [o.tab_label]));
           comp.top.appendChild(
-              self.elt(doc,'div','sherd-window','',
+              self.elt(doc,'div','sherd-window',"display:none;left:0;position:absolute;z-index:999999;top:0;margin:0;padding:0;width:400px;height:400px;overflow:hidden;border:3px solid black;text-align:left;background-color:#cccccc",
                        [
-                           self.elt(doc,'div','sherd-window-inner','',[
+                           self.elt(doc,'div','sherd-window-inner',"overflow-y:auto;width:384px;height:390px;margin:1px;padding:0 6px 6px 6px;border:1px solid black;",[
                                self.elt(doc,'button','sherd-close',"float:right;",['close']),
                                self.elt(doc,'button','sherd-move',"float:right;",['move']),
                                self.elt(doc,'h2','','',['Choose an item to import for analysis']),
                                self.elt(doc,'p','sherd-message',"",['Searching for items....']),
-                               self.elt(doc,'ul','sherd-asset',"")
+                               self.elt(doc,'ul','',"")
                            ])
                        ])
           );
@@ -2340,7 +2337,7 @@ SherdBookmarklet = {
               s[dir] = '0px';
           });
           M.connect(comp.close, "click", function(evt) {
-              jQ('.sherd-analyzer').remove();
+              jQ(comp.ul).empty();
               comp.window.style.display = "none";
               if (SherdBookmarklet.options.decorate) {
                   comp.tab.style.display = 'block';
@@ -2387,78 +2384,21 @@ SherdBookmarklet = {
           var form = M.obj2form(host_url, asset, doc, o.postTarget, index);
           li.id = asset.html_id;
           li.appendChild(form);
-          jQ('input.sherd-form-title',form).prev().empty().append(self.elt(null,'div','\
-            sherd-asset-title','',[self.elt(null,'label','',{label:'title'},['Editable Title:'])]));
+          li.style.listStyleType = 'none';
+          li.style.padding = '4px';
+          li.style.margin = '4px';
+          li.style.border = '1px solid black';
+          jQ('input.sherd-form-title',form).prev().empty().append(self.elt(null,'div','','margin:0;border:0;padding:3px 0;',[self.elt(null,'label','',{label:'title'},['Title:'])]));
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              jQ(form.firstChild).empty().append(self.elt(null,'img','sherd-image',{src:img,style:'',height:null}));
+              jQ(form.firstChild).empty().append(self.elt(null,'img','',{src:img,style:'width:20%;max-width:120px;max-height:120px;',height:null}));
           }
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
           } else if (SherdBookmarklet.user_ready()){
-              form.submitButton = self.elt(null,'input','collect',{type:'button',value:'collect'});
+              form.submitButton = self.elt(null,'input','',{type:'submit',style:'display:block;padding:4px;margin:4px;',value:'analyze'});
               jQ(form.lastChild).empty().append(form.submitButton);
-              jQ(form).mouseenter(function(){
-                jQ(this).css({
-                  background:"#1e1e1e",
-                  cursor:"pointer"
-                })
-              }).mouseleave(function(){
-                jQ(this).css({
-                  background:""
-                })
-              });
-              var _window = window;
-              jQ(form).click(function(_window){
-
-                /* A pop up window solution... */
-                var bucket = jQuery(form).clone();
-                bucket.css({
-                  background:"#fff"
-                })
-                var bucket_window = window.open(
-                  //window.SherdBookmarkletOptions.host_url,
-                  "",
-                  "bucket_window",
-                  "resizable,scrollbars=yes,status=1,location=false"
-                  );
-                jQuery('body',bucket_window.document).append(bucket);
-
-                //set the buttons in the pop up 
-                jQuery('.collect',bucket_window.document).attr({
-                  value:"continue",
-                  class:"sherd-cont-btn"
-                });
-                jQuery(bucket,bucket_window.document).append('<input class="\
-                  sherd-analyze-btn" type="button" name="analyze" value="analyze" />');
-                jQuery(bucket,bucket_window.document).append('<input class="\
-                  sherd-collection-btn" type="button" name="analyze" value="collection" />');
-                
-                //continue
-                jQuery('.sherd-cont-btn',bucket_window.document).click(function(){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="cont" name="button" />');
-                  jQuery(bucket).submit();
-                });//end .click
-
-                //go to MeTh - analyze item
-                jQuery('.sherd-analyze-btn',bucket_window.document).click(function(_window){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="analyze" name="button" />');
-                  console.log(_window.opener)
-                  window.opener.location.replace("http:/google.com/");
-                  jQuery(bucket).submit();
-
-                  bucket_window.close ();
-
-                });//end .click
-
-                //go to MeTh - collection
-                jQuery('.sherd-collection-btn',bucket_window.document).click(function(){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="collection" name="button" />');
-                  jQuery(bucket).submit();
-                });//end .click
-
-            })
           }
 
           if (comp.ul) {
