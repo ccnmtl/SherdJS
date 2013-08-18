@@ -155,7 +155,7 @@ if (!Sherd.Video.YouTube) {
                     if (obj.youtube !== self.components.mediaUrl) {
                         // Replacing the 'url' by cue'ing the video with the new url
                         self.components.mediaUrl = obj.youtube;
-                        self.components.player.cueVideoByUrl(self.components.mediaUrl, 0);
+                        self.components.player.cueVideoByUrl(self.components.mediaUrl + "?version=3", 0);
                     }
                     return true;
                 }
@@ -283,9 +283,11 @@ if (!Sherd.Video.YouTube) {
         this.media.seek = function (starttime, endtime, autoplay) {
             if (self.media.ready()) {
                 if (starttime !== undefined) {
-                    self.components.player.seekTo(starttime, true);
-                    if (!autoplay && !self.media.isPlaying()) {
-                        self.media.pause();
+                    if (self.components.player.seekTo) {
+                        self.components.player.seekTo(starttime, true);
+                        if (!autoplay && !self.media.isPlaying()) {
+                            self.media.pause();
+                        }
                     }
                 }
 
