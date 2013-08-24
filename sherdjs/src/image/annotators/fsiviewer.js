@@ -55,7 +55,12 @@ if (!Sherd.Image.Annotators.FSIViewer) {
                 var id = Sherd.Base.newID('openlayers-annotator');
                 return {
                     htmlID: id,
-                    text: '<div id="' + id + '"><p style="display:none;" id="instructions" class="sherd-instructions">Zoom and Pan to the frame you want to save, and then click Save</p></div>'
+                    text: '<div id="' + id + '"><p style="display:none;" id="instructions" class="sherd-instructions">' +
+                    'To create a selection of an ARTstor image, use tools at the top of the image to zoom into the desired region.' + 
+                    '<br /><br />' +
+                    'Add title, tags and notes. If a Course Vocabulary has been enabled by the instructor, apply vocabulary terms. ' +
+                    'Click Save when you are finished.' +
+                    '</p></div>'
                 };
             },
             'components': function (html_dom, create_obj) {

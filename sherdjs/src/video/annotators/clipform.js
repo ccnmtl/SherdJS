@@ -240,7 +240,12 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 htmlID : htmlID,
                 text : '<div id="' + htmlID + '" style="display: none">' +
                 '<div id="clipcontrols" class="sherd-clipform">' +
-                   '<p id="instructions" style="display: none" class="sherd-instructions">Create a selection by clicking Start Time and End Time buttons as the video plays or by manually typing in times in the associated edit boxes. Add title, tags and notes. Click Save when you are finished.</p>' +
+                   '<p id="instructions" style="display: none" class="sherd-instructions">' +
+                       'Create a selection by clicking Start Time and End Time buttons as the video plays, ' +
+                       'or by manually typing in times in the associated edit boxes.<br /><br />' +
+                       'Add title, tags and notes. If a Course Vocabulary has been enabled by the instructor, ' +
+                       'apply vocabulary terms. Click Save when you are finished.' +                   
+                   '</p>' +
                       '<table>' +
                        '<tr><td span="0"><div><label for="annotation-title">Selection Times</label></div></td></tr>' + 
                        '<tr class="sherd-clipform-editing">' +
