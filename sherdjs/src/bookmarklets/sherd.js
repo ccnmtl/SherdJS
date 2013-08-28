@@ -2256,8 +2256,9 @@ SherdBookmarklet = {
           return target.ownerDocument.body.scrollTop;
       }
       this.loadStyles = function(){
+        var jQ = window.SherdBookmarkletOptions.jQuery || window.jQuery;
         var root_url =  SherdBookmarkletOptions.host_url.split('/save/?').shift()
-        jQuery('head').append('<link rel="stylesheet" type="text/css"\
+        jQ('head').append('<link rel="stylesheet" type="text/css"\
          href="'+ root_url +'/site_media/js/sherdjs/src/bookmarklets/sherd_styles.css">');
 
       }
@@ -2316,7 +2317,8 @@ SherdBookmarklet = {
                        [
                            self.elt(doc,'div','sherd-window-inner','',[
                                self.elt(doc,'button','sherd-close',"float:right;",['close']),
-                               self.elt(doc,'button','sherd-move',"float:right;",['move']),
+                               //self.elt(doc,'button','sherd-move',"float:right;",['move']),
+                               self.elt(doc,'button','sherd-collection',"float:right;",['Go to collection']),
                                self.elt(doc,'h2','','',['Choose an item to import for analysis']),
                                self.elt(doc,'p','sherd-message',"",['Searching for items....']),
                                self.elt(doc,'ul','sherd-asset',"")
@@ -2329,15 +2331,13 @@ SherdBookmarklet = {
           comp.ul = comp.top.getElementsByTagName("ul")[0];
           comp.h2 = comp.top.getElementsByTagName("h2")[0];
           comp.close = comp.top.getElementsByTagName("button")[0];
-          comp.move = comp.top.getElementsByTagName("button")[1];
+          comp.collection = comp.top.getElementsByTagName("button")[1];
           comp.message = comp.top.getElementsByTagName("p")[0];
 
           M.connect(comp.tab, "click", this.onclick);
-          M.connect(comp.move, "click", function(evt) {
-              var s = comp.window.style;
-              var dir = ((s.left=='0px')? 'right' : 'left');
-              s.left = s.right = null;
-              s[dir] = '0px';
+          M.connect(comp.collection, "click", function(evt) {
+              var url = window.host_url.split('/save/?')[0]
+              window.location.replace(url + '/asset/');
           });
           M.connect(comp.close, "click", function(evt) {
               jQ('.sherd-analyzer').remove();
@@ -2397,8 +2397,10 @@ SherdBookmarklet = {
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
           } else if (SherdBookmarklet.user_ready()){
-              form.submitButton = self.elt(null,'input','collect',{type:'button',value:'collect'});
+              form.submitButton = self.elt(null,'input','analyze',{type:'button',value:'analyze now'});
+              form.submitButton2 = self.elt(null,'input','cont',{type:'button',value:'send to MediaThread'});
               jQ(form.lastChild).empty().append(form.submitButton);
+              jQ(form.lastChild).append(form.submitButton2);
               jQ(form).mouseenter(function(){
                 jQ(this).css({
                   background:"#1e1e1e",
@@ -2409,56 +2411,98 @@ SherdBookmarklet = {
                   background:""
                 })
               });
-              var _window = window;
-              jQ(form).click(function(_window){
+              jQ(form.submitButton).click(function(){
+                jQuery(this).parent().parent().submit()
+              })
+              jQ(form.submitButton2).click(function(){
+               /* A pop up window solution... */
+                var bucketWrap = jQ('<div id="bucket-wrap"/>');
+                var bucket = jQ(form).clone();
+                jQ('input.analyze', bucket).remove()
+                jQ('input.cont', bucket).remove()
+                var bucket_window = window.open(
+                   "",
+                   "bucket_window",
+                   "resizable,scrollbars=yes,status=1,location=false, width=700, height=600"
+                );
+                bucket.appendTo(bucketWrap);
+                bucketWrap.css({
+                   position:'fixed',
+                   bottom:'0'
+                 })
+                bucket.css({
+                   background:"#fff"
+                })
 
-                /* A pop up window solution... */
-                var bucket = jQuery(form).clone();
+                jQ(bucket).append('<input type="hidden" value="cont" name="button" />');
+                jQ(bucket).append('<input id="submit-input" type="button" value="Continue" />');
+                jQ('body',bucket_window.document).append(bucketWrap);
+                jQ('#submit-input',bucket_window.document).click(function(){
+                  jQ(this).parent().submit();
+                })
+              })
+              /*
+              jQ(form).click(function(){
+                return
+                /* A pop up window solution... 
+                var bucketWrap = jQ('<div id="bucket-wrap"/>');
+                var bucket = jQ(form).clone();
+                bucket.appendTo(bucketWrap);
+                bucketWrap.css({
+                  position:'fixed',
+                  bottom:'0'
+                })
                 bucket.css({
                   background:"#fff"
                 })
-                var bucket_window = window.open(
-                  //window.SherdBookmarkletOptions.host_url,
-                  "",
-                  "bucket_window",
-                  "resizable,scrollbars=yes,status=1,location=false"
-                  );
-                jQuery('body',bucket_window.document).append(bucket);
-
+                var bucket_window = jQ('<div id="bucket-window"/>');
+                bucket_window.css({
+                  position:"absolute",
+                  zIndex:"999999999"
+                })
+                jQ(bucket_window).append(bucketWrap);
+                jQ('body').append(bucket_window);
                 //set the buttons in the pop up 
-                jQuery('.collect',bucket_window.document).attr({
+                jQ('.collect',bucket_window).attr({
                   value:"continue",
-                  class:"sherd-cont-btn"
+                  class:"sherd-cont-btn-clone"
                 });
-                jQuery(bucket,bucket_window.document).append('<input class="\
-                  sherd-analyze-btn" type="button" name="analyze" value="analyze" />');
-                jQuery(bucket,bucket_window.document).append('<input class="\
-                  sherd-collection-btn" type="button" name="analyze" value="collection" />');
+                // analyze button
+                jQ(bucket,bucket_window).append('<input class="\
+                  sherd-analyze-btn-clone" type="button" name="analyze" value="analyze" />');
+                jQ(bucket,bucket_window).append('<input class="\
+                  sherd-collection-btn-clone" type="button" name="continue" value="collection" />');
                 
                 //continue
-                jQuery('.sherd-cont-btn',bucket_window.document).click(function(){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="cont" name="button" />');
-                  jQuery(bucket).submit();
+                jQ('.sherd-cont-btn-clone',bucket_window).click(function(){
+                  var bucket_popup = window.open(
+                    "",
+                    "bucket_window",
+                    "resizable,scrollbars=yes,status=1,location=false, width=700, height=600"
+                  );
+                  jQ(bucket,bucket_popup.document).append('<input type="hidden" value="cont" name="button" />');
+                  jQ(bucket).submit();
+
                 });//end .click
-
+                
                 //go to MeTh - analyze item
-                jQuery('.sherd-analyze-btn',bucket_window.document).click(function(_window){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="analyze" name="button" />');
-                  console.log(_window.opener)
-                  window.opener.location.replace("http:/google.com/");
-                  jQuery(bucket).submit();
-
-                  bucket_window.close ();
-
+                jQ('.sherd-analyze-btn-clone',bucket_window).click(function(_window){
+                  jQ(bucket,bucket_window).append('<input type="hidden" value="analyze" name="button" />');
+                  jQ(bucket).submit();
+                  var jqxhr = jQ.ajax( "/most_recent/" ) 
+                  var ao=0;
                 });//end .click
 
                 //go to MeTh - collection
-                jQuery('.sherd-collection-btn',bucket_window.document).click(function(){
-                  jQuery(bucket,bucket_window.document).append('<input type="hidden" value="collection" name="button" />');
-                  jQuery(bucket).submit();
+                jQ('.sherd-collection-btn-clone',bucket_window).click(function(){
+                  jQ(bucket,bucket_window).append('<input type="hidden" value="collection" name="button" />');
+                  jQ(bucket).submit();
+                  var newTab = window.host_url.split('/save/?')[0];
+                  window.open(newTab + '/asset/');
                 });//end .click
 
-            })
+            })// end form.click
+          */
           }
 
           if (comp.ul) {

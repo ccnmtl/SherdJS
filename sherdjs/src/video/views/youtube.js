@@ -155,7 +155,7 @@ if (!Sherd.Video.YouTube) {
                     if (obj.youtube !== self.components.mediaUrl) {
                         // Replacing the 'url' by cue'ing the video with the new url
                         self.components.mediaUrl = obj.youtube;
-                        self.components.player.cueVideoByUrl(self.components.mediaUrl, 0);
+                        self.components.player.cueVideoByUrl(self.components.mediaUrl + "?version=3", 0);
                     }
                     return true;
                 }
@@ -185,10 +185,23 @@ if (!Sherd.Video.YouTube) {
             if (unescape(playerID) === self.components.playerID) {
                 self.media._ready = true;
                 
+                // Once the player is ready -- sort out any autoplay+seek requests
+                if (self.components.autoplay) {
+                    if (self.components.starttime !== undefined) {
+                        // Reseek if needed
+                        console.log("reseek");
+                        self.media.seek(self.components.starttime,
+                                        self.components.endtime,
+                                        self.components.autoplay);
+                    } else {
+                        self.media.play();
+                    }
+                }
+                self.components.starttime = undefined;
+                self.components.endtime = undefined;
+                self.components.autoplay = undefined;
+                
                 jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
-
-                // reset the state
-                self.setState({ start: self.components.starttime, end: self.components.endtime});
 
                 // register a state change function
                 // @todo -- YouTube limitation does not allow anonymous functions. Will need to address for
@@ -270,13 +283,10 @@ if (!Sherd.Video.YouTube) {
         this.media.seek = function (starttime, endtime, autoplay) {
             if (self.media.ready()) {
                 if (starttime !== undefined) {
-                    if (autoplay || self.components.autoplay) {
-                        if (self.components.player.seekTo) {
-                            self.components.player.seekTo(starttime, true);
-                        }
-                    } else {
-                        if (self.components.player.cueVideoByUrl) {
-                            self.components.player.cueVideoByUrl(self.components.mediaUrl, starttime);
+                    if (self.components.player.seekTo) {
+                        self.components.player.seekTo(starttime, true);
+                        if (!autoplay && !self.media.isPlaying()) {
+                            self.media.pause();
                         }
                     }
                 }
@@ -288,11 +298,12 @@ if (!Sherd.Video.YouTube) {
                     // the seek to the new time hasn't yet occurred and the pauseAt test (self.media.time > endtime)
                     // incorrectly returns true.
                     setTimeout(function () { self.media.pauseAt(endtime); }, 100);
-                }
+                }                
             } else {
                 // store the values away for when the player is ready
                 self.components.starttime = starttime;
                 self.components.endtime = endtime;
+                self.components.autoplay = autoplay;
             }
         };
 

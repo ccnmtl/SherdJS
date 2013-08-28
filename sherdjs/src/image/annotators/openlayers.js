@@ -147,9 +147,13 @@ if (!Sherd.Image.Annotators.OpenLayers) {
                 return {
                     htmlID: id,
                     text: '<div id="' + id + '">' +
-                    '   <p style="display:none;" id="instructions" class="sherd-instructions">Choose a drawing tool, located on the upper, right-hand side of the image. ' +
-                    '   The polygon tool works by clicking on the points of the polygon and then double-clicking the last point.</p>' +
-                    '</div>'
+                    '<p style="display:none;" id="instructions" class="sherd-instructions">' +
+                    'To create a selection of an image, choose a drawing tool, located on the upper, ' +
+                    'right-hand side of the image. The polygon tool works by clicking on the points of ' +
+                    'the polygon and then double-clicking the last point.<br /><br />' +
+                    'Add title, tags and notes. If a Course Vocabulary has been enabled by ' +
+                    'the instructor, apply vocabulary terms. Click Save when you are finished.' +                                        
+                    '</p></div>'
                 };
             },
             'components': function (html_dom, create_obj) {
