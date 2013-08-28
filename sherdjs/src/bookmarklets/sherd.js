@@ -1775,26 +1775,16 @@ SherdBookmarklet = {
             return;
         }
         var jump_with_first_asset = function(assets,error) {
-            switch (assets.length) {
-            case 0: 
+            if (assets.length === 0) {
                 if (handler.also_find_general) {
                     M.run_with_jquery(grabber_func);
                     return;
                 }
                 var message = error||"This page does not contain any supported media assets. Try going to an asset page.";
                 return alert(message);
-            case 1:
-                if (assets[0].disabled)
-                    return alert("This asset cannot be embedded on external sites. Please select another asset.");
-
-                if (jump_now && !M.debug) {
-                    //document.location = M.obj2url(host_url, assets[0]);
-                    var form = M.obj2form(host_url, assets[0]);
-                    document.body.appendChild(form); //for IE7 sux
-                    form.submit();
-                }
-                break;
-            default:
+            } else if (assets.length === 1 && assets[0].disabled) {
+                return alert("This asset cannot be embedded on external sites. Please select another asset.");
+            } else {
                 M.g = new M.Interface(host_url, {'allow_save_all': handler.allow_save_all});
                 M.g.showAssets(assets);
             }
@@ -2412,7 +2402,7 @@ SherdBookmarklet = {
                 })
               });
               jQ(form.submitButton).click(function(){
-                jQuery(this).parent().parent().submit()
+                jQ(this).parent().parent().submit()
               })
               jQ(form.submitButton2).click(function(){
                /* A pop up window solution... */
