@@ -189,7 +189,6 @@ if (!Sherd.Video.YouTube) {
                 if (self.components.autoplay) {
                     if (self.components.starttime !== undefined) {
                         // Reseek if needed
-                        console.log("reseek");
                         self.media.seek(self.components.starttime,
                                         self.components.endtime,
                                         self.components.autoplay);
