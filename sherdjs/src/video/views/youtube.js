@@ -209,6 +209,7 @@ if (!Sherd.Video.YouTube) {
                 // @todo -- YouTube limitation does not allow anonymous functions. Will need to address for
                 // multiple YT players on a page
                 self.components.player.addEventListener("onStateChange", 'onYTStateChange');
+                // does not work self.components.player.addEventListener("onError", 'onYTError');
             }
         };
 
@@ -242,7 +243,7 @@ if (!Sherd.Video.YouTube) {
                 break;
             }
         };
-
+        
         this.media.duration = function () {
             var duration = 0;
             if (self.components.player) {
@@ -290,13 +291,10 @@ if (!Sherd.Video.YouTube) {
             if (self.media.ready()) {
                 if (starttime !== undefined) {
                     if (self.components.player.seekTo) {
-                        if (starttime > 0) {
-                            self.components.player.seekTo(starttime, true);
-                        } else if (autoplay) {
-                            // Just play it. No need to seek here
-                            self.media.play();                            
-                        }
-                        if (!autoplay && (self.media.state() === -1)) {
+                        self.components.player.seekTo(starttime, true);
+                        if (autoplay && !self.media.isPlaying()) {
+                            self.media.play();           
+                        } else if (self.media.state() === -1) {
                             self.components.pauseit = true;
                         }
                     }
