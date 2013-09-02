@@ -69,7 +69,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 if (options && options.tool_play) {
                     self.unbind.tool_play = self.events.connect(options.tool_play, 'click', function (evt) {
                         var obj = self.getState();
-                        self.events.signal(self.targetview, 'playclip', { start: obj.start, end: obj.end });
+                        self.events.signal(self.targetview, 'playclip', { start: obj.start, end: obj.end, autoplay: true });
                     });
                 }
 
