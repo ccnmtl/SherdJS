@@ -155,7 +155,7 @@ if (!Sherd.Video.YouTube) {
                     if (obj.youtube !== self.components.mediaUrl) {
                         // Replacing the 'url' by cue'ing the video with the new url
                         self.components.mediaUrl = obj.youtube;
-                        self.components.player.cueVideoByUrl(self.components.mediaUrl + "?version=3", 0);
+                        self.components.player.loadVideoByUrl(self.components.mediaUrl + "?version=3");
                     }
                     return true;
                 }
@@ -172,7 +172,11 @@ if (!Sherd.Video.YouTube) {
             self.events.connect(self, 'seek', self.media.playAt);
 
             self.events.connect(self, 'playclip', function (obj) {
-                self.setState(obj);
+                var opts = {};
+                if (obj.hasOwnProperty('autoplay')) {
+                    opts.autoplay = obj.autoplay;
+                }
+                self.setState(obj, opts);
                 self.media.play();
             });
         };
@@ -186,16 +190,14 @@ if (!Sherd.Video.YouTube) {
                 self.media._ready = true;
                 
                 // Once the player is ready -- sort out any autoplay+seek requests
+                if (self.components.starttime !== undefined) {
+                    // Reseek if needed. Seek plays automatically
+                    self.media.seek(self.components.starttime,
+                                    self.components.endtime,
+                                    self.components.autoplay);
+                }
                 if (self.components.autoplay) {
-                    if (self.components.starttime !== undefined) {
-                        // Reseek if needed
-                        console.log("reseek");
-                        self.media.seek(self.components.starttime,
-                                        self.components.endtime,
-                                        self.components.autoplay);
-                    } else {
-                        self.media.play();
-                    }
+                    self.media.play();
                 }
                 self.components.starttime = undefined;
                 self.components.endtime = undefined;
@@ -207,6 +209,7 @@ if (!Sherd.Video.YouTube) {
                 // @todo -- YouTube limitation does not allow anonymous functions. Will need to address for
                 // multiple YT players on a page
                 self.components.player.addEventListener("onStateChange", 'onYTStateChange');
+                // does not work self.components.player.addEventListener("onError", 'onYTError');
             }
         };
 
@@ -224,6 +227,10 @@ if (!Sherd.Video.YouTube) {
                 jQuery(window).trigger('video.finish', [self.components.itemId, self.components.primaryType]);
                 break;
             case 1: // playing
+                if (self.components.pauseit === true) {
+                    self.media.pause();
+                    self.components.pauseit = undefined;
+                }
                 var duration = self.media.duration();
                 if (duration > 1) {
                     self.events.signal(self, 'duration', {duration: duration});                    
@@ -236,7 +243,7 @@ if (!Sherd.Video.YouTube) {
                 break;
             }
         };
-
+        
         this.media.duration = function () {
             var duration = 0;
             if (self.components.player) {
@@ -285,8 +292,10 @@ if (!Sherd.Video.YouTube) {
                 if (starttime !== undefined) {
                     if (self.components.player.seekTo) {
                         self.components.player.seekTo(starttime, true);
-                        if (!autoplay && !self.media.isPlaying()) {
-                            self.media.pause();
+                        if (autoplay && !self.media.isPlaying()) {
+                            self.media.play();           
+                        } else if (self.media.state() === -1) {
+                            self.components.pauseit = true;
                         }
                     }
                 }
