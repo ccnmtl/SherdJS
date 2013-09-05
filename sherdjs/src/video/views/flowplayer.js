@@ -322,10 +322,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 }
                 
                 if (create_obj.playerParams.provider === "audio") {
-                    options.plugins.audio = { url: 'flowplayer.audio-3.2.10.swf' };
+                    options.plugins.audio = { url: flowplayer.audio_plugin};
                 } else {
-                    options.plugins.pseudo = { url: 'flowplayer.pseudostreaming-3.2.11.swf' };
-                    options.plugins.rtmp = { url: 'flowplayer.rtmp-3.2.11.swf' };
+                    options.plugins.pseudo = { url: flowplayer.pseudostreaming_plugin};
+                    options.plugins.rtmp = { url: flowplayer.rtmp_plugin};
                 }
                 
                 if (create_obj.object.poster) {
@@ -351,7 +351,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
                 
                 flowplayer(create_obj.playerID,
-                           flowplayer.swf_location || "http://releases.flowplayer.org/swf/flowplayer-3.2.2.swf",
+                           flowplayer.swf_location,
                            options);
     
                 // Save reference to the player
