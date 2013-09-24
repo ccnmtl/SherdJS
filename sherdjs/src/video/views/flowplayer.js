@@ -228,7 +228,16 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             }
             if (rc.provider === 'pseudo' && /\{start\}/.test(rc.url)) {
                 var pieces = rc.url.split('?');
-                rc.queryString = escape('?' + pieces.pop());
+
+                // Bookmarklet bug in the JWPlayer scraping code led to
+                // a lot of assets being added without the required $ 
+                // in front of the start variable. This is a little patch 
+                // so we don't have to redo all the asset primary sources at once.
+                var queryString = pieces.pop();
+                if (queryString === 'start={start}') {
+                    queryString = 'start=${start}';
+                }
+                rc.queryString = escape('?' + queryString);
                 rc.url = pieces.join('?');
             }
             return rc;

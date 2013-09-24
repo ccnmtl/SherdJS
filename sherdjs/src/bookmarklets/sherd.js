@@ -870,7 +870,7 @@ SherdBookmarklet = {
                           var url = item.streamer+item.file;
                           if (pcfg.startparam) {
                               rv.primary_type = "video_pseudo";
-                              url += '?'+pcfg.startparam+'={start}'
+                              url += '?'+pcfg.startparam+'=${start}'
                           }
                           rv.sources[rv.primary_type] = url;
                       }
