@@ -107,7 +107,7 @@ if (!Sherd.Image.FSIViewer) {
             'default': {
                 height: function (obj, presenter) { return Sherd.winHeight() + 'px'; },
                 width: function (obj, presenter) { return '100%'; },
-                extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
+                extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL&amp;HideUI=false',
                 resize: function () {
                     var top = self.components.top;
                     top.setAttribute('height', Sherd.winHeight() + 'px');
@@ -120,7 +120,7 @@ if (!Sherd.Image.FSIViewer) {
                     return height + 'px';
                 },
                 width: function (obj, presenter) { return '100%'; },
-                extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL',
+                extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=TL&amp;HideUI=false',
                 resize: function () {
                     var top = self.components.top;
                     var height = self.components.winHeight ? self.components.winHeight() : Sherd.winHeight();
@@ -131,7 +131,7 @@ if (!Sherd.Image.FSIViewer) {
             'small': {
                 height: function () { return '240px'; },
                 width: function () { return '320px'; },
-                extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=BL',
+                extra: 'CustomButton_buttons=&amp;NoNav=undefined&amp;MenuAlign=BL&amp;HideUI=false',
                 resize: function () {/*noop*/}
             }
         };
