@@ -2250,6 +2250,8 @@ SherdBookmarklet = {
         var root_url =  SherdBookmarkletOptions.host_url.split('/save/?').shift()
         jQ('head').append('<link rel="stylesheet" type="text/css"\
          href="'+ root_url +'/site_media/js/sherdjs/src/bookmarklets/sherd_styles.css">');
+        jQ('head').append('<link rel="stylesheet" type="text/css"\
+         href="'+ root_url +'/site_media/css/mediathread.css">');
 
       }
       this.showWindow = function() {
@@ -2277,7 +2279,11 @@ SherdBookmarklet = {
                                ])
                   );
               } else {
-                  jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Choose an item to import for analysis'));
+                  var importHeader = jQ('<h2 class="import-header"/>');
+                  var importHeaderWrap = jQ('<div id="import-header-wrap"/>');
+                  importHeader.text('Choose an item to import for analysis');
+                  importHeaderWrap.append(importHeader);
+                  jQ(comp.h2).empty().append(importHeaderWrap);
                   if (comp.message.tagName) {
                       jQ(comp.message).empty();
                   }
@@ -2306,9 +2312,9 @@ SherdBookmarklet = {
               self.elt(doc,'div','sherd-window','',
                        [
                            self.elt(doc,'div','sherd-window-inner','',[
-                               self.elt(doc,'button','sherd-close',"float:right;",['close']),
+                               self.elt(doc,'button','sherd-close',"float:left;",['close']),
                                //self.elt(doc,'button','sherd-move',"float:right;",['move']),
-                               self.elt(doc,'button','sherd-collection',"float:right;",['Go to collection']),
+                               self.elt(doc,'button','sherd-collection',"float:left;",['Go to collection']),
                                self.elt(doc,'h2','','',['Choose an item to import for analysis']),
                                self.elt(doc,'p','sherd-message',"",['Searching for items....']),
                                self.elt(doc,'ul','sherd-asset',"")
@@ -2368,7 +2374,30 @@ SherdBookmarklet = {
       this.removeAsset = function(asset) {
           jQ('#'+asset.html_id).remove();
       };
+      this.addHoverHandler = function(asset){
+        jQ(asset).parent().parent().mouseenter(function(){
+          var inputs = jQuery(jQuery(this)).children('span').children();
+          var inputSpan = jQuery(jQuery(this)).parent().parent().children('span');
 
+          inputs.each(function(){
+            jQ(this).css({
+              display:'block'
+            })
+          })
+        })//end mouseenter
+        
+        jQ(asset).parent().parent().mouseleave(function(){
+          var inputs = jQuery(jQuery(this)).children('span').children();
+          var inputSpan = jQuery(jQuery(this)).parent().parent().children('span');
+
+          inputs.each(function(){
+            jQ(this).css({
+              display:'none'
+            })
+          })
+        })//end mouseleave
+      
+      };
       this.displayAsset = function(asset,index) {
           if (!asset) return;
           var doc = comp.ul.ownerDocument;
@@ -2377,18 +2406,19 @@ SherdBookmarklet = {
           var form = M.obj2form(host_url, asset, doc, o.postTarget, index);
           li.id = asset.html_id;
           li.appendChild(form);
-          jQ('input.sherd-form-title',form).prev().empty().append(self.elt(null,'div','\
-            sherd-asset-title','',[self.elt(null,'label','',{label:'title'},['Editable Title:'])]));
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              jQ(form.firstChild).empty().append(self.elt(null,'img','sherd-image',{src:img,style:'',height:null}));
+              var newAsset = self.elt(null,'img','sherd-image hidden',{src:img,style:'',height:null});
+              jQ(form.firstChild).empty().append(newAsset);
+              self.addHoverHandler(newAsset);
+
           }
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
           } else if (SherdBookmarklet.user_ready()){
-              form.submitButton = self.elt(null,'input','analyze',{type:'button',value:'analyze now'});
-              form.submitButton2 = self.elt(null,'input','cont',{type:'button',value:'send to MediaThread'});
+              form.submitButton = self.elt(null,'input','analyze btn-primary',{type:'button',value:'analyze now'});
+              form.submitButton2 = self.elt(null,'input','cont btn-primary',{type:'button',value:'send to MediaThread'});
               jQ(form.lastChild).empty().append(form.submitButton);
               jQ(form.lastChild).append(form.submitButton2);
               jQ(form).mouseenter(function(){

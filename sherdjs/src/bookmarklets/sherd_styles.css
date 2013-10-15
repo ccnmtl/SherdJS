@@ -5,7 +5,7 @@
 	z-index: 999999999;
 	top: 0;
 	left: 0;
-	background: url(/site_media/js/sherdjs/src/bookmarklets/sherd_bg.png);
+	background: #383838;
 }
 .sherd-window-inner h2{
    color: #fff;
@@ -18,13 +18,17 @@
 .sherd-window-inner ul{
 	display: inline-block;
 	list-style: none;
+	margin: 70px 0 0 0;
 }
 .sherd-window-inner ul li {
 	float:left;
 	list-style: none;
+	/*
 	width: 150px;
-	border: 1px solid #000;
 	padding: 4px;
+	*/
+	border: 1px solid #000;
+	
 	margin: 4px;
 }
 .sherd-asset-type{
@@ -40,7 +44,8 @@
 	color: #fff;
 }
 .sherd-asset-wrap{
-	height: 135px; /* 90% of the possible height of 150px */
+	/*
+	height: 135px;  90% of the possible height of 150px */
 }
 .sherd-window-inner .sherd-form-title{
 	margin:0;
@@ -58,7 +63,64 @@
 	display: none;
 }
 img.sherd-image{
+	/*
 	width:90%;
-	max-width:120px;
-	max-height:120px;
+	*/
+	max-width:250px;
+	max-height:300px;
+
+}
+.import-header{
+	margin: 70px 0 25px 0;
+}
+#import-header-wrap{
+	width: 431px;
+	position: fixed;
+	left: 50%;
+	margin: -23px 0 0 -215px;
+	height: 75px;
+	background: url(/site_media/img/logo_mediathread_new.png) no-repeat;
+	background-position:center;
+}
+
+.analyze.btn-primary, .cont.btn-primary{
+	display: none;
+	font-size: 12px;
+	font-weight: normal;
+	color: #2f2f2f;
+	padding: 0px 5px;
+	border: solid 1px;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	background-color: #efefef;
+	background-image: -moz-linear-gradient(top, #fcfcfc, #efefef);
+	background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#fcfcfc), to(#efefef));
+	background-image: -webkit-linear-gradient(top, #fcfcfc, #efefef);
+	background-image: -o-linear-gradient(top, #fcfcfc, #efefef);
+	background-image: linear-gradient(to bottom, #fcfcfc, #efefef);
+	background-repeat: repeat-x;
+	border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff0088cc', endColorstr='#ff0044cc', GradientType=0);
+	filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+	cursor: pointer;
+}
+
+.sherd-image.hidden{
+	/*
+	display: none !important;
+	*/
+}
+
+.sherd-asset li form{
+	margin: 0 !important;
+}
+
+input.analyze{
+	position: absolute;
+	margin:-70px 0 0 0;
+}
+input.cont{
+	position: absolute;
+	margin:-50px 0 0 0;
 }
