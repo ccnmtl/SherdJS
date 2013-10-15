@@ -1697,7 +1697,7 @@ SherdBookmarklet = {
       var form_api = M.options.form_api || 'mediathread';
       M.forms[form_api](obj,form,ready,doc);
 
-      form.appendChild(doc.createElement("span"));
+     //form.appendChild(doc.createElement("span"));
       return form;
   },/*obj2form*/
   "addField": function(name,value,form,doc) {
@@ -1713,7 +1713,7 @@ SherdBookmarklet = {
     item.name = name;
     ///Ffox bug: this must go after item.type=hidden or not set correctly
     item.value = value;
-    form.appendChild(span);
+    //form.appendChild(span);
     form.appendChild(item);
     return item;
   },/*addField*/
@@ -2305,6 +2305,8 @@ SherdBookmarklet = {
               target.appendChild(comp.top);
           }
           var pageYOffset = self.visibleY(target)+o.top;
+          var pageLength = jQ(document).height();
+          jQ(comp.top).css('height', pageLength);
           var doc = target.ownerDocument;
           comp.top.appendChild(
               self.elt(doc,'div','sherd-tab','',[o.tab_label]));
@@ -2375,28 +2377,25 @@ SherdBookmarklet = {
           jQ('#'+asset.html_id).remove();
       };
       this.addHoverHandler = function(asset){
+        var inputs;
         jQ(asset).parent().parent().mouseenter(function(){
-          var inputs = jQuery(jQuery(this)).children('span').children();
-          var inputSpan = jQuery(jQuery(this)).parent().parent().children('span');
-
+          window.assetThis = jQuery(jQuery(this));
+          inputs = jQuery(jQuery(this)).children("input[value$='bookmarklet']").children();
           inputs.each(function(){
             jQ(this).css({
               display:'block'
             })
           })
         })//end mouseenter
-        
+        /*
         jQ(asset).parent().parent().mouseleave(function(){
-          var inputs = jQuery(jQuery(this)).children('span').children();
-          var inputSpan = jQuery(jQuery(this)).parent().parent().children('span');
-
           inputs.each(function(){
             jQ(this).css({
               display:'none'
             })
           })
         })//end mouseleave
-      
+      */
       };
       this.displayAsset = function(asset,index) {
           if (!asset) return;
@@ -2419,20 +2418,10 @@ SherdBookmarklet = {
           } else if (SherdBookmarklet.user_ready()){
               form.submitButton = self.elt(null,'input','analyze btn-primary',{type:'button',value:'analyze now'});
               form.submitButton2 = self.elt(null,'input','cont btn-primary',{type:'button',value:'send to MediaThread'});
-              jQ(form.lastChild).empty().append(form.submitButton);
-              jQ(form.lastChild).append(form.submitButton2);
-              jQ(form).mouseenter(function(){
-                jQ(this).css({
-                  background:"#1e1e1e",
-                  cursor:"pointer"
-                })
-              }).mouseleave(function(){
-                jQ(this).css({
-                  background:""
-                })
-              });
+              jQ(form).append(form.submitButton);
+              jQ(form).append(form.submitButton2);
               jQ(form.submitButton).click(function(){
-                jQ(this).parent().parent().submit()
+                jQ(this).parent().submit()
               })
               jQ(form.submitButton2).click(function(){
                /* A pop up window solution... */
