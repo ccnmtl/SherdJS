@@ -2307,6 +2307,7 @@ SherdBookmarklet = {
           var pageYOffset = self.visibleY(target)+o.top;
           var pageLength = jQ(document).height();
           jQ(comp.top).css('height', pageLength);
+          jQuery(document).scrollTop(0);//if page is long make sure the user is placed at top
           var doc = target.ownerDocument;
           comp.top.appendChild(
               self.elt(doc,'div','sherd-tab','',[o.tab_label]));
@@ -2353,12 +2354,10 @@ SherdBookmarklet = {
       this.findAssets = function() {
           self.showWindow();
           self.finder = new M.Finder();
-
           self.finder.ASYNC.display = self.displayAsset;
           self.finder.ASYNC.remove = self.removeAsset;
           self.finder.ASYNC.best_frame = self.maybeShowInFrame;
           self.finder.ASYNC.finish = self.finishedCollecting;
-
           self.finder.findAssets();
       };
 
@@ -2377,25 +2376,9 @@ SherdBookmarklet = {
           jQ('#'+asset.html_id).remove();
       };
       this.addHoverHandler = function(asset){
-        var inputs;
-        jQ(asset).parent().parent().mouseenter(function(){
-          window.assetThis = jQuery(jQuery(this));
-          inputs = jQuery(jQuery(this)).children("input[value$='bookmarklet']").children();
-          inputs.each(function(){
-            jQ(this).css({
-              display:'block'
-            })
-          })
-        })//end mouseenter
-        /*
-        jQ(asset).parent().parent().mouseleave(function(){
-          inputs.each(function(){
-            jQ(this).css({
-              display:'none'
-            })
-          })
-        })//end mouseleave
-      */
+        window.assetThis = jQ(asset).parent().parent();
+        var assetForm = jQ(asset).parent().parent();
+        jQ(assetForm).hover(function(){ jQ(assetForm).children('input.cont, input.analyze').toggle() })
       };
       this.displayAsset = function(asset,index) {
           if (!asset) return;
