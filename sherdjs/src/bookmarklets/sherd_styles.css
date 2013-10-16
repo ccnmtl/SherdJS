@@ -1,11 +1,10 @@
 .sherd-analyzer{
 	width: 100%;
-	height: 100%;
-	position: fixed;
+	position: absolute;
 	z-index: 999999999;
 	top: 0;
 	left: 0;
-	background: #383838;
+	background: #fff;
 }
 .sherd-window-inner h2{
    color: #fff;
@@ -18,18 +17,18 @@
 .sherd-window-inner ul{
 	display: inline-block;
 	list-style: none;
-	margin: 70px 0 0 0;
+	margin-top: 100px;
 }
 .sherd-window-inner ul li {
-	float:left;
+	display: inline-block;
 	list-style: none;
-	/*
-	width: 150px;
-	padding: 4px;
-	*/
-	border: 1px solid #000;
-	
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
 	margin: 4px;
+	overflow: hidden;
+	padding: 10px 10px 30px;
 }
 .sherd-asset-type{
 	float: left;
@@ -71,17 +70,22 @@ img.sherd-image{
 
 }
 .import-header{
-	margin: 70px 0 25px 0;
+	position: absolute;
+	top:0;
+	left:50%;
+
+	margin: 55px 0 0 -200px;
+	width: 400px;
 }
 #import-header-wrap{
-	width: 431px;
-	position: fixed;
-	left: 50%;
-	margin: -23px 0 0 -215px;
-	height: 75px;
-	background: url(/site_media/img/logo_mediathread_new.png) no-repeat;
-	background-position:center;
-}
+	width: 100%;
+	position: absolute;
+	margin: 0;
+	top:0;
+	height: 95px;
+	background: url(/site_media/img/logo_mediathread_new.png)#383838 no-repeat;
+	background-position: top center;
+	}
 
 .analyze.btn-primary, .cont.btn-primary{
 	display: none;
@@ -118,9 +122,21 @@ img.sherd-image{
 
 input.analyze{
 	position: absolute;
-	margin:-70px 0 0 0;
+	margin:0;
 }
 input.cont{
 	position: absolute;
-	margin:-50px 0 0 0;
+	margin:-20px 0 0 0;
+}
+
+button.sherd-close{
+	cursor: pointer;
+	position: absolute;
+	z-index: 999;
+}
+button.sherd-collection{
+	cursor: pointer;
+	position: absolute;
+	z-index: 999;
+	margin: 20px 0 0 0;
 }

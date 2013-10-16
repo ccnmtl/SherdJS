@@ -2315,9 +2315,9 @@ SherdBookmarklet = {
               self.elt(doc,'div','sherd-window','',
                        [
                            self.elt(doc,'div','sherd-window-inner','',[
-                               self.elt(doc,'button','sherd-close',"float:left;",['close']),
+                               self.elt(doc,'button','sherd-close',"",['close']),
                                //self.elt(doc,'button','sherd-move',"float:right;",['move']),
-                               self.elt(doc,'button','sherd-collection',"float:left;",['Go to collection']),
+                               self.elt(doc,'button','sherd-collection',"",['Go to collection']),
                                self.elt(doc,'h2','','',['Choose an item to import for analysis']),
                                self.elt(doc,'p','sherd-message',"",['Searching for items....']),
                                self.elt(doc,'ul','sherd-asset',"")
@@ -2376,9 +2376,9 @@ SherdBookmarklet = {
           jQ('#'+asset.html_id).remove();
       };
       this.addHoverHandler = function(asset){
-        window.assetThis = jQ(asset).parent().parent();
-        var assetForm = jQ(asset).parent().parent();
-        jQ(assetForm).hover(function(){ jQ(assetForm).children('input.cont, input.analyze').toggle() })
+        window.assetThis = jQ(asset).parent().parent().parent();
+        var assetFormLi = jQ(asset).parent().parent().parent();
+        jQ(assetFormLi).hover(function(){ jQ(assetFormLi).children().children('input.cont, input.analyze').toggle() })
       };
       this.displayAsset = function(asset,index) {
           if (!asset) return;
