@@ -1686,8 +1686,7 @@ SherdBookmarklet = {
       }
       var form = M.elt(doc,'form','',{},[
           M.elt(doc,'div','sherd-asset-wrap',{}),
-          M.elt(doc,'div','sherd-asset-type','',
-               ['Type: '+(obj.label||obj.primary_type||'Unknown')])
+          M.elt(doc,'div','sherd-btn-overlay',{})
       ]); 
       form.action = destination;
       form.target = target;
@@ -1696,8 +1695,6 @@ SherdBookmarklet = {
 
       var form_api = M.options.form_api || 'mediathread';
       M.forms[form_api](obj,form,ready,doc);
-
-     //form.appendChild(doc.createElement("span"));
       return form;
   },/*obj2form*/
   "addField": function(name,value,form,doc) {
@@ -2307,7 +2304,7 @@ SherdBookmarklet = {
           var pageYOffset = self.visibleY(target)+o.top;
           var pageLength = jQ(document).height();
           jQ(comp.top).css('height', pageLength);
-          jQuery(document).scrollTop(0);//if page is long make sure the user is placed at top
+          jQ(document).scrollTop(0);//if page is long make sure the user is placed at top
           var doc = target.ownerDocument;
           comp.top.appendChild(
               self.elt(doc,'div','sherd-tab','',[o.tab_label]));
@@ -2376,9 +2373,13 @@ SherdBookmarklet = {
           jQ('#'+asset.html_id).remove();
       };
       this.addHoverHandler = function(asset){
-        window.assetThis = jQ(asset).parent().parent().parent();
         var assetFormLi = jQ(asset).parent().parent().parent();
-        jQ(assetFormLi).hover(function(){ jQ(assetFormLi).children().children('input.cont, input.analyze').toggle() })
+        var btnOverlay = jQ('<div class="sherd-btn-overlay"/>');
+        jQ(assetFormLi).hover(function(){ jQ(assetFormLi)
+          .children().children('input.cont, input.analyze').toggle();
+          jQ(assetFormLi).children().children('.sherd-btn-overlay').toggle();
+        })
+        jQ(assetFormLi).children('form').append(btnOverlay);
       };
       this.displayAsset = function(asset,index) {
           if (!asset) return;
