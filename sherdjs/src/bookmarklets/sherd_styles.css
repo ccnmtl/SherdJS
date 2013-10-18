@@ -43,7 +43,8 @@
 	color: #333;
 }
 .sherd-asset-wrap{
-	min-height: 135px;
+	/*min-height: 135px;*/
+	min-width: 250px;
 	/*
 	height: 135px;  90% of the possible height of 150px */
 }
@@ -66,9 +67,7 @@
 	display: none;
 }
 img.sherd-image{
-	/*
-	width:90%;
-	*/
+	width:100% !important;
 	max-width:250px;
 	max-height:300px;
 
@@ -126,9 +125,7 @@ img.sherd-image{
 
 input.analyze{
 	position: absolute;
-	margin: -25px 0 0 170px;
-	float: left;
-	width: 75px;
+	margin: -25px 0 0 168px;
 }
 input.cont{
 	position: absolute;
