@@ -316,6 +316,7 @@ SherdBookmarklet = {
                                    var img_link = metadata.imageUrl.match(/size\d\/(.*)\.\w+$/);
                                    obj.sources["title"] = metadata.title;
                                    obj.sources["thumb"] = "http://library.artstor.org"+metadata.imageUrl;
+				   obj.metadata["artstor-id"] = [obj.artstorId];
                                    var m = metadata.metaData;
                                    for (var i=0;i<m.length;i++) {
                                        ///so multiple values are still OK

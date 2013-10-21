@@ -150,8 +150,8 @@ if (!Sherd.Video.Vimeo) {
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
 
-        window.vimeo_player_progress = function (seconds) {
-            if (self.state.seeking === true && seconds > 0.5) {
+        window.vimeo_player_progress = function (timing) {
+            if (self.state.seeking === true && timing.seconds > 0.5) {
                 self.state.seeking = false;
                 delete self.state.autoplay;
 
