@@ -2376,8 +2376,9 @@ SherdBookmarklet = {
       this.addHoverHandler = function(asset){
         var assetFormLi = jQ(asset).parent().parent().parent();
         var btnOverlay = jQ('<div class="sherd-btn-overlay"/>');
-        jQ(assetFormLi).hover(function(){ jQ(assetFormLi)
-          .children().children('input.cont, input.analyze').toggle();
+        jQ(assetFormLi).hover(function(){
+          jQ(assetFormLi).children()
+            .children('input.cont, input.analyze').toggle();
           jQ(assetFormLi).children().children('.sherd-btn-overlay').toggle();
         })
         jQ(assetFormLi).children('form').append(btnOverlay);
