@@ -104,6 +104,9 @@ img.sherd-image{
 	border-radius: 0 0 3px 3px;
 	width: 100%;
 	clear: both;
+	font-family: 'Helvetica Neue', Helvetica, Arial;
+	font-weight: 200;
+	font-size: 12px;
 }
 
 .analyze.btn-primary {
@@ -116,8 +119,12 @@ img.sherd-image{
 	border-right: none;
 	border-top: none;
 	border-radius: 0;
-		width: 100%;
+	width: 100%;
 	clear: both;
+	font-family: 'Helvetica Neue', Helvetica, Arial;
+	font-weight: 200;
+	font-size: 12px;
+
 }
 
 .cont.btn-primary:hover {
