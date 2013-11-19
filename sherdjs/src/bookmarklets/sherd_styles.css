@@ -135,9 +135,10 @@ input.cont{
 }
 
 button.sherd-close{
-	cursor: pointer;
 	position: absolute;
 	z-index: 999;
+	top: 20px;
+	right: 10px;
 }
 button.sherd-collection{
 	cursor: pointer;

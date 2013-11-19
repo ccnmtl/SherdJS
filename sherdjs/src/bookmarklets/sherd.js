@@ -2312,9 +2312,9 @@ SherdBookmarklet = {
               self.elt(doc,'div','sherd-window','',
                        [
                            self.elt(doc,'div','sherd-window-inner','',[
-                               self.elt(doc,'button','sherd-close',"",['close']),
+                               self.elt(doc,'button','sherd-close btn-primary',"",['cancel']),
                                //self.elt(doc,'button','sherd-move',"float:right;",['move']),
-                               self.elt(doc,'button','sherd-collection',"",['Go to collection']),
+                               self.elt(doc,'button','sherd-collection btn-primary',"",['Go to collection']),
                                self.elt(doc,'h2','','',['Choose an item to import for analysis']),
                                self.elt(doc,'p','sherd-message',"",['Searching for items....']),
                                self.elt(doc,'ul','sherd-asset',"")
