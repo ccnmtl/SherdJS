@@ -8,8 +8,10 @@
 }
 .sherd-window-inner h2{
    color: #fff;
-   font-size: 24px;
-   font-family : Arial !important;
+   font-size: 14px;
+   font-weight: 200;
+   font-family : 'Helvetica Neue', Helvetica, Arial !important;
+   margin: 16px 0;
 }
 .sherd-window{
 	padding:0 25px 0 0;
@@ -64,14 +66,15 @@
 }
 img.sherd-image{
 	width:100% !important;
-	max-width:250px;
+	max-width:215px;
 	max-height:300px;
+	border-radius: 3px;
 
 }
 .import-header{
 	position: absolute;
 	top:0;
-	left:50%;
+	left:200px;
 	width: 400px;
 }
 #import-header-wrap{
@@ -81,46 +84,65 @@ img.sherd-image{
 	top:0;
 	height: 55px;
 	background: url(/site_media/img/logo_mediathread_new.png) #383838 no-repeat;
-	background-position: top left;
+	background-position: center left;
 	}
 
 .analyze.btn-primary, .cont.btn-primary{
 	display: block;
-	font-size: 12px;
-	font-weight: normal;
-	color: #2f2f2f;
-	padding: 0px 5px;
-	border: solid 1px;
-	border-radius: 4px;
-	-moz-border-radius: 4px;
-	-webkit-border-radius: 4px;
-	background-color: #efefef;
-	background-image: -moz-linear-gradient(top, #fcfcfc, #efefef);
-	background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#fcfcfc), to(#efefef));
-	background-image: -webkit-linear-gradient(top, #fcfcfc, #efefef);
-	background-image: -o-linear-gradient(top, #fcfcfc, #efefef);
-	background-image: linear-gradient(to bottom, #fcfcfc, #efefef);
-	background-repeat: repeat-x;
-	border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff0088cc', endColorstr='#ff0044cc', GradientType=0);
-	filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
-	cursor: pointer;
+
+}
+
+.cont.btn-primary {
+	display: block;
+	background: transparent;
+	color: #fff;
+	font-size: 14px;
+	border-bottom: solid 1px #fff;
+	border-left: none;
+	border-right: none;
+	border-top: none;
+	border-radius: 0 0 3px 3px;
+	width: 100%;
+	clear: both;
+}
+
+.analyze.btn-primary {
+	display: block;
+	background: transparent;
+	color: #fff;
+	font-size: 14px;
+	border-bottom: solid 1px #a1a1a1;
+	border-left: none;
+	border-right: none;
+	border-top: none;
+	border-radius: 0;
+		width: 100%;
+	clear: both;
+}
+
+.cont.btn-primary:hover {
+	box-shadow: 3px 1px 3px #ccc;
+	border-radius: 0 0 3px 3px;
+} 
+
+input.cont {
+	position: relative;
+	margin: 0;
+	float: left;
+	top: -35px;
+}
+
+input.analyze {
+	position: relative;
+	margin: 0;
+	float: left;
+	width: 135px;
+	top: -35px;
 }
 
 
 .sherd-asset li form{
 	margin: 0 !important;
-}
-
-input.analyze{
-	position: absolute;
-	margin: -25px 0 0 168px;
-}
-input.cont{
-	position: absolute;
-	margin: -25px 0 0 5px;
-	float: left;
-	width: 135px;
 }
 
 button.sherd-close{
@@ -138,19 +160,12 @@ button.sherd-collection{
 }
 
 .sherd-btn-overlay{
-	/*background:url('/site_media/js/sherdjs/src/bookmarklets/sherd_bg.png');*/
 	background: #333;
 	opacity: .75;
-	height: 35px;
+	height: 75px;
 	z-index: 0;
 	width: 215px;
-	margin: -35px 0 0 0px;
+	margin: -35px 0 35px 0px;
 	position: absolute;
-	-webkit-border-bottom-right-radius: 4px;
-	-webkit-border-bottom-left-radius: 4px;
-	-moz-border-radius-bottomright: 4px;
-	-moz-border-radius-bottomleft: 4px;
-	border-bottom-right-radius: 4px;
-	border-bottom-left-radius: 4px;
 	display: block;
 }
