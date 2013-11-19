@@ -347,8 +347,6 @@ CitationView.prototype.openCitationById = function (anchor, asset_id, annotation
         return;
     }
     
-    self.unload();
-    
     var return_value = {};
     var id, type;
     if (annotation_id) {
@@ -471,7 +469,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
             var ann_data = ann_obj.annotations[0];// ***
             djangosherd.assetview.setState(ann_data, {autoplay: self.options.autoplay});
         } else {
-            djangosherd.assetview.setState({ start: 0 }, {autoplay: self.options.autoplay});
+            djangosherd.assetview.setState({start: 0}, {autoplay: self.options.autoplay});
         }
     } else {
         djangosherd.assetview.html.remove();

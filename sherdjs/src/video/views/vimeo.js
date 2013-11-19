@@ -261,6 +261,9 @@ if (!Sherd.Video.Vimeo) {
         };
 
         this.media.seek = function (starttime, endtime, autoplay) {
+            if (starttime === undefined || starttime === 0) {
+                starttime = 0.1; // don't even ask. 
+            }
             // this might need to be a timer to determine "when" the media player is ready
             // it's working differently from initial load to the update method
             if (!self.media.ready()) {

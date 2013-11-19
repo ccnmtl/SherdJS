@@ -152,12 +152,7 @@ if (!Sherd.Video.YouTube) {
         this.microformat.update = function (obj, html_dom) {
             if (obj.youtube && document.getElementById(self.components.playerID) && self.media.ready()) {
                 try {
-                    if (obj.youtube !== self.components.mediaUrl) {
-                        // Replacing the 'url' by cue'ing the video with the new url
-                        self.components.mediaUrl = obj.youtube;
-                        self.components.player.loadVideoByUrl(self.components.mediaUrl + "?version=3");
-                    }
-                    return true;
+                    return obj.youtube.indexOf(self.components.mediaUrl) === 0;
                 }
                 catch (e) {}
             }
@@ -288,6 +283,9 @@ if (!Sherd.Video.YouTube) {
         };
 
         this.media.seek = function (starttime, endtime, autoplay) {
+            if (starttime === undefined) {
+                starttime = 0;
+            }
             if (self.media.ready()) {
                 if (starttime !== undefined) {
                     if (self.components.player.seekTo) {

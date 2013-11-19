@@ -454,6 +454,10 @@ if (!Sherd.Video.QuickTime) {
         };
 
         this.media.seek = function (starttime, endtime, autoplay) {
+            if (starttime === undefined) {
+                starttime = 0;
+            }
+            
             if (self.media.ready()) {
                 var p = self.components.player;
                 if (starttime !== undefined) {

@@ -190,6 +190,10 @@ if (!Sherd.Video.Videotag) {
         };
 
         this.media.seek = function (starttime, endtime, autoplay) {
+            if (starttime === undefined) {
+                starttime = 0;
+            }
+            
             if (self.components.player) {
                 var c, d = {}; //event listeners
                 var _seek = function (evt) {
