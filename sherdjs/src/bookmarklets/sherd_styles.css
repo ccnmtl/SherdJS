@@ -85,9 +85,9 @@ img.sherd-image{
 	position: absolute;
 	margin: 0;
 	top:0;
-	height: 95px;
-	background: url(/site_media/img/logo_mediathread_new.png)#383838 no-repeat;
-	background-position: top center;
+	height: 35px;
+	background: url(/site_media/img/logo_mediathread_new.png) #383838 no-repeat;
+	background-position: top left;
 	}
 
 .analyze.btn-primary, .cont.btn-primary{
