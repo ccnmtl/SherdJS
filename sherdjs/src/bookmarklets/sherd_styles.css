@@ -1,4 +1,4 @@
-.sherd-analyzer{
+.sherd-analyzer {
 	width: 100%;
 	position: absolute;
 	z-index: 999999999;
@@ -17,16 +17,12 @@
 .sherd-window-inner ul{
 	display: inline-block;
 	list-style: none;
-	margin-top: 100px;
+	margin: 70px 25px;
 }
 .sherd-window-inner ul li {
 	display: inline-block;
 	list-style: none;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	-moz-border-radius: 4px;
-	-webkit-border-radius: 4px;
-	margin: 4px;
+	margin: 7px;
 	overflow: hidden;
 	padding: 0px;
 }
@@ -44,7 +40,7 @@
 }
 .sherd-asset-wrap{
 	/*min-height: 135px;*/
-	min-width: 250px;
+	min-width: 215px;
 	/*
 	height: 135px;  90% of the possible height of 150px */
 }
@@ -76,8 +72,6 @@ img.sherd-image{
 	position: absolute;
 	top:0;
 	left:50%;
-
-	margin: 55px 0 0 -200px;
 	width: 400px;
 }
 #import-header-wrap{
@@ -85,13 +79,13 @@ img.sherd-image{
 	position: absolute;
 	margin: 0;
 	top:0;
-	height: 35px;
+	height: 55px;
 	background: url(/site_media/img/logo_mediathread_new.png) #383838 no-repeat;
 	background-position: top left;
 	}
 
 .analyze.btn-primary, .cont.btn-primary{
-	display: none;
+	display: block;
 	font-size: 12px;
 	font-weight: normal;
 	color: #2f2f2f;
@@ -113,11 +107,6 @@ img.sherd-image{
 	cursor: pointer;
 }
 
-.sherd-image.hidden{
-	/*
-	display: none !important;
-	*/
-}
 
 .sherd-asset li form{
 	margin: 0 !important;
@@ -144,15 +133,17 @@ button.sherd-collection{
 	cursor: pointer;
 	position: absolute;
 	z-index: 999;
-	margin: 20px 0 0 0;
+	top: 20px;
+	right: 100px;
 }
+
 .sherd-btn-overlay{
 	/*background:url('/site_media/js/sherdjs/src/bookmarklets/sherd_bg.png');*/
 	background: #333;
 	opacity: .75;
 	height: 35px;
 	z-index: 0;
-	width: 250px;
+	width: 215px;
 	margin: -35px 0 0 0px;
 	position: absolute;
 	-webkit-border-bottom-right-radius: 4px;
@@ -161,5 +152,5 @@ button.sherd-collection{
 	-moz-border-radius-bottomleft: 4px;
 	border-bottom-right-radius: 4px;
 	border-bottom-left-radius: 4px;
-	display: none;
+	display: block;
 }
