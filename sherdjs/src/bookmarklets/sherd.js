@@ -2312,10 +2312,10 @@ SherdBookmarklet = {
               self.elt(doc,'div','sherd-window','',
                        [
                            self.elt(doc,'div','sherd-window-inner','',[
-                               self.elt(doc,'button','sherd-close btn-primary',"",['cancel']),
-                               //self.elt(doc,'button','sherd-move',"float:right;",['move']),
+                               self.elt(doc,'button','sherd-close btn-primary',"",['Cancel']),
+                               //self.elt(doc,'button','sherd-move',"float:right;",['Move']),
                                self.elt(doc,'button','sherd-collection btn-primary',"",['Go to collection']),
-                               self.elt(doc,'h2','','',['Choose an item to import for analysis']),
+                               self.elt(doc,'h2','','',['Select "Analyze Now" to edit one item immediately, or "Send to Collection" to send an item and keep collecting on this page.']),
                                self.elt(doc,'p','sherd-message',"",['Searching for items....']),
                                self.elt(doc,'ul','sherd-asset',"")
                            ])
@@ -2417,19 +2417,19 @@ SherdBookmarklet = {
                 var bucket_window = window.open(
                    "",
                    "bucket_window",
-                   "resizable,scrollbars=yes,status=1,location=false, width=700, height=600"
+                   "resizable,scrollbars=no,status=1,location=no,menubar=no,width=700,height=250"
                 );
                 bucket.appendTo(bucketWrap);
                 bucketWrap.css({
-                   position:'fixed',
-                   bottom:'0'
+                   
+                   
                  })
                 bucket.css({
                    background:"#fff"
                 })
 
                 jQ(bucket).append('<input type="hidden" value="cont" name="button" />');
-                jQ(bucket).append('<input id="submit-input" type="button" value="Continue" />');
+                jQ(bucket).append('<input id="submit-input" class="btn-primary" type="button" value="Continue" />');
                 jQ('body',bucket_window.document).append(bucketWrap);
                 jQ('#submit-input',bucket_window.document).click(function(){
                   jQ(this).parent().submit();
