@@ -283,9 +283,6 @@ if (!Sherd.Video.YouTube) {
         };
 
         this.media.seek = function (starttime, endtime, autoplay) {
-            if (starttime === undefined) {
-                starttime = 0;
-            }
             if (self.media.ready()) {
                 if (starttime !== undefined) {
                     if (self.components.player.seekTo) {

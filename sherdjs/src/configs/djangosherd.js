@@ -467,6 +467,9 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
     
         if (ann_obj.hasOwnProperty("annotations") && ann_obj.annotations.length > 0 && ann_obj.annotations[0] !== null) {
             var ann_data = ann_obj.annotations[0];// ***
+            if (!ann_data.hasOwnProperty("start")) {
+                ann_data.start = 0;
+            }
             djangosherd.assetview.setState(ann_data, {autoplay: self.options.autoplay});
         } else {
             djangosherd.assetview.setState({start: 0}, {autoplay: self.options.autoplay});

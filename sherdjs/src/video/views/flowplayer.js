@@ -459,10 +459,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             // Reset the saved duration
             self.components.lastDuration = 0;
             
-            if (starttime === undefined) {
-                starttime = 0;
-            }
-            
             if (!self.media.ready()) {
                 self.state.starttime = starttime;
                 self.state.endtime = endtime;
