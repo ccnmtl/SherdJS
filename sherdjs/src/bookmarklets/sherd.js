@@ -1685,8 +1685,7 @@ SherdBookmarklet = {
           destination += "#"+obj.hash;
       }
       var form = M.elt(doc,'form','',{},[
-          M.elt(doc,'div','sherd-asset-wrap',{}),
-          M.elt(doc,'div','sherd-btn-overlay',{})
+          M.elt(doc,'div','sherd-asset-wrap',{})
       ]); 
       form.action = destination;
       form.target = target;
@@ -2278,7 +2277,7 @@ SherdBookmarklet = {
               } else {
                   var importHeader = jQ('<h2 class="import-header"/>');
                   var importHeaderWrap = jQ('<div id="import-header-wrap"/>');
-                  importHeader.text('Choose an item to import for analysis');
+                  importHeader.text('Choose item(s) to add to collection');
                   importHeaderWrap.append(importHeader);
                   jQ(comp.h2).empty().append(importHeaderWrap);
                   if (comp.message.tagName) {
@@ -2314,7 +2313,7 @@ SherdBookmarklet = {
                            self.elt(doc,'div','sherd-window-inner','',[
                                self.elt(doc,'button','sherd-close btn-primary',"",['Cancel']),
                                //self.elt(doc,'button','sherd-move',"float:right;",['Move']),
-                               self.elt(doc,'button','sherd-collection btn-primary',"",['Go to collection']),
+                               self.elt(doc,'button','sherd-collection btn-primary',"",['Go to Collection']),
                                self.elt(doc,'h2','','',['Select "Analyze Now" to edit one item immediately, or "Send to Collection" to send an item and keep collecting on this page.']),
                                self.elt(doc,'p','sherd-message',"",['Searching for items....']),
                                self.elt(doc,'ul','sherd-asset',"")
@@ -2401,10 +2400,10 @@ SherdBookmarklet = {
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
           } else if (SherdBookmarklet.user_ready()){
-              form.submitButton = self.elt(null,'input','analyze btn-primary',{type:'button',value:'Analyze Now'});
-              form.submitButton2 = self.elt(null,'input','cont btn-primary',{type:'button',value:'Send to MediaThread'});
-              jQ(form).append(form.submitButton);
+              form.submitButton = self.elt(null,'input','analyze btn-primary',{type:'button',value:'Open in Mediathread'});
+              form.submitButton2 = self.elt(null,'input','cont btn-primary',{type:'button',value:'Collect'});
               jQ(form).append(form.submitButton2);
+              jQ(form).append(form.submitButton);              
               jQ(form.submitButton).click(function(){
                 jQ(this).parent().submit()
               })
