@@ -683,6 +683,33 @@ SherdBookmarklet = {
             })
         }
     },
+    "vimeo.com": {
+        find: function(callback) {
+            SherdBookmarklet.run_with_jquery(function _find(jQuery) {
+                var videos = document.getElementsByTagName("video");
+                if (videos.length < 1) {
+                    var message = "This Vimeo page does not contain videos accessible to the bookmarklet. Try clicking into a single video page.";
+                    alert(message);
+                    callback([]); // no items found
+                } else {
+                    // parse vimeo id out of the fallback url
+                    var video = videos[0];                
+                    var parent = jQuery(video).parents("div.player")[0];
+                    var url = jQuery(parent).attr("data-fallback-url");
+                    var vimeoId = url.split("/")[5];
+                    
+                    SherdBookmarklet.assethandler.objects_and_embeds.players
+                    .moogaloop.asset(video, 
+                                     vimeoId,
+                                     {'window':window,'document':document},
+                                     0,
+                                     function(ind,rv){ callback([rv]); });
+                }
+            }); //end run_with_jquery for vimeo.com
+        },
+        decorate:function(objs) {
+        }
+    },
     "youtube.com": {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
@@ -1100,58 +1127,64 @@ SherdBookmarklet = {
                   asset:function(objemb,match_rv,context,index,optional_callback) {
                       var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
                       
-                      var matches = objemb.src && objemb.src.match(/clip_id=([\d]*)/);
-                      if (!matches || matches.length < 1) {
-                          var flashvars = jQ(objemb).children('param[name=flashvars],param[name=FLASHVARS]');
-                          if (!flashvars.val()) {
+                      var vimeoId;
+                      if (match_rv) {
+                          vimeoId = match_rv;
+                      } else {
+                          var matches = objemb.src && objemb.src.match(/clip_id=([\d]*)/);
+                          if (!matches || matches.length < 1) {
+                              var flashvars = jQ(objemb).children('param[name=flashvars],param[name=FLASHVARS]');
+                              if (!flashvars.val()) {
+                                  return {};
+                              }
+                              matches = flashvars.val().match(/clip_id=([\d]*)/);
+                          }
+                          if (!matches || matches.length < 2) {
                               return {};
                           }
-                          matches = flashvars.val().match(/clip_id=([\d]*)/);
+                          vimeoId = matches[1];
                       }
-                      if (!matches || matches.length < 2) {
-                          return {}
-                      } else {
-                          var rv = {
-                              html:objemb,
-                              wait:true,
-                              primary_type:"vimeo",
-                              label:"vimeo video",
-                              sources: {
-                                  "url": "http://www.vimeo.com/" + matches[1],
-                                  "vimeo":"http://www.vimeo.com/" + matches[1]
-                              }};
+                      
+                      var rv = {
+                          html:objemb,
+                          wait:true,
+                          primary_type:"vimeo",
+                          label:"vimeo video",
+                          sources: {
+                              "url": "http://www.vimeo.com/" + vimeoId,
+                              "vimeo":"http://www.vimeo.com/" + vimeoId
+                          }};
                           
-                          if (objemb.api_getCurrentTime) {
-                              if (objemb.api_getCurrentTime() > 0) {
-                                  rv["hash"]="start="+ objemb.api_getCurrentTime();
-                              }
+                      if (objemb.api_getCurrentTime) {
+                          if (objemb.api_getCurrentTime() > 0) {
+                              rv["hash"]="start="+ objemb.api_getCurrentTime();
                           }
-                          
-                          var vm_callback = 'sherd_vimeo_callback_'+ index;
-                          window[vm_callback] = function(vm_data) {
-                              if (vm_data && vm_data.length > 0) {
-                                  var info = vm_data[0];
-                                  rv.sources["title"] = info.title;
-                                  rv.sources["thumb"] = info.thumbnail_medium;
-                                  rv.sources["metadata-owner"] = info.user_name ||undefined;
-                                  rv.sources["width"] = info.width;
-                                  rv.sources["height"] = info.height;
-                              }
-                              optional_callback(index,rv);
-                          }
-                          var ajax_options = {
-                              url: "http://www.vimeo.com/api/v2/video/" + matches[1] + ".json?callback=" + vm_callback,
-                              dataType: 'script',
-                              error:function(){optional_callback(index);}
-                          }
-                          if (SherdBookmarklet.options.cross_origin) {
-                              ajax_options['dataType'] = 'json';
-                              ajax_options['success'] = window[vm_callback];
-                              ajax_options['url'] = "http://www.vimeo.com/api/v2/video/" + matches[1] + ".json";
-                          }
-                          jQ.ajax(ajax_options);
-                          return rv;
                       }
+                          
+                      var vm_callback = 'sherd_vimeo_callback_'+ index;
+                      window[vm_callback] = function(vm_data) {
+                          if (vm_data && vm_data.length > 0) {
+                              var info = vm_data[0];
+                              rv.sources["title"] = info.title;
+                              rv.sources["thumb"] = info.thumbnail_medium;
+                              rv.sources["metadata-owner"] = info.user_name ||undefined;
+                              rv.sources["width"] = info.width;
+                              rv.sources["height"] = info.height;
+                          }
+                          optional_callback(index,rv);
+                      }
+                      var ajax_options = {
+                          url: "http://www.vimeo.com/api/v2/video/" + vimeoId + ".json?callback=" + vm_callback,
+                          dataType: 'script',
+                          error:function(){optional_callback(index);}
+                      }
+                      if (SherdBookmarklet.options.cross_origin) {
+                          ajax_options['dataType'] = 'json';
+                          ajax_options['success'] = window[vm_callback];
+                          ajax_options['url'] = "http://www.vimeo.com/api/v2/video/" + vimeoId + ".json";
+                      }
+                      jQ.ajax(ajax_options);
+                      return rv;
                   }                     
               },
               "zoomify":{
