@@ -166,14 +166,10 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function (obj, html_dom) {
-            return false;
-            
-            // tons of quirkiness with flowplayer and this update approach. let's just not do this for the moment.
-            /**
-            rc = false;
-            newUrl = self.microformat._getPlayerParams(obj);
+            var rc = false;
+            var newUrl = self.microformat._getPlayerParams(obj);
             if (newUrl.url && document.getElementById(self.components.playerID) && self.media.state() > 0) {
-                playlist = self.components.player.getPlaylist();
+                var playlist = self.components.player.getPlaylist();
                 if (playlist[0].url == newUrl.url) {
                     // If the url is the same as the previous, just seek to the right spot.
                     // This works just fine.
@@ -181,7 +177,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 }
             }
             return rc;
-            **/
         };
         
         this.microformat._getPlayerParams = function (obj) {

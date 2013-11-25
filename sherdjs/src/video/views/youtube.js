@@ -152,12 +152,7 @@ if (!Sherd.Video.YouTube) {
         this.microformat.update = function (obj, html_dom) {
             if (obj.youtube && document.getElementById(self.components.playerID) && self.media.ready()) {
                 try {
-                    if (obj.youtube !== self.components.mediaUrl) {
-                        // Replacing the 'url' by cue'ing the video with the new url
-                        self.components.mediaUrl = obj.youtube;
-                        self.components.player.loadVideoByUrl(self.components.mediaUrl + "?version=3");
-                    }
-                    return true;
+                    return obj.youtube.indexOf(self.components.mediaUrl) === 0;
                 }
                 catch (e) {}
             }
