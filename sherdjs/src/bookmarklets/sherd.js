@@ -2371,16 +2371,6 @@ SherdBookmarklet = {
       this.removeAsset = function(asset) {
           jQ('#'+asset.html_id).remove();
       };
-      this.addHoverHandler = function(asset){
-        var assetFormLi = jQ(asset).parent().parent().parent();
-        var btnOverlay = jQ('<div class="sherd-btn-overlay"/>');
-        jQ(assetFormLi).hover(function(){
-          jQ(assetFormLi).children()
-            .children('input.cont, input.analyze')();
-          jQ(assetFormLi).children().children('.sherd-btn-overlay')();
-        })
-        jQ(assetFormLi).children('form').append(btnOverlay);
-      };
       this.displayAsset = function(asset,index) {
           if (!asset) return;
           var doc = comp.ul.ownerDocument;
@@ -2394,8 +2384,6 @@ SherdBookmarklet = {
           if (img) {
               var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'',height:null});
               jQ(form.firstChild).empty().append(newAsset);
-              self.addHoverHandler(newAsset);
-
           }
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
@@ -2416,86 +2404,82 @@ SherdBookmarklet = {
                 var bucket_window = window.open(
                    "",
                    "bucket_window",
-                   "resizable,scrollbars=no,status=1,location=no,menubar=no,width=700,height=250"
+                   "resizable,scrollbars=no,status=1,href=no,location=no,menubar=no,width=700,height=250,top=200,left=300"
                 );
-                bucket.appendTo(bucketWrap);
-                bucketWrap.css({
-                   
-                   
-                 })
-                bucket.css({
-                   background:"#fff"
-                })
 
+                bucket.appendTo(bucketWrap);
                 jQ(bucket).append('<input type="hidden" value="cont" name="button" />');
-                jQ(bucket).append('<input id="submit-input" class="btn-primary" type="button" value="Continue" />');
+                jQ(bucket).append('<br/><input id="submit-input" class="btn-primary" type="button" value="Save" />');
+                jQ(bucket).append('<input id="submit-cancel" class="btn-primary" type="button" value="Cancel" />');
+                jQ(bucket).append('<br/><span class ="help-text">Clicking "Save" will send this item to your Mediathread collection and return you to collecting!<span/>');
+                jQ(bucketWrap).prepend('<h2>Send this item to your Mediathread collection</h2>')
                 jQ('body',bucket_window.document).append(bucketWrap);
+                jQ('#submit-cancel',bucket_window.document).click(function(){
+                  bucket_window.close();
+                });
                 jQ('#submit-input',bucket_window.document).click(function(){
                   jQ(this).parent().submit();
-                })
-              })
-              /*
-              jQ(form).click(function(){
-                return
-                /* A pop up window solution... 
-                var bucketWrap = jQ('<div id="bucket-wrap"/>');
-                var bucket = jQ(form).clone();
-                bucket.appendTo(bucketWrap);
+                });
+
+                bucket_window.document.title = "Mediathread"
+                var body = jQ('body',bucket_window.document);
+                var title = body.find('.sherd-form-title');
+                var submitInput = body.find('.btn-primary');
+                var header = body.find('#bucket-wrap h2');
+                var helpText = body.find('.help-text');
+                
                 bucketWrap.css({
-                  position:'fixed',
-                  bottom:'0'
+                
                 })
                 bucket.css({
-                  background:"#fff"
+                   'background':"#fff",
+                   'text-align': 'center'
                 })
-                var bucket_window = jQ('<div id="bucket-window"/>');
-                bucket_window.css({
-                  position:"absolute",
-                  zIndex:"999999999"
+                header.css({
+                  'font-family':'arial',
+                  'font-weight': '100',
+                  'font-size': '18px',
+                  'color': '#323232',
+                  'text-align':'center'
                 })
-                jQ(bucket_window).append(bucketWrap);
-                jQ('body').append(bucket_window);
-                //set the buttons in the pop up 
-                jQ('.collect',bucket_window).attr({
-                  value:"continue",
-                  class:"sherd-cont-btn-clone"
-                });
-                // analyze button
-                jQ(bucket,bucket_window).append('<input class="\
-                  sherd-analyze-btn-clone" type="button" name="analyze" value="analyze" />');
-                jQ(bucket,bucket_window).append('<input class="\
-                  sherd-collection-btn-clone" type="button" name="continue" value="collection" />');
-                
-                //continue
-                jQ('.sherd-cont-btn-clone',bucket_window).click(function(){
-                  var bucket_popup = window.open(
-                    "",
-                    "bucket_window",
-                    "resizable,scrollbars=yes,status=1,location=false, width=700, height=600"
-                  );
-                  jQ(bucket,bucket_popup.document).append('<input type="hidden" value="cont" name="button" />');
-                  jQ(bucket).submit();
+                title.focus();
+                title.trigger('click')
+                title.css({
+                  color:'#999',
+                  width:'350px',
+                  height:'35px',
+                  fontSize:'14px',
+                  margin:'10px 0',
+                  '-moz-appearance':'none',
+                  '-webkit-appearance':'none'
+                })
+                submitInput.css({
+                  'background-color':'transparent',
+                  '-webkit-border-radius':'4px',
+                  '-moz-border-radius':'4px',
+                  'border-top-left-radius':'4px',
+                  'text-indent':'0',
+                  'border':'1px solid #dcdcdc',
+                  'display':'inline-block',
+                  'color':'#666',
+                  'font-family':'arial',
+                  'font-size':'13px',
+                  'height':'30px',
+                  'line-height':'26px',
+                  'width':'65px',
+                  'text-decoration':'none',
+                  'text-align':'center',
+                  'margin': '0 10px 10px 0',
+                  'cursor':'pointer'
+                })
+                helpText.css({
+                  'color':'#666',
+                  'font-size': '12px',
+                  'font-family': 'arial',
+                })
+              })//End SubmitButton2 click
 
-                });//end .click
-                
-                //go to MeTh - analyze item
-                jQ('.sherd-analyze-btn-clone',bucket_window).click(function(_window){
-                  jQ(bucket,bucket_window).append('<input type="hidden" value="analyze" name="button" />');
-                  jQ(bucket).submit();
-                  var jqxhr = jQ.ajax( "/most_recent/" ) 
-                  var ao=0;
-                });//end .click
-
-                //go to MeTh - collection
-                jQ('.sherd-collection-btn-clone',bucket_window).click(function(){
-                  jQ(bucket,bucket_window).append('<input type="hidden" value="collection" name="button" />');
-                  jQ(bucket).submit();
-                  var newTab = window.host_url.split('/save/?')[0];
-                  window.open(newTab + '/asset/');
-                });//end .click
-
-            })// end form.click
-          */
+                 
           }
 
           if (comp.ul) {
