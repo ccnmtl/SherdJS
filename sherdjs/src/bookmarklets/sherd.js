@@ -2382,7 +2382,7 @@ SherdBookmarklet = {
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'',height:null});
+              var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'max-width:200px',height:null});
               jQ(form.firstChild).empty().append(newAsset);
           }
           if (asset.disabled) {
@@ -2404,7 +2404,7 @@ SherdBookmarklet = {
                 var bucket_window = window.open(
                    "",
                    "Mediathread",
-                   "resizable,scrollbars=no,status=1,href=no,location=no,menubar=no,width=700,height=250,top=200,left=300"
+                   "resizable,scrollbars=no,status=1,href=no,location=no,menubar=no,width=650,height=350,top=200,left=300"
                 );
 
                 bucket.appendTo(bucketWrap);
@@ -2429,12 +2429,12 @@ SherdBookmarklet = {
                     'top': '100px',
                     'left': '500px',
                     'background': '#C1E5FA',
-                    'width': '500px',
+                    'width': '535px',
                     'border': '3px solid #A9DFFF',
                     '-webkit-border-radius': '4px',
                     '-moz-border-radius': '4px',
                     'border-radius': '4px',
-                    'padding': '15px',
+                    'padding': '25px',
                     'color': '#008ADB',
                     'display': 'none'
                   })
@@ -2458,7 +2458,7 @@ SherdBookmarklet = {
                 bucket_window.document.title = "Mediathread";//force the title of the popup
                 var body = jQ('body',bucket_window.document);
                 var title = body.find('.sherd-form-title');
-                var submitInput = body.find('.btn-primary');
+                var submitBtn = body.find('.btn-primary');
                 var header = body.find('#bucket-wrap h2');
                 var helpText = body.find('.help-text');
                 
@@ -2487,11 +2487,11 @@ SherdBookmarklet = {
                   '-moz-appearance':'none',
                   '-webkit-appearance':'none'
                 })
-                submitInput.css({
+                submitBtn.css({
                   'background-color':'transparent',
+                  'border-radius':'4px',
                   '-webkit-border-radius':'4px',
                   '-moz-border-radius':'4px',
-                  'border-top-left-radius':'4px',
                   'text-indent':'0',
                   'border':'1px solid #dcdcdc',
                   'display':'inline-block',
