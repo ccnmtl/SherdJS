@@ -2382,7 +2382,7 @@ SherdBookmarklet = {
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'max-width:200px',height:null});
+              var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'max-width:200px;max-height:150px',height:null});
               jQ(form.firstChild).empty().append(newAsset);
           }
           if (asset.disabled) {
@@ -2421,13 +2421,15 @@ SherdBookmarklet = {
                   
                   jQ(this).parent().submit();
                   var sherdOverlay = jQ('.sherd-window-inner',document);
+                  var alertSavedMarginLeft = (jQ('.sherd-window-inner',document).width()/2) - (535*.5);
+                  var alertSavedMarginTop = (jQ(window).height()/2) -100;
                   var alertSaved = jQ('<div class="alert-saved"><span style="font-weight:bold">Success.</span> Your item has been sucessfully added to your Mediathread collection.</div>');
-                  var alertClose = jQ('<div clas="alert-close">x</div>');
+                  var alertClose = jQ('<div clas="alert-close">X</div>');
                   alertSaved.css({
                     'position': 'absolute',
                     'z-index': '99999999999999',
-                    'top': '100px',
-                    'left': '500px',
+                    'top': alertSavedMarginTop + 'px',
+                    'left': alertSavedMarginLeft + 'px',
                     'background': '#C1E5FA',
                     'width': '535px',
                     'border': '3px solid #A9DFFF',
@@ -2452,7 +2454,7 @@ SherdBookmarklet = {
                   })
                   alertSaved.prepend(alertClose);
                   sherdOverlay.append(alertSaved)
-                  alertSaved.toggle(500);
+                  alertSaved.fadeIn(500);
                 });
 
                 bucket_window.document.title = "Mediathread";//force the title of the popup
