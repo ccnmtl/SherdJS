@@ -2403,7 +2403,7 @@ SherdBookmarklet = {
                 jQ('input.cont', bucket).remove()
                 var bucket_window = window.open(
                    "",
-                   "bucket_window",
+                   "Mediathread",
                    "resizable,scrollbars=no,status=1,href=no,location=no,menubar=no,width=700,height=250,top=200,left=300"
                 );
 
@@ -2418,10 +2418,44 @@ SherdBookmarklet = {
                   bucket_window.close();
                 });
                 jQ('#submit-input',bucket_window.document).click(function(){
+                  
                   jQ(this).parent().submit();
+                  var sherdOverlay = jQ('.sherd-window-inner',document);
+                  var alertSaved = jQ('<div class="alert-saved"><span style="font-weight:bold">Success.</span> Your item has been sucessfully added to your Mediathread collection.</div>');
+                  var alertClose = jQ('<div clas="alert-close">x</div>');
+                  alertSaved.css({
+                    'position': 'absolute',
+                    'z-index': '99999999999999',
+                    'top': '100px',
+                    'left': '500px',
+                    'background': '#C1E5FA',
+                    'width': '500px',
+                    'border': '3px solid #A9DFFF',
+                    '-webkit-border-radius': '4px',
+                    '-moz-border-radius': '4px',
+                    'border-radius': '4px',
+                    'padding': '15px',
+                    'color': '#008ADB',
+                    'display': 'none'
+                  })
+                  alertClose.css({
+                    'cursor':'pointer',
+                    'user-select': 'none',
+                    'position': 'absolute',
+                    'right': '0',
+                    'top': '0',
+                    'color': '#999',
+                    'padding': '2px 5px'
+                  })
+                  alertClose.click(function(){
+                    jQ(this).parent().remove();
+                  })
+                  alertSaved.prepend(alertClose);
+                  sherdOverlay.append(alertSaved)
+                  alertSaved.toggle(500);
                 });
 
-                bucket_window.document.title = "Mediathread"
+                bucket_window.document.title = "Mediathread";//force the title of the popup
                 var body = jQ('body',bucket_window.document);
                 var title = body.find('.sherd-form-title');
                 var submitInput = body.find('.btn-primary');
