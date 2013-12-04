@@ -445,14 +445,16 @@ SherdBookmarklet = {
     },
     "flickr.com": {
         find:function(callback) {
+          console.log('flickr fired')
             SherdBookmarklet.run_with_jquery(function(jQuery) { 
                 var apikey = SherdBookmarklet.options.flickr_apikey;
-                if (!apikey) 
-                    return callback([]);
+                if (!apikey)
+                    SherdBookmarklet.options.flickr_apikey = '123';
+                    //return callback([]);
 
                 var bits = document.location.pathname.split("/");//expected:/photos/<userid>/<imageid>/
                 var imageId = bits[3];
-
+                window.imageId = imageId;
                 if (imageId.length < 1 || imageId.search(/\d{1,12}/) < 0)
                     return callback([]);
 
@@ -497,7 +499,7 @@ SherdBookmarklet = {
                                         "image-metadata":"w"+w+"h"+h,
                                         "metadata-owner":getInfoData.photo.owner.realname ||undefined
                                     };
-
+                                console.log(callback);
                                 return callback( [{html:img, primary_type:"image", sources:sources}] );
                             })
                 });/*end jQuery.ajax*/
@@ -2382,7 +2384,7 @@ SherdBookmarklet = {
 
           var img = asset.sources.thumb || asset.sources.image;
           if (img) {
-              var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'max-width:200px;max-height:150px',height:null});
+              var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'max-width:215px;max-height:150px',height:null});
               jQ(form.firstChild).empty().append(newAsset);
           }
           if (asset.disabled) {
@@ -2396,6 +2398,7 @@ SherdBookmarklet = {
                 jQ(this).parent().submit()
               })
               jQ(form.submitButton2).click(function(){
+
                /* A pop up window solution... */
                 var bucketWrap = jQ('<div id="bucket-wrap"/>');
                 var bucket = jQ(form).clone();
@@ -2406,24 +2409,28 @@ SherdBookmarklet = {
                    "Mediathread",
                    "resizable,scrollbars=no,status=1,href=no,location=no,menubar=no,width=650,height=350,top=200,left=300"
                 );
-
+                if(jQ('.sherd-image',bucket_window.document).length > 0){
+                  // make sure the bucket dies not already exists, if so 
+                  // remove it.
+                  jQ('#bucket-wrap',bucket_window.document).remove();
+                }
                 bucket.appendTo(bucketWrap);
                 jQ(bucket).append('<input type="hidden" value="cont" name="button" />');
                 jQ(bucket).append('<br/><input id="submit-input" class="btn-primary" type="button" value="Save" />');
                 jQ(bucket).append('<input id="submit-cancel" class="btn-primary" type="button" value="Cancel" />');
-                jQ(bucket).append('<br/><span class ="help-text">Clicking "Save" will send this item to your Mediathread collection and return you to collecting!<span/>');
-                jQ(bucketWrap).prepend('<h2>Send this item to your Mediathread collection</h2>')
+                jQ(bucket).append('<br/><span class ="help-text">Clicking "Save" will add this item to your Mediathread collection and return you to collecting!<span/>');
+                jQ(bucketWrap).prepend('<h2>Add this item to your Mediathread collection</h2>')
                 jQ('body',bucket_window.document).append(bucketWrap);
                 jQ('#submit-cancel',bucket_window.document).click(function(){
                   bucket_window.close();
                 });
                 jQ('#submit-input',bucket_window.document).click(function(){
-                  
                   jQ(this).parent().submit();
                   var sherdOverlay = jQ('.sherd-window-inner',document);
                   var alertSavedMarginLeft = (jQ('.sherd-window-inner',document).width()/2) - (535*.5);
                   var alertSavedMarginTop = (jQ(window).height()/2) -100;
-                  var alertSaved = jQ('<div class="alert-saved"><span style="font-weight:bold">Success.</span> Your item has been sucessfully added to your Mediathread collection.</div>');
+                  var collectionUrl = host_url.split('save')[0] + 'asset/'
+                  var alertSaved = jQ('<div class="alert-saved"><span style="font-weight:bold">Success.</span> Your item has been sucessfully added to your <a href="'+ collectionUrl +'">Mediathread collection</a>.</div>');
                   var alertClose = jQ('<div clas="alert-close">X</div>');
                   alertSaved.css({
                     'position': 'absolute',
@@ -2455,8 +2462,9 @@ SherdBookmarklet = {
                   alertSaved.prepend(alertClose);
                   sherdOverlay.append(alertSaved)
                   alertSaved.fadeIn(500);
-                });
-
+                });// end #submit-input' click
+  
+                // style and add listeners onto the popup window 
                 bucket_window.document.title = "Mediathread";//force the title of the popup
                 var body = jQ('body',bucket_window.document);
                 var title = body.find('.sherd-form-title');
@@ -2464,9 +2472,6 @@ SherdBookmarklet = {
                 var header = body.find('#bucket-wrap h2');
                 var helpText = body.find('.help-text');
                 
-                bucketWrap.css({
-                
-                })
                 bucket.css({
                    'background':"#fff",
                    'text-align': 'center'
@@ -2478,8 +2483,8 @@ SherdBookmarklet = {
                   'color': '#323232',
                   'text-align':'center'
                 })
+
                 title.focus();
-                title.trigger('click')
                 title.css({
                   color:'#999',
                   width:'350px',
@@ -2490,24 +2495,49 @@ SherdBookmarklet = {
                   '-webkit-appearance':'none'
                 })
                 submitBtn.css({
-                  'background-color':'transparent',
+                  'font-size':'14px',
+                  'font-weight':'normal',
+                  'color':'#2f2f2f',
+                  'padding':'5px 15px',
+                  'margin':'0px 12px 12px',
+                  'border':'solid 1px',
                   'border-radius':'4px',
-                  '-webkit-border-radius':'4px',
                   '-moz-border-radius':'4px',
-                  'text-indent':'0',
-                  'border':'1px solid #dcdcdc',
-                  'display':'inline-block',
-                  'color':'#666',
-                  'font-family':'arial',
-                  'font-size':'13px',
-                  'height':'30px',
-                  'line-height':'26px',
-                  'width':'65px',
-                  'text-decoration':'none',
-                  'text-align':'center',
-                  'margin': '0 10px 10px 0',
-                  'cursor':'pointer'
+                  '-webkit-border-radius':'4px',
+                  'background-color':'#efefef',
+                  '*background-color':'#efefef',
+                  'background-image':'-moz-linear-gradient(top, #fcfcfc, #efefef)',
+                  'background-image':'-webkit-gradient(linear, 0 0, 0 100%, from(#fcfcfc), to(#efefef))',
+                  'background-image':'-webkit-linear-gradient(top, #fcfcfc, #efefef)',
+                  'background-image':'-o-linear-gradient(top, #fcfcfc, #efefef)',
+                  'background-image':'linear-gradient(to bottom, #fcfcfc, #efefef)',
+                  'background-repeat':'repeat-x',
+                  'border-color':'#0044cc #0044cc #002a80',
+                  'border-color':'rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25)',
+                  'filter':'progid:DXImageTransform.Microsoft.gradient(startColorstr="#ff0088cc", endColorstr="#ff0044cc", GradientType=0)',
+                  'filter':'progid:DXImageTransform.Microsoft.gradient(enabled=false)',
+                  'cursor':'pointer',
+                  'display':'inline-block'
                 })
+                submitBtn.hover(function(){
+                    jQ(this).css({
+                    'background-image':'-moz-linear-gradient(top, #efefef, #fcfcfc)',
+                    'background-image':'-webkit-gradient(linear, 0 0, 0 100%, from(#efefef), to(#fcfcfc))',
+                    'background-image':'-webkit-linear-gradient(top, #efefef, #fcfcfc)',
+                    'background-image':'-o-linear-gradient(top, #efefef, #fcfcfc)',
+                    'background-image':'linear-gradient(to bottom, #efefef, #fcfcfc)'
+                    
+                  })
+                }, function(){
+                    jQ(this).css({
+                      'background-image':'-moz-linear-gradient(top, #fcfcfc, #efefef)',
+                      'background-image':'-webkit-gradient(linear, 0 0, 0 100%, from(#fcfcfc), to(#efefef))',
+                      'background-image':'-webkit-linear-gradient(top, #fcfcfc, #efefef)',
+                      'background-image':'-o-linear-gradient(top, #fcfcfc, #efefef)',
+                      'background-image':'linear-gradient(to bottom, #fcfcfc, #efefef)'
+                    })
+                  })
+                
                 helpText.css({
                   'color':'#666',
                   'font-size': '12px',
