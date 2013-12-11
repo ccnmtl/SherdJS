@@ -2496,7 +2496,7 @@ SherdBookmarklet = {
                 jQ(bucket).append('<input type="hidden" value="cont" name="button" />');
                 jQ(bucket).append('<br/><input id="submit-input" class="btn-primary" type="button" value="Save" />');
                 jQ(bucket).append('<input id="submit-cancel" class="btn-primary" type="button" value="Cancel" />');
-                jQ(bucket).append('<br/><span class ="help-text">Clicking "Save" will add this item to your Mediathread collection and return you to collecting!<span/>');
+                jQ(bucket).append('<br/><span class ="help-text">Clicking "Save" will add this item to your Mediathread collection and return you to collecting.<span/>');
                 jQ(bucketWrap).prepend('<h2>Add this item to your Mediathread collection</h2>')
                 jQ('body',bucket_window.document).append(bucketWrap);
                 jQ('#submit-cancel',bucket_window.document).click(function(){
