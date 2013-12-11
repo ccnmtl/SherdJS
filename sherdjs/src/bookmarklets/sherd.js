@@ -2309,6 +2309,51 @@ SherdBookmarklet = {
                                 ', and then click the '+o.widget_name+' again to import items.'
                                ])
                   );
+                  jQ('.sherd-asset').css({
+                    display: 'none'
+                  })
+                  jQ('button').remove();
+                  var messageDiv = jQ('<div class="message-div"></div>');
+                  var messageClose = jQ('<div>X<div/>');
+                  var winHeight = jQ(window).height();
+                  var winWidth = jQ(window).width();
+                  messageClose.css({
+                    'cursor':'pointer',
+                    '-moz-user-select':'none',
+                    'position':'absolute',
+                    'right':'10px',
+                    'top':'10px',
+                    'color':'rgb(153, 153, 153)',
+                    'padding':'2px 5px',
+                  }).appendTo(messageDiv);             
+                  messageDiv.css({
+                    'position':'absolute',
+                    'top': winHeight/2 - 125 +'px',
+                    'left': winWidth/2- 267 +'px',
+                    'background': 'none repeat scroll 0% 0% rgb(193, 229, 250)',
+                    'width': '535px',
+                    'border': '3px solid rgb(169, 223, 255)',
+                    'border-radius': '4px 4px 4px 4px',
+                    'padding': '25px',
+                    'color': 'rgb(0, 138, 219)',
+                    'display': 'none'
+                  }).appendTo('.sherd-analyzer');
+
+                  jQ('.sherd-window-inner h2').css({
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    fontSize: '18px'
+                  });
+                  jQ('.sherd-window-inner a').css({
+                    color: 'rgb(0, 138, 219)'
+                  })
+
+                  jQ('.sherd-window').appendTo(messageDiv);
+                  messageDiv.fadeIn(1000);
+
+                  messageDiv.click(function(){
+                    jQ('.sherd-analyzer').remove();
+                  })
               } else {
                   var importHeader = jQ('<h2 class="import-header"/>');
                   var importHeaderWrap = jQ('<div id="import-header-wrap"/>');
