@@ -455,6 +455,10 @@ SherdBookmarklet = {
                 var bits = document.location.pathname.split("/");//expected:/photos/<userid>/<imageid>/
                 var imageId = bits[3];
                 window.imageId = imageId;
+                if(imageId == undefined){
+                  return callback([]);
+                };
+                
                 if (imageId.length < 1 || imageId.search(/\d{1,12}/) < 0)
                     return callback([]);
 
