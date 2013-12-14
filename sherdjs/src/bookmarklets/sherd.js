@@ -2105,7 +2105,31 @@ SherdBookmarklet = {
           } else {
               self.findGeneralAssets();
           }
-      };
+          if(self.assets_found.length == 0 && SherdBookmarklet.user_ready() ){
+            self.noAssetMessage();
+          }
+      }
+      
+      this.noAssetMessage = function(){
+        var closeBtn = jQ('<div class="no-asset-close-btn">X</div>');
+        var messageBox = jQ('<div class="no-asset-alert">Sorry, no supported assets were found on this page. Try going to an asset page if you are on a list/search page. <br/><br/> If there is a video on the page, press play and then try again.</div>');
+        var winWidth = jQ(window).width();
+        var winHeight = jQ(window).height();
+        jQ('.import-header').remove();
+        jQ('.sherd-analyzer').append(messageBox);
+        messageBox.prepend(closeBtn);
+
+        
+        messageBox.css({
+          left: (winWidth / 2) - 262 + 'px',
+          top : (winHeight / 2) - 100 + 'px'
+        })
+
+        closeBtn.click(function(){
+          jQ('.sherd-analyzer').remove();
+        })
+      }
+
       this.findGeneralAssets = function() {
           self.no_assets_yet = true;
           self.asset_keys = {};
@@ -2314,39 +2338,19 @@ SherdBookmarklet = {
                   })
                   jQ('button').remove();
                   var messageDiv = jQ('<div class="message-div"></div>');
-                  var messageClose = jQ('<div>X<div/>');
+                  var messageClose = jQ('<div class="message-close">X<div/>');
                   var winHeight = jQ(window).height();
                   var winWidth = jQ(window).width();
-                  messageClose.css({
-                    'cursor':'pointer',
-                    '-moz-user-select':'none',
-                    'position':'absolute',
-                    'right':'10px',
-                    'top':'10px',
-                    'color':'rgb(153, 153, 153)',
-                    'padding':'2px 5px',
-                  }).appendTo(messageDiv);             
+                  messageClose.appendTo(messageDiv);             
                   messageDiv.css({
-                    'position':'absolute',
                     'top': winHeight/2 - 125 +'px',
                     'left': winWidth/2- 267 +'px',
-                    'background': 'none repeat scroll 0% 0% rgb(193, 229, 250)',
-                    'width': '535px',
-                    'border': '3px solid rgb(169, 223, 255)',
-                    'border-radius': '4px 4px 4px 4px',
-                    'padding': '25px',
-                    'color': 'rgb(0, 138, 219)',
                     'display': 'none'
                   }).appendTo('.sherd-analyzer');
 
-                  jQ('.sherd-window-inner h2').css({
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    fontSize: '18px'
-                  });
-                  jQ('.sherd-window-inner a').css({
-                    color: 'rgb(0, 138, 219)'
-                  })
+                  jQ('.sherd-window-inner h2').addClass('not-logged-in');
+
+                  jQ('.sherd-window-inner a').addClass('not-logged-in');
 
                   jQ('.sherd-window').appendTo(messageDiv);
                   messageDiv.fadeIn(1000);
@@ -2625,7 +2629,6 @@ SherdBookmarklet = {
 
                  
           }
-
           if (comp.ul) {
               if (comp.ul.firstChild != null 
                   && comp.ul.firstChild.innerHTML == o.message_no_assets) {

@@ -174,3 +174,57 @@ button.sherd-collection{
 .sherd-btn-overlay{
 display: none;
 }
+/* No asset found message box*/
+.no-asset-alert{
+	width: 300px;
+	position: absolute;
+	z-index: 99999999999999999999999;
+	background: none repeat scroll 0% 0% rgb(193, 229, 250);
+	width: 535px;
+	border: 3px solid rgb(169, 223, 255);
+	border-radius: 4px 4px 4px 4px;
+	padding: 25px;
+	color: rgb(0, 138, 219);
+	text-align: left;
+}
+.no-asset-close-btn{
+	cursor: pointer;
+	-moz-user-select: none;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	color: rgb(153, 153, 153);
+	padding: 2px 5px;
+}
+
+/* Not logged in message */
+
+.message-div{
+	position: absolute;
+	background: none repeat scroll 0% 0% rgb(193, 229, 250);
+	width: 535px;
+	border: 3px solid rgb(169, 223, 255);
+	border-radius: 4px 4px 4px 4px;
+	padding: 25px;
+	color: rgb(0, 138, 219);
+}
+
+.message-div .message-close{
+	cursor: pointer;
+	-moz-user-select: none;
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	color: rgb(153, 153, 153);
+	padding: 2px 5px;
+}
+
+h2.not-logged-in{
+	color: rgb(0, 138, 219);
+    font-weight: bold;
+    font-size: 18px;
+}
+
+a.not-logged-in{
+	color: rgb(0, 138, 219) !important;
+}
