@@ -467,7 +467,7 @@ SherdBookmarklet = {
                     +apikey+"&photo_id="+imageId
                     + ((SherdBookmarklet.options.cross_origin) ? '&nojsoncallback=1' : '&jsoncallback=?');
                 jQuery.getJSON(baseUrl + "&method=flickr.photos.getInfo",function(getInfoData) {
-                        if (getInfoData.photo.media=="video") {
+                        if (getInfoData.photo == undefined || getInfoData.photo.media=="video") {
                             /*video is unsupported*/
                             return callback([]);
                         }
