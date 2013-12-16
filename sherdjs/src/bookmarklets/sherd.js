@@ -2484,7 +2484,7 @@ SherdBookmarklet = {
                 jQ(this).parent().submit()
               })
               jQ(form.submitButton2).click(function(){
-
+                window.button_asset = jQ(this);
                /* A pop up window solution... */
                 var bucketWrap = jQ('<div id="bucket-wrap"/>');
                 var bucket = jQ(form).clone();
@@ -2517,37 +2517,27 @@ SherdBookmarklet = {
                   var alertSavedMarginTop = (jQ(window).height()/2) -100;
                   var collectionUrl = host_url.split('save')[0] + 'asset/'
                   var alertSaved = jQ('<div class="alert-saved"><span style="font-weight:bold">Success.</span> Your item has been sucessfully added to your <a href="'+ collectionUrl +'">Mediathread collection</a>.</div>');
-                  var alertClose = jQ('<div clas="alert-close">X</div>');
+                  var alertClose = jQ('<div class="alert-close">X</div>');
+
                   alertSaved.css({
-                    'position': 'absolute',
-                    'z-index': '99999999999999',
                     'top': alertSavedMarginTop + 'px',
-                    'left': alertSavedMarginLeft + 'px',
-                    'background': '#C1E5FA',
-                    'width': '535px',
-                    'border': '3px solid #A9DFFF',
-                    '-webkit-border-radius': '4px',
-                    '-moz-border-radius': '4px',
-                    'border-radius': '4px',
-                    'padding': '25px',
-                    'color': '#008ADB',
-                    'display': 'none'
-                  })
-                  alertClose.css({
-                    'cursor':'pointer',
-                    'user-select': 'none',
-                    'position': 'absolute',
-                    'right': '0',
-                    'top': '0',
-                    'color': '#999',
-                    'padding': '2px 5px'
-                  })
+                    'left': alertSavedMarginLeft + 'px'
+
+                  });
                   alertClose.click(function(){
                     jQ(this).parent().remove();
                   })
                   alertSaved.prepend(alertClose);
-                  sherdOverlay.append(alertSaved)
-                  alertSaved.fadeIn(500);
+                  sherdOverlay.append(alertSaved);
+                  alertSaved.fadeIn(500, function(){
+                    var btn = window.button_asset;
+                    btn.attr('value', 'Collected');
+                    btn.off()
+                    btn.css({
+                      background:'#999',
+                      color:'#333'
+                    })
+                  });
                 });// end #submit-input' click
   
                 // style and add listeners onto the popup window 
