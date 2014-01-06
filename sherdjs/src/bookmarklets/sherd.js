@@ -445,7 +445,6 @@ SherdBookmarklet = {
     },
     "flickr.com": {
         find:function(callback) {
-          console.log('flickr fired')
             SherdBookmarklet.run_with_jquery(function(jQuery) { 
                 var apikey = SherdBookmarklet.options.flickr_apikey;
                 if (!apikey)
@@ -503,7 +502,7 @@ SherdBookmarklet = {
                                         "image-metadata":"w"+w+"h"+h,
                                         "metadata-owner":getInfoData.photo.owner.realname ||undefined
                                     };
-                                console.log(callback);
+
                                 return callback( [{html:img, primary_type:"image", sources:sources}] );
                             })
                 });/*end jQuery.ajax*/
