@@ -693,8 +693,7 @@ SherdBookmarklet = {
         
         find: function(callback) {
             SherdBookmarklet.run_with_jquery(function _find(jQuery) {
-                var videos = document.getElementsByTagName("video").length >1 ? document.getElementsByTagName("video"): document.getElementsByTagName("object");
-                alert(videos.length);
+                var videos = jQuery('.video-wrapper');
                 if (videos.length < 1) {
                     var message = "This Vimeo page does not contain videos accessible to the bookmarklet. Try clicking into a single video page.";
                     alert(message);
