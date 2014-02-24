@@ -727,7 +727,11 @@ SherdBookmarklet = {
                         v_match = v_match.match(/video_id=([^&]*)/);
                     } else { //mostly for <OBJECT>
                         v_match = document.location.search.match(/[?&]v=([^&]*)/);
-                    } 
+                    }
+                    if(v_match==null){
+                      var vid = document.location.search.split('v=')[1];
+                      v_match = ['video_id=' + vid, vid];
+                    }
                     SherdBookmarklet.assethandler.objects_and_embeds.players
                     .youtube.asset(video, 
                                    v_match,
@@ -806,11 +810,11 @@ SherdBookmarklet = {
               "youtube":{
                   match:function(emb) {
                       ///ONLY <EMBED>
-                      return String(emb.src).match(/^http:\/\/www.youtube.com\/v\/([\w\-]*)/);
+                      return String(emb.src).match(/^http:\/\/www.youtube.com\/v\/([\w\-]*)/); 
                   },
                   asset:function(emb,match,context,index,optional_callback) {
-                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
-                      var VIDEO_ID = match[1]; //e.g. "LPHEvaNjdhw"
+                      var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );                        
+                      var VIDEO_ID = match[1]; //e.g. "LPHEvaNjdhw";
                       var rv = {
                           html:emb,
                           wait:true,
@@ -858,6 +862,9 @@ SherdBookmarklet = {
                           ajax_options['url'] = rv.sources.gdata+'?v=2&alt=json';
                       }
                       jQ.ajax(ajax_options);
+                      // YT is declaring maximum z-index for Safari and it cannot e overriden via CSS
+                      // we need to redeclare it
+                      jQ('#masthead-positioner').css('z-index','999');
                       return rv;
                   }
               },/*end youtube embeds*/
