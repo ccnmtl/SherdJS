@@ -728,10 +728,11 @@ SherdBookmarklet = {
                     } else { //mostly for <OBJECT>
                         v_match = document.location.search.match(/[?&]v=([^&]*)/);
                     }
-                    if(v_match==null){
-                      var vid = document.location.search.split('v=')[1];
+                    if(v_match==null && SherdBookmarklet.getURLParameters('v')){
+                      var vid = SherdBookmarklet.getURLParameters('v');
                       v_match = ['video_id=' + vid, vid];
                     }
+
                     SherdBookmarklet.assethandler.objects_and_embeds.players
                     .youtube.asset(video, 
                                    v_match,
@@ -2743,7 +2744,10 @@ SherdBookmarklet = {
           //TODO: this will be a huge pain, since it needs to be cross-domain.
       }
 
-  }/*Interface*/
+  }, /*END Interface*/
+   getURLParameters: function(name) {
+  		return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+  }
 };/*SherdBookmarklet (root)*/
 
 window.MondrianBookmarklet = SherdBookmarklet; //legacy name
