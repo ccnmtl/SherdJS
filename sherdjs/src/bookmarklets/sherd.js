@@ -2408,7 +2408,7 @@ SherdBookmarklet = {
               self.elt(doc,'div','sherd-window','',
                        [
                            self.elt(doc,'div','sherd-window-inner','',[
-                               self.elt(doc,'button','sherd-close btn-primary',"",['Cancel']),
+                               self.elt(doc,'button','sherd-close btn-primary',"",['X']),
                                //self.elt(doc,'button','sherd-move',"float:right;",['Move']),
                                self.elt(doc,'button','sherd-collection btn-primary',"",['Go to Collection']),
                                self.elt(doc,'h2','','',['Select "Analyze Now" to edit one item immediately, or "Send to Collection" to send an item and keep collecting on this page.']),
