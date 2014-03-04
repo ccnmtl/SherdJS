@@ -5,7 +5,7 @@
 	top: 0;
 	left: 0;
 
-	background: url(/site_media/js/sherdjs/src/bookmarklets/overlaybg.png) repeat;
+	background: url(/media/js/sherdjs/src/bookmarklets/overlaybg.png) repeat;
 }
 .sherd-window-inner h2{
    color: #fff;
@@ -84,7 +84,7 @@ img.sherd-image{
 	margin: 0;
 	top:0;
 	height: 55px;
-	background: url(/site_media/img/logo_mediathread_new.png) #383838 no-repeat;
+	background: url(/media/img/logo_mediathread_new.png) #383838 no-repeat;
 	background-position: center left;
 	}
 

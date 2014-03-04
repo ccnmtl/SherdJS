@@ -1,6 +1,6 @@
 <!--
     Run tests via:  
-    http://localhost:8000/site_media/js/sherdjs/tests/run-tests.html?testframe=testframe;testframe_no_clear
+    http://localhost:8000/media/js/sherdjs/tests/run-tests.html?testframe=testframe;testframe_no_clear
     
     Note: I discovered that Quicktime must be visible within the browser for the Plugin to record a "ready" status
     If there are failures, this could be why.
@@ -8,12 +8,12 @@
 
 <html>
 <head>
-    <script type="text/javascript" src="../../../lib/MochiKit.js"></script>
-    <script type="text/javascript" src="../../../src/base.js"></script>
-    <script type="text/javascript" src="../../../src/assets.js"></script>
-    <script type="text/javascript" src="../../../src/video/views/video.js"></script>
-    <script type="text/javascript" src="../../../src/video/views/quicktime.js"></script>
-    <script type="text/javascript" src="../../../src/configs/djangosherd.js"></script>
+    <script type="text/javascript" src="/media/jquery/js/jquery-1.8.3.js"></script>
+    <script type="text/javascript" src="/media/js/sherdjs/src/base.js"></script>
+    <script type="text/javascript" src="/media/js/sherdjs/src/assets.js"></script>
+    <script type="text/javascript" src="/media/js/sherdjs/src/video/views/video.js"></script>
+    <script type="text/javascript" src="/media/js/sherdjs/src/video/views/quicktime.js"></script>
+    <script type="text/javascript" src="/media/js/sherdjs/src/configs/djangosherd.js"></script>
 
     <script type="text/javascript">
         function testDefinition(t)
@@ -36,7 +36,7 @@
                                                  height: 256, 
                                                  width: 320,
                                                  autoplay: false,
-                                                 loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' });
+                                                 loadingposter: '/media/js/sherdjs/media/images/poster.gif' });
 
            // Verify create_obj has expected return parameters
            t.ok(create_obj.object);
@@ -69,7 +69,7 @@
                                  height: 256,
                                  width: 320,
                                  autoplay: false,
-                                 loadingposter: '/site_media/js/sherdjs/media/images/poster.gif'} 
+                                 loadingposter: '/media/js/sherdjs/media/images/poster.gif'} 
                               
                               // Check Update
                               var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
@@ -211,7 +211,7 @@
                     height: 256, 
                     width: 320,
                     autoplay: false,
-                    loadingposter: '/site_media/js/sherdjs/media/images/poster.gif' }
+                    loadingposter: '/media/js/sherdjs/media/images/poster.gif' }
 
             var obj_div = getFirstElementByTagAndClassName('div', 'asset-display');// id=videoclip
             view.html.push(obj_div, {asset: asset});

@@ -267,7 +267,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                            '<input type="text" class="timecode" id="clipEnd" value="' + self.components.end + '" />' +
                          '</td>' +
                          '<td class="sherd-clipform-play">' + 
-                         '<input type="image" title="Play Clip" class="regButton videoplay" id="btnPlayClip" src="/site_media/img/icons/meth_video_play.png"/>' +
+                         '<input type="image" title="Play Clip" class="regButton videoplay" id="btnPlayClip" src="/media/img/icons/meth_video_play.png"/>' +
                          '</td>' +
                        '</tr>' +
                       '</table>' +

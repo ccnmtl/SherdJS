@@ -2317,9 +2317,9 @@ SherdBookmarklet = {
         var jQ = window.SherdBookmarkletOptions.jQuery || window.jQuery;
         var root_url =  SherdBookmarkletOptions.host_url.split('/save/?').shift()
         jQ('head').append('<link rel="stylesheet" type="text/css"\
-         href="'+ root_url +'/site_media/js/sherdjs/src/bookmarklets/sherd_styles.css">');
+         href="'+ root_url +'/media/js/sherdjs/src/bookmarklets/sherd_styles.css">');
         jQ('head').append('<link rel="stylesheet" type="text/css"\
-         href="'+ root_url +'/site_media/css/mediathread.css">');
+         href="'+ root_url +'/media/css/mediathread.css">');
 
       }
       this.showWindow = function() {
