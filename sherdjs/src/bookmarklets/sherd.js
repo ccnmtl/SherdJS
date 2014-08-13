@@ -2489,6 +2489,9 @@ SherdBookmarklet = {
               jQ(form).append(form.submitButton2);
               jQ(form).append(form.submitButton);              
               jQ(form.submitButton).click(function(){
+                var action = jQ(this).parent().attr('action');
+                action = 'http://' + action.split('://')[1];
+                jQ(this).parent().attr('action', action);
                 jQ(this).parent().submit()
               })
               jQ(form.submitButton2).click(function(){
@@ -2524,6 +2527,7 @@ SherdBookmarklet = {
                   var alertSavedMarginLeft = (jQ('.sherd-window-inner',document).width()/2) - (535*.5);
                   var alertSavedMarginTop = (jQ(window).height()/2) -100;
                   var collectionUrl = host_url.split('save')[0] + 'asset/'
+                  collectionUrl = 'http://' + collectionUrl.split('://')[1] 
                   var alertSaved = jQ('<div class="alert-saved"><span style="font-weight:bold">Success.</span> Your item has been sucessfully added to your <a href="'+ collectionUrl +'">Mediathread collection</a>.</div>');
                   var alertClose = jQ('<div class="alert-close">X</div>');
 
