@@ -1618,7 +1618,33 @@ SherdBookmarklet = {
                               ///TODO: should we get video metadata (betacam, aspect ratio)?
                               callback([rv]);
                           },
-                          error:function(){callback([]);}
+                          error:function(){
+                            //attempt to scrape manually
+                            if(console){
+                              console.log('trying to scrape manually, something went wrong with the unAPI call');
+                              // if Openvault
+                              if(request_url.indexOf('openvault')>0){
+                                var rv = {
+                                  "page_resource":true,
+                                  "html":document,
+                                  "primary_type":"pbcore",
+                                  "sources":{
+                                      'pbcore':window.location.href
+                                  },
+                                  "metadata":{'subject':[]}
+                                  };
+                                  rv.metadata['Description'] = [jQ('.blacklight-dc_description_t .value').text()];
+                                  rv.metadata['Subject'] = [jQ('.blacklight-topic_cv .value').text()];
+                                  rv.metadata['Copyrights'] = [jQ('.copyright').text()];
+                                  rv.metadata['Publisher'] = ['WGBH Educational Foundation'];
+                              }
+                            }
+                            if(rv){
+                              callback([rv]);
+                            }else{
+                              callback([]);
+                            }
+                          }
                       });
                       return;
                   }//end if (server)
