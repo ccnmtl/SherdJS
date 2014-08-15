@@ -2529,7 +2529,7 @@ SherdBookmarklet = {
                   var sherdOverlay = jQ('.sherd-window-inner',document);
                   var alertSavedMarginLeft = (jQ('.sherd-window-inner',document).width()/2) - (535*.5);
                   var alertSavedMarginTop = (jQ(window).height()/2) -100;
-                  var collectionUrl = unHttpsTheLink(host_url.split('save')[0] + 'asset/');
+                  var collectionUrl = self.unHttpsTheLink(host_url.split('save')[0] + 'asset/');
                   var alertSaved = jQ('<div class="alert-saved"><span style="font-weight:bold">Success.</span> Your item has been sucessfully added to your <a href="'+ collectionUrl +'">Mediathread collection</a>.</div>');
                   var alertClose = jQ('<div class="alert-close">X</div>');
 
