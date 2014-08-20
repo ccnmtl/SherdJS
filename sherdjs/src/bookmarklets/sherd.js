@@ -2136,6 +2136,8 @@ SherdBookmarklet = {
       this.findAssets = function() {
           self.assets_found = [];
           var handler = SherdBookmarklet.gethosthandler();
+          console.log('handler: ');
+          console.log(handler);
           if (handler) {
               handler.find.call(handler, self.collectAssets);
               if (handler.also_find_general) {
@@ -2144,7 +2146,7 @@ SherdBookmarklet = {
           } else {
               self.findGeneralAssets();
           }
-          if(self.assets_found.length == 0 && SherdBookmarklet.user_ready() ){
+          if(self.assets_found.length == 0 && SherdBookmarklet.user_ready()){
             self.noAssetMessage();
           }
       }
@@ -2155,9 +2157,6 @@ SherdBookmarklet = {
         var winWidth = jQ(window).width();
         var winHeight = jQ(window).height();
         jQ('.import-header').remove();
-        jQ('.sherd-analyzer').append(messageBox);
-        messageBox.prepend(closeBtn);
-
         
         messageBox.css({
           left: (winWidth / 2) - 262 + 'px',
@@ -2167,6 +2166,15 @@ SherdBookmarklet = {
         closeBtn.click(function(){
           jQ('.sherd-analyzer').remove();
         })
+        //double check no asset on page
+        if(jQ('.sherd-asset li').length > 0 ){
+          jQ('.sherd-analyzer').append(messageBox);
+          messageBox.prepend(closeBtn);
+        }
+        
+
+        
+        
       }
 
       this.findGeneralAssets = function() {
@@ -2254,7 +2262,10 @@ SherdBookmarklet = {
           }
       };
       this.collectAssets = function(assets,errors) {
+          //console.log('assets');
+          
           self.assets_found = self.assets_found.concat(assets);
+          //console.log(self.assets_found);
           for (var i=0;i<assets.length;i++) {
               self.no_assets_yet = false;
               if (assets[i].page_resource) ++self.page_resource_count;
@@ -2498,6 +2509,13 @@ SherdBookmarklet = {
         return newUrl;
       };
       this.displayAsset = function(asset,index) {
+        console.log('display asset');
+        var assetUrl = asset.sources[asset.primary_type];
+        if(assetUrl !== undefined){
+          // make sure to strip out any url params
+          asset.sources[asset.primary_type] = assetUrl.split('?')[0];
+        }
+        console.log(asset);
           if (!asset) return;
           var doc = comp.ul.ownerDocument;
           var li = doc.createElement("li");
