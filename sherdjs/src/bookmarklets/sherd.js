@@ -2529,7 +2529,8 @@ SherdBookmarklet = {
               var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'max-width:215px;max-height:150px',height:null});
               jQ(form.firstChild).empty().append(newAsset);
           }else{
-            asset.sources.thumb = 'http://panhandletickets.com/not_available.jpg';
+
+            asset.sources.thumb = host_url.split('save')[0] + 'media/img/nothumb_video.png';
             var newAsset = self.elt(null,'img','sherd-video',{src:asset.sources.thumb,style:'max-width:215px;max-height:150px',height:null});
             jQ(form.firstChild).empty().append(newAsset);
             
