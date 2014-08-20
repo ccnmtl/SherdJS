@@ -41,6 +41,7 @@
 	text-align: left;
 	color: #333;
 }
+
 .sherd-asset-wrap{
 	min-height: 55px;
 	min-width: 215px;
@@ -94,6 +95,7 @@ img.sherd-image{
 input.analyze.btn-primary, input.cont.btn-primary{
 	display: block;
 	background-color: #333;
+	min-height: 25px;
 }
 
 .cont.btn-primary {
@@ -111,6 +113,7 @@ input.analyze.btn-primary, input.cont.btn-primary{
 	clear: both;
 	font-family: 'Helvetica Neue', Helvetica, Arial;
 	font-weight: 200;
+	min-height: 25px;
 }
 
 .analyze.btn-primary {

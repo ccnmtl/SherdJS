@@ -2528,6 +2528,11 @@ SherdBookmarklet = {
           if (img) {
               var newAsset = self.elt(null,'img','sherd-image',{src:img,style:'max-width:215px;max-height:150px',height:null});
               jQ(form.firstChild).empty().append(newAsset);
+          }else{
+            asset.sources.thumb = 'http://panhandletickets.com/not_available.jpg';
+            var newAsset = self.elt(null,'img','sherd-video',{src:asset.sources.thumb,style:'max-width:215px;max-height:150px',height:null});
+            jQ(form.firstChild).empty().append(newAsset);
+            
           }
           if (asset.disabled) {
               form.lastChild.innerHTML = o.message_disabled_asset;
