@@ -2167,7 +2167,7 @@ SherdBookmarklet = {
           jQ('.sherd-analyzer').remove();
         })
         //double check no asset on page
-        if(jQ('.sherd-asset li').length > 0 ){
+        if(jQ('.sherd-asset li').length == 0 ){
           jQ('.sherd-analyzer').append(messageBox);
           messageBox.prepend(closeBtn);
         }
@@ -2262,10 +2262,7 @@ SherdBookmarklet = {
           }
       };
       this.collectAssets = function(assets,errors) {
-          //console.log('assets');
-          
           self.assets_found = self.assets_found.concat(assets);
-          //console.log(self.assets_found);
           for (var i=0;i<assets.length;i++) {
               self.no_assets_yet = false;
               if (assets[i].page_resource) ++self.page_resource_count;
@@ -2509,13 +2506,11 @@ SherdBookmarklet = {
         return newUrl;
       };
       this.displayAsset = function(asset,index) {
-        console.log('display asset');
         var assetUrl = asset.sources[asset.primary_type];
         if(assetUrl !== undefined){
           // make sure to strip out any url params
           asset.sources[asset.primary_type] = assetUrl.split('?')[0];
         }
-        console.log(asset);
           if (!asset) return;
           var doc = comp.ul.ownerDocument;
           var li = doc.createElement("li");
