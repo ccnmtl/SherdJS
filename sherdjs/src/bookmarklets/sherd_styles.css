@@ -41,10 +41,14 @@
 	text-align: left;
 	color: #333;
 }
+
 .sherd-asset-wrap{
-	/*min-height: 135px;*/
+	min-height: 55px;
 	min-width: 215px;
 	/*
+	setting the min height and width will make sure that videos are 
+	picked up and shown when they do not have thubmnails on their
+	hosted sites --> like the 9/11 archive. 
 	height: 135px;  90% of the possible height of 150px */
 }
 .sherd-window-inner .sherd-form-title{
@@ -91,6 +95,7 @@ img.sherd-image{
 input.analyze.btn-primary, input.cont.btn-primary{
 	display: block;
 	background-color: #333;
+	min-height: 25px;
 }
 
 .cont.btn-primary {
@@ -108,6 +113,7 @@ input.analyze.btn-primary, input.cont.btn-primary{
 	clear: both;
 	font-family: 'Helvetica Neue', Helvetica, Arial;
 	font-weight: 200;
+	min-height: 25px;
 }
 
 .analyze.btn-primary {
