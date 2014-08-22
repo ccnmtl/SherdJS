@@ -183,6 +183,9 @@ SherdBookmarklet = {
   user_ready:function() {
       return SherdBookmarklet.user_status.ready;
   },
+  needs_update:function() {
+      return !SherdBookmarklet.user_status.current;
+  },
   update_user_status:function(user_status) {
       var uninit = (! window.SherdBookmarklet.user_status.ready);
       for (var a in user_status) {
@@ -2318,9 +2321,9 @@ SherdBookmarklet = {
       this.options = {
           login_url:null,
           tab_label:"Analyze in Mediathread",
-          not_logged_in_message:"You are not logged in to MediaThread.",
-          login_to_course_message:"login to your MediaThread course",
-          link_text_for_existing_asset:"Link in MediaThread",
+          not_logged_in_message:"You are not logged in to Mediathread.",
+          login_to_course_message:"login to your Mediathread course",
+          link_text_for_existing_asset:"Link in Mediathread",
           target:((M.hasBody(document))? document.body : null),
           postTarget:'_top',
           top:100,
@@ -2364,21 +2367,38 @@ SherdBookmarklet = {
               comp.tab.style.display = "none";
               jQ(comp.ul).empty();
               if (!SherdBookmarklet.user_ready()) {
-                  jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Login required'));
-                  o.login_url = o.login_url || host_url.split("/",3).join("/");
-                  jQ(comp.message).empty().append(
-                      self.elt(null,'span','',{},
-                               [o.not_logged_in_message,
-                                self.elt(null,'br','',{}),
-                                'Please ',
-                                self.elt(null,'a','',{
-                                    href:o.login_url,
-                                    target:'_blank',
-                                    style:'color:#8C3B2E;'
-                                },[o.login_to_course_message]),
-                                ', and then click the '+o.widget_name+' again to import items.'
-                               ])
-                  );
+                  if (SherdBookmarklet.needs_update()) {
+                      // display message here
+                      jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Please update'));
+                      o.login_url = o.login_url || host_url.split("/",3).join("/") + "/upgrade/";
+                      jQ(comp.message).empty().append(
+                          self.elt(null,'span','',{},
+                                   ['This Mediathread bookmarklet is outdated.',
+                                    self.elt(null,'br','',{}),
+                                    'To update, please ',
+                                    self.elt(null,'a','',{
+                                        href:o.login_url,
+                                        target:'_blank',
+                                        style:'color:#8C3B2E;'
+                                    },['click here']),
+                                    ' and follow instructions.'
+                                   ]));
+                  } else {
+                      jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Login required'));
+                      o.login_url = o.login_url || host_url.split("/",3).join("/");
+                      jQ(comp.message).empty().append(
+                          self.elt(null,'span','',{},
+                                   [o.not_logged_in_message,
+                                    self.elt(null,'br','',{}),
+                                    'Please ',
+                                    self.elt(null,'a','',{
+                                        href:o.login_url,
+                                        target:'_blank',
+                                        style:'color:#8C3B2E;'
+                                    },[o.login_to_course_message]),
+                                    ', and then click the '+o.widget_name+' again to import items.'
+                                   ]));
+                  }
                   jQ('.sherd-asset').css({
                     display: 'none'
                   })
