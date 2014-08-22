@@ -162,6 +162,12 @@ button.sherd-close{
 	z-index: 999;
 	top: 20px;
 	right: 10px;
+	background: #555;
+	color: #fff !important;
+}
+button.sherd-close:hover{
+	background: #666;
+	color: #fff !important;
 }
 button.sherd-collection{
 	cursor: pointer;
@@ -169,8 +175,13 @@ button.sherd-collection{
 	z-index: 999;
 	top: 20px;
 	right: 100px;
+	background: #555;
+	color: #fff !important;
 }
-
+button.sherd-collection:hover{
+	background: #666;
+	color: #fff !important;
+}
 .sherd-btn-overlay{
 display: none;
 }

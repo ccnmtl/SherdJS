@@ -183,6 +183,9 @@ SherdBookmarklet = {
   user_ready:function() {
       return SherdBookmarklet.user_status.ready;
   },
+  needs_update:function() {
+      return !SherdBookmarklet.user_status.current;
+  },
   update_user_status:function(user_status) {
       var uninit = (! window.SherdBookmarklet.user_status.ready);
       for (var a in user_status) {
@@ -1618,7 +1621,33 @@ SherdBookmarklet = {
                               ///TODO: should we get video metadata (betacam, aspect ratio)?
                               callback([rv]);
                           },
-                          error:function(){callback([]);}
+                          error:function(){
+                            //attempt to scrape manually
+                            if(console){
+                              console.log('trying to scrape manually, something went wrong with the unAPI call');
+                              // if Openvault
+                              if(request_url.indexOf('openvault')>0){
+                                var rv = {
+                                  "page_resource":true,
+                                  "html":document,
+                                  "primary_type":"pbcore",
+                                  "sources":{
+                                      'pbcore':window.location.href
+                                  },
+                                  "metadata":{'subject':[]}
+                                  };
+                                  rv.metadata['Description'] = [jQ('.blacklight-dc_description_t .value').text()];
+                                  rv.metadata['Subject'] = [jQ('.blacklight-topic_cv .value').text()];
+                                  rv.metadata['Copyrights'] = [jQ('.copyright').text()];
+                                  rv.metadata['Publisher'] = ['WGBH Educational Foundation'];
+                              }
+                            }
+                            if(rv){
+                              callback([rv]);
+                            }else{
+                              callback([]);
+                            }
+                          }
                       });
                       return;
                   }//end if (server)
@@ -2118,7 +2147,7 @@ SherdBookmarklet = {
           } else {
               self.findGeneralAssets();
           }
-          if(self.assets_found.length == 0 && SherdBookmarklet.user_ready() ){
+          if(self.assets_found.length == 0 && SherdBookmarklet.user_ready()){
             self.noAssetMessage();
           }
       }
@@ -2129,9 +2158,6 @@ SherdBookmarklet = {
         var winWidth = jQ(window).width();
         var winHeight = jQ(window).height();
         jQ('.import-header').remove();
-        jQ('.sherd-analyzer').append(messageBox);
-        messageBox.prepend(closeBtn);
-
         
         messageBox.css({
           left: (winWidth / 2) - 262 + 'px',
@@ -2141,6 +2167,15 @@ SherdBookmarklet = {
         closeBtn.click(function(){
           jQ('.sherd-analyzer').remove();
         })
+        //double check no asset on page
+        if(jQ('.sherd-asset li').length > 0 ){
+          jQ('.sherd-analyzer').append(messageBox);
+          messageBox.prepend(closeBtn);
+        }
+        
+
+        
+        
       }
 
       this.findGeneralAssets = function() {
@@ -2284,9 +2319,9 @@ SherdBookmarklet = {
       this.options = {
           login_url:null,
           tab_label:"Analyze in Mediathread",
-          not_logged_in_message:"You are not logged in to MediaThread.",
-          login_to_course_message:"login to your MediaThread course",
-          link_text_for_existing_asset:"Link in MediaThread",
+          not_logged_in_message:"You are not logged in to Mediathread.",
+          login_to_course_message:"login to your Mediathread course",
+          link_text_for_existing_asset:"Link in Mediathread",
           target:((M.hasBody(document))? document.body : null),
           postTarget:'_top',
           top:100,
@@ -2330,21 +2365,38 @@ SherdBookmarklet = {
               comp.tab.style.display = "none";
               jQ(comp.ul).empty();
               if (!SherdBookmarklet.user_ready()) {
-                  jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Login required'));
-                  o.login_url = o.login_url || host_url.split("/",3).join("/");
-                  jQ(comp.message).empty().append(
-                      self.elt(null,'span','',{},
-                               [o.not_logged_in_message,
-                                self.elt(null,'br','',{}),
-                                'Please ',
-                                self.elt(null,'a','',{
-                                    href:o.login_url,
-                                    target:'_blank',
-                                    style:'color:#8C3B2E;'
-                                },[o.login_to_course_message]),
-                                ', and then click the '+o.widget_name+' again to import items.'
-                               ])
-                  );
+                  if (SherdBookmarklet.needs_update()) {
+                      // display message here
+                      jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Please update'));
+                      o.login_url = o.login_url || host_url.split("/",3).join("/") + "/upgrade/";
+                      jQ(comp.message).empty().append(
+                          self.elt(null,'span','',{},
+                                   ['This Mediathread bookmarklet is outdated.',
+                                    self.elt(null,'br','',{}),
+                                    'To update, please ',
+                                    self.elt(null,'a','',{
+                                        href:o.login_url,
+                                        target:'_blank',
+                                        style:'color:#8C3B2E;'
+                                    },['click here']),
+                                    ' and follow instructions.'
+                                   ]));
+                  } else {
+                      jQ(comp.h2).empty().get(0).appendChild(document.createTextNode('Login required'));
+                      o.login_url = o.login_url || host_url.split("/",3).join("/");
+                      jQ(comp.message).empty().append(
+                          self.elt(null,'span','',{},
+                                   [o.not_logged_in_message,
+                                    self.elt(null,'br','',{}),
+                                    'Please ',
+                                    self.elt(null,'a','',{
+                                        href:o.login_url,
+                                        target:'_blank',
+                                        style:'color:#8C3B2E;'
+                                    },[o.login_to_course_message]),
+                                    ', and then click the '+o.widget_name+' again to import items.'
+                                   ]));
+                  }
                   jQ('.sherd-asset').css({
                     display: 'none'
                   })
@@ -2427,7 +2479,7 @@ SherdBookmarklet = {
 
           M.connect(comp.tab, "click", this.onclick);
           M.connect(comp.collection, "click", function(evt) {
-              var url = window.host_url.split('/save/?')[0]
+              var url = self.unHttpsTheLink(window.host_url.split('/save/?')[0]);
               window.location.replace(url + '/asset/');
           });
           M.connect(comp.close, "click", function(evt) {
@@ -2467,6 +2519,10 @@ SherdBookmarklet = {
       this.removeAsset = function(asset) {
           jQ('#'+asset.html_id).remove();
       };
+      this.unHttpsTheLink = function(url){
+        newUrl = 'http://' + url.split('://')[1];
+        return newUrl;
+      };
       this.displayAsset = function(asset,index) {
           if (!asset) return;
           var doc = comp.ul.ownerDocument;
@@ -2489,8 +2545,7 @@ SherdBookmarklet = {
               jQ(form).append(form.submitButton2);
               jQ(form).append(form.submitButton);              
               jQ(form.submitButton).click(function(){
-                var action = jQ(this).parent().attr('action');
-                action = 'http://' + action.split('://')[1];
+                var action = self.unHttpsTheLink(jQ(this).parent().attr('action'));
                 jQ(this).parent().attr('action', action);
                 jQ(this).parent().submit()
               })
@@ -2526,8 +2581,7 @@ SherdBookmarklet = {
                   var sherdOverlay = jQ('.sherd-window-inner',document);
                   var alertSavedMarginLeft = (jQ('.sherd-window-inner',document).width()/2) - (535*.5);
                   var alertSavedMarginTop = (jQ(window).height()/2) -100;
-                  var collectionUrl = host_url.split('save')[0] + 'asset/'
-                  collectionUrl = 'http://' + collectionUrl.split('://')[1] 
+                  var collectionUrl = self.unHttpsTheLink(host_url.split('save')[0] + 'asset/');
                   var alertSaved = jQ('<div class="alert-saved"><span style="font-weight:bold">Success.</span> Your item has been sucessfully added to your <a href="'+ collectionUrl +'">Mediathread collection</a>.</div>');
                   var alertClose = jQ('<div class="alert-close">X</div>');
 
