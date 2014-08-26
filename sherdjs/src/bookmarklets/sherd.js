@@ -752,6 +752,11 @@ SherdBookmarklet = {
                 var video = document.getElementById("movie_player");
                 if (video && video !== null) {
                     var v_match = video.getAttribute('flashvars');
+                    if(v_match && v_match.split('cbr=')[1].match('IE&').length >0 ){
+                      // this is an IE embed then
+                      window.IEVideo = video;
+                      jQuery(video).css('display','none');
+                    }
                     if (v_match) {
                         v_match = v_match.match(/video_id=([^&]*)/);
                     } else { //mostly for <OBJECT>
@@ -2512,6 +2517,9 @@ SherdBookmarklet = {
           M.connect(comp.close, "click", function(evt) {
               jQ('.sherd-analyzer').remove();
               comp.window.style.display = "none";
+              if(window.IEVideo){
+                jQ(window.IEVideo).css('display','block');
+              }
               if (SherdBookmarklet.options.decorate) {
                   comp.tab.style.display = 'block';
               }
@@ -2580,7 +2588,10 @@ SherdBookmarklet = {
           } else if (SherdBookmarklet.user_ready()){
               form.submitButton = self.elt(null,'input','analyze btn-primary',{type:'button',value:'Open in Mediathread'});
               form.submitButton2 = self.elt(null,'input','cont btn-primary',{type:'button',value:'Collect'});
-              jQ(form).append(form.submitButton2);
+              if(!window.IEVideo){
+                //the continue button is not working in IE right now
+                jQ(form).append(form.submitButton2);
+              }
               jQ(form).append(form.submitButton);              
               jQ(form.submitButton).click(function(){
                 var action = self.unHttpsTheLink(jQ(this).parent().attr('action'));
