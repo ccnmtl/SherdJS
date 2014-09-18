@@ -521,7 +521,7 @@ function DjangoSherd_Storage() {
                 ann_obj = _cache[obj_type][id];
             } else {
                 jQuery.ajax({
-                    url: (subject.url || '/' + obj_type + '/json/' + id + '/'),
+                    url: (subject.url || '/api/' + obj_type + '/' + id + '/'),
                     dataType: 'json',
                     dataFilter: legacy_json,
                     cache: false, // Internet Explorer has aggressive caching policies.
