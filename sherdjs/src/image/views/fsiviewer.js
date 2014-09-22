@@ -224,7 +224,7 @@ if (!Sherd.Image.FSIViewer) {
                 fpx = obj["image_fpx-metadata"];
             } else {
                 broken_url = obj.image_fpxid.split('/');
-                fpx = obj["image_fpxid-metadata"]
+                fpx = obj["image_fpxid-metadata"];
             }
             var presentation = self.presentations[obj.presentation || 'default'];
             obj.image_fpx_base = broken_url.slice(0, 3).join('/') + '/';

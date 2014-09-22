@@ -4,4 +4,4 @@ before_script:
   - npm install jscs --prefix .
 script:
   - ./node_modules/jshint/bin/jshint sherdjs/src
-  - ./node_modules/jscs/bin/jscs sherdjs/src
+#  - ./node_modules/jscs/bin/jscs sherdjs/src

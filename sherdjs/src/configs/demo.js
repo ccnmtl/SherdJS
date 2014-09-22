@@ -9,7 +9,7 @@ var annotations=[
     }
 ];
 var stor = new Sherd.Storage.JSON();
-stor.load(annotations,{id:function(){return 'static1'}});
+stor.load(annotations,{id:function(){return 'static1';}});
 
 var qtview = new Sherd.AssetViews.QuickTime();
 qtview.attachDOM(document.getElementById('userassets'));
