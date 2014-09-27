@@ -515,6 +515,62 @@ SherdBookmarklet = {
         decorate:function(objs) {
         }
     },
+    "mirc.sc.edu": {
+      find:function(callback){
+        SherdBookmarklet.run_with_jquery(function _find(jQuery) {
+          if(jQuery("a.usc-flowplayer > :first").is('img')){
+            //This works inconsistently...so I'm going to put up a warning as a workaround
+            // var fp = jQuery(".usc-flowplayer").flowplayer(0);
+            // fp.load(); //bring up the flowplayer "object"
+            alert("Please start playing the video you would like to collect.");
+            return false;
+          }
+
+          //if(jQuery("a.usc-flowplayer > :first").is('img')) jQuery("a.usc-flowplayer").trigger("click");
+          var fp_id = jQuery("a.usc-flowplayer > :first ").attr("id");
+          // console.log(jQuery("a.usc-flowplayer").flowplayer(0));
+          var video = document.getElementById(fp_id);
+          if (video && video !== null) {
+            var v_match = SherdBookmarklet.assethandler.objects_and_embeds.players.flowplayer3.match(video); //the flowplayer version
+            if (v_match && v_match !== null) {
+              var fp_rv=SherdBookmarklet.assethandler.objects_and_embeds.players.flowplayer3.asset(video,v_match,{'window':window,'document':document});
+            }
+          }
+          // if(typeof(fp)!='undefined') fp.unload();
+
+          fp_rv.metadata = {};
+
+          try { fp_rv.metadata.title = fp_rv.sources.title = [jQuery("#edit-title--2").text().split("\n")[2].trim()]; }
+          catch (e) {fp_rv.metadata.title = ''}
+          try { fp_rv.metadata.produced = [jQuery("#edit-production-date").text().split("\n")[2].trim()]; }
+          catch (e) {fp_rv.metadata.produced = ''}
+          try { fp_rv.metadata.description = [jQuery("#edit-description--2").text().split("\n")[2].trim()]; }
+          catch (e) {fp_rv.metadata.description = ''}
+          try { fp_rv.metadata.copyright = [jQuery("#edit-credits-preserved-by-rights").text().split("\n")[2].trim()]; }
+          catch (e) {fp_rv.metadata.copyright = ''}
+          try { fp_rv.metadata.temporal = [jQuery("#edit-tempo--2").text().split("\n")[2].trim()]; }
+          catch (e) {fp_rv.metadata.temporal = ''}
+          try { fp_rv.metadata.geographical = [jQuery("#edit-geo").text().split("\n")[2].trim()]; }
+          catch (e) {fp_rv.metadata.geographical = ''}          
+          try { 
+            var tags = jQuery("#edit-subjects").html().replace(/<label(.*)<\/label>/g, "").split(/(<br>)+/);
+            for(var i=tags.length-1; i>=0; i--) tags[i].trim()=='<br>' || tags[i].trim()=='' ? tags.splice(i, 1) : tags[i]=tags[i].trim();
+            fp_rv.metadata.subject = tags;
+          } catch (e) {fp_rv.metadata.tags = [];}
+          try { 
+            var credits = jQuery("#edit-credits").text().split('Donor')[0].split('Credits')[1].split('.');
+            for(var i=credits.length-1; i>=0; i--) credits[i].trim()=='<br>' || credits[i].trim()=='' ? credits.splice(i, 1) : credits[i]=credits[i].trim();
+            fp_rv.metadata.credits = credits;
+          } catch (e) {fp_rv.metadata.credits = [];}          
+
+          fp_rv.sources.thumb="http://mirc.sc.edu/sites/all/modules/usc_mirc/images/playbuttonblack.jpg"
+
+          return callback([fp_rv]);
+        })
+      },
+      decorate:function(objs){
+      }
+    }, 
     "wikipedia.org":{
         find:function(callback) {
             var returnArray = [];
