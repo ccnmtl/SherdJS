@@ -752,7 +752,7 @@ SherdBookmarklet = {
                 var video = document.getElementById("movie_player");
                 if (video && video !== null) {
                     var v_match = video.getAttribute('flashvars');
-                    if(v_match && v_match.split('cbr=')[1].match('IE&').length >0 ){
+                    if(v_match && v_match.split('cbr=')[1].match('IE&') !==null ){
                       // this is an IE embed then
                       window.IEVideo = video;
                       jQuery(video).css('display','none');
