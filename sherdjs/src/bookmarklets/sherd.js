@@ -732,7 +732,7 @@ SherdBookmarklet = {
                     var video = videos[0];                
                     var parent = jQuery(video).parents("div.player")[0];
                     var url = jQuery(parent).attr("data-fallback-url");
-                    var vimeoId = url.split("/")[5];
+                    var vimeoId = url.split("/")[4];
                     
                     SherdBookmarklet.assethandler.objects_and_embeds.players
                     .moogaloop.asset(video, 
