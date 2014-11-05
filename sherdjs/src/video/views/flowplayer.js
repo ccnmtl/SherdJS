@@ -174,6 +174,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     // If the url is the same as the previous, just seek to the right spot.
                     // This works just fine.
                     rc = true;
+                    delete self.state.starttime;
+                    delete self.state.endtime;
+                    delete self.state.last_pause_time;
+
+                    self.connect_tickcount();
                 }
             }
             return rc;
@@ -276,6 +281,20 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
         // Post-create step. Overriding here to do a component create using the Flowplayer API
+        
+        this.connect_tickcount = function() {
+            self.events.queue('tick count', [{
+                test : function () {
+                    self.components.elapsed.innerHTML =
+                        self.secondsToCode(self.media.time());
+                    
+                    if (self.components.provider === "audio") {
+                        self.media.duration();
+                    }
+                },
+                poll: 1000
+            }]);  
+        };
         
         this.initialize = function (create_obj) {
             if (create_obj) {
@@ -388,17 +407,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         }
                     }, 750);
                 });
-                self.events.queue('tick count', [{
-                    test : function () {
-                        self.components.elapsed.innerHTML =
-                            self.secondsToCode(self.media.time());
-                        
-                        if (self.components.provider === "audio") {
-                            self.media.duration();
-                        }
-                    },
-                    poll: 1000
-                }]);
+                self.connect_tickcount();
             }
         };
         
