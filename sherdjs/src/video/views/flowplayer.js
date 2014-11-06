@@ -174,6 +174,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     // If the url is the same as the previous, just seek to the right spot.
                     // This works just fine.
                     rc = true;
+                    delete self.state.starttime;
+                    delete self.state.endtime;
+                    delete self.state.last_pause_time;
                 }
             }
             return rc;
@@ -249,7 +252,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             return rc;
         };
         
-        
         this.microformat._queueReadyToSeekEvent = function () {
             self.events.queue('flowplayer ready to seek', [
                 {
@@ -277,6 +279,28 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         // AssetView Overrides
         // Post-create step. Overriding here to do a component create using the Flowplayer API
         
+        this.disconnect_pause = function() {
+            self.events.killTimer('flowplayer pause');  
+        };
+        
+        this.disconnect_tickcount = function() {
+          self.events.killTimer('tick count');  
+        };
+
+        this.connect_tickcount = function() {
+            self.events.queue('tick count', [{
+                test : function () {
+                    self.components.elapsed.innerHTML =
+                        self.secondsToCode(self.media.time());
+                    
+                    if (self.components.provider === "audio") {
+                        self.media.duration();
+                    }
+                },
+                poll: 1000
+            }]);  
+        };
+        
         this.initialize = function (create_obj) {
             if (create_obj) {
                 var options = {
@@ -284,21 +308,27 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         scaling: "fit",
                         // these are the common clip properties & event handlers
                         // they (theoretically) apply to all the clips
-                        onPause: function (clip) {
-                            self.state.last_pause_time = self.components.player.getTime();
-                            jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
-                        },
                         onSeek: function (clip, target_time) {
                             self.state.last_pause_time = target_time;
                         },
                         onStart: function () {
                             jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
+                            self.connect_tickcount();
                         },
                         onResume: function () {
                             jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
+                            self.connect_tickcount();
+                        },
+                        onPause: function (clip) {
+                            self.state.last_pause_time = self.components.player.getTime();
+                            jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
+                            self.disconnect_tickcount();
+                            self.disconnect_pause();
                         },
                         onFinish: function () {
                             jQuery(window).trigger('video.finish', [self.components.itemId, self.components.primaryType]);
+                            self.disconnect_tickcount();
+                            self.disconnect_pause();
                         }
                     },
                     plugins: {
@@ -388,17 +418,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                         }
                     }, 750);
                 });
-                self.events.queue('tick count', [{
-                    test : function () {
-                        self.components.elapsed.innerHTML =
-                            self.secondsToCode(self.media.time());
-                        
-                        if (self.components.provider === "audio") {
-                            self.media.duration();
-                        }
-                    },
-                    poll: 1000
-                }]);
+                self.connect_tickcount();
             }
         };
         
