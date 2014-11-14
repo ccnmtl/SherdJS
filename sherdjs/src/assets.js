@@ -48,6 +48,10 @@ if (!Sherd.GenericAssetView) {
                 var flowplayer = this.settings.flowplayer = {'view': new Sherd.Video.Flowplayer() };
                 decorateVideo(options, flowplayer);
             }
+            if (Sherd.Video.JWPlayer) {
+                var jwplayer = this.settings.jwplayer = {'view': new Sherd.Video.JWPlayer() };
+                decorateVideo(options, jwplayer);
+            }
             if (Sherd.Video.RealPlayer) {
                 var realplayer = this.settings.realplayer = {'view': new Sherd.Video.RealPlayer() };
                 decorateVideo(options, realplayer);
