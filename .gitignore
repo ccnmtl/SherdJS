@@ -9,3 +9,4 @@ src/bookmarklets/browser_extensions/google_chrome/jquery.min.js
 src/bookmarklets/browser_extensions/google_chrome/settings.js
 src/bookmarklets/browser_extensions/google_chrome/sherd.js
 *.tar.gz
+node_modules
