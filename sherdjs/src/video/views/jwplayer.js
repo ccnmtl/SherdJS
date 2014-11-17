@@ -119,13 +119,16 @@ if (!Sherd.Video.JWPlayer && Sherd.Video.Base) {
             }
             return rc;
         };
-
+        
+        this.microformat.type = function() {
+            return 'jwplayer';
+        };
         
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
         
         this.disconnect_pause = function() {
-            self.events.killTimer('flowplayer pause');  
+            self.events.killTimer('jwplayer pause');  
         };
         
         // Post-create step. Overriding here to do a component create using the JWPlayer API

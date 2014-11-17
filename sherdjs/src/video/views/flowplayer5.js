@@ -7,8 +7,8 @@
  */
 if (!Sherd) { Sherd = {}; }
 if (!Sherd.Video) { Sherd.Video = {}; }
-if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
-    Sherd.Video.Flowplayer5 = function () {
+if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
+    Sherd.Video.Flowplayer = function () {
         var self = this;
         
         this.state = {ready: false};
@@ -36,8 +36,8 @@ if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
         // create == asset->{html+information to make it}
         // setup the flowplayer div. will be replaced on write using the flowplayer API
         this.microformat.create = function (obj, doc) {
-            var wrapperID = Sherd.Base.newID('flowplayer5-wrapper-');
-            var playerID = Sherd.Base.newID('flowplayer5-player-');
+            var wrapperID = Sherd.Base.newID('flowplayer-wrapper-');
+            var playerID = Sherd.Base.newID('flowplayer-player-');
             var params = self.microformat._getPlayerParams(obj);
 
             if (!obj.options) {
@@ -69,7 +69,7 @@ if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
                 durationID: 'totalcliplength' + playerID,
                 playerParams: params,
                 text: '<div class="flowplayer-timedisplay" id="timedisplay' + playerID + '" style="visibility:hidden;"><span id="currtime' + playerID + '">00:00:00</span>/<span id="totalcliplength' + playerID + '">00:00:00</span></div><div id="' + wrapperID + '" class="sherd-flowplayer-wrapper sherd-video-wrapper">' +
-                      '<div class="sherd-flowplayer"' +
+                      '<div class="sherd-flowplayer fixed-controls"' +
                            'style="display:block; width:' + obj.options.width + 'px;' +
                            'height:' + obj.options.height + 'px;" id="' + playerID + '">' +
                       '</div>' +
@@ -118,22 +118,18 @@ if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
         
         // Replace the video identifier within the rendered .html
         this.microformat.update = function (obj, html_dom) {
-/**            
             var rc = false;
             var newUrl = self.microformat._getPlayerParams(obj);
-            if (newUrl.url && document.getElementById(self.components.playerID) && self.media.state() > 0) {
-                var playlist = self.components.player.getPlaylist();
-                if (playlist[0].url == newUrl.url) {
+            if (newUrl.url && document.getElementById(self.components.playerID) && self.media.ready()) {
+                if (self.components.player.video.url == newUrl.url) {
                     // If the url is the same as the previous, just seek to the right spot.
                     // This works just fine.
                     rc = true;
-                    delete self.state.starttime;
-                    delete self.state.endtime;
-                    delete self.state.last_pause_time;
                 }
+            } else {
+                self.state.ready = false;
             }
             return rc;
-**/            
         };
         
         this.microformat._getPlayerParams = function (obj) {
@@ -142,60 +138,37 @@ if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
                 var a = self.microformat._parseRtmpUrl(obj.mp4_rtmp);
                 rc.url = a.url;
                 rc.netConnectionUrl = a.netConnectionUrl;
-                rc.provider = 'rtmp';
             } else if (obj.flv_rtmp) {
                 var rtmp = self.microformat._parseRtmpUrl(obj.flv_rtmp);
                 rc.url = rtmp.url;
                 rc.netConnectionUrl = rtmp.netConnectionUrl;
-                rc.provider = 'rtmp';
             } else if (obj.flv_pseudo) {
                 rc.url = obj.flv_pseudo;
-                rc.provider = 'pseudo';
             } else if (obj.mp4_pseudo) {
                 rc.url = obj.mp4_pseudo;
-                rc.provider = 'pseudo';
             } else if (obj.mp4) {
                 rc.url = obj.mp4;
-                rc.provider = '';
             } else if (obj.flv) {
                 rc.url = obj.flv;
-                rc.provider = '';
             } else if (obj.video_pseudo) {
                 rc.url = obj.video_pseudo;
-                rc.provider = 'pseudo';
             } else if (obj.video_rtmp) {
                 var video_rtmp = self.microformat._parseRtmpUrl(obj.video_rtmp);
                 rc.url = video_rtmp.url;
                 rc.netConnectionUrl = video_rtmp.netConnectionUrl;
-                rc.provider = 'rtmp';
             } else if (obj.video) {
                 rc.url = obj.video;
-                rc.provider = '';
             } else if (obj.mp3) {
                 rc.url = obj.mp3;
-                rc.provider = 'audio';
             } else if (obj.mp4_audio) {
                 rc.url = obj.mp4_audio;
-                rc.provider = 'pseudo';
-            }
-            if (rc.provider === 'pseudo' && /\{start\}/.test(rc.url)) {
-                var pieces = rc.url.split('?');
-
-                // Bookmarklet bug in the JWPlayer scraping code led to
-                // a lot of assets being added without the required $ 
-                // in front of the start variable. This is a little patch 
-                // so we don't have to redo all the asset primary sources at once.
-                var queryString = pieces.pop();
-                if (queryString === 'start={start}') {
-                    queryString = 'start=${start}';
-                }
-                rc.queryString = escape('?' + queryString);
-                rc.url = pieces.join('?');
             }
             return rc;
         };
         
-
+        this.microformat.type = function() {
+            return 'flowplayer';
+        };
         
         ////////////////////////////////////////////////////////////////////////
         // AssetView Overrides
@@ -244,16 +217,18 @@ if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
                 
                 // register for notifications from clipstrip to seek to various times in the video
                 self.events.connect(self, 'seek', self.media.playAt);
-                self.events.connect(self, 'duration', function (obj) {
-                    self.components.timedisplay.style.visibility = 'visible';
-                    self.components.duration.innerHTML = self.secondsToCode(obj.duration);
-                });
                 self.events.connect(self, 'playclip', function (obj) {
                     self.media.seek(obj.start, obj.end, true);
                 });
                 
                 self.components.player.bind("ready", function(e, api) {
                     self.state.ready = true;
+                    self.components.timedisplay.style.visibility = 'visible';
+                    self.components.duration.innerHTML = self.secondsToCode(self.media.duration());
+
+                    if (self.state.starttime || self.state.autoplay) {
+                        self.media.seek(self.state.starttime, self.state.endtime, self.state.autoplay);
+                    }
                 });
                 self.components.player.bind("resume", function(e, api) {
                     self.connect_tickcount();
@@ -273,8 +248,8 @@ if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
         // Media & Player Specific
 
         this.media.duration = function () {
-            return self.components.player ? 
-                self.components.player.duration : 0;
+            return self.components.player ?
+                self.components.player.video.duration : 0;
         };
         
         this.media.pause = function () {
@@ -285,7 +260,7 @@ if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
 
         this.media.play = function () {
             if (self.components.player) {
-                self.components.player.play(0);
+                self.components.player.play();
             }
         };
 
@@ -296,24 +271,39 @@ if (!Sherd.Video.Flowplayer5 && Sherd.Video.Base) {
         this.media.ready = function () {
             return self.state.ready;
         };
-        
+
         this.media.seek = function (starttime, endtime, autoplay) {
-            if (starttime !== undefined) {
-                self.components.player.seek(starttime);
-            }
-                
-            if (endtime) {
-                self.media.pauseAt(endtime);
-            }
-                
-            if ((autoplay || self.components.autoplay) && !self.media.isPlaying()) {
-                self.media.play();
+            if (!self.media.ready()) {
+                self.state.starttime = starttime;
+                self.state.endtime = endtime;
+                self.state.autoplay = autoplay;
+            } else {
+                self.disconnect_pause();
+                delete self.state.starttime;
+                delete self.state.endtime;
+                delete self.state.autoplay;
+    
+                if (starttime !== undefined) {
+                    self.components.player.seek(starttime, function() {
+                        if (autoplay) {
+                            self.media.play();
+                        }
+                        if (endtime) {
+                            self.media.pauseAt(endtime);
+                        }
+                    });
+                } else if (autoplay) {
+                    self.media.play();
+                    if (endtime) {
+                        self.media.pauseAt(endtime);
+                    }
+                }
             }
         };
         
         this.media.time = function () {
             return self.components.player ? 
-                self.components.player.time : 0;
+                self.components.player.video.time : 0;
         };
         
         this.media.timestrip = function () {

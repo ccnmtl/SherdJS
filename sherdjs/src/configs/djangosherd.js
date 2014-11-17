@@ -52,10 +52,8 @@ function djangosherd_adaptAsset(asset) {
     if (asset.flv || asset.flv_pseudo ||
             asset.mp4 || asset.mp4_pseudo || asset.mp4_rtmp ||
             asset.flv_rtmp || asset.video_pseudo || asset.video_rtmp ||
-            asset.video || asset.mp3) {
+            asset.video || asset.mp3 || asset.mp4_audio) {
         asset.type = 'flowplayer';
-    } else if (asset.mp4_audio) {
-        asset.type = 'jwplayer';
     } else if (asset.youtube) {
         asset.type = 'youtube';
     } else if (asset.vimeo) {

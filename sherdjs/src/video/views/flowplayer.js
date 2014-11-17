@@ -161,7 +161,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             return obj;
         };
         
-        // Note: not currently in use
         this.microformat.type = function () { return 'flowplayer'; };
         
         // Replace the video identifier within the rendered .html
