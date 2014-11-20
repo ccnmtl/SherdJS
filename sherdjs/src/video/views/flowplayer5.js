@@ -18,15 +18,15 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
         this.presentations = {
             'small': {
                 width: function () { return 310; },
-                height: function () { return 220; }
+                height: function () { return 233; }
             },
             'medium': {
                 width: function () { return 475; },
-                height: function () { return 336; }
+                height: function () { return 375; }
             },
             'default': {
                 width: function () { return 620; },
-                height: function () { return 440; }
+                height: function () { return 466; }
             }
         };
         
@@ -60,6 +60,13 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 };
             }
             
+            var posterUrl = "";
+            if (obj.poster) {
+                posterUrl = obj.poster;
+            } else if (params.provider === "audio") {
+                posterUrl = "http://mediathread.ccnmtl.columbia.edu/media/img/poster_audio.png";
+            }
+            
             var create_obj = {
                 object: obj,
                 htmlID: wrapperID,
@@ -68,8 +75,11 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 currentTimeID: 'currtime' + playerID,
                 durationID: 'totalcliplength' + playerID,
                 playerParams: params,
-                text: '<div class="flowplayer-timedisplay" id="timedisplay' + playerID + '" style="visibility:hidden;"><span id="currtime' + playerID + '">00:00:00</span>/<span id="totalcliplength' + playerID + '">00:00:00</span></div><div id="' + wrapperID + '" class="sherd-flowplayer-wrapper sherd-video-wrapper">' +
-                      '<div class="sherd-flowplayer fixed-controls"' +
+                text: '<div class="flowplayer-timedisplay" id="timedisplay' + playerID + '" style="visibility:hidden;">' + 
+                      '<span id="currtime' + playerID + '">00:00:00</span>/<span id="totalcliplength' + playerID + '">00:00:00</span></div>' + 
+                      '<div id="' + wrapperID + '" class="sherd-flowplayer-wrapper sherd-video-wrapper">' +
+                      '<div class="sherd-flowplayer no-hover fixed-controls" data-ratio="0.68" ' +
+                          'poster="' + posterUrl + '"' +
                            'style="display:block; width:' + obj.options.width + 'px;' +
                            'height:' + obj.options.height + 'px;" id="' + playerID + '">' +
                       '</div>' +
@@ -203,7 +213,9 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                     playlist: [[
                           {mp4: create_obj.playerParams.url}
                        ]
-                    ]
+                    ],
+                    splash: false,
+                    swf: flowplayer.swf_location
                  };
                 
                 var elt = jQuery("#" + create_obj.playerID);
@@ -313,7 +325,7 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             var w = self.components.width;
             return {w: w,
                     trackX: 47,
-                    trackWidth: w - 185,
+                    trackWidth: w - 194,
                     visible: true
                    };
         };
