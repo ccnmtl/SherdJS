@@ -1503,6 +1503,8 @@ SherdBookmarklet = {
 											//web.mit.edu/shakespeare/asia/
 											/logo\W/.test(image.src)
                      ) continue;
+                  if (image.src.length > 4096 || image.src.indexOf('data') === 0)
+                      continue;
                   /*recreate the <img> so we get the real width/height */
                   var image_ind = document.createElement("img");
                   image_ind.src = image.src;
