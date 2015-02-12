@@ -148,10 +148,6 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
                 var a = self.microformat._parseRtmpUrl(obj.mp4_rtmp);
                 rc.url = a.url;
                 rc.netConnectionUrl = a.netConnectionUrl;
-            } else if (obj.flv_rtmp) {
-                var rtmp = self.microformat._parseRtmpUrl(obj.flv_rtmp);
-                rc.url = rtmp.url;
-                rc.netConnectionUrl = rtmp.netConnectionUrl;
             } else if (obj.flv_pseudo) {
                 rc.url = obj.flv_pseudo;
             } else if (obj.mp4_pseudo) {
@@ -210,18 +206,21 @@ if (!Sherd.Video.Flowplayer && Sherd.Video.Base) {
             if (create_obj) {
                 var options = {
                     // one video: a one-member playlist
-                    playlist: [[
-                          {mp4: create_obj.playerParams.url}
-                       ]
-                    ],
+                    playlist: [],
                     splash: false,
-                    swf: flowplayer.swf_location
+                    swf: flowplayer.html5_swf_location
                  };
+               
+                 if (create_obj.object.flv || create_obj.object.flv_pseudo) {
+                     options.playlist.push([{flv: create_obj.playerParams.url}]);
+                 } else {
+                     options.playlist.push([{mp4: create_obj.playerParams.url}]);
+                 }
+
+                 var elt = jQuery("#" + create_obj.playerID);
+                 jQuery(elt).flowplayer(options);
                 
-                var elt = jQuery("#" + create_obj.playerID);
-                jQuery(elt).flowplayer(options);
-                
-                jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
+                 jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
     
                 // Save reference to the player
                 self.components.player = flowplayer(elt);
