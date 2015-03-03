@@ -502,7 +502,7 @@ SherdBookmarklet = {
                                         "title": getInfoData.photo.title._content,
                                         "thumb": thumb_url,
                                         "image": img_url,
-                                        "archive": "http://www.flickr.com/photos/" + getInfoData.photo.owner.nsid, /* owner's photostream */
+                                        "metadata-photostream": "http://www.flickr.com/photos/" + getInfoData.photo.owner.nsid, /* owner's photostream */
                                         "image-metadata":"w"+w+"h"+h,
                                         "metadata-owner":getInfoData.photo.owner.realname ||undefined
                                     };
