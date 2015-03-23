@@ -1273,14 +1273,14 @@ SherdBookmarklet = {
                           optional_callback(index,rv);
                       };
                       var ajax_options = {
-                          url: "http://www.vimeo.com/api/v2/video/" + vimeoId + ".json?callback=" + vm_callback,
+                          url: "https://www.vimeo.com/api/v2/video/" + vimeoId + ".json?callback=" + vm_callback,
                           dataType: 'script',
                           error:function(){optional_callback(index);}
                       };
                       if (SherdBookmarklet.options.cross_origin) {
                           ajax_options.dataType = 'json';
                           ajax_options.success = window[vm_callback];
-                          ajax_options.url = "http://www.vimeo.com/api/v2/video/" + vimeoId + ".json";
+                          ajax_options.url = "https://www.vimeo.com/api/v2/video/" + vimeoId + ".json";
                       }
                       jQ.ajax(ajax_options);
                       return rv;
