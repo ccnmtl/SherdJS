@@ -199,6 +199,10 @@ SherdBookmarklet = {
           window.SherdBookmarklet.options.youtube_apikey = user_status.youtube_apikey;
       }
 
+      if ('flickr_apikey' in user_status) {
+          window.SherdBookmarklet.options.flickr_apikey = user_status.flickr_apikey;
+      }
+
       //Safari sometimes loads logged_in.js last, even when added first
       if (uninit && user_status.ready && SherdBookmarklet.g) {
           //find assets again
