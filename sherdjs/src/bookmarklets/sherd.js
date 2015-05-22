@@ -194,6 +194,11 @@ SherdBookmarklet = {
       if (window.console) {
           window.console.log(user_status);
       }
+
+      if ('youtube_apikey' in user_status) {
+          window.SherdBookmarklet.options.youtube_apikey = user_status.youtube_apikey;
+      }
+
       //Safari sometimes loads logged_in.js last, even when added first
       if (uninit && user_status.ready && SherdBookmarklet.g) {
           //find assets again
@@ -451,11 +456,8 @@ SherdBookmarklet = {
         find:function(callback) {
             SherdBookmarklet.run_with_jquery(function(jQuery) { 
                 var apikey = SherdBookmarklet.options.flickr_apikey;
-                if (!apikey)
-                    SherdBookmarklet.options.flickr_apikey = '123';
-                    //return callback([]);
-
-                var bits = document.location.pathname.split("/");//expected:/photos/<userid>/<imageid>/
+                // expected:/photos/<userid>/<imageid>/
+                var bits = document.location.pathname.split("/");
                 var imageId = bits[3];
                 window.imageId = imageId;
                 if(imageId === undefined){
@@ -904,17 +906,18 @@ SherdBookmarklet = {
                       return String(emb.src).match(/^http:\/\/www.youtube.com\/v\/([\w\-]*)/); 
                   },
                   asset:function(emb,match,context,index,optional_callback) {
+                      var apikey = SherdBookmarklet.options.youtube_apikey;
+
                       var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );                        
                       var VIDEO_ID = match[1]; //e.g. "LPHEvaNjdhw";
                       var rv = {
-                          html:emb,
-                          wait:true,
-                          primary_type:"youtube",
-                          label:"youtube video",
+                          html: emb,
+                          wait: true,
+                          primary_type: "youtube",
+                          label: "youtube video",
                           sources: {
-                              "youtube":"http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
-                              ///DOCS: http://code.google.com/apis/youtube/2.0/reference.html#Searching_for_videos
-                              "gdata":'https://gdata.youtube.com/feeds/api/videos/'+VIDEO_ID
+                              "youtube": "http://www.youtube.com/v/"+VIDEO_ID+"?enablejsapi=1&fs=1",
+                              "gapi": 'https://www.googleapis.com/youtube/v3/videos?id=' + VIDEO_ID
                           }};
                       if (emb.getCurrentTime) {
                           if (emb.getCurrentTime() > 0 && emb.getCurrentTime() < emb.getDuration()) 
@@ -922,28 +925,25 @@ SherdBookmarklet = {
                       }
                       var yt_callback = 'sherd_youtube_callback_'+index;
                       window[yt_callback] = function(yt_data) {
-                          var e = yt_data.entry;
-                          rv.sources.title = e.title.$t;
-                          var th = e.media$group.media$thumbnail[0];
-                          rv.sources.thumb = th.url;
-                          rv.sources['thumb-metadata'] = "w"+th.width+"h"+th.height;
-                          rv.metadata = {
-                              'description':[e.media$group.media$description.$t],
-                              'author':[e.author[0].name.$t],
-                              'author_uri':[e.author[0].uri.$t],
-                              'published':[e.published.$t],
-                              'youtube_link':['http://www.youtube.com/watch?v='+VIDEO_ID]
-                          };
-                          if (e.media$group.media$category.length) {
-                              rv.metadata.category = [e.media$group.media$category[0].label];
-                          }
-                          if (e.yt$noembed) {
-                              rv.disabled = true;
+                          if (yt_data.items.length > 0) {
+                              var item = yt_data.items[0].snippet;
+                              rv.sources.title = item.title;
+                              
+                              var th = item.thumbnails.default;
+                              rv.sources.thumb = th.url;
+                              rv.sources['thumb-metadata'] = "w"+th.width+"h"+th.height;
+
+                              rv.metadata = {
+                                  'Description': [item.description],
+                                  'Channel': [item.channelTitle],
+                                  'Published': [item.publishedAt]
+                              };
+                              rv.disabled = ! yt_data.items[0].status.embeddable;
                           }
                           optional_callback(index, rv);
                       };
                       var ajax_options = {
-                          url: rv.sources.gdata+'?v=2&alt=json-in-script&callback='+yt_callback,
+                          url: rv.sources.gapi + '&key=' + apikey + '&part=snippet,status&callback=' + yt_callback,
                           dataType: 'script',
                           error:function(){optional_callback(index);}
                       };
@@ -2902,7 +2902,6 @@ SherdBookmarklet = {
   }
 };/*SherdBookmarklet (root)*/
 
-window.MondrianBookmarklet = SherdBookmarklet; //legacy name
 if (!window.SherdBookmarkletOptions) {
     window.SherdBookmarkletOptions = {};
 }
@@ -2969,12 +2968,11 @@ if (SherdBookmarkletOptions.decorate) {
     finder.findAssets();
 } else {
     var o = SherdBookmarkletOptions;
-    var host_url = o.host_url || o.mondrian_url;//legacy name
     SherdBookmarklet.options = o;
     SherdBookmarklet.debug = o.debug;
     if (o.user_status) {
         SherdBookmarklet.update_user_status(o.user_status);
     }
-    SherdBookmarklet.runners[o.action](host_url,true);
-} 
+    SherdBookmarklet.runners[o.action](o.host_url,true);
+}
 
