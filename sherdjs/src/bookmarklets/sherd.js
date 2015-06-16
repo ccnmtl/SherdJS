@@ -2560,7 +2560,8 @@ SherdBookmarklet = {
 
           M.connect(comp.tab, "click", this.onclick);
           M.connect(comp.collection, "click", function(evt) {
-              var url = self.unHttpsTheLink(window.host_url.split('/save/?')[0]);
+              hostURL = SherdBookmarkletOptions.host_url;
+              var url = self.unHttpsTheLink(hostURL.split('/save/?')[0]);
               window.location.replace(url + '/asset/');
           });
           M.connect(comp.close, "click", function(evt) {
