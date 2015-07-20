@@ -40,14 +40,18 @@ if (!Sherd.Video.Annotators.ClipForm) {
         this.getState = function () {
             var duration = self.targetview.media.duration();
             var timeScale = self.targetview.media.timescale();
+            var startFieldValue = self.components.startField ?
+                self.components.startField.value : null;
+            var endFieldValue = self.components.endField ?
+                self.components.endField.value : null;
 
             var obj = {
-                'startCode' : self.components.startField.value,
-                'endCode' : self.components.endField.value,
+                'startCode' : startFieldValue,
+                'endCode' : endFieldValue,
                 'duration' : duration,
                 'timeScale' : timeScale,
-                'start' : codeToSeconds(self.components.startField.value),
-                'end' : codeToSeconds(self.components.endField.value)
+                'start' : codeToSeconds(startFieldValue),
+                'end' : codeToSeconds(endFieldValue)
             };
 
             return obj;
@@ -78,20 +82,20 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 var start;
                 if (obj.startCode) {
                     start = obj.startCode;
-                } else if (obj.start !== undefined) {
+                } else if (typeof obj.start !== 'undefined') {
                     start = secondsToCode(obj.start);
                 }
 
                 var end;
                 if (obj.endCode) {
                     end = obj.endCode;
-                } else if (obj.end !== undefined) {
+                } else if (typeof obj.end !== 'undefined') {
                     end = secondsToCode(obj.end);
                 } else if (start) {
                     end = start;
                 }
                 ///Used to communicate with the clipstrip
-                if (start !== undefined) {
+                if (typeof start !== 'undefined') {
                     if (self.components.startField) {
                         self.components.startField.value = start;
                     }
@@ -101,7 +105,7 @@ if (!Sherd.Video.Annotators.ClipForm) {
                     self.components.start = start;
                     self.events.signal(self.targetview, 'clipstart', { start: codeToSeconds(start) });
                 }
-                if (end !== undefined) {
+                if (typeof end !== 'undefined') {
                     if (self.components.endField) {
                         self.components.endField.value = end;
                     }
@@ -168,9 +172,14 @@ if (!Sherd.Video.Annotators.ClipForm) {
             self.events.connect(self.components.startButton, 'click', function (evt) {
                 var movieTime = self.targetview.media.time();
                 var movieTimeCode = secondsToCode(movieTime);
-                self.components.startField.value = movieTimeCode; // update start time with movie time
+                if (self.components.startField) {
+                    // update start time with movie time
+                    self.components.startField.value = movieTimeCode;
+                }
 
-                if (movieTime > codeToSeconds(self.components.endField.value)) {
+                if (self.components.endField &&
+                    (movieTime > codeToSeconds(self.components.endField.value))
+                   ) {
                     // update end time if start time is greater
                     self.components.endField.value = movieTimeCode;
                 }
@@ -185,10 +194,16 @@ if (!Sherd.Video.Annotators.ClipForm) {
                     self.targetview.media.pause();
                 }
 
-                self.components.endField.value = movieTimeCode; // update the end time with movie time
+                if (self.components.endField) {
+                    // update the end time with movie time
+                    self.components.endField.value = movieTimeCode;
+                }
 
                 // if the start time is greater then the endtime, make start time match end time
-                if (movieTime < codeToSeconds(self.components.startField.value)) {
+                if (self.components.startField &&
+                    (movieTime < codeToSeconds(
+                        self.components.startField.value))
+                   ) {
                     self.components.startField.value = movieTimeCode;
                 }
 
@@ -201,7 +216,10 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 if (obj.end < obj.start) {
                     obj.end = obj.start;
                     obj.endCode = obj.startCode;
-                    self.components.endField.value = obj.startCode;// HTML
+                    if (self.components.endField) {
+                        // HTML
+                        self.components.endField.value = obj.startCode;
+                    }
                 }
                 self.storage.update(obj, false);
             });
@@ -212,7 +230,10 @@ if (!Sherd.Video.Annotators.ClipForm) {
                 if (obj.end < obj.start) {
                     obj.start = obj.end;
                     obj.startCode = obj.endCode;
-                    self.components.startField.value = obj.endCode;// HTML
+                    if (self.components.startField) {
+                        // HTML
+                        self.components.startField.value = obj.endCode;
+                    }
                 }
                 self.storage.update(obj, false);
             });
