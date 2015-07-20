@@ -36,6 +36,9 @@ if (!Sherd.Video.Helpers) {
     };
 
     Sherd.Video.codeToSeconds = function (code) {
+        if (!code) {
+            return 0;
+        }
         var mvscale = 1;
         // takes a timecode like '0:01:36:00.0' and turns it into # seconds
         var t = code.split(':');
