@@ -1,3 +1,7 @@
+0.5.1 (2015-07-22)
+==================
+* Handle some null cases in clipform.js
+
 0.4.9 (2015-03-23)
 ==================
 * access vimeo api securely
