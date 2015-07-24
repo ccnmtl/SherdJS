@@ -420,8 +420,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         "clipstrip": jQuery(asset_target).find('div.clipstrip-display').get(0),
         "asset": jQuery(asset_target).find('div.asset-display').get(0),
         "asset_title": jQuery(asset_target).find('div.asset-title').get(0),
-        "annotation_title": jQuery(asset_target).find('div.annotation-title').get(0),
-        "create_selection": jQuery(asset_target).find('div.create-selection', asset_target).get(0)
+        "annotation_title": jQuery(asset_target).find('div.annotation-title').get(0)
     };
     
     if (targets.annotation_title) {
@@ -441,11 +440,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         asset_obj.autoplay = (self.options.autoplay) ? self.options.autoplay : false;
         asset_obj.presentation = self.options.presentation || 'small';
 
-        if (targets.asset_title) {
-            if (targets.create_selection) {
-                targets.create_selection.innerHTML = '<a href="' + asset_obj.local_url + '#edit_state=new">Create Selection</a>';
-            }
-            
+        if (targets.asset_title) {            
             if (targets.annotation_title.innerHTML === "") {
                 targets.annotation_title.innerHTML = '<a href="' + asset_obj.local_url + '">' + asset_obj.title + '</a>';
                 targets.asset_title.innerHTML = '&nbsp;';
