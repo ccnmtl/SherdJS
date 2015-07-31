@@ -306,22 +306,25 @@ CitationView.prototype.decorateElementLinks = function (element) {
     var self = this;
     
     var links = jQuery(element).find(self.citation_link);
+
+    var clickHandler = function (evt) {
+        try {
+            self.openCitation(this);
+            
+            jQuery('.active-annotation').removeClass('active-annotation');
+            jQuery(this).addClass('active-annotation');
+        } catch (e) {
+            if (window.console) {
+                console.log('ERROR opening citation:' + e.message);
+            }
+        }
+        evt.preventDefault();
+    };
+        
     for (var i = 0; i < links.length; i++) {
         var link = links[i];
         if (jQuery(link).data().events === undefined || jQuery(link).data().events.click === undefined) {
-            jQuery(link).click(function (evt) {
-                try {
-                    self.openCitation(this);
-                    
-                    jQuery('.active-annotation').removeClass('active-annotation');
-                    jQuery(this).addClass('active-annotation');
-                } catch (e) {
-                    if (window.console) {
-                        console.log('ERROR opening citation:' + e.message);
-                    }
-                }
-                evt.preventDefault();
-            });
+            jQuery(link).click(clickHandler);
         }
     }
 };
@@ -609,7 +612,7 @@ function DjangoSherd_Storage() {
 function DjangoSherd_NoteList() {
 }
 
-window.DjangoSherd_Colors = new (function () {
+window.DjangoSherd_Colors = (function () {
     this.get = function (str) {
         return (this.current_colors[str] || (this.current_colors[str] = this.mapping(++this.last_color)));
     };
