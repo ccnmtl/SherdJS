@@ -1,9 +1,8 @@
 sudo: false
 language: node_js
-# before_script:
-#   - npm install jshint --prefix .
+before_script:
+  - npm install jshint --prefix .
 #   - npm install jscs --prefix .
 script:
-  - true
-#   - ./node_modules/jshint/bin/jshint sherdjs/src
+  - ./node_modules/jshint/bin/jshint sherdjs/src
 #   - ./node_modules/jscs/bin/jscs sherdjs/src
