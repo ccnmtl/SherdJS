@@ -162,13 +162,13 @@ function DjangoSherd_AnnotationMicroFormat() {
         if (obj.title) {
             return_text += '<div class="annotation-title">' + obj.title + '</div>';
         }
-        
+
         if (obj.asset && obj.asset.title) {
             return_text += '<div class="asset-title">';
             return_text += '<span class="asset-title-prefix">from </span><a href="' + obj.asset.local_url + '">' + obj.asset.title + '</a>';
             return_text += '</div>';
         }
-        
+
         return {
             object: obj,
             htmlID: wrapperID,
@@ -233,7 +233,7 @@ function DjangoSherd_Asset_Config() {
         'storage': ds.noteform,
         'targets': {clipstrip: 'clipstrip-display'}
     });
-    
+
     ds.assetview.html.push(
         jQuery('div.asset-display').get(0), // id=videoclip
         {
@@ -257,7 +257,7 @@ var CitationView = function () {
 
 CitationView.prototype.init = function (options) {
     var self = this;
-    
+
     if (options) {
         // copy in options so default are not overwritten
         for (var a in options) {
@@ -266,20 +266,20 @@ CitationView.prototype.init = function (options) {
             }
         }
     }
-    
+
     if (self.options.default_target) {
         self.options.targets.asset = document.getElementById(self.options.default_target);
     }
-    
+
     // Create an assetview.
     // @todo - We have potentially more than 1 assetview on the project page. The singleton nature in the
     // core architecture means the two views are really sharing the underlying code.
     // Consider how to resolve this contention. (It's a big change in the core.)
-    
+
     // This may be DANGEROUS in any sense. The old assetview should be destroyed first?
     if (!djangosherd.assetview) {
         var clipform = options.hasOwnProperty('clipform') ? options.clipform : false;
-        
+
         if (!clipform) {
             djangosherd.assetview = new Sherd.GenericAssetView({ clipform: false, clipstrip: true});
         } else {
@@ -293,10 +293,10 @@ CitationView.prototype.init = function (options) {
         }
     }
 };
-      
+
 CitationView.prototype.decorateLinks = function (parent) {
     var self = this;
-    
+
     ///decorate LINKS to OPEN annotations within a specified div or the whole document
     var elt = parent ? document.getElementById(parent) : document;
     return self.decorateElementLinks(elt);
@@ -304,24 +304,27 @@ CitationView.prototype.decorateLinks = function (parent) {
 
 CitationView.prototype.decorateElementLinks = function (element) {
     var self = this;
-    
+
     var links = jQuery(element).find(self.citation_link);
+
+    var clickHandler = function (evt) {
+        try {
+            self.openCitation(this);
+
+            jQuery('.active-annotation').removeClass('active-annotation');
+            jQuery(this).addClass('active-annotation');
+        } catch (e) {
+            if (window.console) {
+                console.log('ERROR opening citation:' + e.message);
+            }
+        }
+        evt.preventDefault();
+    };
+
     for (var i = 0; i < links.length; i++) {
         var link = links[i];
         if (jQuery(link).data().events === undefined || jQuery(link).data().events.click === undefined) {
-            jQuery(link).click(function (evt) {
-                try {
-                    self.openCitation(this);
-                    
-                    jQuery('.active-annotation').removeClass('active-annotation');
-                    jQuery(this).addClass('active-annotation');
-                } catch (e) {
-                    if (window.console) {
-                        console.log('ERROR opening citation:' + e.message);
-                    }
-                }
-                evt.preventDefault();
-            });
+            jQuery(link).click(clickHandler);
         }
     }
 };
@@ -330,23 +333,23 @@ CitationView.prototype.openCitation = function (anchor) {
     var self = this;
 
     var url = anchor.href;
-    
+
     var asset_url = url.match(/(asset)\/(\d+)\//);
     var asset_id = asset_url.pop();
-    
+
     var ann_url = url.match(/(annotations)\/(\d+)\/$/);
     var annotation_id = (ann_url && ann_url.pop()) || null;
-    
+
     return self.openCitationById(anchor, asset_id, annotation_id);
 };
 
 CitationView.prototype.openCitationById = function (anchor, asset_id, annotation_id) {
     var self = this;
-    
+
     if (anchor && jQuery(anchor).hasClass("disabled")) {
         return;
     }
-    
+
     var return_value = {};
     var id, type;
     if (annotation_id) {
@@ -356,7 +359,7 @@ CitationView.prototype.openCitationById = function (anchor, asset_id, annotation
         id = asset_id;
         type = "asset";
     }
-        
+
     djangosherd.storage.get({id: id, type: type },
     function (ann_obj) {
         self.options.deleted = false;
@@ -385,15 +388,15 @@ CitationView.prototype.openCitationById = function (anchor, asset_id, annotation
 
 CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
     var self = this;
-    
+
     var asset_target = ((self.options.targets && self.options.targets.asset) ?
             self.options.targets.asset
             : document.getElementById("videoclipbox"));
-    
+
     if (typeof self.options.onPrepareCitation === 'function') {
         self.options.onPrepareCitation(asset_target);
     }
-    
+
     if (!self.options.default_target) {
         var display_position = self.options.position || null;
         if (!display_position) {
@@ -403,7 +406,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         asset_target.style.left = display_position.left + "px";
 
         var linkHeight = 20;
-    
+
         var above_position = display_position.top - linkHeight - jQuery(asset_target).height();
         var show_above = (display_position.top + jQuery(asset_target).height()) > jQuery("body").height();
 
@@ -413,7 +416,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
             asset_target.style.top = display_position.top + "px";
         }
     }
-    
+
     jQuery(asset_target).show();
     var targets = {
         "top": asset_target,
@@ -422,7 +425,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         "asset_title": jQuery(asset_target).find('div.asset-title').get(0),
         "annotation_title": jQuery(asset_target).find('div.annotation-title').get(0)
     };
-    
+
     if (targets.annotation_title) {
         if (self.options.deleted) {
             targets.annotation_title.innerHTML = "Selection Deleted";
@@ -433,14 +436,14 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
                         : '');
         }
     }
-    
-        
+
+
     var asset_obj = ann_obj.hasOwnProperty("asset") ? ann_obj.asset : ann_obj;
     if (asset_obj) {
         asset_obj.autoplay = (self.options.autoplay) ? self.options.autoplay : false;
         asset_obj.presentation = self.options.presentation || 'small';
 
-        if (targets.asset_title) {            
+        if (targets.asset_title) {
             if (targets.annotation_title.innerHTML === "") {
                 targets.annotation_title.innerHTML = '<a href="' + asset_obj.local_url + '">' + asset_obj.title + '</a>';
                 targets.asset_title.innerHTML = '&nbsp;';
@@ -459,7 +462,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
             targets: {clipstrip: targets.clipstrip},
             functions: { winHeight: self.options.winHeight }
         });
-    
+
         if (ann_obj.hasOwnProperty("annotations") && ann_obj.annotations.length > 0 && ann_obj.annotations[0] !== null) {
             var ann_data = ann_obj.annotations[0];// ***
             if (!ann_data.hasOwnProperty("start")) {
@@ -473,7 +476,7 @@ CitationView.prototype.displayCitation = function (anchor, ann_obj, id) {
         djangosherd.assetview.html.remove();
         targets.asset_title.innerHTML = "";
     }
-    
+
     jQuery(window).trigger("resize");
 
     var return_value = {};
@@ -501,7 +504,7 @@ function DjangoSherd_Storage() {
             'project': {}
         };
     this._cache = _cache;
-    
+
     // Retrieve data from server & stash in the cache
     this.get = function (subject, callback, list_callback, errorCallback) {
         ///currently obj_type in [annotations, asset, project]
@@ -510,7 +513,7 @@ function DjangoSherd_Storage() {
         var obj_type = subject.type || 'annotations';
         var ann_obj = null;
         var delay = false;
-        
+
         if (id || subject.url) {
             if (id in _cache[obj_type] && !list_callback) {
                 ann_obj = _cache[obj_type][id];
@@ -546,7 +549,7 @@ function DjangoSherd_Storage() {
             callback(ann_obj);
         }
     };
-    
+
     this.json_update = function (json) {
         var new_id = true;
         if (json.project) {
@@ -560,7 +563,7 @@ function DjangoSherd_Storage() {
                     for (var j in a.sources) {
                         if (a.sources.hasOwnProperty(j)) {
                             a[j] = a.sources[j].url;
-                            
+
                             if (a.sources[j].width) {
                                 if (a.sources[j].primary) {
                                     a.width = a.sources[j].width;
@@ -575,7 +578,7 @@ function DjangoSherd_Storage() {
                     }
                     djangosherd_adaptAsset(a); //in-place
                     _cache.asset[a.id] = a;
-                    
+
                     if (a.hasOwnProperty('annotations')) {
                         for (var l in a.annotations) {
                             if (a.annotations.hasOwnProperty(l)) {
@@ -609,7 +612,7 @@ function DjangoSherd_Storage() {
 function DjangoSherd_NoteList() {
 }
 
-window.DjangoSherd_Colors = new (function () {
+window.DjangoSherd_Colors = (function () {
     this.get = function (str) {
         return (this.current_colors[str] || (this.current_colors[str] = this.mapping(++this.last_color)));
     };
@@ -671,6 +674,3 @@ window.DjangoSherd_Colors = new (function () {
     }
 
 })();
-
-
-
