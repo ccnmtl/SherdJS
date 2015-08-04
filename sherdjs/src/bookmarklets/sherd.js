@@ -33,7 +33,7 @@ ARCHITECTURE:
 
   The 'action' mostly services the bookmarklet, but in theory, this
      separates the initialization code along with what the
-     bookmarklet's action would be -- to immediatley jump into
+     bookmarklet's action would be -- to immediately jump into
      mediathread or to display the options list (which is more often
      the default).
 
