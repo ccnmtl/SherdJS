@@ -1,7 +1,7 @@
 /* SherdJS Bookmarklet
 HOW IT IS RUN:
   This is the main file for MediaThread bookmarklet code.  It is not
-  the actually bookmarklet that the user installs
+  the actual bookmarklet that the user installs
 
   -- this way, changes to this file will be run without users needing
      to reinstall the bookmarklet.  In MediaThread, the actual
