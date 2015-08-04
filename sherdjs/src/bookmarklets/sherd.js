@@ -6,7 +6,7 @@ HOW IT IS RUN:
   -- this way, changes to this file will be run without users needing
      to reinstall the bookmarklet.  In MediaThread, the actual
      bookmarklet is here:
-     https://github.com/ccnmtl/mediathread/blob/master/templates/assetmgr/bookmarklet.js
+     https://github.com/ccnmtl/mediathread/blob/master/mediathread/templates/assetmgr/bookmarklet.html
      And this file (through a symlink and urls.py redirection) becomes
      available through /bookmarklets/analyze.js
 
