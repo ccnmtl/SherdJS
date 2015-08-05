@@ -259,39 +259,40 @@ if (!Sherd.Video.Annotators.ClipForm) {
             var htmlID = 'clipform';
             return {
                 htmlID : htmlID,
-                text : '<div id="' + htmlID + '" style="display: none">' +
+                text : '<div id="' + htmlID + '" style="display: none;">' +
                 '<div id="clipcontrols" class="sherd-clipform">' +
                    '<p id="instructions" style="display: none" class="sherd-instructions">' +
                        'Create a selection by clicking Start Time and End Time buttons as the video plays, ' +
                        'or by manually typing in times in the associated edit boxes.<br /><br />' +
                        'Add title, tags and notes. If a Course Vocabulary has been enabled by the instructor, ' +
                        'apply vocabulary terms. Click Save when you are finished.' +                   
-                   '</p>' +
-                      '<table>' +
-                       '<tr><td span="0"><div><label for="annotation-title">Selection Times</label></div></td></tr>' + 
-                       '<tr class="sherd-clipform-editing">' +
-                         '<td>' +
-                           '<input type="button" class="btn btn-primary btn-xs" value="Start Time" id="btnClipStart"/> ' +
-                         '</td>' +
-                         '<td width="10px">&nbsp;</td>' +
-                         '<td>' +
-                           '<input type="button" class="btn btn-primary btn-xs" value="End Time" id="btnClipEnd"/> ' +
-                         '</td>' +
-                         '<td>&nbsp;</td>' +
-                       '</tr>' +
-                       '<tr class="sherd-clipform-editing">' +
-                         '<td>' +
-                           '<input type="text" class="timecode" id="clipStart" value="' + self.components.start + '" />' +
-                         '</td>' +
-                         '<td style="width: 10px; text-align: center">-</td>' +
-                         '<td>' +
-                           '<input type="text" class="timecode" id="clipEnd" value="' + self.components.end + '" />' +
-                         '</td>' +
-                         '<td class="sherd-clipform-play">' + 
-                         '<input type="image" title="Play Clip" class="regButton videoplay" id="btnPlayClip" src="/media/img/icons/meth_video_play.png"/>' +
-                         '</td>' +
-                       '</tr>' +
-                      '</table>' +
+                    '</p>' +
+
+                '<label>Selection Times</label>' +
+
+                '<div class="col-xs-3">' +
+                    '<button class="btn btn-primary btn-block btn-sm" type="button" id="btnClipStart">Start Time</button> ' +
+
+                    '<input type="text" class="form-control timecode input-sm" id="clipStart" value="' +
+                    self.components.start +
+                    '">' +
+                '</div>' +
+
+                '<div class="col-xs-3">' +
+                    '<button class="btn btn-primary btn-block btn-sm" type="button" id="btnClipEnd">End Time</button> ' +
+
+                    '<input type="text" class="form-control timecode input-sm" id="clipEnd" value="' +
+                    self.components.end +
+                    '">' +
+                '</div>' +
+
+                '<div class="col-xs-2">' +
+                    '<button type="button" class="btn btn-default" id="btnPlayClip">' +
+                    '<span class="glyphicon glyphicon-play" aria-hidden="true"></span>' +
+                    '</button>' +
+                '</div>' +
+
+                '<div class="clearfix"></div>' +
                 '</div>'
             };
         };
