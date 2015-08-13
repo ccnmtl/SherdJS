@@ -1,6 +1,6 @@
 {
   "name": "SherdJS",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "author": "Schuyler Duveen <sky@skyb.us>",
   "description": "A Javascript library that 'knows' how to display and annotate (and maybe embed) objects into certain contexts.",
   "contributors": [ 
