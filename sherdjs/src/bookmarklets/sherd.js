@@ -1,12 +1,12 @@
 /* SherdJS Bookmarklet
 HOW IT IS RUN:
   This is the main file for MediaThread bookmarklet code.  It is not
-  the actually bookmarklet that the user installs
+  the actual bookmarklet that the user installs
 
   -- this way, changes to this file will be run without users needing
      to reinstall the bookmarklet.  In MediaThread, the actual
      bookmarklet is here:
-     https://github.com/ccnmtl/mediathread/blob/master/templates/assetmgr/bookmarklet.js
+     https://github.com/ccnmtl/mediathread/blob/master/mediathread/templates/assetmgr/bookmarklet.html
      And this file (through a symlink and urls.py redirection) becomes
      available through /bookmarklets/analyze.js
 
@@ -33,7 +33,7 @@ ARCHITECTURE:
 
   The 'action' mostly services the bookmarklet, but in theory, this
      separates the initialization code along with what the
-     bookmarklet's action would be -- to immediatley jump into
+     bookmarklet's action would be -- to immediately jump into
      mediathread or to display the options list (which is more often
      the default).
 
