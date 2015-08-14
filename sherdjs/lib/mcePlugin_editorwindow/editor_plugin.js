@@ -46,8 +46,8 @@
             {
                 name:'link',
                 test:function(current_elt) {//A tag and not anchor
-                    var par = DOM.getParent(current_elt, 'A');
-                    if (par && !par.name) return par;
+                    var parent = DOM.getParent(current_elt, 'A');
+                    if (parent && !parent.name) return parent;
                 },
                 content:function(a_tag) {
                     return DOM.create('a',{href:a_tag.href,
@@ -57,15 +57,19 @@
             }
         ],
         _nodeChanged: function(ed, cm/*control manager*/, current_elt, collapsed, opt) {
-            var self = this;
+            if (typeof opt === 'object' && opt.initial === true) {
+                // Don't show the editor window on page load.
+                return false;
+            }
 
+            var self = this;
             var i = self._listeners.length;//last wins
             while (--i >=0) {
-                var par = self._listeners[i].test(current_elt);
-                if (par) {
+                var parent = self._listeners[i].test(current_elt);
+                if (parent) {
                     if (this.opened) {
-                        if (par == this.tag_for_window) {
-                            this._positionWindow(ed,current_elt, par);
+                        if (parent == this.tag_for_window) {
+                            this._positionWindow(ed,current_elt, parent);
                         } else {
                             ///superceded by another listeners
                             ///TODO: maybe we should do this based on
@@ -75,11 +79,12 @@
                             this._closeWindow();
                         }
                     }
+
                     //retest this.opened in case it was just closed above
-                    if (!this.opened && par != this.tag_for_window) {
+                    if (!this.opened && parent != this.tag_for_window) {
                         this.opened = self._listeners[i];
-                        this.tag_for_window = par;
-                        this._openWindow(ed,current_elt, par);
+                        this.tag_for_window = parent;
+                        this._openWindow(ed, current_elt, parent);
                     }
                     break;
                 }
@@ -96,13 +101,13 @@
             var p2 = (parent) ? DOM.getPos(parent) : p1;
             var cp = DOM.getPos(pos.container);
             //Q:viewport scroll an issue? A:somehow, no
-            ///use current_elt, not par because par might be multi-line
+            ///use current_elt, not parent because parent might be multi-line
             pos.x = p2.x+cp.x;
             pos.y = p1.y+cp.y;
             return pos;
         },
-        _positionWindow: function(ed,current_elt,par) {
-            var pos = this.getAbsoluteCursorPos(ed,current_elt,par);
+        _positionWindow: function(ed,current_elt,parent) {
+            var pos = this.getAbsoluteCursorPos(ed,current_elt,parent);
             var rect = DOM.getRect(this.win);
             var viewport = DOM.getViewPort(window);
 
@@ -126,7 +131,7 @@
             Event.add(window,'keydown',this._closeOnEscape,this);
             return win;
         },
-        _openWindow: function(ed,current_elt,par) {
+        _openWindow: function(ed,current_elt,parent) {
             var self = this;
             ///TODO: we could wait here, and wrap this in a setTimeout
             /// make sure that someone 'settled' onto the element, but
@@ -138,9 +143,9 @@
             document.body.appendChild(this.win);
             /*** after adding to document, so we can getbyID ***/
             //custom content
-            DOM.get(id+'_content').appendChild( this.opened.content(par) );
+            DOM.get(id+'_content').appendChild( this.opened.content(parent) );
 
-            this._positionWindow(ed,current_elt,par);
+            this._positionWindow(ed,current_elt,parent);
 
             Event.add(id+'_close', 'mousedown', function(evt){
                 self._closeWindow(ed,current_elt);
