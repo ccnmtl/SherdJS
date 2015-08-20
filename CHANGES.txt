@@ -1,3 +1,7 @@
+0.5.5 (2015-08-19)
+==================
+* Fix citation display issues in Safari
+
 0.5.4 (2015-08-14)
 ==================
 * TinyMCE EditorWindow plugin: don't display on page load
