@@ -20,16 +20,16 @@ if (!Sherd.Video.YouTube) {
 
         this.presentations = {
             'small': {
-                width: function () { return 310; },
-                height: function () { return 220; }
+                width: function () { return 320; },
+                height: function () { return 240; }
             },
             'medium': {
-                width: function () { return 475; },
-                height: function () { return 336; }
+                width: function () { return 480; },
+                height: function () { return 360; }
             },
             'default': {
-                width: function () { return 620; },
-                height: function () { return 440; }
+                width: function () { return 640; },
+                height: function () { return 480; }
             }
         };
 
@@ -39,8 +39,7 @@ if (!Sherd.Video.YouTube) {
         // create == asset->{html+information to make it}
         this.microformat.create = function (obj) {
             var wrapperID = Sherd.Base.newID('youtube-wrapper-');
-            ///playerID MUST only have [\w] chars or IE7 will fail
-            var playerID = Sherd.Base.newID('youtube_player_');
+            self.playerID = Sherd.Base.newID('youtube_player_');
             var autoplay = obj.autoplay ? 1 : 0;
             self.media._ready = false;
 
@@ -64,63 +63,71 @@ if (!Sherd.Video.YouTube) {
                 };
             }
 
-            // massage the url options if needed, take off everything after the ? mark
-            var url;
-            var idx = obj.youtube.indexOf('?');
-            if (idx > -1) {
-                url = obj.youtube.substr(0, idx);
-            } else {
-                url = obj.youtube;
-            }
-
-            // For IE, the id needs to be placed in the object.
-            // For FF, the id needs to be placed in the embed.
-            var objectID = '';
-            var embedID = '';
-            if (window.navigator.userAgent.indexOf("MSIE") > -1) {
-                objectID = 'id="' + playerID + '"';
-            } else {
-                embedID = 'id="' + playerID + '"';
-            }
-
+            self.videoId = getYouTubeID(obj.youtube);
+            var url = 'https://www.youtube.com/embed/' + self.videoId;
+            var urlParams = jQuery.param({
+                enablejsapi: 1,
+                autoplay: autoplay,
+                fs: 1,
+                rel: 0,
+                showinfo: 0,
+                modestbranding: 1
+            });
             return {
                 object: obj,
                 htmlID: wrapperID,
-                playerID: playerID, // Used by microformat.components initialization
+                playerID: self.playerID, // Used by microformat.components initialization
                 autoplay: autoplay, // Used later by _seek seeking behavior
                 mediaUrl: url, // Used by _seek seeking behavior
                 text: '<div id="' + wrapperID + '" class="sherd-youtube-wrapper">' +
-                '  <object width="' + obj.options.width + '" height="' + obj.options.height + '" ' +
-                ' classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' + objectID + '>' +
-                '  <param name="movie" value="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&showinfo=0&probably_logged_in=0&modestbranding=1&enablejsapi=1&playerapiid=' + playerID + '"></param>' +
-                '  <param name="allowscriptaccess" value="always"/></param>' +
-                '  <param name="autoplay" value="' + autoplay + '"></param>' +
-                '  <param name="width" value="' + obj.options.width + '"></param>' +
-                '  <param name="height" value="' + obj.options.height + '"></param>' +
-                '  <param name="allowfullscreen" value="true"></param>' +
-                '  <embed src="' + url + '?version=3&fs=1&rel=0&egm=0&hd=0&showinfo=0&probably_logged_in=0&modestbranding=1&enablejsapi=1&playerapiid=' + playerID + '"' +
-                '    type="application/x-shockwave-flash"' +
-                '    allowScriptAccess="always"' +
-                '    autoplay="' + autoplay + '"' +
-                '    width="' + obj.options.width + '" height="' + obj.options.height + '"' +
-                '    allowfullscreen="true" ' + embedID +
-                '  </embed>' +
-                '</object>' +
-                '</div>'
+                    '<iframe type="text/html" ' +
+                    'src="' + url + '?' + urlParams + '" ' +
+                    'width="' + obj.options.width + '" ' +
+                    'height="' + obj.options.height + '" ' +
+                    'allowfullscreen="true" ' +
+                    'frameborder="0" ' +
+                    'id="' + self.playerID + '" />' +
+                    '</div>'
             };
+        };
+
+        this.youtubePlayer = {
+            loadYouTubeAPI: function(playerId, videoId) {
+                if (typeof YT === 'undefined' ||
+                    typeof YT.Player === 'undefined'
+                   ) {
+                    window.onYouTubeIframeAPIReady = function() {
+                        self.youtubePlayer.loadPlayer(playerId, videoId);
+                    };
+
+                    jQuery.getScript('//www.youtube.com/iframe_api');
+                } else {
+                    self.youtubePlayer.loadPlayer(playerId, videoId);
+                }
+            },
+
+            loadPlayer: function(playerId, videoId) {
+                self.components.player = new YT.Player(playerId, {
+                    events: {
+                        'onReady': window.onPlayerReady,
+                        'onStateChange': window.onPlayerStateChange
+                    }
+                });
+            }
         };
 
         // self.components -- Access to the internal player and any options needed at runtime
         this.microformat.components = function (html_dom, create_obj) {
+            // Initialize the self.components.player object so we can control the video.
+            self.youtubePlayer.loadYouTubeAPI(self.playerID, self.videoId);
+
             try {
                 var rv = {};
                 if (html_dom) {
                     rv.wrapper = html_dom;
                 }
                 if (create_obj) {
-                    //the first works for everyone except safari
-                    //the latter probably works everywhere except IE
-                    rv.player = document[create_obj.playerID] || document.getElementById(create_obj.playerID);
+                    rv.player = document.getElementById(create_obj.playerID);
                     rv.autoplay = create_obj.autoplay;
                     rv.mediaUrl = create_obj.mediaUrl;
                     rv.playerID = create_obj.playerID;
@@ -180,10 +187,10 @@ if (!Sherd.Video.YouTube) {
         // Media & Player Specific
 
         // Global function required for the player
-        window.onYouTubePlayerReady = function (playerID) {
-            if (unescape(playerID) === self.components.playerID) {
+        window.onPlayerReady = function() {
+            if (unescape(self.playerID) === self.components.playerID) {
                 self.media._ready = true;
-                
+
                 // Once the player is ready -- sort out any autoplay+seek requests
                 if (self.components.starttime !== undefined) {
                     // Reseek if needed. Seek plays automatically
@@ -197,29 +204,34 @@ if (!Sherd.Video.YouTube) {
                 self.components.starttime = undefined;
                 self.components.endtime = undefined;
                 self.components.autoplay = undefined;
-                
+
                 jQuery(window).trigger('video.create', [self.components.itemId, self.components.primaryType]);
 
                 // register a state change function
                 // @todo -- YouTube limitation does not allow anonymous functions. Will need to address for
                 // multiple YT players on a page
-                self.components.player.addEventListener("onStateChange", 'onYTStateChange');
-                // does not work self.components.player.addEventListener("onError", 'onYTError');
+                //self.player.addEventListener("onStateChange", 'onYTStateChange');
+                // does not work self.player.addEventListener("onError", 'onYTError');
             }
         };
 
-        // This event is fired whenever the player's state changes. Possible values are unstarted
-        // (-1), ended (0), playing (1), paused (2), buffering (3), video cued (5). When the SWF is first loaded
-        // it will broadcast an unstarted (-1) event.
-        // When the video is cued and ready to play it will broadcast a video cued event (5).
+        // This event is fired whenever the player's state
+        // changes. Possible values are unstarted (-1), ended (0),
+        // playing (1), paused (2), buffering (3), video cued
+        // (5). When the SWF is first loaded it will broadcast an
+        // unstarted (-1) event.  When the video is cued and ready to
+        // play it will broadcast a video cued event (5).
         //
-        // @todo -- onYTStateChange does not pass the playerID into the function, which will be
-        // a problem if we ever have multiple players on the page
-        window.onYTStateChange = function (newState) {
+        // @todo -- onYTStateChange does not pass the playerID into
+        // the function, which will be a problem if we ever have
+        // multiple players on the page
+        window.onPlayerStateChange = function(newState) {
             switch (newState) {
             case 0: //ended
                 self.events.clearTimers();
-                jQuery(window).trigger('video.finish', [self.components.itemId, self.components.primaryType]);
+                jQuery(window).trigger(
+                    'video.finish',
+                    [self.components.itemId, self.components.primaryType]);
                 break;
             case 1: // playing
                 if (self.components.pauseit === true) {
@@ -228,17 +240,22 @@ if (!Sherd.Video.YouTube) {
                 }
                 var duration = self.media.duration();
                 if (duration > 1) {
-                    self.events.signal(self, 'duration', {duration: duration});                    
-                    jQuery(window).trigger('video.play', [self.components.itemId, self.components.primaryType]);
+                    self.events.signal(self, 'duration', {duration: duration});
+                    jQuery(window).trigger(
+                        'video.play',
+                        [self.components.itemId, self.components.primaryType]);
                 }
                 break;
             case 2: // stopped
-                ///Do NOT clear timers here, because clicking 'play' cycles through a 2-state
-                jQuery(window).trigger('video.pause', [self.components.itemId, self.components.primaryType]);
+                ///Do NOT clear timers here, because clicking 'play'
+                ///cycles through a 2-state
+                jQuery(window).trigger(
+                    'video.pause',
+                    [self.components.itemId, self.components.primaryType]);
                 break;
             }
         };
-        
+
         this.media.duration = function () {
             var duration = 0;
             if (self.components.player) {
@@ -284,11 +301,11 @@ if (!Sherd.Video.YouTube) {
 
         this.media.seek = function (starttime, endtime, autoplay) {
             if (self.media.ready()) {
-                if (starttime !== undefined) {
+                if (typeof starttime !== 'undefined') {
                     if (self.components.player.seekTo) {
                         self.components.player.seekTo(starttime, true);
                         if (autoplay && !self.media.isPlaying()) {
-                            self.media.play();           
+                            self.media.play();
                         } else if (self.media.state() === -1) {
                             self.components.pauseit = true;
                         }
@@ -301,8 +318,10 @@ if (!Sherd.Video.YouTube) {
                     // race condition between a prior seek with a greater end time. In that situation,
                     // the seek to the new time hasn't yet occurred and the pauseAt test (self.media.time > endtime)
                     // incorrectly returns true.
-                    setTimeout(function () { self.media.pauseAt(endtime); }, 100);
-                }                
+                    setTimeout(function () {
+                        self.media.pauseAt(endtime);
+                    }, 100);
+                }
             } else {
                 // store the values away for when the player is ready
                 self.components.starttime = starttime;

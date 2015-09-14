@@ -612,28 +612,23 @@ function DjangoSherd_Storage() {
 function DjangoSherd_NoteList() {
 }
 
-window.DjangoSherd_Colors = (function () {
-    this.get = function (str) {
-        return (this.current_colors[str] || (this.current_colors[str] = this.mapping(++this.last_color)));
-    };
-    this.mapping = function (num) {
+window.DjangoSherd_Colors = {
+    get: function (str) {
+        return (this.current_colors[str] ||
+                (this.current_colors[str] = this.mapping(++this.last_color)));
+    },
+    mapping: function (num) {
         //would like to get purple = 270or280 in (green is currently over represented)
         var hue = (num * 45) % 240;
         var sat = 100 - (parseInt(num * 30 / 240, 10) % 3 * 40);
         var lum = 55 + 5 * ((parseInt(num * 30 / 240 / 3, 10) % 5));
         return this.hsl2rgb(hue, sat, lum);
-    };
-    this.hsl2rgb = function (h, s, l) {
-        var rgb = hsl2rgb(h, s, l);
-        return 'rgb(' + parseInt(rgb.r, 10) + ',' + parseInt(rgb.g, 10) + ',' + parseInt(rgb.b, 10) + ')';
-    };
-    this.reset = function () {
+    },
+    reset: function () {
         this.last_color = -1;
         this.current_colors = {};
-    };
-    this.reset();
-
-    function hueToRgb(m1, m2, hue) {
+    },
+    hueToRgb: function(m1, m2, hue) {
         var v;
         if (hue < 0) {
             hue += 1;
@@ -650,8 +645,8 @@ window.DjangoSherd_Colors = (function () {
             v = m1;
         }
         return 255 * v;
-    }
-    function hsl2rgb(h, s, l) {
+    },
+    hsl2rgb: function(h, s, l) {
         var m1, m2, hue;
         var r, g, b;
         s /= 100;
@@ -666,11 +661,13 @@ window.DjangoSherd_Colors = (function () {
             }
             m1 = l * 2 - m2;
             hue = h / 360;
-            r = hueToRgb(m1, m2, hue + 1 / 3);
-            g = hueToRgb(m1, m2, hue);
-            b = hueToRgb(m1, m2, hue - 1 / 3);
+            r = this.hueToRgb(m1, m2, hue + 1 / 3);
+            g = this.hueToRgb(m1, m2, hue);
+            b = this.hueToRgb(m1, m2, hue - 1 / 3);
         }
         return {r: r, g: g, b: b};
     }
 
-})();
+};
+
+DjangoSherd_Colors.reset();
