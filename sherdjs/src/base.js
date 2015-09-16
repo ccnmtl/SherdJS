@@ -123,7 +123,19 @@ Sherd.Base = {
                 // /but we should have it clobber
                 // /until we need it
                 if (self.microformat && self.microformat.components) {
-                    self.components = self.microformat.components(dom, create_obj);
+                    var possiblePromise = self.microformat.components(dom, create_obj);
+
+                    if (possiblePromise &&
+                        typeof possiblePromise.done === 'function'
+                       ) {
+                        possiblePromise.done(function(components) {
+                            self.components = components;
+                        });
+                    } else if (typeof possiblePromise === 'object') {
+                        self.components = possiblePromise;
+                    } else {
+                        console.error('components error:', possiblePromise);
+                    }
                 } else {
                     self.components = {
                         'top' : dom

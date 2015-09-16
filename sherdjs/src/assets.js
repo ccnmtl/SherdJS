@@ -41,7 +41,9 @@ if (!Sherd.GenericAssetView) {
                 decorateVideo(options, quicktime);
             }
             if (Sherd.Video.YouTube) {
-                var youtube = this.settings.youtube = {'view': new Sherd.Video.YouTube() };
+                var youtube = this.settings.youtube = {
+                    'view': new Sherd.Video.YouTube()
+                };
                 decorateVideo(options, youtube);
             }
             if (Sherd.Video.Flowplayer) {
