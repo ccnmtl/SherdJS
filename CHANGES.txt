@@ -1,3 +1,8 @@
+0.5.6 (2015-09-16)
+==================
+* Use YouTube iframe API for displaying youtube videos
+  instead of the flash api (<object> tag).
+
 0.5.5 (2015-08-19)
 ==================
 * Fix citation display issues in Safari
