@@ -91,41 +91,20 @@ if (!Sherd.Video.YouTube) {
             };
         };
 
-        this.youtubePlayer = {
-            loadYouTubeAPI: function(playerId, videoId) {
-                if (typeof YT === 'undefined' ||
-                    typeof YT.Player === 'undefined'
-                   ) {
-                    window.onYouTubeIframeAPIReady = function() {
-                        self.youtubePlayer.loadPlayer(playerId, videoId);
-                    };
-
-                    jQuery.getScript('//www.youtube.com/iframe_api');
-                } else {
-                    self.youtubePlayer.loadPlayer(playerId, videoId);
-                }
-            },
-
-            loadPlayer: function(playerId, videoId) {
-                self.components.player = new YT.Player(playerId, {
-                    events: {
-                        'onReady': window.onPlayerReady,
-                        'onStateChange': window.onPlayerStateChange
-                    }
-                });
-            }
-        };
-
-        // self.components -- Access to the internal player and any options needed at runtime
+        /**
+         *  Access to the internal player and any options needed at runtime.
+         *
+         *  Returns a promise.
+         */
         this.microformat.components = function (html_dom, create_obj) {
-            // Initialize the self.components.player object so we can control the video.
-            self.youtubePlayer.loadYouTubeAPI(self.playerID, self.videoId);
+            var dfd = jQuery.Deferred();
 
             try {
                 var rv = {};
                 if (html_dom) {
                     rv.wrapper = html_dom;
                 }
+
                 if (create_obj) {
                     rv.player = document.getElementById(create_obj.playerID);
                     rv.autoplay = create_obj.autoplay;
@@ -134,10 +113,33 @@ if (!Sherd.Video.YouTube) {
                     rv.presentation = create_obj.object.presentation;
                     rv.itemId = create_obj.object.id;
                     rv.primaryType = create_obj.object.primary_type;
+
+                    // Initialize the self.components.player object so we
+                    // can control the video.
+                    self.loadYouTubeAPI(create_obj.playerID).then(
+                        function(player) {
+                            // Set the player attribute on self.components,
+                            // and also add the player to the return value
+                            // that's used by base.js. It's kind of crazy but
+                            // otherwise it doesn't work in the two cases:
+                            // * Loading youtube video asset page directly.
+                            // * Loading a new video after already viewing one.
+                            self.components.player = player;
+                            rv.player = player;
+                            dfd.resolve(rv);
+                        },
+                        function(e) {
+                            console.error('loadYouTubeAPI rejected.');
+                        }
+                    );
+                } else {
+                    return dfd.resolve(rv);
                 }
-                return rv;
-            } catch (e) {}
-            return false;
+                return dfd.promise();
+            } catch (e) {
+                return dfd.reject('error in microformat.components:', e);
+            }
+            return dfd.reject(false);
         };
 
         // Return asset object description (parameters) in a serialized JSON format.
@@ -153,7 +155,9 @@ if (!Sherd.Video.YouTube) {
         };
 
         // Note: not currently in use
-        this.microformat.type = function () { return 'youtube'; };
+        this.microformat.type = function () {
+            return 'youtube';
+        };
 
         // Replace the video identifier within the rendered .html
         this.microformat.update = function (obj, html_dom) {
@@ -186,6 +190,41 @@ if (!Sherd.Video.YouTube) {
         ////////////////////////////////////////////////////////////////////////
         // Media & Player Specific
 
+        /**
+         * Returns a promise that resolves with the YT.Player() instance.
+         */
+        this.loadYouTubeAPI = function(playerId) {
+            var dfd = jQuery.Deferred();
+
+            if (typeof YT === 'undefined' ||
+                typeof YT.Player === 'undefined'
+               ) {
+                window.onYouTubeIframeAPIReady = function() {
+                    var p = self.loadYouTubePlayer(playerId);
+                    dfd.resolve(p);
+                };
+
+                jQuery.getScript('//www.youtube.com/iframe_api');
+            } else {
+                return dfd.resolve(self.loadYouTubePlayer(playerId));
+            }
+
+            return dfd.promise();
+        };
+
+        /**
+         * Returns an instance of the YT.Player(), given the player's
+         * html 'id', and the youtube videoId.
+         */
+        this.loadYouTubePlayer = function(playerId) {
+            return new YT.Player(playerId, {
+                events: {
+                    'onReady': window.onPlayerReady,
+                    'onStateChange': window.onPlayerStateChange
+                }
+            });
+        };
+
         // Global function required for the player
         window.onPlayerReady = function() {
             if (unescape(self.playerID) === self.components.playerID) {
@@ -212,6 +251,11 @@ if (!Sherd.Video.YouTube) {
                 // multiple YT players on a page
                 //self.player.addEventListener("onStateChange", 'onYTStateChange');
                 // does not work self.player.addEventListener("onError", 'onYTError');
+            } else {
+                console.error(
+                    'playerID mismatch:',
+                    unescape(self.playerID),
+                    self.components.playerID);
             }
         };
 
@@ -266,6 +310,7 @@ if (!Sherd.Video.YouTube) {
                     }
                 } catch (e) {
                     // media probably not yet initialized
+                    console.error(e);
                 }
             }
             return duration;
@@ -275,7 +320,9 @@ if (!Sherd.Video.YouTube) {
             if (self.components.player) {
                 try {
                     self.components.player.pauseVideo();
-                } catch (e) {}
+                } catch (e) {
+                    console.error(e);
+                }
             }
         };
 
@@ -283,7 +330,9 @@ if (!Sherd.Video.YouTube) {
             if (self.components.player) {
                 try {
                     self.components.player.playVideo();
-                } catch (e) {}
+                } catch (e) {
+                    console.error(e);
+                }
             }
         };
 
@@ -295,7 +344,9 @@ if (!Sherd.Video.YouTube) {
             var playing = false;
             try {
                 playing = self.media.state() === 1;
-            } catch (e) {}
+            } catch (e) {
+                console.error(e);
+            }
             return playing;
         };
 
@@ -340,13 +391,14 @@ if (!Sherd.Video.YouTube) {
                     }
                 } catch (e) {
                     // media probably not yet initialized
+                    console.error(e);
                 }
             }
             return time;
         };
 
         this.media.timestrip = function () {
-            var w = self.components.player.width;
+            var w = document.getElementById(self.playerID).width;
             return {
                 w: w,
                 trackX: 3,
