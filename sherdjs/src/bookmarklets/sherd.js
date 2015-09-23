@@ -306,9 +306,8 @@ SherdBookmarklet = {
                 var obj_final = function() {
                     return callback(found_images);
                 };
-                for (var i=0;i<found_images.length;i++) {
-                    function getArtStorData(obj) {
-                        jQuery
+                var getArtStorData = function(obj, i) {
+                    jQuery
                         .ajax({url:"http://"+location.hostname+"/library/secure/imagefpx/"+obj.artstorId+"/103/5",
                                dataType:'json',
                                success:function(fpxdata,textStatus) {
@@ -322,7 +321,7 @@ SherdBookmarklet = {
                                    if (--done===0) obj_final();
                                }
                               });
-                        jQuery
+                    jQuery
                         .ajax({url:"http://"+location.hostname+"/library/secure/metadata/"+obj.artstorId,
                                dataType:'json',
                                success:function(metadata,textStatus) {
@@ -344,8 +343,9 @@ SherdBookmarklet = {
                                    if (--done===0) obj_final(); 
                                }
                               });
-                    }
-                    getArtStorData(found_images[i]);
+                };
+                for (var i=0;i<found_images.length;i++) {
+                    getArtStorData(found_images[i], i);
                 }
             });
         }
@@ -355,8 +355,9 @@ SherdBookmarklet = {
             SherdBookmarklet.run_with_jquery(function(jQ) { 
                 var SB = SherdBookmarklet;
                 var obj = {'sources':{"title":document.title},'metadata':{}};
+                var opt_urls;
                 try {
-                    var opt_urls = document.forms.form.elements.site.options;
+                    opt_urls = document.forms.form.elements.site.options;
                 } catch(e) {
                     return callback([]);
                 }
@@ -532,6 +533,7 @@ SherdBookmarklet = {
             return false;
           }
 
+          var fp_rv;
           //if(jQuery("a.usc-flowplayer > :first").is('img')) jQuery("a.usc-flowplayer").trigger("click");
           var fp_id = jQuery("a.usc-flowplayer > :first ").attr("id");
           // console.log(jQuery("a.usc-flowplayer").flowplayer(0));
@@ -539,7 +541,7 @@ SherdBookmarklet = {
           if (video && video !== null) {
             var v_match = SherdBookmarklet.assethandler.objects_and_embeds.players.flowplayer3.match(video); //the flowplayer version
             if (v_match && v_match !== null) {
-              var fp_rv=SherdBookmarklet.assethandler.objects_and_embeds.players.flowplayer3.asset(video,v_match,{'window':window,'document':document});
+              fp_rv=SherdBookmarklet.assethandler.objects_and_embeds.players.flowplayer3.asset(video,v_match,{'window':window,'document':document});
             }
           }
           // if(typeof(fp)!='undefined') fp.unload();
@@ -547,32 +549,48 @@ SherdBookmarklet = {
           fp_rv.metadata = {};
 
           try { fp_rv.metadata.title = fp_rv.sources.title = [jQuery("#edit-title--2").text().split("\n")[2].trim()]; }
-          catch (e) {fp_rv.metadata.title = ''}
+          catch (e) {fp_rv.metadata.title = '';}
           try { fp_rv.metadata.produced = [jQuery("#edit-production-date").text().split("\n")[2].trim()]; }
-          catch (e) {fp_rv.metadata.produced = ''}
+          catch (e) {fp_rv.metadata.produced = '';}
           try { fp_rv.metadata.description = [jQuery("#edit-description--2").text().split("\n")[2].trim()]; }
-          catch (e) {fp_rv.metadata.description = ''}
+          catch (e) {fp_rv.metadata.description = '';}
           try { fp_rv.metadata.copyright = [jQuery("#edit-credits-preserved-by-rights").text().split("\n")[2].trim()]; }
-          catch (e) {fp_rv.metadata.copyright = ''}
+          catch (e) {fp_rv.metadata.copyright = '';}
           try { fp_rv.metadata.temporal = [jQuery("#edit-tempo--2").text().split("\n")[2].trim()]; }
-          catch (e) {fp_rv.metadata.temporal = ''}
+          catch (e) {fp_rv.metadata.temporal = '';}
           try { fp_rv.metadata.geographical = [jQuery("#edit-geo").text().split("\n")[2].trim()]; }
-          catch (e) {fp_rv.metadata.geographical = ''}          
-          try { 
-            var tags = jQuery("#edit-subjects").html().replace(/<label(.*)<\/label>/g, "").split(/(<br>)+/);
-            for(var i=tags.length-1; i>=0; i--) tags[i].trim()=='<br>' || tags[i].trim()=='' ? tags.splice(i, 1) : tags[i]=tags[i].trim();
-            fp_rv.metadata.subject = tags;
-          } catch (e) {fp_rv.metadata.tags = [];}
-          try { 
-            var credits = jQuery("#edit-credits").text().split('Donor')[0].split('Credits')[1].split('.');
-            for(var i=credits.length-1; i>=0; i--) credits[i].trim()=='<br>' || credits[i].trim()=='' ? credits.splice(i, 1) : credits[i]=credits[i].trim();
-            fp_rv.metadata.credits = credits;
-          } catch (e) {fp_rv.metadata.credits = [];}          
-
-          fp_rv.sources.thumb="http://mirc.sc.edu/sites/all/modules/usc_mirc/images/playbuttonblack.jpg"
+          catch (e) {fp_rv.metadata.geographical = '';}
+          var i;
+            try {
+                var tags = jQuery("#edit-subjects").html().replace(/<label(.*)<\/label>/g, "").split(/(<br>)+/);
+                for(i=tags.length-1; i>=0; i--) {
+                    if (tags[i].trim()==='<br>' || tags[i].trim()==='') {
+                        tags.splice(i, 1);
+                    } else {
+                        tags[i] = tags[i].trim();
+                    }
+                }
+                fp_rv.metadata.subject = tags;
+            } catch (e) {
+                fp_rv.metadata.tags = [];
+            }
+            try {
+                var credits = jQuery("#edit-credits").text().split('Donor')[0].split('Credits')[1].split('.');
+                for(i=credits.length-1; i>=0; i--) {
+                    if (credits[i].trim()==='<br>' || credits[i].trim()==='') {
+                        credits.splice(i, 1);
+                    } else {
+                        credits[i] = credits[i].trim();
+                    }
+                }
+                fp_rv.metadata.credits = credits;
+            } catch (e) {
+                fp_rv.metadata.credits = [];
+            }
+          fp_rv.sources.thumb="http://mirc.sc.edu/sites/all/modules/usc_mirc/images/playbuttonblack.jpg";
 
           return callback([fp_rv]);
-        })
+        });
       },
       decorate:function(objs){
       }
@@ -718,13 +736,13 @@ SherdBookmarklet = {
                             var ancestor = jQuery(this).parents().get(9);
                             //td[5] for gallery searches, td[3] for image portfolios
                             var cell = (jQuery(ancestor).children('td').length==5) ? 'td[5]' : 'td[3]' ;
-                            function tryEval(obj,name,xpath,inArray) {
+                            var tryEval = function(obj,name,xpath,inArray) {
                                 var res = document.evaluate(xpath,ancestor,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null).snapshotItem(0);
                                 if (res) {
                                     var v = res.textContent.replace(/\s+/,' ');
                                     obj[name] = ((inArray)?[v]:v);
                                 }
-                            }
+                            };
                             //xpath begins right after the tbody/tr[2]/
                             tryEval(img_data.sources,'title',cell+'/table[2]/tbody/tr[3]/td/table/tbody/tr/td');
                             tryEval(img_data.metadata,'creator',cell+'/table[1]/tbody/tr[3]/td[1]/table/tbody/tr/td',true);
@@ -1103,11 +1121,28 @@ SherdBookmarklet = {
                         for(var k in meta_obj){
                           sources[k] = meta_obj[k];
                       }
-                      if(!sources.thumb){
-                        var paramConfig = jQuery('*[name=flashvars]')[0].value.split('config=')[1];
-                        eval('var paramObj='+paramConfig);
-                        paramThumb = paramObj.canvas.background.split('url(')[1].split(')')[0];
-                        sources.thumb = paramThumb;
+                      if (!sources.thumb) {
+                          var paramConfig =
+                              $('*[name=flashvars]')[0].value
+                              .split('config=')[1];
+                          paramConfig = JSON.parse(paramConfig);
+                          var paramObj = paramConfig;
+                          var paramThumb;
+                          if (paramObj &&
+                              paramObj.canvas &&
+                              paramObj.canvas.background
+                             ) {
+                              var bg = paramObj.canvas.background;
+                              var bgsplit = bg.split('url(');
+                              if (bgsplit.length > 1) {
+                                  paramThumb = bgsplit[1].split(')')[0];
+                              }
+                              // Otherwise,
+                              // background doesn't contain the string "url()",
+                              // so it's probably something like #000000. Just
+                              // ignore it - the thumbnail isn't essential.
+                          }
+                          sources.thumb = paramThumb;
                       }
                       return {
                           "html":obj,
@@ -1345,6 +1380,7 @@ SherdBookmarklet = {
                                           rv_zoomify._data_collection = 'Hackish tile walk';
                                           return optional_callback(index,rv_zoomify);
                                       }
+                                      break;
                                   case 'tilegrp': --dim.tilegrp;
                                       var m = dim.mode; dim.mode = 'tilegrp'; 
                                       return walktiles(m);
@@ -1530,6 +1566,9 @@ SherdBookmarklet = {
               var frms = context.document.getElementsByTagName("iframe");
               var result = [];
               var jQ = (window.SherdBookmarkletOptions.jQuery || window.jQuery);
+              var cb = function(ind, rv) {
+                  callback([rv]);
+              };
               for (var i = 0; i < frms.length; i++) {
                   var v_match = String(frms[i].src).match(/^http:\/\/www.youtube.com\/embed\/([\w\-]*)/);
                   if (v_match && v_match.length > 1) {
@@ -1537,8 +1576,9 @@ SherdBookmarklet = {
                       .youtube.asset(frms[i],
                                      v_match,
                                      {'window': window,
-                                      'document': document}, 0,
-                                     function(ind, rv){ callback([rv]); });
+                                      'document': document},
+                                     0,
+                                     cb);
                   }
               }
           }          
@@ -1550,6 +1590,13 @@ SherdBookmarklet = {
               var zoomify_urls = {};
               var done = 0;
               var jQ = (window.SherdBookmarkletOptions.jQuery ||window.jQuery );
+              var getFunc = function(dir) {
+                  var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
+                  zoomify.sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
+                  if (--done===0) {
+                      callback(result);
+                  }
+              };
               for (var i=0;i<imgs.length;i++) {
                   //IGNORE headers/footers/logos
                   var image = imgs[i];
@@ -1610,11 +1657,7 @@ SherdBookmarklet = {
                               /*Get width/height from zoomify's XML file
                                 img_root+"/source/"+img_key+"/"+img_key+"/ImageProperties.xml"
                                */
-                              jQ.get(tile_root+"/ImageProperties.xml",null,function(dir) {
-                                  var sizes = dir.match(/WIDTH=\"(\d+)\"\s+HEIGHT=\"(\d+)\"/);
-                                  zoomify.sources["xyztile-metadata"] = "w"+(sizes[1])+"h"+(sizes[2]);
-                                  if (--done===0) callback(result);
-                              },"text");
+                              jQ.get(tile_root+"/ImageProperties.xml",null,getFunc,"text");
                           }
                       }
                   }
@@ -1716,11 +1759,12 @@ SherdBookmarklet = {
                           },
                           error:function(){
                             //attempt to scrape manually
+                            var rv;
                             if(console){
                               console.log('trying to scrape manually, something went wrong with the unAPI call');
                               // if Openvault
                               if(request_url.indexOf('openvault')>0){
-                                var rv = {
+                                rv = {
                                   "page_resource":true,
                                   "html":document,
                                   "primary_type":"pbcore",
@@ -1999,10 +2043,10 @@ SherdBookmarklet = {
       img.src = src;
       return img;
   },
-  "mergeMetadata":function(result,metadata) {
+  "mergeMetadata":function(result, metadata) {
       if (!metadata) return;
       if (!result.metadata) {
-          return result.metadata = metadata;
+          result.metadata = metadata;
       } else {
           for (var a in metadata) {
               if (result.metadata[a]) {
@@ -2050,8 +2094,10 @@ SherdBookmarklet = {
                   switch(String(this.tagName).toLowerCase()) {
                   case "a":case "link":case "area":
                       props[p].push(abs(this.href, doc));
+                      break;
                   case "audio":case "embed":case "iframe":case "img":case "source":case "video":
                       props[p].push(abs(this.src, doc));
+                      break;
                   default:
                       props[p].push(jQ(this).text());
                   }
@@ -2172,10 +2218,13 @@ SherdBookmarklet = {
       var setStyle = function(e,style) {
           //BROKEN IN IE: http://www.peterbe.com/plog/setAttribute-style-IE
           var css = style.split(';');
+          var upperCaseB = function(a, b) {
+              return b.toUpperCase();
+          };
           for (var i=0;i<css.length;i++) {
               var kv = css[i].split(':');
               if (kv[0] && kv.length===2) {
-                  e.style[kv[0].replace(/-([a-z])/,function(a,b){return b.toUpperCase();})] = kv[1];
+                  e.style[kv[0].replace(/-([a-z])/,upperCaseB)] = kv[1];
               }
           }
       };
@@ -2748,35 +2797,44 @@ SherdBookmarklet = {
                   '-webkit-border-radius':'4px',
                   'background-color':'#efefef',
                   '*background-color':'#efefef',
-                  'background-image':'-moz-linear-gradient(top, #fcfcfc, #efefef)',
-                  'background-image':'-webkit-gradient(linear, 0 0, 0 100%, from(#fcfcfc), to(#efefef))',
-                  'background-image':'-webkit-linear-gradient(top, #fcfcfc, #efefef)',
-                  'background-image':'-o-linear-gradient(top, #fcfcfc, #efefef)',
-                  'background-image':'linear-gradient(to bottom, #fcfcfc, #efefef)',
+                  'background-image': [
+                    '-moz-linear-gradient(top, #fcfcfc, #efefef)',
+                    '-webkit-gradient(linear, 0 0, 0 100%, from(#fcfcfc), to(#efefef))',
+                    '-webkit-linear-gradient(top, #fcfcfc, #efefef)',
+                    '-o-linear-gradient(top, #fcfcfc, #efefef)',
+                    'linear-gradient(to bottom, #fcfcfc, #efefef)'
+                  ],
                   'background-repeat':'repeat-x',
-                  'border-color':'#0044cc #0044cc #002a80',
-                  'border-color':'rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25)',
-                  'filter':'progid:DXImageTransform.Microsoft.gradient(startColorstr="#ff0088cc", endColorstr="#ff0044cc", GradientType=0)',
-                  'filter':'progid:DXImageTransform.Microsoft.gradient(enabled=false)',
+                  'border-color': [
+                  '#0044cc #0044cc #002a80',
+                    'rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25)'
+                  ],
+                  'filter': [
+                    'progid:DXImageTransform.Microsoft.gradient(startColorstr="#ff0088cc", endColorstr="#ff0044cc", GradientType=0)',
+                    'progid:DXImageTransform.Microsoft.gradient(enabled=false)'
+                  ],
                   'cursor':'pointer',
                   'display':'inline-block'
                 });
                 submitBtn.hover(function(){
                     jQ(this).css({
-                    'background-image':'-moz-linear-gradient(top, #efefef, #fcfcfc)',
-                    'background-image':'-webkit-gradient(linear, 0 0, 0 100%, from(#efefef), to(#fcfcfc))',
-                    'background-image':'-webkit-linear-gradient(top, #efefef, #fcfcfc)',
-                    'background-image':'-o-linear-gradient(top, #efefef, #fcfcfc)',
-                    'background-image':'linear-gradient(to bottom, #efefef, #fcfcfc)'
-                    
-                  });
+                        'background-image': [
+                            '-moz-linear-gradient(top, #efefef, #fcfcfc)',
+                            '-webkit-gradient(linear, 0 0, 0 100%, from(#efefef), to(#fcfcfc))',
+                            '-webkit-linear-gradient(top, #efefef, #fcfcfc)',
+                            '-o-linear-gradient(top, #efefef, #fcfcfc)',
+                            'linear-gradient(to bottom, #efefef, #fcfcfc)'
+                        ]
+                    });
                 }, function(){
                     jQ(this).css({
-                      'background-image':'-moz-linear-gradient(top, #fcfcfc, #efefef)',
-                      'background-image':'-webkit-gradient(linear, 0 0, 0 100%, from(#fcfcfc), to(#efefef))',
-                      'background-image':'-webkit-linear-gradient(top, #fcfcfc, #efefef)',
-                      'background-image':'-o-linear-gradient(top, #fcfcfc, #efefef)',
-                      'background-image':'linear-gradient(to bottom, #fcfcfc, #efefef)'
+                        'background-image': [
+                            '-moz-linear-gradient(top, #fcfcfc, #efefef)',
+                            '-webkit-gradient(linear, 0 0, 0 100%, from(#fcfcfc), to(#efefef))',
+                            '-webkit-linear-gradient(top, #fcfcfc, #efefef)',
+                            '-o-linear-gradient(top, #fcfcfc, #efefef)',
+                            'linear-gradient(to bottom, #fcfcfc, #efefef)'
+                        ]
                     });
                   });
                 
@@ -2903,7 +2961,7 @@ SherdBookmarklet = {
 
   }, /*END Interface*/
    getURLParameters: function(name) {
-  		return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[null,""])[1].replace(/\+/g, '%20'))||null;
   }
 };/*SherdBookmarklet (root)*/
 
@@ -2941,7 +2999,7 @@ if (SherdBookmarkletOptions.decorate) {
     };
     ///request sent TO background.html
     chrome.extension.sendRequest({show_icon:true}, function(response) {});
-    function cleanup(obj) {
+    var cleanup = function(obj) {
         var json_safe =  JSON.parse(
             JSON.stringify(obj,function(key,value){
                 if (typeof value=='object' && value.tagName) {
@@ -2954,7 +3012,7 @@ if (SherdBookmarkletOptions.decorate) {
                 json_safe.splice(i--,1); //decrement after splice to combat loop
         }
         return json_safe;
-    }
+    };
     chrome.extension.onRequest.addListener(
         //for request sent FROM popup.html
         function(request,sender,sendResponse) {
