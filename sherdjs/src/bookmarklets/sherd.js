@@ -1487,6 +1487,10 @@ SherdBookmarklet = {
                     }
                     result.push(rv);
                 }
+                for (i = 0; i < result.length; i++) {
+                    MediathreadCollect.metadataSearch(
+                        result[i], context.document);
+                }
                 callback(result);
             }
         },/* end image assethandler */
