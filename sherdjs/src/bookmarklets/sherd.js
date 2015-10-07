@@ -163,9 +163,6 @@
    At the bottom of this file is the init/bootstrap code which runs the right part of
    SherdBookmarklet.* (generally a runner) after inspecting SherdBookmarkletOptions
 
-   Chrome bookmarklet case is for when this same code is used as a library in the chrome
-   bookmarklet.  See: src/bookmarklets/browser_extensions/google_chrome in this repo.
-
 */
 
 SherdBookmarklet = {
@@ -2988,52 +2985,6 @@ if (SherdBookmarkletOptions.decorate) {
             break;
         }
     }
-} else if (window.chrome && chrome.extension) {
-    ///1. search for assets--as soon as we find one, break out and send show:true
-    ///2. on request, return a full asset list
-    ///3. allow the grabber to be created by sending an asset list to it
-    SherdBookmarklet.options = SherdBookmarkletOptions;
-    var finder = new SherdBookmarklet.Finder();
-    var found_one = false;
-    finder.ASYNC.display = function(asset) {
-        if (!asset.disabled && !found_one) {//just run once
-            found_one = true;
-            ///request sent TO background.html
-            chrome.extension.sendRequest({found_asset:true,show_icon:true}, function(response) {});
-        }
-    };
-    ///request sent TO background.html
-    chrome.extension.sendRequest({show_icon:true}, function(response) {});
-    var cleanup = function(obj) {
-        var json_safe =  JSON.parse(
-            JSON.stringify(obj,function(key,value){
-                if (typeof value=='object' && value.tagName) {
-                    return '';
-                } else return value;
-            }));
-        //remove merged assets
-        for (var i=0;i<json_safe.length;i++) {
-            if ( ! json_safe[i].html_id)
-                json_safe.splice(i--,1); //decrement after splice to combat loop
-        }
-        return json_safe;
-    };
-    chrome.extension.onRequest.addListener(
-        //for request sent FROM popup.html
-        function(request,sender,sendResponse) {
-            if (finder.assets_found.length) {
-                sendResponse({'assets':cleanup(finder.assets_found)});
-            } else {
-                ///try again
-                finder.ASYNC.display = function(asset) {
-                    sendResponse({'assets':cleanup(finder.assets_found),
-                                  'where':'after'
-                                 });
-                };
-                finder.findAssets();
-            }
-        });
-    finder.findAssets();
 } else {
     var o = SherdBookmarkletOptions;
     SherdBookmarklet.options = o;
