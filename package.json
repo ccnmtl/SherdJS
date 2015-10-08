@@ -1,12 +1,16 @@
 {
   "name": "SherdJS",
-  "version": "0.5.6",
+  "version": "0.5.8",
   "author": "Schuyler Duveen <sky@skyb.us>",
   "description": "A Javascript library that 'knows' how to display and annotate (and maybe embed) objects into certain contexts.",
   "contributors": [ 
     {
       "name": "Susan Dreher",
       "email": "sdreher@columbia.edu"
+    },
+    {
+      "name": "Nik Nyby",
+      "email": "nnyby@columbia.edu"
     } 
   ],
   "repository": {
