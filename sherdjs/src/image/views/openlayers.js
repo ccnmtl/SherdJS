@@ -526,7 +526,10 @@ if (!Sherd.Image.OpenLayers) {
                 top.style.width = presentation.width(create_obj.object, self);
                 top.style.height = presentation.height(create_obj.object, self);
 
-                self.openlayers.map =  new OpenLayers.Map(create_obj.htmlID);
+                self.openlayers.map =  new OpenLayers.Map(create_obj.htmlID, {
+                    panMethod: null,
+                    zoomMethod: null
+                });
                 var objopt = create_obj.object.options;
                 if (create_obj.object.xyztile) {
                     ///DOC: Tile x0,y0 upper left starts at (-180,80)
